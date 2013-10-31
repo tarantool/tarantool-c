@@ -1,4 +1,4 @@
 tarantool-c
 ===========
 
-Tarantool C client
+tfile - tarantool v1.6 snapshot/xlog file reader
