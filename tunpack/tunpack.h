@@ -32,6 +32,7 @@
 
 /*
  * tunpack - tarantool v1.6 iproto deserelization library
+ *
  * http://tarantool.org
  *
 */
@@ -64,7 +65,7 @@ struct tunpack_hdelete {
 };
 
 struct tunpack_hupdate {
-	uint32_t s, flags;;
+	uint32_t s, flags;
 };
 
 struct tunpack_hcall {
@@ -101,6 +102,20 @@ struct tunpack_select {
 	char *l;
 };
 
+struct tunpack_call {
+	struct tunpack_hcall *h;
+	char *proc;
+	uint32_t size_proc;
+	size_t size;
+	char *t;
+};
+
+struct tunpack_update {
+	struct tunpack_hupdate *h;
+	size_t size;
+	char *body; /* tuple + ops */
+};
+
 struct tunpack {
 	struct tunpack_h *h;
 	union {
@@ -108,10 +123,56 @@ struct tunpack {
 		struct tunpack_delete13 del13;
 		struct tunpack_delete del;
 		struct tunpack_select select;
+		struct tunpack_call call;
+		struct tunpack_update update;
 	} v;
 };
 
-int tunpack(struct tunpack *u, char *buf, size_t size)
+static char*
+tunpack_ber128load_slowpath(char *p, uint32_t *value)
+{
+	if (! (p[2] & 0x80)) {
+		*value = (p[0] & 0x7f) << 14 |
+		         (p[1] & 0x7f) << 7  |
+		         (p[2] & 0x7f);
+		p += 3;
+	} else
+	if (! (p[3] & 0x80)) {
+		*value = (p[0] & 0x7f) << 21 |
+		         (p[1] & 0x7f) << 14 |
+		         (p[2] & 0x7f) << 7  |
+		         (p[3] & 0x7f);
+		p += 4;
+	} else
+	if (! (p[4] & 0x80)) {
+		*value = (p[0] & 0x7f) << 28 |
+		         (p[1] & 0x7f) << 21 |
+		         (p[2] & 0x7f) << 14 |
+		         (p[3] & 0x7f) << 7  |
+		         (p[4] & 0x7f);
+		p += 5;
+	} else {
+		return NULL;
+	}
+	return p;
+}
+
+static inline char*
+tunpack_ber128load(char *p, uint32_t *value) {
+	if (! (p[0] & 0x80)) {
+		*value = *(p++) & 0x7f;
+	} else
+	if (! (p[1] & 0x80)) {
+		*value = (p[0] & 0x7f) << 7 | (p[1] & 0x7f);
+		p += 2;
+	} else {
+		return tunpack_ber128load_slowpath(p, value);
+	}
+	return p;
+}
+
+static inline int
+tunpack(struct tunpack *u, char *buf, size_t size)
 {
 	if (size < sizeof(struct tunpack_h))
 		return -1;
@@ -170,8 +231,31 @@ int tunpack(struct tunpack *u, char *buf, size_t size)
 		u->v.select.l = p;
 		break;
 	case TUNPACK_CALL:
+		if ((end - p) < sizeof(struct tunpack_hcall))
+			return -1;
+		u->v.call.h = (struct tunpack_hcall*)p;
+		p += sizeof(struct tunpack_hcall);
+		body = u->h->len - sizeof(struct tunpack_hcall);
+		if ((p + body) > end)
+			return -1;
+		p = tunpack_ber128load(p, &u->v.call.size_proc);
+		if (p == NULL)
+			return -1;
+		u->v.call.proc = p;
+		p += u->v.call.size_proc;
+		u->v.call.size = end - p;
+		u->v.call.t = p;
 		break;
 	case TUNPACK_UPDATE:
+		if ((end - p) < sizeof(struct tunpack_hupdate))
+			return -1;
+		u->v.update.h = (struct tunpack_hupdate*)p;
+		p += sizeof(struct tunpack_hupdate);
+		body = u->h->len - sizeof(struct tunpack_hupdate);
+		if ((p + body) > end)
+			return -1;
+		u->v.update.size = body;
+		u->v.update.body = p;
 		break;
 	case TUNPACK_PING:
 		break;
