@@ -33,7 +33,7 @@
 #include <stdint.h>
 
 /*
- * tfile - tarantool v1.6 snapshot/xlog file reader
+ * tarantool v1.6 snapshot/xlog file reader
  * http://tarantool.org
  *
  * example:

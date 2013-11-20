@@ -34,7 +34,8 @@
 #include <inttypes.h>
 #include <assert.h>
 
-#include <tfile.h>
+#include "file.h"
+#include "session.h"
 
 int
 main(int argc, char * argv[])

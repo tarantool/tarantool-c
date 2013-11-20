@@ -31,12 +31,10 @@
 */
 
 /*
- * tunpack - tarantool v1.6 iproto deserelization library
- *
+ * tarantool v1.6 iproto deserelization library
  * http://tarantool.org
  *
 */
-
 #include <stdint.h>
 #include <string.h>
 

@@ -35,7 +35,7 @@
 #include <assert.h>
 #include <errno.h>
 
-#include <tfile.h>
+#include <file.h>
 #include <crc32.h>
 
 #define TFILE_VERSION "0.12\n"
