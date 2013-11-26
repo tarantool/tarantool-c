@@ -17,7 +17,8 @@ set(LIBTB_SRC
     ${PROJECT_SOURCE_DIR}/lib/file.c
     ${PROJECT_SOURCE_DIR}/lib/cksum.c
     ${PROJECT_SOURCE_DIR}/lib/session.c
-    ${PROJECT_SOURCE_DIR}/lib/console.c)
+    ${PROJECT_SOURCE_DIR}/lib/console.c
+    ${PROJECT_SOURCE_DIR}/lib/utf8.c)
 
 add_library(LIBTB STATIC ${LIBTB_SRC})
 
@@ -41,6 +42,7 @@ install (FILES
          ${PROJECT_SOURCE_DIR}/lib/request.h
          ${PROJECT_SOURCE_DIR}/lib/session.h
          ${PROJECT_SOURCE_DIR}/lib/console.h
+         ${PROJECT_SOURCE_DIR}/lib/utf8.h
          ${PROJECT_SOURCE_DIR}/lib/tp.h
          DESTINATION include/tarantool)
 install (FILES ${PROJECT_SOURCE_DIR}/lib/tarantool.h

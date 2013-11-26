@@ -1,5 +1,5 @@
-#ifndef LIBTB_H_
-#define LIBTB_H_
+#ifndef TB_UTF8_H_
+#define TB_UTF8_H_
 
 /*
  * Redistribution and use in source and binary forms, with or
@@ -28,41 +28,22 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
-*/
+ */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct tbutf8 {
+	unsigned char *data;
+	size_t size;
+	size_t len;
+};
 
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <string.h>
-#include <assert.h>
-#include <errno.h>
+#define TB_UTF8CHAR(U, P) ((U)->data + (P))
 
-#define TB_INCLUDE(NAME) <TB_PREFIX NAME>
-
-#ifndef TB_LOCAL
-# define TB_PREFIX tarantool/
-#else
-# define TB_PREFIX
-#endif
-
-#include TB_INCLUDE(tp.h)
-#include TB_INCLUDE(file.h)
-#include TB_INCLUDE(request.h)
-#include TB_INCLUDE(session.h)
-#include TB_INCLUDE(utf8.h)
-
-#undef TP_INCLUDE
-#undef TP_PREFIX
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+int tb_utf8init(struct tbutf8*, const unsigned char*, size_t);
+void tb_utf8free(struct tbutf8*);
+ssize_t tb_utf8chrlen(const unsigned char*, size_t);
+ssize_t tb_utf8len(const unsigned char*, size_t);
+ssize_t tb_utf8sizeof(const unsigned char*, size_t, size_t n);
+ssize_t tb_utf8next(struct tbutf8*, size_t off);
+int tb_utf8cmp(struct tbutf8*, struct tbutf8*);
 
 #endif
