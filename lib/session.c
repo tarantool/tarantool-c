@@ -370,7 +370,7 @@ tb_sessenddo(struct tbses *s, char *buf, size_t size)
 }
 
 static ssize_t
-tb_sesrecvraw(struct tbses *s, char *buf, size_t size, int all)
+tb_sesrecvraw(struct tbses *s, char *buf, size_t size, int strict)
 {
 	size_t off = 0;
 	do {
@@ -383,7 +383,7 @@ tb_sesrecvraw(struct tbses *s, char *buf, size_t size, int all)
 			return -1;
 		}
 		off += r;
-	} while (off != size && all);
+	} while (off != size && strict);
 
 	return off;
 }
@@ -438,12 +438,29 @@ int tb_sessync(struct tbses *s)
 	return rc;
 }
 
-int tb_sessend(struct tbses *s, char *buf, size_t size)
+ssize_t
+tb_sessend(struct tbses *s, char *buf, size_t size)
 {
 	return tb_sessenddo(s, buf, size);
 }
 
-int tb_sesrecv(struct tbses *s, char *buf, size_t size)
+ssize_t
+tb_sesrecv(struct tbses *s, char *buf, size_t size, int strict)
 {
+	if (! strict) {
+		if (s->r.buf) {
+			size_t v = s->r.top - s->r.off;
+			if (v > 0) {
+				if (size < v)
+					v = size;
+				memcpy(buf, s->r.buf + s->r.off, v);
+				s->r.off += v;
+				return v;
+			}
+		}
+		/* todo: make unstricted read with readahead
+		 * buffer */
+		return tb_sesrecvraw(s, buf, size, 0);
+	}
 	return tb_sesrecvdo(s, buf, size);
 }

@@ -1,5 +1,3 @@
-#ifndef TB_SESSION_H_
-#define TB_SESSION_H_
 
 /*
  * Redistribution and use in source and binary forms, with or
@@ -30,44 +28,53 @@
  * SUCH DAMAGE.
 */
 
-/*
- * tarantool v1.6 network session
-*/
+#include <tarantool.h>
 
-struct tbbuf {
-	size_t off;
-	size_t top;
-	size_t size;
-	char *buf;
-};
+int tb_conwrite(struct tbses *s, char *buf, size_t size)
+{
+	int rc = tb_sessend(s, buf, size);
+	if (rc == -1)
+		return -1;
+	return tb_sessend(s, "\n", 1);
+}
 
-struct tbses {
-	char *host;
-	int port;
-	int connected;
-	struct timeval tmc;
-	int sbuf;
-	int rbuf;
-	int fd;
-	int errno_;
-	struct tbbuf s, r;
-};
-
-enum tbsesopt {
-	TB_HOST,
-	TB_PORT,
-	TB_CONNECTTM,
-	TB_SENDBUF,
-	TB_READBUF
-};
-
-int tb_sesinit(struct tbses*);
-int tb_sesfree(struct tbses*);
-int tb_sesset(struct tbses*, enum tbsesopt, ...);
-int tb_sesconnect(struct tbses*);
-int tb_sesclose(struct tbses*);
-int tb_sessync(struct tbses*);
-ssize_t tb_sessend(struct tbses*, char*, size_t);
-ssize_t tb_sesrecv(struct tbses*, char*, size_t, int strict);
-
-#endif
+int tb_conread(struct tbses *s, char **r, size_t *size)
+{
+	char readahead[8096];
+	size_t pos = 0;
+	char *buf = NULL;
+	char *bufn;
+	for (;;)
+	{
+		ssize_t rc = tb_sesrecv(s, readahead, sizeof(readahead), 0);
+		if (rc <= 0)
+			break;
+		bufn = (char*)realloc(buf, pos + rc + 1);
+		if (bufn == NULL) {
+			free(buf);
+			break;
+		}
+		buf = bufn;
+		memcpy(buf + pos, readahead, rc);
+		pos += rc;
+		buf[pos] = 0;
+		if (pos >= 8)
+		{
+			int match_cr =
+			    !memcmp(buf, "---\n", 4) &&
+			    !memcmp(buf + pos - 4, "...\n", 4);
+			int match_crlf = !match_cr &&
+			    pos >= 10 &&
+			    !memcmp(buf, "---\r\n", 5) &&
+			    !memcmp(buf + pos - 5, "...\r\n", 5);
+			if (match_crlf || match_cr) {
+				*r = buf;
+				*size = pos;
+				return 0;
+			}
+		}
+	}
+	if (buf)
+		free(buf);
+	return -1;
+}
