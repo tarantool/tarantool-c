@@ -44,12 +44,12 @@ extern "C" {
 #include <assert.h>
 #include <errno.h>
 
-#define TB_INCLUDE(NAME) <TB_PREFIX NAME>
+#define TB_INCLUDE(NAME) <TB_PREFIX/NAME>
 
-#ifndef TB_LOCAL
-# define TB_PREFIX tarantool/
+#ifdef TB_LOCAL
+# define TB_PREFIX TB_LOCAL
 #else
-# define TB_PREFIX
+# define TB_PREFIX tarantool
 #endif
 
 #include TB_INCLUDE(tp.h)

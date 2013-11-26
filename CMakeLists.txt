@@ -9,7 +9,7 @@ set(LIBTB_VERSION "${LIBTB_VERSIONMAJOR}.${LIBTB_VERSIONMINOR}")
 set(LIBTB_SOVERSION "${LIBTB_VERSIONMAJOR}")
 
 set(LIBTB_CFLAGS "-std=gnu99 -Wall -Wextra -pedantic")
-add_definitions("-DTB_LOCAL")
+add_definitions("-DTB_LOCAL=${PROJECT_SOURCE_DIR}/lib")
 
 include_directories("${PROJECT_SOURCE_DIR}/lib")
 
