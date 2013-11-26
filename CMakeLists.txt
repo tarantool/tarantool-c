@@ -14,9 +14,9 @@ add_definitions("-DTB_LOCAL")
 include_directories("${PROJECT_SOURCE_DIR}/lib")
 
 set(LIBTB_SRC
-	lib/file.c
-	lib/cksum.c
-	lib/session.c)
+    ${PROJECT_SOURCE_DIR}/lib/file.c
+    ${PROJECT_SOURCE_DIR}/lib/cksum.c
+    ${PROJECT_SOURCE_DIR}/lib/session.c)
 
 add_library(LIBTB STATIC ${LIBTB_SRC})
 
@@ -36,12 +36,12 @@ install (TARGETS LIBTB ARCHIVE DESTINATION lib)
 install (TARGETS LIBTB_SHARED LIBRARY DESTINATION lib)
 
 install (FILES
-         lib/file.h
-         lib/request.h
-         lib/session.h
-         lib/tp.h
+         ${PROJECT_SOURCE_DIR}/lib/file.h
+         ${PROJECT_SOURCE_DIR}/lib/request.h
+         ${PROJECT_SOURCE_DIR}/lib/session.h
+         ${PROJECT_SOURCE_DIR}/lib/tp.h
          DESTINATION include/tarantool)
-install (FILES lib/tarantool.h
+install (FILES ${PROJECT_SOURCE_DIR}/lib/tarantool.h
          DESTINATION include)
 
 add_subdirectory(test)
