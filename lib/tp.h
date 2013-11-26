@@ -209,39 +209,40 @@ extern "C" {
 #include <string.h>
 #include <assert.h>
 
-#define tp_function_unused __attribute__((unused))
-#define tp_packed __attribute__((packed))
-#define tp_inline __attribute__((forceinline))
-#define tp_noinline __attribute__((noinline))
+#define tpfunction_unused __attribute__((unused))
+#define tppacked __attribute__((packed))
+#define tpinline __attribute__((forceinline))
+#define tpnoinline __attribute__((noinline))
 #if defined(__GNUC__)
 #if (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
-#define tp_hot __attribute__((hot))
+#define tphot __attribute__((hot))
 #endif
 #endif
-#if !defined(tp_hot)
-#define tp_hot
+#if !defined(tphot)
+#define tphot
 #endif
 
-#define tp_likely(expr)   __builtin_expect(!! (expr), 1)
-#define tp_unlikely(expr) __builtin_expect(!! (expr), 0)
+#define tplikely(expr) __builtin_expect(!! (expr), 1)
+#define tpunlikely(expr) __builtin_expect(!! (expr), 0)
 
 struct tp;
 
 /* Reallocation function, can be customized for own use */
 typedef char *(*tp_reserve)(struct tp *p, size_t req, size_t *size);
 
-/* request types. */
-#define TP_PING   65280
-#define TP_INSERT 13
-#define TP_SELECT 17
-#define TP_UPDATE 19
-#define TP_DELETE 21
-#define TP_CALL   22
+/* request types */
+#define TP_PING     65280
+#define TP_INSERT   13
+#define TP_SELECT   17
+#define TP_UPDATE   19
+#define TP_DELETE13 20
+#define TP_DELETE   21
+#define TP_CALL     22
 
 /* requests flags */
-#define TP_BOX_RETURN_TUPLE   1
-#define TP_BOX_ADD            2
-#define TP_BOX_REPLACE        4
+#define TP_BOX_RETURN_TUPLE  1
+#define TP_BOX_ADD           2
+#define TP_BOX_REPLACE       4
 
 /* update operation codes */
 #define TP_OPSET    0
@@ -256,30 +257,34 @@ typedef char *(*tp_reserve)(struct tp *p, size_t req, size_t *size);
 /* internal protocol headers */
 struct tp_h {
 	uint32_t type, len, reqid;
-} tp_packed;
+} tppacked;
 
 struct tp_hinsert {
 	uint32_t space, flags;
-} tp_packed;
+} tppacked;
 
 struct tp_hdelete {
 	uint32_t space, flags;
-} tp_packed;
+} tppacked;
+
+struct tp_hdelete13 {
+	uint32_t space;
+} tppacked;
 
 struct tp_hupdate {
 	uint32_t space, flags;
-} tp_packed;
+} tppacked;
 
 struct tp_hcall {
 	uint32_t flags;
-} tp_packed;
+} tppacked;
 
 struct tp_hselect {
 	uint32_t space, index;
 	uint32_t offset;
 	uint32_t limit;
 	uint32_t keyc;
-} tp_packed;
+} tppacked;
 
 /*
  * Main tp object - points either to a request buffer, or to
@@ -336,10 +341,10 @@ tp_unused(struct tp *p) {
  * 	return NULL;
  * }
 */
-tp_function_unused static char*
+tpfunction_unused static char*
 tp_realloc(struct tp *p, size_t required, size_t *size) {
 	size_t toalloc = tp_size(p) * 2;
-	if (tp_unlikely(toalloc < required))
+	if (tpunlikely(toalloc < required))
 		toalloc = tp_size(p) + required;
 	*size = toalloc;
 	return realloc(p->s, toalloc);
@@ -390,24 +395,24 @@ tp_init(struct tp *p, char *buf, size_t size,
 
 /* Ensure that buffer has enough space to fill size bytes, resize
  * buffer if needed. */
-static tp_noinline ssize_t
+static tpnoinline ssize_t
 tp_ensure(struct tp *p, size_t size) {
-	if (tp_likely(tp_unused(p) >= size))
+	if (tplikely(tp_unused(p) >= size))
 		return 0;
-	if (tp_unlikely(p->reserve == NULL))
+	if (tpunlikely(p->reserve == NULL))
 		return -1;
 	size_t sz;
 	register char *np = p->reserve(p, size, &sz);
-	if (tp_unlikely(np == NULL))
+	if (tpunlikely(np == NULL))
 		return -1;
 	p->p = np + (p->p - p->s);
-	if (tp_likely(p->h))
+	if (tplikely(p->h))
 		p->h = (struct tp_h*)(np + (((char*)p->h) - p->s));
-	if (tp_likely(p->t))
+	if (tplikely(p->t))
 		p->t = np + (p->t - p->s);
-	if (tp_unlikely(p->f))
+	if (tpunlikely(p->f))
 		p->f = (np + (p->f - p->s));
-	if (tp_unlikely(p->u))
+	if (tpunlikely(p->u))
 		p->u = (np + (p->u - p->s));
 	p->s = np;
 	p->e = np + sz;
@@ -432,7 +437,7 @@ tp_use(struct tp *p, size_t size) {
  */
 static inline ssize_t
 tp_append(struct tp *p, const void *data, size_t size) {
-	if (tp_unlikely(tp_ensure(p, size) == -1))
+	if (tpunlikely(tp_ensure(p, size) == -1))
 		return -1;
 	memcpy(p->p, data, size);
 	return tp_use(p, size);
@@ -467,7 +472,7 @@ tp_tuplecount(struct tp *p) {
 static inline ssize_t
 tp_tuple(struct tp *p) {
 	assert(p->h != NULL);
-	if (tp_unlikely(tp_ensure(p, sizeof(uint32_t)) == -1))
+	if (tpunlikely(tp_ensure(p, sizeof(uint32_t)) == -1))
 		return -1;
 	*(uint32_t*)(p->t = p->p) = 0;
 	p->p += sizeof(uint32_t);
@@ -482,16 +487,16 @@ tp_tuple(struct tp *p) {
 /* Ber128 calculation functions, internally used by the library */
 static inline size_t
 tp_ber128sizeof(uint32_t value) {
-	return (  tp_likely(value < (1 <<  7))) ? 1 :
-	       (  tp_likely(value < (1 << 14))) ? 2 :
-	       (tp_unlikely(value < (1 << 21))) ? 3 :
-	       (tp_unlikely(value < (1 << 28))) ? 4 : 5;
+	return (  tplikely(value < (1 <<  7))) ? 1 :
+	       (  tplikely(value < (1 << 14))) ? 2 :
+	       (tpunlikely(value < (1 << 21))) ? 3 :
+	       (tpunlikely(value < (1 << 28))) ? 4 : 5;
 }
 
-static tp_noinline void tp_hot
+static tpnoinline void tphot
 tp_ber128save_slowpath(struct tp *p, uint32_t value) {
-	if (tp_unlikely(value >= (1 << 21))) {
-		if (tp_unlikely(value >= (1 << 28)))
+	if (tpunlikely(value >= (1 << 21))) {
+		if (tpunlikely(value >= (1 << 28)))
 			*(p->p++) = (value >> 28) | 0x80;
 		*(p->p++) = (value >> 21) | 0x80;
 	}
@@ -501,20 +506,20 @@ tp_ber128save_slowpath(struct tp *p, uint32_t value) {
 	p->p += 3;
 }
 
-static inline void tp_hot
+static inline void tphot
 tp_ber128save(struct tp *p, uint32_t value) {
-	if (tp_unlikely(value >= (1 << 14))) {
+	if (tpunlikely(value >= (1 << 14))) {
 		tp_ber128save_slowpath(p, value);
 		return;
 	}
-	if (tp_likely(value >= (1 << 7)))
+	if (tplikely(value >= (1 << 7)))
 		*(p->p++) = ((value >> 7) | 0x80);
 	*(p->p++) = ((value) & 0x7F);
 }
 
-static tp_noinline int tp_hot
+static tpnoinline int tphot
 tp_ber128load_slowpath(struct tp *p, uint32_t *value) {
-	if (tp_likely(! (p->f[2] & 0x80))) {
+	if (tplikely(! (p->f[2] & 0x80))) {
 		*value = (p->f[0] & 0x7f) << 14 |
 		         (p->f[1] & 0x7f) << 7  |
 		         (p->f[2] & 0x7f);
@@ -539,12 +544,12 @@ tp_ber128load_slowpath(struct tp *p, uint32_t *value) {
 	return 0;
 }
 
-static inline int tp_hot
+static inline int tphot
 tp_ber128load(struct tp *p, uint32_t *value) {
-	if (tp_likely(! (p->f[0] & 0x80))) {
+	if (tplikely(! (p->f[0] & 0x80))) {
 		*value = *(p->f++) & 0x7f;
 	} else
-	if (tp_likely(! (p->f[1] & 0x80))) {
+	if (tplikely(! (p->f[1] & 0x80))) {
 		*value = (p->f[0] & 0x7f) << 7 | (p->f[1] & 0x7f);
 		p->f += 2;
 	} else
@@ -561,7 +566,7 @@ tp_field(struct tp *p, const char *data, size_t size) {
 	assert(p->h != NULL);
 	assert(p->t != NULL);
 	register int esz = tp_ber128sizeof(size);
-	if (tp_unlikely(tp_ensure(p, esz + size) == -1))
+	if (tpunlikely(tp_ensure(p, esz + size) == -1))
 		return -1;
 	tp_ber128save(p, size);
 	memcpy(p->p, data, size);
@@ -593,7 +598,7 @@ tp_appendreq(struct tp *p, void *h, size_t size) {
 	int isallocated = p->p != NULL;
 	tp_setreq(p);
 	ssize_t rc = tp_append(p, h, size);
-	if (tp_unlikely(rc == -1))
+	if (tpunlikely(rc == -1))
 		return -1;
 	if (!isallocated)
 		p->h = (struct tp_h*)p->s;
@@ -683,7 +688,7 @@ tp_call(struct tp *p, uint32_t flags, const char *name, size_t name_len) {
 	h.h.len = sizeof(struct tp_hcall) + sz + name_len;
 	h.h.reqid = 0;
 	h.c.flags = flags;
-	if (tp_unlikely(tp_ensure(p, sizeof(h) + sz + name_len) == -1))
+	if (tpunlikely(tp_ensure(p, sizeof(h) + sz + name_len) == -1))
 		return -1;
 	tp_setreq(p);
 	memcpy(p->p, &h, sizeof(h));
@@ -766,7 +771,7 @@ static inline ssize_t
 tp_updatebegin(struct tp *p) {
 	assert(p->h != NULL);
 	assert(p->h->type == TP_UPDATE);
-	if (tp_unlikely(tp_ensure(p, sizeof(uint32_t)) == -1))
+	if (tpunlikely(tp_ensure(p, sizeof(uint32_t)) == -1))
 		return -1;
 	*(uint32_t*)(p->u = p->p) = 0;
 	p->p += sizeof(uint32_t);
@@ -789,7 +794,7 @@ tp_op(struct tp *p, uint32_t field, uint8_t op, const char *data,
 	assert(p->u != NULL);
 	assert(p->h->type == TP_UPDATE);
 	size_t sz = 4 + 1 + tp_ber128sizeof(size) + size;
-	if (tp_unlikely(tp_ensure(p, sz)) == -1)
+	if (tpunlikely(tp_ensure(p, sz)) == -1)
 		return -1;
 	/* field */
 	*(uint32_t*)(p->p) = field;
@@ -799,7 +804,7 @@ tp_op(struct tp *p, uint32_t field, uint8_t op, const char *data,
 	p->p += sizeof(uint8_t);
 	/* data */
 	tp_ber128save(p, size);
-	if (tp_likely(data))
+	if (tplikely(data))
 		memcpy(p->p, data, size);
 	p->p += size;
 	/* update offset and count */
@@ -820,7 +825,7 @@ tp_opsplice(struct tp *p, uint32_t field, uint32_t offset,
 	uint32_t sz = olen + sizeof(offset) + clen + sizeof(cut) +
 	              plen + paste_len;
 	ssize_t rc = tp_op(p, field, TP_OPSPLICE, NULL, sz);
-	if (tp_unlikely(rc == -1))
+	if (tpunlikely(rc == -1))
 		return -1;
 	p->p -= sz;
 	tp_ber128save(p, sizeof(offset));
@@ -850,12 +855,12 @@ tp_sz(struct tp *p, const char *sz) {
  */
 static inline ssize_t
 tp_reqbuf(const char *buf, size_t size) {
-	if (tp_unlikely(size < sizeof(struct tp_h)))
+	if (tpunlikely(size < sizeof(struct tp_h)))
 		return sizeof(struct tp_h) - size;
 	register int sz =
 		((struct tp_h*)buf)->len + sizeof(struct tp_h);
-	return (tp_likely(size < sz)) ?
-	                  sz - size : -(size - sz);
+	return (tplikely((int)size < sz)) ?
+	                 sz - size : -(size - sz);
 }
 
 /* Same as tp_reqbuf(), but works on the buffer in struct tp.
@@ -881,7 +886,7 @@ tp_unfetched(struct tp *p) {
  */
 static inline void*
 tp_fetch(struct tp *p, int inc) {
-	assert(tp_unfetched(p) >= inc);
+	assert((int)tp_unfetched(p) >= inc);
 	register char *po = p->c;
 	p->c += inc;
 	return po;
@@ -941,10 +946,10 @@ tp_replyop(struct tp *p) {
  * }
  *
  */
-tp_function_unused static ssize_t
+tpfunction_unused static ssize_t
 tp_reply(struct tp *p) {
 	ssize_t used = tp_req(p);
-	if (tp_unlikely(used > 0))
+	if (tpunlikely(used > 0))
 		return -1;
 	/* this is end of packet in continious buffer */
 	p->p = p->e + used; /* end - used */
@@ -953,9 +958,9 @@ tp_reply(struct tp *p) {
 	p->t = p->f = p->u = NULL;
 	p->cnt = 0;
 	p->code = 0;
-	if (tp_unlikely(p->h->type == TP_PING))
+	if (tpunlikely(p->h->type == TP_PING))
 		return 0;
-	if (tp_unlikely(p->h->type != TP_UPDATE &&
+	if (tpunlikely(p->h->type != TP_UPDATE &&
 	                p->h->type != TP_INSERT &&
 	                p->h->type != TP_DELETE &&
 	                p->h->type != TP_SELECT &&
@@ -965,7 +970,7 @@ tp_reply(struct tp *p) {
 	if (p->code != 0)
 		return p->code;
 	/* BOX_QUIET */
-	if (tp_unlikely(tp_unfetched(p) == 0))
+	if (tpunlikely(tp_unfetched(p) == 0))
 		return p->code;
 	p->cnt = *(uint32_t*)tp_fetch(p, sizeof(uint32_t));
 	return p->code;
@@ -1050,7 +1055,7 @@ static inline int
 tp_hasnextfield(struct tp *p) {
 	assert(p->t != NULL);
 	register char *f = p->f + p->fsz;
-	if (tp_unlikely(p->f == NULL))
+	if (tpunlikely(p->f == NULL))
 		f = p->t + 4;
 	return (tp_tupleend(p) - f) >= 1;
 }
@@ -1060,18 +1065,18 @@ tp_hasnextfield(struct tp *p) {
  * tp_tuplecount(), tp_tuplesize(), tp_gettuple(). */
 static inline int
 tp_next(struct tp *p) {
-	if (tp_unlikely(p->t == NULL)) {
-		if (tp_unlikely(! tp_hasdata(p)))
+	if (tpunlikely(p->t == NULL)) {
+		if (tpunlikely(! tp_hasdata(p)))
 			return 0;
 		p->t = p->c + 4;
 		goto fetch;
 	}
-	if (tp_unlikely(! tp_hasnext(p)))
+	if (tpunlikely(! tp_hasnext(p)))
 		return 0;
 	p->t = tp_tupleend(p) + 4;
 fetch:
 	p->tsz = *(uint32_t*)(p->t - 4);
-	if (tp_unlikely((p->t + p->tsz) > p->e))
+	if (tpunlikely((p->t + p->tsz) > p->e))
 		return -1;
 	p->f = NULL;
 	return 1;
@@ -1082,20 +1087,20 @@ fetch:
 static inline int
 tp_nextfield(struct tp *p) {
 	assert(p->t != NULL);
-	if (tp_unlikely(p->f == NULL)) {
-		if (tp_unlikely(! tp_hasnextfield(p)))
+	if (tpunlikely(p->f == NULL)) {
+		if (tpunlikely(! tp_hasnextfield(p)))
 			return 0;
 		p->f = p->t + 4;
 		goto fetch;
 	}
-	if (tp_unlikely(! tp_hasnextfield(p)))
+	if (tpunlikely(! tp_hasnextfield(p)))
 		return 0;
 	p->f += p->fsz;
 fetch:;
 	register int rc = tp_ber128load(p, &p->fsz);
-	if (tp_unlikely(rc == -1))
+	if (tpunlikely(rc == -1))
 		return -1;
-	if (tp_unlikely((p->f + p->fsz) > p->e))
+	if (tpunlikely((p->f + p->fsz) > p->e))
 		return -1;
 	return 1;
 }

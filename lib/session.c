@@ -28,10 +28,7 @@
  * SUCH DAMAGE.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+#include <tarantool.h>
 
 #include <sys/time.h>
 #include <sys/types.h>
@@ -42,13 +39,10 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <limits.h>
 
-#include "session.h"
-
 static int
-tbuffer_init(struct tbuffer *b, int size)
+tb_bufinit(struct tbbuf *b, int size)
 {
 	b->off = 0;
 	b->top = 0;
@@ -63,7 +57,7 @@ tbuffer_init(struct tbuffer *b, int size)
 }
 
 static void
-tbuffer_free(struct tbuffer *b)
+tb_buffree(struct tbbuf *b)
 {
 	if (b->buf) {
 		free(b->buf);
@@ -71,7 +65,7 @@ tbuffer_free(struct tbuffer *b)
 	}
 }
 
-int tsession_init(struct tsession *s)
+int tb_sesinit(struct tbses *s)
 {
 	s->host = strdup("127.0.0.1");
 	if (s->host == NULL) {
@@ -91,24 +85,24 @@ int tsession_init(struct tsession *s)
 	return 0;
 }
 
-int tsession_free(struct tsession *s)
+int tb_sesfree(struct tbses *s)
 {
-	tsession_close(s);
+	tb_sesclose(s);
 	if (s->host) {
 		free(s->host);
 		s->host = NULL;
 	}
-	tbuffer_free(&s->s);
-	tbuffer_free(&s->r);
+	tb_buffree(&s->s);
+	tb_buffree(&s->r);
 	return 0;
 }
 
-int tsession_set(struct tsession *s, enum tsession_opt o, ...)
+int tb_sesset(struct tbses *s, enum tbsesopt o, ...)
 {
 	va_list args;
 	va_start(args, o);
 	switch (o) {
-	case TSESSION_HOST: {
+	case TB_HOST: {
 		char *p = strdup(va_arg(args, char*));
 		if (p == NULL) {
 			va_end(args);
@@ -119,20 +113,19 @@ int tsession_set(struct tsession *s, enum tsession_opt o, ...)
 		s->host = p;
 		break;
 	}
-	case TSESSION_PORT:
+	case TB_PORT:
 		s->port = va_arg(args, int);
 		break;
-	case TSESSION_SBUF:
-		s->sbuf = va_arg(args, int);
-		break;
-	case TSESSION_RBUF:
-		s->rbuf = va_arg(args, int);
-		break;
-	case TSESSION_TMC: {
+	case TB_CONNECTTM:
 		s->tmc.tv_sec  = va_arg(args, int);
 		s->tmc.tv_usec = 0;
 		break;
-	}
+	case TB_SENDBUF:
+		s->sbuf = va_arg(args, int);
+		break;
+	case TB_READBUF:
+		s->rbuf = va_arg(args, int);
+		break;
 	default:
 		va_end(args);
 		s->errno_ = EINVAL;
@@ -143,7 +136,7 @@ int tsession_set(struct tsession *s, enum tsession_opt o, ...)
 }
 
 static int
-tsession_setbufmax(struct tsession *s, int opt, int min)
+tb_sessetbufmax(struct tbses *s, int opt, int min)
 {
 	int max = 128 * 1024 * 1024;
 	if (min == 0)
@@ -160,20 +153,20 @@ tsession_setbufmax(struct tsession *s, int opt, int min)
 }
 
 static int
-tsession_setopts(struct tsession *s)
+tb_sessetopts(struct tbses *s)
 {
 	int opt = 1;
 	if (setsockopt(s->fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) == -1) {
 		s->errno_ = errno;
 		return -1;
 	}
-	tsession_setbufmax(s, SO_SNDBUF, s->sbuf);
-	tsession_setbufmax(s, SO_RCVBUF, s->rbuf);
+	tb_sessetbufmax(s, SO_SNDBUF, s->sbuf);
+	tb_sessetbufmax(s, SO_RCVBUF, s->rbuf);
 	return 0;
 }
 
 static int
-tsession_resolve(struct tsession *s, struct sockaddr_in *addr)
+tb_sesresolve(struct tbses *s, struct sockaddr_in *addr)
 {
 	memset(addr, 0, sizeof(struct sockaddr_in));
 	addr->sin_family = AF_INET;
@@ -193,7 +186,7 @@ tsession_resolve(struct tsession *s, struct sockaddr_in *addr)
 }
 
 static int
-tsession_nonblock(struct tsession *s, int set)
+tb_sesnonblock(struct tbses *s, int set)
 {
 	int flags = fcntl(s->fd, F_GETFL);
 	if (flags == -1) {
@@ -211,15 +204,15 @@ tsession_nonblock(struct tsession *s, int set)
 }
 
 static int
-tsession_connectdo(struct tsession *s)
+tb_sesconnectdo(struct tbses *s)
 {
 	/* resolve address */
 	struct sockaddr_in addr;
-	int rc = tsession_resolve(s, &addr);
+	int rc = tb_sesresolve(s, &addr);
 	if (rc == -1)
 		return -1;
 	/* set nonblock */
-	rc = tsession_nonblock(s, 1);
+	rc = tb_sesnonblock(s, 1);
 	if (rc == -1)
 		return -1;
 
@@ -287,21 +280,21 @@ tsession_connectdo(struct tsession *s)
 	}
 
 	/* set block */
-	return tsession_nonblock(s, 0);
+	return tb_sesnonblock(s, 0);
 }
 
-int tsession_connect(struct tsession *s)
+int tb_sesconnect(struct tbses *s)
 {
 	int rc;
 	if (s->s.buf == NULL) {
-		rc = tbuffer_init(&s->s, s->sbuf);
+		rc = tb_bufinit(&s->s, s->sbuf);
 		if (rc == -1) {
 			s->errno_ = ENOMEM;
 			return -1;
 		}
-		rc = tbuffer_init(&s->r, s->rbuf);
+		rc = tb_bufinit(&s->r, s->rbuf);
 		if (rc == -1) {
-			tbuffer_free(&s->s);
+			tb_buffree(&s->s);
 			s->errno_ = ENOMEM;
 			return -1;
 		}
@@ -311,17 +304,17 @@ int tsession_connect(struct tsession *s)
 		s->errno_ = errno;
 		return -1;
 	}
-	rc = tsession_setopts(s);
+	rc = tb_sessetopts(s);
 	if (rc == -1)
 		return -1;
-	rc = tsession_connectdo(s);
+	rc = tb_sesconnectdo(s);
 	if (rc == -1)
 		return -1;
 	s->connected = 1;
 	return 0;
 }
 
-int tsession_close(struct tsession *s)
+int tb_sesclose(struct tbses *s)
 {
 	int rc = 0;
 	if (s->fd != -1) {
@@ -334,7 +327,7 @@ int tsession_close(struct tsession *s)
 }
 
 static ssize_t
-tsession_sendraw(struct tsession *s, char *buf, size_t size)
+tb_sessendraw(struct tbses *s, char *buf, size_t size)
 {
 	size_t off = 0;
 	do {
@@ -353,10 +346,10 @@ tsession_sendraw(struct tsession *s, char *buf, size_t size)
 }
 
 static ssize_t
-tsession_senddo(struct tsession *s, char *buf, size_t size)
+tb_sessenddo(struct tbses *s, char *buf, size_t size)
 {
 	if (s->s.buf == NULL)
-		return tsession_sendraw(s, buf, size);
+		return tb_sessendraw(s, buf, size);
 
 	if (size > s->s.size) {
 		s->errno_ = E2BIG;
@@ -367,7 +360,7 @@ tsession_senddo(struct tsession *s, char *buf, size_t size)
 		s->s.off += size;
 		return size;
 	}
-	ssize_t r = tsession_sendraw(s, s->s.buf, s->s.off);
+	ssize_t r = tb_sessendraw(s, s->s.buf, s->s.off);
 	if (r == -1)
 		return -1;
 
@@ -377,7 +370,7 @@ tsession_senddo(struct tsession *s, char *buf, size_t size)
 }
 
 static ssize_t
-tsession_recvraw(struct tsession *s, char *buf, size_t size, int all)
+tb_sesrecvraw(struct tbses *s, char *buf, size_t size, int all)
 {
 	size_t off = 0;
 	do {
@@ -396,10 +389,10 @@ tsession_recvraw(struct tsession *s, char *buf, size_t size, int all)
 }
 
 static ssize_t
-tsession_recvdo(struct tsession *s, char *buf, size_t size)
+tb_sesrecvdo(struct tbses *s, char *buf, size_t size)
 {
 	if (s->r.buf == NULL)
-		return tsession_recvraw(s, buf, size, 1);
+		return tb_sesrecvraw(s, buf, size, 1);
 	
 	size_t lv, rv, off = 0, left = size;
 	while (1) {
@@ -417,7 +410,7 @@ tsession_recvdo(struct tsession *s, char *buf, size_t size)
 		}
 
 		s->r.off = 0;
-		ssize_t top = tsession_recvraw(s, s->r.buf, s->r.size, 0);
+		ssize_t top = tb_sesrecvraw(s, s->r.buf, s->r.size, 0);
 		if (top <= 0) {
 			s->errno_ = errno;
 			return -1;
@@ -434,23 +427,23 @@ tsession_recvdo(struct tsession *s, char *buf, size_t size)
 	return -1;
 }
 
-int tsession_sync(struct tsession *s)
+int tb_sessync(struct tbses *s)
 {
 	if (s->s.off == 0)
 		return 0;
-	ssize_t rc = tsession_sendraw(s, s->s.buf, s->s.off);
+	ssize_t rc = tb_sessendraw(s, s->s.buf, s->s.off);
 	if (rc == -1)
 		return -1;
 	s->s.off = 0;
 	return rc;
 }
 
-int tsession_send(struct tsession *s, char *buf, size_t size)
+int tb_sessend(struct tbses *s, char *buf, size_t size)
 {
-	return tsession_senddo(s, buf, size);
+	return tb_sessenddo(s, buf, size);
 }
 
-int tsession_recv(struct tsession *s, char *buf, size_t size)
+int tb_sesrecv(struct tbses *s, char *buf, size_t size)
 {
-	return tsession_recvdo(s, buf, size);
+	return tb_sesrecvdo(s, buf, size);
 }

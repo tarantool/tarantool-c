@@ -28,28 +28,10 @@
  * SUCH DAMAGE.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <inttypes.h>
-#include <assert.h>
-
-#include "file.h"
-#include "session.h"
+#include <tarantool.h>
 
 int
 main(int argc, char * argv[])
 {
-	struct tfile f;
-	int rc = tfile_open(&f, "./00000000000000000002.xlog");
-	if (rc < 0) {
-		printf("%s\n", tfile_error(&f, rc));
-		return 1;
-	}
-	while ((rc = tfile_next(&f)) > 0)
-		printf("lsn: %"PRIu64"\n", f.h.lsn);
-	if (rc < 0)
-		printf("%s\n", tfile_error(&f, rc));
-	tfile_close(&f);
 	return 0;
 }

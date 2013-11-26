@@ -1,5 +1,5 @@
-#ifndef TFILE_H_INCLUDED_
-#define TFILE_H_INCLUDED_
+#ifndef TB_FILE_H_
+#define TB_FILE_H_
 
 /*
  * Redistribution and use in source and binary forms, with or
@@ -30,58 +30,53 @@
  * SUCH DAMAGE.
 */
 
-#include <stdint.h>
-
 /*
- * tarantool v1.6 snapshot/xlog file reader
- * http://tarantool.org
+ * Tarantool v1.6 log/snapshot reader
  *
  * example:
  *
- * struct tfile f;
- * int rc = tfile_open(&f, "./00000000000000000002.xlog");
+ * struct tbfile f;
+ * int rc = tb_fileopen(&f, "./00000000000000000002.xlog");
  * if (rc < 0) {
- *    printf("%s\n", tfile_strerror(&f, rc));
+ *    printf("%s\n", tb_filestrerror(&f, rc));
  *    return 1;
  * }
- * while ((rc = tfile_next(&f)) > 0) {
+ * while ((rc = tb_filenext(&f)) > 0) {
  *    printf("lsn: %"PRIu64"\n", f.h.lsn);
  * }
  * if (rc < 0)
- *    printf("%s\n", tfile_strerror(&f, rc));
- * tfile_close(&f);
+ *    printf("%s\n", tb_filestrerror(&f, rc));
+ * tb_fileclose(&f);
  *
 */
 
-#define tfpacked __attribute__((packed))
-
 /* general error */
-#define TF_E        -1
+#define TBF_E        -1
 /* bad crc */
-#define TF_ECORRUPT -2
+#define TBF_ECORRUPT -2
 /* bad file type */
-#define TF_ETYPE    -3
+#define TBF_ETYPE    -3
 /* out of memory */
-#define TF_EOOM     -4
+#define TBF_EOOM     -4
 
-struct tfile_header {
+struct tbfileheader {
 	uint32_t crc32h;
 	uint64_t lsn;
 	double   tm;
 	uint32_t len;
 	uint32_t crc32d;
-} tfpacked;
+} tppacked;
 
-struct tfile_row {
+struct tbfilerow {
 	uint16_t tag;
 	uint64_t cookie;
 	uint16_t op;
-} tfpacked;
+} tppacked;
 
-struct tfile {
+struct tbfile {
 	FILE *f;
-	struct tfile_header h;
-	struct tfile_row r;
+	struct tbfileheader h;
+	struct tbfilerow r;
 	size_t size;
 	char *data;
 	char *p;
@@ -96,25 +91,25 @@ struct tfile {
  *
  * Returns 0 on success or < 0 otherwise.
 */
-int tfile_open(struct tfile*, char *path);
+int tb_fileopen(struct tbfile*, char *path);
 
 /* Close file.
  *
  * Returns 0 on success or < 0 otherwise.
 */
-int tfile_close(struct tfile*);
+int tb_fileclose(struct tbfile*);
 
 /* Get a error string description.
  *
  * Returns 0 on success or < 0 otherwise.
 */
-const char *tfile_error(struct tfile*, int);
+const char *tb_fileerror(struct tbfile*, int);
 
 /* Seek to the specified offset.
  *
  * Returns 0 on success or < 0 otherwise.
 */
-int tfile_seek(struct tfile*, uint64_t off);
+int tb_fileseek(struct tbfile*, uint64_t off);
 
 /* Skip to the next record.
  *
@@ -123,6 +118,6 @@ int tfile_seek(struct tfile*, uint64_t off);
  *  1   if there are still data to read
  *  < 0 on error
 */
-int tfile_next(struct tfile*);
+int tb_filenext(struct tbfile*);
 
 #endif

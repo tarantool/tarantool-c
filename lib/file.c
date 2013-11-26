@@ -28,22 +28,15 @@
  * SUCH DAMAGE.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <inttypes.h>
-#include <assert.h>
-#include <errno.h>
+#include <tarantool.h>
+#include <cksum.h>
 
-#include <file.h>
-#include <crc32.h>
+#define TBF_MARKER  0xba0babed
+#define TBF_EOF     0x10adab1e
+#define TBF_VERSION "0.12\n"
+#define TBF_MAGIC   "XLOG\n"
 
-#define TFILE_VERSION "0.12\n"
-#define TFILE_MAGIC   "XLOG\n"
-#define TFILE_MARKER  0xba0babed
-#define TFILE_EOF     0x10adab1e
-
-int tfile_open(struct tfile *f, char *path)
+int tb_fileopen(struct tbfile *f, char *path)
 {
 	char *ptr;
 	char type[32];
@@ -57,7 +50,7 @@ int tfile_open(struct tfile *f, char *path)
 	f->size = 0;
 	f->data = NULL;
 	f->error[0] = 0;
-	int e = TF_E;
+	int e = TBF_E;
 	if (path) {
 		f->f = fopen(path, "r");
 		if (f->f == NULL)
@@ -76,10 +69,10 @@ int tfile_open(struct tfile *f, char *path)
 		goto err;
 
 	/* validate meta */
-	e = TF_ETYPE;
-	if (strcmp(type, TFILE_MAGIC) != 0)
+	e = TBF_ETYPE;
+	if (strcmp(type, TBF_MAGIC) != 0)
 		goto err;
-	if (strcmp(version, TFILE_VERSION) != 0)
+	if (strcmp(version, TBF_VERSION) != 0)
 		goto err;
 
 	/* match marker */
@@ -87,7 +80,7 @@ int tfile_open(struct tfile *f, char *path)
 		char buf[256];
 		ptr = fgets(buf, sizeof(buf), f->f);
 		if (ptr == NULL) {
-			e = TF_E;
+			e = TBF_E;
 			goto err;
 		}
 		if (strcmp(ptr, "\n") == 0 ||
@@ -106,7 +99,7 @@ err:
 	return e;
 }
 
-int tfile_close(struct tfile *f)
+int tb_fileclose(struct tbfile *f)
 {
 	int rc = 0;
 	if (f->f && f->f != stdin) {
@@ -123,20 +116,20 @@ int tfile_close(struct tfile *f)
 }
 
 static inline int
-tfile_eof(struct tfile *f, char *data)
+tb_fileeof(struct tbfile *f, char *data)
 {
 	uint32_t marker = 0;
 	if (data)
 		free(data);
 	/* check eof condition */
-	if (ftello(f->f) == f->offset + sizeof(uint32_t)) {
+	if (ftello(f->f) == (off_t)(f->offset + sizeof(uint32_t))) {
 		fseeko(f->f, f->offset, SEEK_SET);
 		if (fread(&marker, sizeof(marker), 1, f->f) != 1) {
 			f->errno_ = errno;
-			return TF_E;
+			return TBF_E;
 		} else
-		if (marker != TFILE_EOF)
-			return TF_ECORRUPT;
+		if (marker != TBF_EOF)
+			return TBF_ECORRUPT;
 		f->offset = ftello(f->f);
 	}
 	/* eof */
@@ -144,7 +137,7 @@ tfile_eof(struct tfile *f, char *data)
 }
 
 static inline int
-tfile_read(struct tfile *f, char **buf)
+tb_fileread(struct tbfile *f, char **buf)
 {
 	/* save begin of the record (before marker) */
 	f->offset_begin = ftello(f->f);
@@ -153,20 +146,20 @@ tfile_read(struct tfile *f, char **buf)
 	char *data = NULL;
 	uint32_t marker = 0;
 	if (fread(&marker, sizeof(marker), 1, f->f) != 1)
-		return tfile_eof(f, data);
+		return tb_fileeof(f, data);
 
 	/* seek for marker */
-	while (marker != TFILE_MARKER) {
+	while (marker != TBF_MARKER) {
 		int c = fgetc(f->f);
 		if (c == EOF)
-			return tfile_eof(f, data);
+			return tb_fileeof(f, data);
 		marker = marker >> 8 | ((uint32_t) c & 0xff) <<
 			 (sizeof(marker) * 8 - 8);
 	}
 
 	/* read header */
 	if (fread(&f->h, sizeof(f->h), 1, f->f) != 1)
-		return tfile_eof(f, data);
+		return tb_fileeof(f, data);
 
 	/* update offset */
 	f->offset = ftello(f->f);
@@ -174,23 +167,23 @@ tfile_read(struct tfile *f, char **buf)
 	/* validate header crc */
 	uint32_t crc32h =
 		crc32c(0, (unsigned char*)&f->h + sizeof(uint32_t),
-		       sizeof(struct tfile_header) -
+		       sizeof(struct tbfileheader) -
 		       sizeof(uint32_t));
 	if (crc32h != f->h.crc32h)
-		return TF_ECORRUPT;
+		return TBF_ECORRUPT;
 
 	/* allocate memory and read the record */
 	data = malloc(f->h.len);
 	if (data == NULL)
-		return TF_EOOM;
+		return TBF_EOOM;
 	if (fread(data, f->h.len, 1, f->f) != 1)
-		return tfile_eof(f, data);
+		return tb_fileeof(f, data);
 
 	/* validate data */
 	uint32_t crc32d = crc32c(0, (unsigned char*)data, f->h.len);
 	if (crc32d != f->h.crc32d) {
 		free(data);
-		return TF_ECORRUPT;
+		return TBF_ECORRUPT;
 	}
 
 	/* set row header */
@@ -199,21 +192,21 @@ tfile_read(struct tfile *f, char **buf)
 	return 1;
 }
 
-int tfile_next(struct tfile *f)
+int tb_filenext(struct tbfile *f)
 {
 	char *p = NULL;
-	int rc = tfile_read(f, &p);
+	int rc = tb_fileread(f, &p);
 	if (rc <= 0)
 		return rc;
 	if (f->p)
 		free(f->p);
-	f->size = f->h.len - sizeof(struct tfile_row);
-	f->data = p + sizeof(struct tfile_row);
+	f->size = f->h.len - sizeof(struct tbfilerow);
+	f->data = p + sizeof(struct tbfilerow);
 	f->p = p;
 	return 1;
 }
 
-int tfile_seek(struct tfile *f, uint64_t off)
+int tb_fileseek(struct tbfile *f, uint64_t off)
 {
 	assert(f->f != NULL);
 	f->offset = off;
@@ -224,19 +217,19 @@ int tfile_seek(struct tfile *f, uint64_t off)
 }
 
 const char*
-tfile_error(struct tfile *f, int e)
+tb_fileerror(struct tbfile *f, int e)
 {
 	switch (e) {
-	case TF_E:
+	case TBF_E:
 		snprintf(f->error, sizeof(f->error),
 		         "error: %s (errno: %d)",
 		         strerror(f->errno_), f->errno_);
 		break;
-	case TF_EOOM:
+	case TBF_EOOM:
 		snprintf(f->error, sizeof(f->error),
 		         "error: out of memory");
 		break;
-	case TF_ECORRUPT:
+	case TBF_ECORRUPT:
 		snprintf(f->error, sizeof(f->error),
 		         "error: data corruption detected at offset %"PRIu64"",
 		         f->offset_begin);

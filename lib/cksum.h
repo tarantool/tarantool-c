@@ -1,5 +1,5 @@
-#ifndef TB_SESSION_H_
-#define TB_SESSION_H_
+#ifndef TB_CKSUM_H_
+#define TB_CKSUM_H_
 
 /*
  * Redistribution and use in source and binary forms, with or
@@ -30,44 +30,7 @@
  * SUCH DAMAGE.
 */
 
-/*
- * tarantool v1.6 network session
-*/
-
-struct tbbuf {
-	size_t off;
-	size_t top;
-	size_t size;
-	char *buf;
-};
-
-struct tbses {
-	char *host;
-	int port;
-	int connected;
-	struct timeval tmc;
-	int sbuf;
-	int rbuf;
-	int fd;
-	int errno_;
-	struct tbbuf s, r;
-};
-
-enum tbsesopt {
-	TB_HOST,
-	TB_PORT,
-	TB_CONNECTTM,
-	TB_SENDBUF,
-	TB_READBUF
-};
-
-int tb_sesinit(struct tbses*);
-int tb_sesfree(struct tbses*);
-int tb_sesset(struct tbses*, enum tbsesopt, ...);
-int tb_sesconnect(struct tbses*);
-int tb_sesclose(struct tbses*);
-int tb_sessync(struct tbses*);
-int tb_sessend(struct tbses*, char*, size_t);
-int tb_sesrecv(struct tbses*, char*, size_t);
+uint32_t crc32(const void *buf, size_t size);
+uint32_t crc32c(uint32_t crc32c, const unsigned char *buffer, unsigned int length);
 
 #endif

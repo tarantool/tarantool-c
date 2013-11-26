@@ -1,5 +1,5 @@
-#ifndef __BSD_CRC32_H_
-#define __BSD_CRC32_H_
+#ifndef LIBTB_H_
+#define LIBTB_H_
 
 /*
  * Redistribution and use in source and binary forms, with or
@@ -30,9 +30,38 @@
  * SUCH DAMAGE.
 */
 
-#include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-uint32_t crc32(const void *buf, size_t size);
-uint32_t crc32c(uint32_t crc32c, const unsigned char *buffer, unsigned int length);
+#include <stdlib.h>
+#include <stddef.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <string.h>
+#include <assert.h>
+#include <errno.h>
+
+#define TB_INCLUDE(NAME) <TB_PREFIX NAME>
+
+#ifndef TB_LOCAL
+# define TB_PREFIX tarantool/
+#else
+# define TB_PREFIX
+#endif
+
+#include TB_INCLUDE(tp.h)
+#include TB_INCLUDE(file.h)
+#include TB_INCLUDE(request.h)
+#include TB_INCLUDE(session.h)
+
+#undef TP_INCLUDE
+#undef TP_PREFIX
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif
