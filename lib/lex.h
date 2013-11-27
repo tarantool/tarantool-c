@@ -1,5 +1,5 @@
-#ifndef TB_UTF8_H_
-#define TB_UTF8_H_
+#ifndef TB_LEX_H_
+#define TB_LEX_H_
 
 /*
  * Redistribution and use in source and binary forms, with or
@@ -30,20 +30,51 @@
  * SUCH DAMAGE.
  */
 
-struct tbutf8 {
-	unsigned char *data;
-	size_t size;
-	size_t len;
+enum {
+	TB_TERROR = -1,
+	TB_TEOF = 0,
+	TB_TNONE = 1000,
+	TB_TNUM32,
+	TB_TNUM64,
+	TB_TID,
+	TB_TPUNCT,
+	TB_TSTRING,
+	TB_TCUSTOM = 2000
 };
 
-#define tb_utf8char(U, P) ((U)->data + (P))
+struct tbkeyword {
+	char *name;
+	int size;
+	int tk;
+};
 
-int tb_utf8init(struct tbutf8*, unsigned char*, size_t);
-void tb_utf8free(struct tbutf8*);
-ssize_t tb_utf8chrlen(unsigned char*, size_t);
-ssize_t tb_utf8len(unsigned char*, size_t);
-ssize_t tb_utf8sizeof(unsigned char*, size_t, size_t n);
-ssize_t tb_utf8next(struct tbutf8*, size_t off);
-int tb_utf8cmp(struct tbutf8*, struct tbutf8*);
+struct tbtoken {
+	int tk;
+	union {
+		int32_t i32;
+		int64_t i64;
+		struct tbutf8 s;
+	} v;
+	int line, col;
+	SLIST_ENTRY(tbtoken) next;
+	STAILQ_ENTRY(tbtoken) nextq;
+};
+
+struct tblex {
+	struct tbkeyword *keywords;
+	struct tbutf8 buf;
+	size_t pos;
+	int line, col;
+	SLIST_HEAD(,tbtoken) stack;
+	int count;
+	STAILQ_HEAD(,tbtoken) q;
+	int countq;
+	char *error;
+};
+
+int tb_lexinit(struct tblex*, struct tbkeyword*, char*, size_t);
+void tb_lexfree(struct tblex*);
+void tb_lexpush(struct tblex*, struct tbtoken*);
+int tb_lex(struct tblex*, struct tbtoken**);
 
 #endif

@@ -30,7 +30,7 @@
 
 #include <tarantool.h>
 
-int tb_utf8init(struct tbutf8 *u, const unsigned char *data, size_t size)
+int tb_utf8init(struct tbutf8 *u, unsigned char *data, size_t size)
 {
 	u->size = size;
 	u->data = malloc(u->size + 1);
@@ -57,7 +57,7 @@ void tb_utf8free(struct tbutf8 *u)
 	u->len = 0;
 }
 
-ssize_t tb_utf8chrlen(const unsigned char *data, size_t size)
+ssize_t tb_utf8chrlen(unsigned char *data, size_t size)
 {
 #define tbbit(I) (1 << (I))
 #define tbbitis(B, I) ((B) & tbbit(I))
@@ -98,7 +98,7 @@ ssize_t tb_utf8chrlen(const unsigned char *data, size_t size)
 #undef tbbitis
 }
 
-ssize_t tb_utf8len(const unsigned char *data, size_t size)
+ssize_t tb_utf8len(unsigned char *data, size_t size)
 {
 	size_t i = 0;
 	ssize_t c = 0, r = 0;
@@ -113,7 +113,7 @@ ssize_t tb_utf8len(const unsigned char *data, size_t size)
 }
 
 ssize_t
-tb_utf8sizeof(const unsigned char *data, size_t size, size_t n)
+tb_utf8sizeof(unsigned char *data, size_t size, size_t n)
 {
 	size_t i = 0, c = 0;
 	ssize_t r = 0;
@@ -129,7 +129,8 @@ tb_utf8sizeof(const unsigned char *data, size_t size, size_t n)
 	return i;
 }
 
-ssize_t tb_utf8next(struct tbutf8 *u, size_t off)
+ssize_t
+tb_utf8next(struct tbutf8 *u, size_t off)
 {
 	if (off == u->size)
 		return 0;
