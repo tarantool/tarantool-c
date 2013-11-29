@@ -28,7 +28,8 @@
  * SUCH DAMAGE.
 */
 
-#include <tarantool.h>
+#include <lib/tarantool.h>
+#include <stdio.h>
 
 int
 main(int argc, char * argv[])

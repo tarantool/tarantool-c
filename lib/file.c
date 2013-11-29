@@ -28,8 +28,8 @@
  * SUCH DAMAGE.
 */
 
-#include <tarantool.h>
-#include <cksum.h>
+#include <lib/tarantool.h>
+#include <lib/cksum.h>
 
 #define TBF_MARKER  0xba0babed
 #define TBF_EOF     0x10adab1e
