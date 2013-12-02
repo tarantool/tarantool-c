@@ -56,6 +56,7 @@ extern "C" {
 #include TB_INCLUDE(file.h)
 #include TB_INCLUDE(request.h)
 #include TB_INCLUDE(session.h)
+#include TB_INCLUDE(console.h)
 #include TB_INCLUDE(utf8.h)
 #include TB_INCLUDE(queue.h)
 #include TB_INCLUDE(lex.h)
