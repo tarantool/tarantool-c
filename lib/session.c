@@ -323,6 +323,7 @@ int tb_sesclose(struct tbses *s)
 			s->errno_ = errno;
 		s->fd = -1;
 	}
+	s->connected = 0;
 	return rc;
 }
 

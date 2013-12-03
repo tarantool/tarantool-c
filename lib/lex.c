@@ -34,7 +34,8 @@
 
 int tb_lexinit(struct tblex *l, struct tbkeyword *list, char *buf, size_t size)
 {
-	if (! tb_utf8init(&l->buf, (unsigned char*)buf, size))
+	int rc = tb_utf8init(&l->buf, (unsigned char*)buf, size);
+	if (rc == -1)
 		return -1;
 	l->keywords = list;
 	l->pos = 0;
