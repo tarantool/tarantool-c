@@ -2,6 +2,38 @@
 #define TB_H_
 
 /*
+ * Copyright (c) 2012-2013 Tarantool AUTHORS
+ * (https://github.com/tarantool/tarantool/blob/master/AUTHORS)
+ *
+ * Redistribution and use in source and binary forms, with or
+ * without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above
+ *    copyright notice, this list of conditions and the
+ *    following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above
+ *    copyright notice, this list of conditions and the following
+ *    disclaimer in the documentation and/or other materials
+ *    provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY <COPYRIGHT HOLDER> ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+ * <COPYRIGHT HOLDER> OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+ * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+*/
+
+/*
 	Example:
 
 	struct tb t;
@@ -103,6 +135,15 @@ tb_unused(struct tb *t) {
 	return t->e - t->p;
 }
 
+__attribute__((unused)) static char*
+tb_realloc(struct tb *t, size_t required, size_t *size) {
+	size_t toalloc = tb_size(t) * 2;
+	if (toalloc < required)
+		toalloc = tb_size(t) + required;
+	*size = toalloc;
+	return realloc(t->s, toalloc);
+}
+
 static inline int
 tb_ensure(struct tb *t, size_t size)
 {
@@ -145,8 +186,7 @@ tb_encode(struct tb *t, uint32_t op)
 	if (rc == -1)
 		return NULL;
 	t->r = t->p;
-	/**(uint32_t*)(t->r) = mp_bswap_u32(op);*/
-	*(uint32_t*)(t->r) = op;
+	*(uint32_t*)(t->r) = mp_bswap_u32(op);
 	*(uint32_t*)(t->r + sizeof(uint32_t)) = 0;
 	return t->r + 8;
 }
@@ -155,30 +195,12 @@ static inline void
 tb_finish(struct tb *t, char *ptr)
 {
 	assert(t->r != NULL);
-	*(uint32_t*)(t->r + sizeof(uint32_t)) = t->p - t->r;
-	/*
 	*(uint32_t*)(t->r + sizeof(uint32_t)) =
 		mp_bswap_u32(t->p - t->r);
-		*/
 	t->r = NULL;
 	if (ptr)
 		tb_advance(t, ptr);
 }
-
-/* bitmap keys */
-#define tbbit(x) (1 << x)
-
-#define TB_BSYNC     tbbit(1)
-#define TB_BSHARD_ID tbbit(2)
-#define TB_BSPACE    tbbit(3)
-#define TB_BINDEX    tbbit(4)
-#define TB_BOFFSET   tbbit(5)
-#define TB_BLIMIT    tbbit(6)
-#define TB_BITERATOR tbbit(7)
-#define TB_BPROCNAME tbbit(8)
-#define TB_BEXPRS    tbbit(9)
-#define TB_BKEYS     tbbit(10)
-#define TB_BTUPLES   tbbit(11)
 
 struct tbrequest {
 	uint32_t request_type;
@@ -198,6 +220,8 @@ struct tbrequest {
 	const char *tuples;
 };
 
+#define tb_setbit(r, f) (r->bitmap |= (1 << (f)))
+
 static inline int64_t
 tb_decode(struct tbrequest *r, char *buf, size_t size)
 {
@@ -210,61 +234,80 @@ tb_decode(struct tbrequest *r, char *buf, size_t size)
 	p += 8;
 	if (r->len > (size - 8))
 		return -1;
+	if (r->request_type != TB_SELECT  &&
+	    r->request_type != TB_INSERT  &&
+	    r->request_type != TB_REPLACE &&
+	    r->request_type != TB_STORE   &&
+	    r->request_type != TB_UPDATE  &&
+	    r->request_type != TB_DELETE  &&
+	    r->request_type != TB_CALL)
+		return -1;
 	uint32_t n = mp_decode_map(&p);
 	uint32_t i = 0;
 	while (i < n) {
 		uint64_t k = mp_decode_uint(&p);
 		switch (k) {
 		case TB_SYNC:
-			r->bitmap |= TB_BSYNC;
+			if (mp_typeof(*p) != MP_UINT)
+				return -1;
 			r->sync = mp_decode_uint(&p);
 			break;
 		case TB_SHARD_ID:
-			r->bitmap |= TB_BSHARD_ID;
+			if (mp_typeof(*p) != MP_UINT)
+				return -1;
 			r->shard_id = mp_decode_uint(&p);
 			break;
 		case TB_SPACE:
-			r->bitmap |= TB_BSPACE;
+			if (mp_typeof(*p) != MP_UINT)
+				return -1;
 			r->space = mp_decode_uint(&p);
 			break;
 		case TB_INDEX:
-			r->bitmap |= TB_BINDEX;
+			if (mp_typeof(*p) != MP_UINT)
+				return -1;
 			r->index = mp_decode_uint(&p);
 			break;
 		case TB_OFFSET:
-			r->bitmap |= TB_BOFFSET;
+			if (mp_typeof(*p) != MP_UINT)
+				return -1;
 			r->offset = mp_decode_uint(&p);
 			break;
 		case TB_LIMIT:
-			r->bitmap |= TB_BLIMIT;
+			if (mp_typeof(*p) != MP_UINT)
+				return -1;
 			r->limit = mp_decode_uint(&p);
 			break;
 		case TB_ITERATOR:
-			r->bitmap |= TB_BITERATOR;
+			if (mp_typeof(*p) != MP_UINT)
+				return -1;
 			r->iterator = mp_decode_uint(&p);
 			break;
 		case TB_PROCNAME:
-			r->bitmap |= TB_BPROCNAME;
+			if (mp_typeof(*p) != MP_STR)
+				return -1;
 			r->procname = mp_decode_str(&p, &r->proclen);
 			break;
 		case TB_EXPRS:
-			r->bitmap |= TB_BEXPRS;
+			if (mp_typeof(*p) != MP_ARRAY)
+				return -1;
 			r->exprs = p;
 			mp_next(&p);
 			break;
 		case TB_KEYS:
-			r->bitmap |= TB_BKEYS;
+			if (mp_typeof(*p) != MP_ARRAY)
+				return -1;
 			r->keys = p;
 			mp_next(&p);
 			break;
 		case TB_TUPLES:
-			r->bitmap |= TB_BTUPLES;
+			if (mp_typeof(*p) != MP_ARRAY)
+				return -1;
 			r->tuples = p;
 			mp_next(&p);
 			break;
-		default:
-			return -1;
+		default: return -1;
 		}
+		tb_setbit(r, k);
 	}
 	return r->bitmap;
 }
