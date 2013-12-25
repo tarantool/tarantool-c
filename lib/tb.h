@@ -96,9 +96,12 @@ static inline int
 tb_init(struct tb *t, char *buf, size_t size,
         tb_reserve reserve, void *obj)
 {
-	t->s = buf;
-	t->p = t->s;
-	t->e = t->s + size;
+	memset(t, 0, sizeof(*t));
+	if (buf) {
+		t->s = buf;
+		t->p = t->s;
+		t->e = t->s + size;
+	}
 	t->reserve = reserve;
 	t->obj = obj;
 	if (!buf && size > 0) {
@@ -141,7 +144,7 @@ tb_realloc(struct tb *t, size_t required, size_t *size) {
 	if (toalloc < required)
 		toalloc = tb_size(t) + required;
 	*size = toalloc;
-	return realloc(t->s, toalloc);
+	return (char*)realloc(t->s, toalloc);
 }
 
 static inline int
@@ -187,8 +190,10 @@ tb_encode(struct tb *t, uint32_t op)
 		return NULL;
 	t->r = t->p;
 	*(uint32_t*)(t->r) = mp_bswap_u32(op);
-	*(uint32_t*)(t->r + sizeof(uint32_t)) = 0;
-	return t->r + 8;
+	*(uint32_t*)(t->r + sizeof(uint32_t)) =
+		mp_bswap_u32(0);
+	t->p += 8;
+	return t->p;
 }
 
 static inline void
@@ -196,13 +201,13 @@ tb_finish(struct tb *t, char *ptr)
 {
 	assert(t->r != NULL);
 	*(uint32_t*)(t->r + sizeof(uint32_t)) =
-		mp_bswap_u32(t->p - t->r);
+		mp_bswap_u32(ptr - t->p);
 	t->r = NULL;
-	if (ptr)
-		tb_advance(t, ptr);
+	tb_advance(t, ptr);
 }
 
 struct tbrequest {
+	const char *data;
 	uint32_t request_type;
 	uint32_t len;
 	uint64_t bitmap;
@@ -214,34 +219,27 @@ struct tbrequest {
 	uint32_t limit;
 	uint8_t iterator;
 	const char *procname;
-	uint32_t proclen;
+	uint32_t procname_len;
 	const char *exprs;
+	const char *exprs_end;
 	const char *keys;
+	const char *keys_end;
 	const char *tuples;
+	const char *tuples_end;
 };
 
-#define tb_setbit(r, f) (r->bitmap |= (1 << (f)))
+#define tbbit(f)       (1ULL << (f))
+#define tbbitset(r, f) ((r)->bitmap | tbbit(f))
+#define tbhas(r, f)    ((r)->bitmap & tbbit(f))
 
 static inline int64_t
-tb_decode(struct tbrequest *r, char *buf, size_t size)
+tb_decode_body(struct tbrequest *r, uint32_t type, const char *buf, uint32_t len)
 {
-	if (size < 8)
-		return -1;
 	const char *p = buf;
-	r->request_type = *(uint32_t*)(p);
-	r->len = *(uint32_t*)(p + 4);
+	r->data = buf;
+	r->request_type = type;
+	r->len = len;
 	r->bitmap = 0;
-	p += 8;
-	if (r->len > (size - 8))
-		return -1;
-	if (r->request_type != TB_SELECT  &&
-	    r->request_type != TB_INSERT  &&
-	    r->request_type != TB_REPLACE &&
-	    r->request_type != TB_STORE   &&
-	    r->request_type != TB_UPDATE  &&
-	    r->request_type != TB_DELETE  &&
-	    r->request_type != TB_CALL)
-		return -1;
 	uint32_t n = mp_decode_map(&p);
 	uint32_t i = 0;
 	while (i < n) {
@@ -285,31 +283,58 @@ tb_decode(struct tbrequest *r, char *buf, size_t size)
 		case TB_PROCNAME:
 			if (mp_typeof(*p) != MP_STR)
 				return -1;
-			r->procname = mp_decode_str(&p, &r->proclen);
+			r->procname = mp_decode_str(&p, &r->procname_len);
 			break;
 		case TB_EXPRS:
 			if (mp_typeof(*p) != MP_ARRAY)
 				return -1;
 			r->exprs = p;
 			mp_next(&p);
+			r->exprs_end = p;
 			break;
 		case TB_KEYS:
 			if (mp_typeof(*p) != MP_ARRAY)
 				return -1;
 			r->keys = p;
 			mp_next(&p);
+			r->keys_end = p;
 			break;
 		case TB_TUPLES:
 			if (mp_typeof(*p) != MP_ARRAY)
 				return -1;
 			r->tuples = p;
 			mp_next(&p);
+			r->tuples_end = p;
 			break;
 		default: return -1;
 		}
-		tb_setbit(r, k);
+		r->bitmap = tbbitset(r, k);
+		i++;
 	}
 	return r->bitmap;
+}
+
+static inline int64_t
+tb_decode(struct tbrequest *r, char *buf, size_t size)
+{
+	if (size < 8)
+		return -1;
+	const char *p = buf;
+	uint32_t type = *(uint32_t*)(p);
+	uint32_t len = *(uint32_t*)(p + 4);
+	if (len > (size - 8))
+		return -1;
+	switch (type) {
+	case TB_SELECT:
+	case TB_INSERT:
+	case TB_REPLACE:
+	case TB_STORE:
+	case TB_UPDATE:
+	case TB_DELETE:
+	case TB_CALL:
+		return 0;
+	}
+	return tb_decode_body(r, type, buf, len);
 }
 
 #if defined(__cplusplus)

@@ -34,6 +34,39 @@
 int
 main(int argc, char * argv[])
 {
+#if 0
+	char buf[1024];
+	struct tb t;
+	int rc = tb_init(&t, buf, 1024, NULL, NULL);
+	if (rc == -1)
+		return -1;
+	char *p = tb_encode(&t, TB_INSERT);
+	p = mp_encode_map(p, 2);
+	p = mp_encode_uint(p, TB_SPACE);
+	p = mp_encode_uint(p, 0);
+	p = mp_encode_uint(p, TB_TUPLES);
+	p = mp_encode_array(p, 1);
+	p = mp_encode_array(p, 2);
+	p = mp_encode_uint(p, 10);
+	p = mp_encode_uint(p, 15);
+	tb_finish(&t, p);
+
+	struct tbses s;
+	tb_sesinit(&s);
+	tb_sesset(&s, TB_HOST, "127.0.0.1");
+	tb_sesset(&s, TB_PORT, 33013);
+	tb_sesset(&s, TB_SENDBUF, 0);
+	tb_sesset(&s, TB_READBUF, 0);
+	rc = tb_sesconnect(&s);
+	if (rc == -1)
+		return 1;
+
+	tb_sessend(&s, t.s, tb_used(&t));
+#endif
+
+	(void)argc;
+	(void)argv;
+
 	printf("ok\n");
 	return 0;
 }
