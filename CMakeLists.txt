@@ -42,20 +42,20 @@ set_target_properties(tb_shared PROPERTIES COMPILE_FLAGS "${LIBTB_CFLAGS}")
 set_target_properties(tb_shared PROPERTIES VERSION ${LIBTB_VERSION} SOVERSION ${LIBTB_SOVERSION})
 set_target_properties(tb_shared PROPERTIES OUTPUT_NAME ${LIBTB_NAME})
 
-install(TARGETS tb ARCHIVE DESTINATION lib)
-install(TARGETS tb_shared LIBRARY DESTINATION lib)
+#install(TARGETS tb ARCHIVE DESTINATION lib)
+#install(TARGETS tb_shared LIBRARY DESTINATION lib)
 
-install(FILES
-        ${LIBTB_ROOT}/lib/file.h
-        ${LIBTB_ROOT}/lib/request.h
-        ${LIBTB_ROOT}/lib/session.h
-        ${LIBTB_ROOT}/lib/console.h
-        ${LIBTB_ROOT}/lib/utf8.h
-        ${LIBTB_ROOT}/lib/lex.h
-        ${LIBTB_ROOT}/lib/tp.h
-        DESTINATION include/tarantool)
-install(FILES ${LIBTB_ROOT}/lib/tarantool.h
-        DESTINATION include)
+#install(FILES
+#        ${LIBTB_ROOT}/lib/file.h
+#        ${LIBTB_ROOT}/lib/request.h
+#        ${LIBTB_ROOT}/lib/session.h
+#        ${LIBTB_ROOT}/lib/console.h
+#        ${LIBTB_ROOT}/lib/utf8.h
+#        ${LIBTB_ROOT}/lib/lex.h
+#        ${LIBTB_ROOT}/lib/tp.h
+#        DESTINATION include/tarantool)
+#install(FILES ${LIBTB_ROOT}/lib/tarantool.h
+#        DESTINATION include)
 
 add_subdirectory(test)
 
