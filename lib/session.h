@@ -34,6 +34,8 @@
  * tarantool v1.6 network session
 */
 
+#include <sys/time.h>
+
 struct tbbuf {
 	size_t off;
 	size_t top;
