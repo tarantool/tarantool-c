@@ -38,6 +38,9 @@ project(LIBTB_SHARED)
 
 add_library(tb_shared SHARED SHARED ${LIBTB_SRC})
 
+string(REPLACE "-static-libgcc" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+string(REPLACE "-static" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+
 set_target_properties(tb_shared PROPERTIES COMPILE_FLAGS "${LIBTB_CFLAGS}")
 set_target_properties(tb_shared PROPERTIES VERSION ${LIBTB_VERSION} SOVERSION ${LIBTB_SOVERSION})
 set_target_properties(tb_shared PROPERTIES OUTPUT_NAME ${LIBTB_NAME})
