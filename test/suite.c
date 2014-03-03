@@ -29,43 +29,56 @@
 */
 
 #include <lib/tarantool.h>
+
 #include <stdio.h>
 
 int
 main(int argc, char * argv[])
 {
-#if 0
-	char buf[1024];
-	struct tb t;
-	int rc = tb_init(&t, buf, 1024, NULL, NULL);
-	if (rc == -1)
-		return -1;
-	char *p = tb_encode(&t, TB_INSERT);
-	p = mp_encode_map(p, 2);
-	p = mp_encode_uint(p, TB_SPACE);
-	p = mp_encode_uint(p, 0);
-	p = mp_encode_uint(p, TB_TUPLES);
-	p = mp_encode_array(p, 1);
-	p = mp_encode_array(p, 2);
-	p = mp_encode_uint(p, 10);
-	p = mp_encode_uint(p, 15);
-	tb_finish(&t, p);
-
-	struct tbses s;
-	tb_sesinit(&s);
-	tb_sesset(&s, TB_HOST, "127.0.0.1");
-	tb_sesset(&s, TB_PORT, 33013);
-	tb_sesset(&s, TB_SENDBUF, 0);
-	tb_sesset(&s, TB_READBUF, 0);
-	rc = tb_sesconnect(&s);
-	if (rc == -1)
-		return 1;
-
-	tb_sessend(&s, t.s, tb_used(&t));
-#endif
-
 	(void)argc;
 	(void)argv;
+
+#if 0
+#define MP_SOURCE 1
+#include "msgpuck.h"
+
+#include <lib/iproto.h>
+
+char buf[1024];
+char *p = buf + 5;
+p = mp_encode_map(p, 2);
+p = mp_encode_uint(p, TB_CODE);
+p = mp_encode_uint(p, TB_INSERT);
+p = mp_encode_uint(p, TB_SYNC);
+p = mp_encode_uint(p, 0);
+p = mp_encode_map(p, 2);
+p = mp_encode_uint(p, TB_SPACE);
+p = mp_encode_uint(p, 0);
+p = mp_encode_uint(p, TB_TUPLE);
+p = mp_encode_array(p, 2);
+p = mp_encode_uint(p, 10);
+p = mp_encode_uint(p, 20);
+uint32_t size = p - buf;
+*buf = 0xce;
+*(uint32_t*)(buf+1) = mp_bswap_u32(size - 5);
+
+struct tbses s;
+tb_sesinit(&s);
+tb_sesset(&s, TB_HOST, "127.0.0.1");
+tb_sesset(&s, TB_PORT, 33013);
+tb_sesset(&s, TB_SENDBUF, 0);
+tb_sesset(&s, TB_READBUF, 0);
+int rc = tb_sesconnect(&s);
+if (rc == -1)
+	return 1;
+tb_sessend(&s, buf, size);
+
+ssize_t len = tb_sesrecv(&s, buf, sizeof(buf), 0);
+struct tbresponse rp;
+int64_t r = tb_response(&rp, buf, len);
+if (r == -1)
+	return 1;
+#endif
 
 	printf("ok\n");
 	return 0;
