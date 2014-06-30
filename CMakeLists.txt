@@ -18,7 +18,7 @@ endif()
 
 add_definitions("-DTB_LOCAL=${LIBTB_ROOT}/lib")
 
-include_directories("${LIBTB_ROOT}")
+include_directories("${LIBTB_ROOT}" "${LIBTB_ROOT}/lib" "${LIBTB_ROOT}/lib/msgpuck" "${LIBTB_ROOT}/lib/third_party")
 
 set(LIBTB_SRC
     ${LIBTB_ROOT}/lib/file.c
@@ -26,7 +26,10 @@ set(LIBTB_SRC
     ${LIBTB_ROOT}/lib/session.c
     ${LIBTB_ROOT}/lib/console.c
     ${LIBTB_ROOT}/lib/utf8.c
-    ${LIBTB_ROOT}/lib/lex.c)
+    ${LIBTB_ROOT}/lib/lex.c
+    ${LIBTB_ROOT}/lib/third_party/base64.c
+    ${LIBTB_ROOT}/lib/third_party/sha1.c
+    ${LIBTB_ROOT}/lib/tp.c)
 
 add_library(tb STATIC ${LIBTB_SRC})
 

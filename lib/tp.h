@@ -1,329 +1,157 @@
 #ifndef TP_H_INCLUDED
 #define TP_H_INCLUDED
 
-/*
- * TP - Tarantool Protocol library.
- * (http://tarantool.org)
- *
- * protocol description:
- * https://github.com/tarantool/tarantool/blob/master/doc/box-protocol.txt
- * -------------------
- *
- * TP - a C library designed to create requests and process
- * replies to or from a Tarantool server.
- *
- * The library is designed to be used by a C/C++ application which
- * requires sophisticated memory control and/or performance.
- *
- * The library does not support network operations. All operations
- * are done in a user supplied buffer and with help of
- * a user-supplied allocator.
- *
- * The primary purpose of the library was to spare implementors
- * of Tarantool drivers in other languages, such as Perl,
- * Ruby, Python, etc, from the details of the binary protocol, and
- * also to make it possible to avoid double-buffering by writing
- * directly to/from language objects from/to a serialized binary
- * packet stream. This paradigm makes data transfer from domain
- * language types (such as strings, scalars, numbers, etc) to
- * the network format direct, and, therefore, most efficient.
- *
- * As a side effect, the library is usable in any kind of
- * networking environment: synchronous with buffered sockets, or
- * asynchronous event-based, as well as with cooperative
- * multitasking.
- *
- * Before using the library, please get acquainted with
- * Tarnatool binary protocol, documented at
- * https://github.com/tarantool/tarantool/blob/master/doc/box-protocol.txt
- *
- * BASIC REQUEST STRUCTURE
- * -----------------------
- *
- * Any request in Tarantool consists of a 12-byte header,
- * containing request type, id and length, and an optional tuple
- * or tuples. Similarly, a response carries back the same request
- * type and id, and then a tuple or tuples.
- *
- * Below is a step-by-step tutorial for creating requests
- * and unpacking responses.
- *
- * TO ASSEMBLE A REQUEST
- * ---------------------
- *
- * (1) initialize an instance of struct tp with tp_init().
- * Provide tp_init() with a buffer and an (optional) allocator
- * function.
- *
- * (2) construct requests by sequentially calling necessary
- * operations, such as tp_insert(), tp_delete(), tp_update(),
- * tp_call(). Note: these operations only append to the buffer
- * a request header, a body of the request, which is usually
- * a tuple, must be appended to the buffer with a separate call.
- * Each next call of tp_*() API appends request data to
- * the tail of the buffer. If the buffer becomes too small to
- * contain the binary stream, the reallocation function is
- * invoked to enlarge the buffer.
- * A buffer can contain multiple requests: Tarantool
- * handles them all asynchronously, sending responses
- * back as soon as they are ready. The request id can be then
- * used to associate responses with requests.
- *
- * For example:
- *
- * char buf[256];
- * struct tp req;
- * // initialize request buffer
- * tp_init(&req, buf, sizeof(buf), NULL, NULL);
- * // append INSERT packet header to the buffer
- * // request flags are empty, request id is 0
- * tp_insert(&req, 0, 0);
- * // begin appending a tuple to the request
- * tp_tuple(&req);
- * // append one tuple field
- * tp_sz(&req, "key");
- * // one more tuple field
- * tp_sz(&req, "value");
- *
- * (3) the buffer can be used right after all requests are
- * appended to it. tp_used() can be used to get the current
- * buffer size:
- *
- * write(1, buf, tp_used(&req)); // write the buffer to stdout
- *
- * (4) When no longer needed, the buffer must be freed manually.
- *
- * For additional examples, please read the documentation for
- * buffer operations.
- *
- * PROCESSING A REPLY
- * ------------------
- *
- * (1) tp_init() must be called with a pointer to a buffer which
- * already stores or will eventually receive the server response.
- * Functions tp_reqbuf() and tp_req() can be then used to examine
- * if a network buffer contains a full reply or not.
- *
- * Following is an example of tp_req() usage (reading from stdin
- * and parsing it until a response is completely read):
- *
- * struct tp rep;
- * tp_init(&rep, NULL, 0, tp_realloc, NULL);
- *
- * while (1) {
- *  ssize_t to_read = tp_req(&rep);
- *  printf("to_read: %zu\n", to_read);
- *  if (to_read <= 0)
- *    break;
- *  ssize_t new_size = tp_ensure(&rep, to_read);
- *  printf("new_size: %zu\n", new_size);
- *  if (new_size == -1)
- *    return -1;
- *  int rc = fread(rep.p, to_read, 1, stdin);
- *  if (rc != 1)
- *    return 1;
- *  // discard processed data and make space available
- *  // for new input:
- *  tp_use(&rep, to_read);
- * }
- *
- * (2) tp_reply() function can be used to find out if the request
- * is executed successfully or not:
- * server_code = tp_reply(&reply);
- *
- * if (server_code != 0) {
- *   printf("error: %-.*s\n", tp_replyerrorlen(&rep),
- *          tp_replyerror(&rep));
- * }
- *
- * Note: the library itself doesn't contain #defines for server
- * error codes. They are defined in
- * https://github.com/tarantool/tarantool/blob/master/include/errcode.h
- *
- * A server failure can be either transient or persistent. For
- * example, a failure to allocate memory is transient: as soon as
- * some data is deleted, the request can be executed again, this
- * time successfully. A constraint violation is a non-transient
- * error: it persists regardless of how many times a request
- * is re-executed. Server error codes can be analyzed to better
- * handle an error.
- *
- * (3) The server usually responds to any kind of request with a
- * tuple. Tuple data can be accessed via tp_next(), tp_nextfield(),
- * tp_gettuple(), tp_getfield().
- *
- * See the docs for tp_reply() and tp_next()/tp_nextfield() for an
- * example.
- *
- * API RETURN VALUE CONVENTION
- * ---------------------------
- *
- * API functions return 0 on success, -1 on error.
- * If a function appends data to struct tp, it returns the
- * size appended on success, or -1 on error.
- *
- * SEE ALSO
- * --------
- *
- * TP is used by Tarantool Perl driver:
- * https://github.com/dr-co/dr-tarantool/blob/master/Tarantool.xs
-*/
-
-/*
- * Copyright (c) 2012-2013 Tarantool AUTHORS
- * (https://github.com/tarantool/tarantool/blob/master/AUTHORS)
- *
- * Redistribution and use in source and binary forms, with or
- * without modification, are permitted provided that the following
- * conditions are met:
- *
- * 1. Redistributions of source code must retain the above
- *    copyright notice, this list of conditions and the
- *    following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials
- *    provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY <COPYRIGHT HOLDER> ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
- * <COPYRIGHT HOLDER> OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
- * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
-*/
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#include "msgpuck.h"
+#include "sha1.h"
+#include "base64.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define tpfunction_unused __attribute__((unused))
-#define tppacked __attribute__((packed))
-#define tpinline __attribute__((forceinline))
-#define tpnoinline __attribute__((noinline))
-#if defined(__GNUC__)
-#if (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
-#define tphot __attribute__((hot))
-#endif
-#endif
-#if !defined(tphot)
-#define tphot
+
+#if !defined __GNUC_MINOR__ || defined __INTEL_COMPILER || \
+	defined __SUNPRO_C || defined __SUNPRO_CC
+#define TP_GCC_VERSION(major, minor) 0
+#else
+#define TP_GCC_VERSION(major, minor) (__GNUC__ > (major) || \
+	(__GNUC__ == (major) && __GNUC_MINOR__ >= (minor)))
 #endif
 
-#define tplikely(expr) __builtin_expect(!! (expr), 1)
-#define tpunlikely(expr) __builtin_expect(!! (expr), 0)
+#if !defined(__has_builtin)
+#define __has_builtin(x) 0 /* clang */
+#endif
 
+#if TP_GCC_VERSION(2, 9) || __has_builtin(__builtin_expect)
+#define tplikely(x) __builtin_expect(!!(x), 1)
+#define tpunlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define tplikely(x) (x)
+#define tpunlikely(x) (x)
+#endif
+
+/* {{{ API declaration */
 struct tp;
 
-/* Reallocation function, can be customized for own use */
 typedef char *(*tp_reserve)(struct tp *p, size_t req, size_t *size);
 
-/* request types */
-#define TP_PING     65280
-#define TP_INSERT   13
-#define TP_SELECT   17
-#define TP_UPDATE   19
-#define TP_DELETE13 20
-#define TP_DELETE   21
-#define TP_CALL     22
-
-/* requests flags */
-#define TP_BOX_RETURN_TUPLE  1
-#define TP_BOX_ADD           2
-#define TP_BOX_REPLACE       4
-
-/* update operation codes */
-#define TP_OPSET    0
-#define TP_OPADD    1
-#define TP_OPAND    2
-#define TP_OPXOR    3
-#define TP_OPOR     4
-#define TP_OPSPLICE 5
-#define TP_OPDELETE 6
-#define TP_OPINSERT 7
-
-/* internal protocol headers */
-struct tp_h {
-	uint32_t type, len, reqid;
-} tppacked;
-
-struct tp_hinsert {
-	uint32_t space, flags;
-} tppacked;
-
-struct tp_hdelete {
-	uint32_t space, flags;
-} tppacked;
-
-struct tp_hdelete13 {
-	uint32_t space;
-} tppacked;
-
-struct tp_hupdate {
-	uint32_t space, flags;
-} tppacked;
-
-struct tp_hcall {
-	uint32_t flags;
-} tppacked;
-
-struct tp_hselect {
-	uint32_t space, index;
-	uint32_t offset;
-	uint32_t limit;
-	uint32_t keyc;
-} tppacked;
+/**
+ * tp greetings object - points to parts of a greetings buffer.
+ */
+struct tpgreeting {
+	const char *description; /* Points to a text containg tarantool name and version */
+	const char *salt_base64; /* Points to connecion salt in base64 encodong */
+};
 
 /*
- * Main tp object - points either to a request buffer, or to
- * a response.
+ * Main tp request object - points to a request buffer.
  *
  * All fields except tp->p should not be accessed directly.
  * Appropriate accessors should be used instead.
 */
 struct tp {
-	struct tp_h *h;        /* current request header */
 	char *s, *p, *e;       /* start, pos, end */
-	char *t, *f, *u;       /* tuple, tuple field, update operation */
-	char *c;               /* reply parsing position */
-	uint32_t tsz, fsz, tc; /* tuple size, field size, tuple count */
-	uint32_t code;         /* reply server code */
-	uint32_t cnt;          /* reply tuple count */
+	char *size;            /* pointer to lenght field of current request */
+	char *sync;            /* pointer to sync field of current request */
 	tp_reserve reserve;    /* realloc function pointer */
-	void *obj;             /* reallocation context pointer */
+	void *obj;             /* realloc function pointer */
 };
 
-/* Get the size of the allocated buffer */
-static inline size_t
-tp_size(struct tp *p) {
-	return p->e - p->s;
-}
+/**
+ * Struct for iterating msgpack array
+ *
+ * struct tp_array_itr itr;
+ * if (tp_array_itr_init(&itr, buf, buf_size))
+ * 	panic("It's not a valid array!.");
+ * while (tp_array_itr_next(&itr)) {
+ * 	mp_print(itr.elem, itr.elem_end);
+ * 	// or do smth else with itr.elem
+ * }
+ */
+struct tp_array_itr {
+	const char *data; /* pointer to the beginning of array */
+	const char *first_elem; /* pointer to the first element of array */
+	const char *elem; /* pointer to current element of array */
+	const char *elem_end; /* pointer to current element end of array */
+	uint32_t elem_count; /* number of elements in array */
+	int cur_index; /* index of current element */
+};
 
-/* Get the size of data in the buffer */
-static inline size_t
-tp_used(struct tp *p) {
-	return p->p - p->s;
-}
+/**
+ * Struct for iterating msgpack map
+ *
+ * struct tp_map_itr itr;
+ * if (tp_map_itr_init(&itr, buf, buf_size))
+ * 	panic("It's not a valid map!.");
+ * while(tp_map_itr_next(&itr)) {
+ * 	mp_print(itr.key, itr.key_end);
+ * 	mp_print(itr.value, itr.value_end);
+ * 	// or do smth else with itr.key and itr.value
+ * }
+ */
+struct tp_map_itr {
+	const char *data; /* pointer to the beginning of map */
+	const char *first_key; /* pointer to the first key of map */
+	const char *key; /* pointer to current key of map */
+	const char *key_end; /* pointer to current key end */
+	const char *value; /* pointer to current value of map */
+	const char *value_end; /* pointer to current value end */
+	uint32_t pair_count; /* number of key-values pairs in array */
+	int cur_index; /* index of current pair */
+};
 
-/* Get the size available for write */
-static inline size_t
-tp_unused(struct tp *p) {
-	return p->e - p->p;
-}
+/**
+ * tp response object - points to parts of a response buffer
+ */
+struct tpresponse {
+	uint64_t bitmap;               /* bitmap of field IDs that was read from response */
+	const char *buf;               /* points to begin of buffer */
+	uint32_t code;                 /* response code (0 is success, or errno if not) */
+	uint32_t sync;                 /* synchronization id */
+	const char *error;             /* eror message (NULL if not present) */
+	const char *error_end;         /* end of error message (NULL if not present) */
+	const char *data;              /* tuple data (NULL if not present) */
+	const char *data_end;          /* end if tuple data (NULL if not present) */
+	struct tp_array_itr tuple_itr; /* internal iterator over tuples */
+	struct tp_array_itr field_itr; /* internal iterator over tuple fields */
+};
 
-/* A common reallocation function, can be used
+/**
+ * Receice greetings from the server.
+ * Note, the input buffer is not copied,
+ * so freeing or reusing the input buffer will invalidate tpgreeting struct
+ * For example salt is used for autorizaion (tp_auth).
+ * Returns 0 if buffer is too small or greetings size (128) on success
+ */
+static ssize_t
+tp_greeting(struct tpgreeting *g, char *buf, size_t size);
+
+/**
+ * Main request initialization function.
+ *
+ * buf     - current buffer, may be NULL
+ * size    - current buffer size
+ * reserve - reallocation function, may be NULL
+ * obj     - pointer to be passed to the reallocation function as
+ *           context
+ *
+ * Either a buffer pointer or a reserve function must be
+ * provided.
+ * If reserve function is provided, data must be manually freed
+ * when the buffer is no longer needed.
+ *  (eg. free(p->s) or tp_free(p) );
+ */
+static void
+tp_init(struct tp *p, char *buf, size_t size,
+        tp_reserve reserve, void *obj);
+
+/**
+ * A common reallocation function, can be used
  * for 'reserve' param in tp_init().
  * Resizes the buffer twice the previous size using realloc().
  *
@@ -333,16 +161,634 @@ tp_unused(struct tp *p) {
  *
  * data must be manually freed when the buffer is no longer
  * needed.
- * (eg. free(p->s));
+ * (eg. free(p->s) or tp_free(p) );
  * if realloc will return NULL, then you must destroy previous memory.
  * (eg.
  * if (tp_realloc(p, ..) == NULL) {
- * 	free(p->s)
+ * 	tp_free(p)
  * 	return NULL;
  * }
 */
 tpfunction_unused static char*
-tp_realloc(struct tp *p, size_t required, size_t *size) {
+tp_realloc(struct tp *p, size_t required, size_t *size);
+
+/**
+ * Free function for use in a pair with tp_realloc.
+ * Don't use it when tp inited with static buffer!
+ */
+static void
+tp_free(struct tp *p);
+
+/**
+ * Get currently allocated buffer pointer
+ */
+static char*
+tp_buf(struct tp *p);
+
+/**
+ * Get currently allocated buffer size
+ */
+static size_t
+tp_size(struct tp *p);
+
+/**
+ * Get the size of data in the buffer
+ */
+static size_t
+tp_used(struct tp *p);
+
+/**
+ * Get the size available for write
+ */
+static size_t
+tp_unused(struct tp *p);
+
+/**
+ * Create a ping request.
+ *
+ * char buf[64];
+ * struct tp req;
+ * tp_init(&req, buf, sizeof(buf), NULL, NULL);
+ * tp_ping(&req);
+ */
+static inline char*
+tp_ping(struct tp *p);
+
+/**
+ * Create an auth request.
+ *
+ * salt_base64 must be gathered from tpgreeings struct,
+ * that is initialized during tp_greeting call.
+ *
+ * tp_auth(p, greet.salt_base64, "admin", 5, "pass", 4);
+ */
+static char*
+tp_auth(struct tp *p, const char *salt_base64, const char *user, int ulen, const char *pass, int plen);
+
+/**
+ * Append a select request.
+ *
+ * char buf[64];
+ * struct tp req;
+ * tp_init(&req, buf, sizeof(buf), NULL, NULL);
+ * tp_select(&req, 0, 0, 0, 100);
+ * tp_key(&req, 1);
+ * tp_sz(&req, "key");
+ */
+static char*
+tp_select(struct tp *p, uint32_t space, uint32_t index,
+	  uint32_t offset, uint32_t limit);
+
+/**
+ * Create an insert request.
+ *
+ * char buf[64];
+ * struct tp req;
+ * tp_init(&req, buf, sizeof(buf), NULL, NULL);
+ * tp_insert(&req, 0);
+ * tp_tuple(&req, 2);
+ * tp_sz(&req, "key");
+ * tp_sz(&req, "value");
+ */
+static inline char*
+tp_insert(struct tp *p, uint32_t space);
+
+/**
+ * Create an replace request.
+ *
+ * char buf[64];
+ * struct tp req;
+ * tp_init(&req, buf, sizeof(buf), NULL, NULL);
+ * tp_insert(&req, 0);
+ * tp_tuple(&req, 2);
+ * tp_sz(&req, "key");
+ * tp_sz(&req, "value");
+ */
+static char*
+tp_replace(struct tp *p, uint32_t space);
+
+/**
+ * Create a delete request.
+ *
+ * char buf[64];
+ * struct tp req;
+ * tp_init(&req, buf, sizeof(buf), NULL, NULL);
+ * tp_delete(&req, 0);
+ * tp_key(&req, 1);
+ * tp_sz(&req, "key");
+ */
+static char*
+tp_delete(struct tp *p, uint32_t space);
+
+/**
+ * Create an update request.
+ *
+ * char buf[64];
+ * struct tp req;
+ * tp_init(&req, buf, sizeof(buf), NULL, NULL);
+ * tp_update(&req, 0); // update of space 0
+ * tp_key(&req, 1); // key with one part
+ * tp_sz(&req, "key"); // one and only part of the key
+ * tp_updatebegin(&req, 2); // update with two operations
+ * tp_op(&req, "+", 2); // add to field 2 ..
+ * tp_encode_uint(&req, 1); // .. a value 1
+ * tp_op(&req, "=", 3); // set a field 3 ..
+ * tp_sz(&req, "value"); // .. a value "value"
+ */
+static char*
+tp_update(struct tp *p, uint32_t space);
+
+/**
+ * Begin update operations.
+ * See tp_update description for details.
+ */
+static char*
+tp_updatebegin(struct tp *p, uint32_t op_count);
+
+/**
+ * Add an update operation.
+ * See tp_update description.
+ * Operation op could be:
+ * "=" - assign operation argument to field <field_no>;
+ *  will extend the tuple if <field_no> == <max_field_no> + 1
+ * "#" - delete <argument> fields starting from <field_no>
+ * "!" - insert <argument> before <field_no>
+ * The following operation(s) are only defined for integer
+ * types:
+ * "+" - add argument to field <field_no>, argument
+ * are integer
+ * "-" - subtract argument from the field <field_no>
+ * "&" - bitwise AND of argument and field <field_no>
+ * "^" - bitwise XOR of argument and field <field_no>
+ * "|" - bitwise OR of argument and field <field_no>
+ */
+static inline char*
+tp_op(struct tp *p, char op, uint32_t field_no);
+
+/**
+ * Create a call request.
+ *
+ * char buf[64];
+ * struct tp req;
+ * tp_init(&req, buf, sizeof(buf), NULL, NULL);
+ *
+ * char proc[] = "hello_proc";
+ * tp_call(&req, proc, sizeof(proc) - 1);
+ * tp_encode_array(&req, 2);
+ * tp_sz(&req, "arg1");
+ * tp_sz(&req, "arg2");
+ */
+static char*
+tp_call(struct tp *p, const char *function, int len);
+
+/**
+ *
+ */
+static char*
+tp_format(struct tp *p, const char *format, ...);
+
+/**
+ * Write a tuple header
+ * Same as tp_encode_array, added for compatibility.
+ */
+static char*
+tp_tuple(struct tp *p, uint32_t field_count);
+
+/**
+ * Write a key header
+ * Same as tp_encode_array, added for compatibility.
+ */
+static char*
+tp_key(struct tp *p, uint32_t part_count);
+
+/**
+ * Add an uint value to the request
+ */
+static char*
+tp_encode_uint(struct tp *p, uint64_t num);
+
+/**
+ * Add an int value to the request
+ * the value must be less than zero
+ */
+static char*
+tp_encode_int(struct tp *p, int64_t num);
+
+/**
+ * Add n string value to the request, with lenght provided.
+ */
+static char*
+tp_encode_str(struct tp *p, const char *str, uint32_t len);
+
+/**
+ * Add n zero-end srting value to the request.
+ */
+static char*
+tp_encode_sz(struct tp *p, const char *str);
+
+/**
+ * Add n zero-end srting value to the request.
+ * (added for compatibility with tarantool 1.5 connector)
+ */
+static char*
+tp_sz(struct tp *p, const char *str);
+
+/**
+ * Add a nil value to the request
+ */
+static char*
+tp_encode_nil(struct tp *p);
+
+/**
+ * Add an binary data to the request.
+ */
+static char*
+tp_encode_bin(struct tp *p, const char *str, uint32_t len);
+
+/**
+ * Add n array to the request with a given size
+ *
+ * tp_encode_array(p, 3);
+ * tp_encode_uint(p, 1);
+ * tp_encode_uint(p, 2);
+ * tp_encode_uint(p, 3);
+ */
+static char*
+tp_encode_array(struct tp *p, uint32_t size);
+
+/**
+ * Add n map to the request with a given size
+ *
+ * tp_encode_array(p, 2);
+ * tp_encode_sz(p, "name");
+ * tp_encode_sz(p, "Alan");
+ * tp_encode_sz(p, "birth");
+ * tp_encode_uint(p, 1912);
+ */
+static char*
+tp_encode_map(struct tp *p, uint32_t size);
+
+/**
+ * Add a bool value to the request.
+ */
+static char*
+tp_encode_bool(struct tp *p, bool val);
+
+/**
+ * Add a float value to the request.
+ */
+static char*
+tp_encode_float(struct tp *p, float num);
+
+/**
+ * Add a double float value to the request.
+ */
+static char*
+tp_encode_double(struct tp *p, double num);
+
+/**
+ * Set the current request id.
+ */
+static inline void
+tp_reqid(struct tp *p, uint32_t reqid);
+
+/**
+ * Ensure that buffer has enough space to fill size bytes, resize
+ * buffer if needed. Returns -1 on error, and new allocated size
+ * of success.
+ */
+static inline ssize_t
+tp_ensure(struct tp *p, size_t size);
+
+/**
+ * Initialize struct tpresponse with a data buffer.
+ * Returns -1 if an error occured
+ * Returns 0 if buffer contains only part of the response
+ * Return size in bytes of the response in buffer on success
+ */
+static ssize_t
+tp_reply(struct tpresponse *r, const char * const buf, size_t size);
+
+/**
+ * Return the current request id
+ */
+static uint32_t
+tp_getreqid(struct tpresponse *r);
+
+/**
+ * Check if the response has a tuple.
+ * Automatically checked during tp_next() iteration.
+ */
+static int
+tp_hasdata(struct tpresponse *r);
+
+/**
+ * Get tuple count in response
+ */
+static uint32_t
+tp_tuplecount(const struct tpresponse *r);
+
+/**
+ * Skip to the next tuple or to the first tuple after rewind
+ */
+static int
+tp_next(struct tpresponse *r);
+
+/**
+ * Check if there is a one more tuple.
+ */
+static int
+tp_hasnext(struct tpresponse *r);
+
+/**
+ * Rewind iteration to the first tuple.
+ * Note that initialization of tpresponse via tp_reply
+ * rewinds tuple iteration automatically
+ */
+static void
+tp_rewind(struct tpresponse *r);
+
+/**
+ * Get the current tuple data, all fields.
+ */
+static const char *
+tp_gettuple(struct tpresponse *r);
+
+/**
+ * Get the current tuple size in bytes.
+ */
+static uint32_t
+tp_tuplesize(struct tpresponse *r);
+
+/**
+ *  Get a pointer to the end of the current tuple.
+ */
+static const char *
+tp_tupleend(struct tpresponse *r);
+
+/**
+ * Skip to the next field.
+ */
+static inline int
+tp_nextfield(struct tpresponse *r);
+
+/**
+ * Get the current field.
+ */
+static const char *
+tp_getfield(struct tpresponse *r);
+
+/*
+ * Rewind iteration to the first tuple field of the current tuple.
+ * Note that iterating tuples of the response
+ * rewinds field iteration automatically
+ */
+static void
+tp_rewindfield(struct tpresponse *r);
+
+/*
+ * Check if the current tuple has a one more field.
+ */
+static int
+tp_hasnextfield(struct tpresponse *r);
+
+
+/**
+ * Get the current field size in bytes.
+ */
+static uint32_t
+tp_getfieldsize(struct tpresponse *r);
+
+/*
+ * Determine MsgPack type by a first byte of encoded data.
+ */
+static enum tp_type
+tp_typeof(const char c);
+
+/**
+ * Read unsigned integer value
+ */
+static uint64_t
+tp_get_uint(const char *field);
+
+/**
+ * Read signed integer value
+ */
+static int64_t
+tp_get_int(const char *field);
+
+/**
+ * Read float value
+ */
+static float
+tp_get_float(const char *field);
+
+/**
+ * Read double value
+ */
+static double
+tp_get_double(const char *field);
+
+/**
+ * Read bool value
+ */
+static bool
+tp_get_bool(const char *field);
+
+/**
+ * Read string value
+ */
+static const char *
+tp_get_str(const char *field, uint32_t *size);
+
+/**
+ * Read binary data value
+ */
+static const char *
+tp_get_bin(const char *field, uint32_t *size);
+
+
+/**
+ * Init msgpack iterator by a pointer to msgpack array begin.
+ * First elemet will be accessible after tp_array_itr_next call.
+ * Returns -1 on error
+ */
+static int
+tp_array_itr_init(struct tp_array_itr *itr, const char *data, size_t size);
+
+/**
+ * Iterate to next position.
+ * return true if success, or false if there are no elemens left
+ */
+static bool
+tp_array_itr_next(struct tp_array_itr *itr);
+
+/**
+ * Reset iterator to the begining. First elemet will be
+ * accessible after tp_array_itr_next call.
+ * return true if success, or false if there are no elemens left
+ */
+static void
+tp_array_itr_reset(struct tp_array_itr *itr);
+
+/**
+ * Init msgpack map iterator by a pointer to msgpack map begin.
+ * First elemet will be accessible after tp_map_itr_next call.
+ * Returns -1 on error
+ */
+static int
+tp_map_itr_init(struct tp_map_itr *itr, const char *data, size_t size);
+
+/**
+ * Iterate to next position.
+ * return true if success, or false if there are no pairs left
+ */
+static bool
+tp_map_itr_next(struct tp_map_itr *itr);
+
+/**
+ * Reset iterator to the begining. First pair will be
+ * accessible after tp_map_itr_next call.
+ * return true if success, or false if there are no pairs left
+ */
+static void
+tp_map_itr_reset(struct tp_map_itr *itr);
+
+/* }}} */
+
+
+/* {{{ Implementation */
+
+/* available types */
+enum tp_type {
+	TP_NIL = MP_NIL,
+	TP_UINT = MP_UINT,
+	TP_INT = MP_INT,
+	TP_STR = MP_STR,
+	TP_BIN = MP_BIN,
+	TP_ARRAY = MP_ARRAY,
+	TP_MAP = MP_MAP,
+	TP_BOOL = MP_BOOL,
+	TP_FLOAT = MP_FLOAT,
+	TP_DOUBLE = MP_DOUBLE,
+	TP_EXT = MP_EXT
+};
+
+/* header */
+enum tp_header_key_t {
+	TP_CODE = 0x00,
+	TP_SYNC = 0x01
+};
+
+/* request body */
+enum tp_body_key_t {
+	TP_SPACE = 0x10,
+	TP_INDEX = 0x11,
+	TP_LIMIT = 0x12,
+	TP_OFFSET = 0x13,
+	TP_ITERATOR = 0x14,
+	TP_KEY = 0x20,
+	TP_TUPLE = 0x21,
+	TP_FUNCTION = 0x22,
+	TP_USERNAME = 0x23
+};
+
+/* response body */
+enum tp_response_key_t {
+	TP_DATA = 0x30,
+	TP_ERROR = 0x31
+};
+
+/* request types */
+enum tp_request_type {
+	TP_SELECT = 1,
+	TP_INSERT = 2,
+	TP_REPLACE = 3,
+	TP_UPDATE = 4,
+	TP_DELETE = 5,
+	TP_CALL = 6,
+	TP_AUTH = 7,
+	TP_PING = 64
+};
+
+static const uint32_t SCRAMBLE_SIZE = 20;
+
+/**
+ * Receice greetings from the server.
+ * Note, the input buffer is not copied,
+ * so freeing or reusing the input buffer will invalidate tpgreeting struct
+ * For example salt is used for autorizaion (tp_auth).
+ * Returns 0 if buffer is too small or greetings size (128) on success
+ */
+static inline ssize_t
+tp_greeting(struct tpgreeting *g, char *buf, size_t size)
+{
+	if (size < 128)
+		return 0;
+	g->description = buf;
+	g->salt_base64 = buf + 64;
+	return 128;
+}
+
+
+/**
+ * Get currently allocated buffer pointer
+ */
+static inline char*
+tp_buf(struct tp *p)
+{
+	return p->s;
+}
+
+/**
+ * Get currently allocated buffer size
+ */
+static inline size_t
+tp_size(struct tp *p)
+{
+	return p->e - p->s;
+}
+
+/**
+ * Get the size of data in the buffer
+ */
+static inline size_t
+tp_used(struct tp *p)
+{
+	return p->p - p->s;
+}
+
+/**
+ * Get the size available for write
+ */
+static inline size_t
+tp_unused(struct tp *p)
+{
+	return p->e - p->p;
+}
+
+/**
+ * A common reallocation function, can be used
+ * for 'reserve' param in tp_init().
+ * Resizes the buffer twice the previous size using realloc().
+ *
+ * struct tp req;
+ * tp_init(&req, NULL, tp_realloc, NULL);
+ * tp_ping(&req); // will call the reallocator
+ *
+ * data must be manually freed when the buffer is no longer
+ * needed.
+ * (eg. free(p->s) or tp_free(p) );
+ * if realloc will return NULL, then you must destroy previous memory.
+ * (eg.
+ * if (tp_realloc(p, ..) == NULL) {
+ * 	tp_free(p)
+ * 	return NULL;
+ * }
+*/
+tpfunction_unused static char*
+tp_realloc(struct tp *p, size_t required, size_t *size)
+{
 	size_t toalloc = tp_size(p) * 2;
 	if (tpunlikely(toalloc < required))
 		toalloc = tp_size(p) + required;
@@ -350,763 +796,1158 @@ tp_realloc(struct tp *p, size_t required, size_t *size) {
 	return realloc(p->s, toalloc);
 }
 
-
-/* Free function for use in a pair with tp_realloc */
+/**
+ * Free function for use in a pair with tp_realloc.
+ * Don't use it when tp inited with static buffer!
+ */
 static inline void
-tp_free(struct tp *p) {
+tp_free(struct tp *p)
+{
 	free(p->s);
 }
 
-/* Get currently allocated buffer pointer */
-static inline char*
-tp_buf(struct tp *p) {
-	return p->s;
-}
-
-/* Main initialization function.
+/**
+ * Main initialization function.
  *
+ * buf     - current buffer, may be NULL
+ * size    - current buffer size
  * reserve - reallocation function, may be NULL
  * obj     - pointer to be passed to the reallocation function as
  *           context
- * buf     - current buffer, may be NULL
- * size    - current buffer size
  *
  * Either a buffer pointer or a reserve function must be
  * provided.
-*/
+ * If reserve function is provided, data must be manually freed
+ * when the buffer is no longer needed.
+ *  (eg. free(p->s) or tp_free(p) );
+ */
 static inline void
 tp_init(struct tp *p, char *buf, size_t size,
-        tp_reserve reserve, void *obj) {
+        tp_reserve reserve, void *obj)
+{
 	p->s = buf;
 	p->p = p->s;
 	p->e = p->s + size;
-	p->t = NULL;
-	p->f = NULL;
-	p->u = NULL;
-	p->c = NULL;
-	p->h = NULL;
-	p->tsz = 0;
-	p->fsz = 0;
-	p->cnt = 0;
-	p->code = 0;
+	p->size = NULL;
+	p->sync = NULL;
 	p->reserve = reserve;
 	p->obj = obj;
 }
 
-/* Ensure that buffer has enough space to fill size bytes, resize
- * buffer if needed. */
-static tpnoinline ssize_t
-tp_ensure(struct tp *p, size_t size) {
+/**
+ * Ensure that buffer has enough space to fill size bytes, resize
+ * buffer if needed. Returns -1 on error, and new allocated size
+ * of success.
+ */
+static inline ssize_t
+tp_ensure(struct tp *p, size_t size)
+{
 	if (tplikely(tp_unused(p) >= size))
 		return 0;
 	if (tpunlikely(p->reserve == NULL))
 		return -1;
 	size_t sz;
-	register char *np = p->reserve(p, size, &sz);
+	char *np = p->reserve(p, size, &sz);
 	if (tpunlikely(np == NULL))
 		return -1;
+	if (tplikely(p->size))
+		p->size = (np + (((char*)p->size) - p->s));
+	if (tplikely(p->sync))
+		p->sync = (np + (((char*)p->sync) - p->s));
 	p->p = np + (p->p - p->s);
-	if (tplikely(p->h))
-		p->h = (struct tp_h*)(np + (((char*)p->h) - p->s));
-	if (tplikely(p->t))
-		p->t = np + (p->t - p->s);
-	if (tpunlikely(p->f))
-		p->f = (np + (p->f - p->s));
-	if (tpunlikely(p->u))
-		p->u = (np + (p->u - p->s));
 	p->s = np;
 	p->e = np + sz;
 	return sz;
 }
 
-/* Mark size bytes as used.
- * Can be used to tell the buffer that a chunk has been read
- * from the network into it.
+/**
+ * Accept a data of specified size.
+ * This is an function for internal use, and is not part of an API
  */
-static inline ssize_t
-tp_use(struct tp *p, size_t size) {
+static inline char*
+tp_add(struct tp *p, size_t size)
+{
+	void *ptr = p->p;
 	p->p += size;
-	return tp_used(p);
+	assert(p->size);
+	*p->size = 0xce;
+	*(uint32_t*)(p->size + 1) = mp_bswap_u32(p->p - p->size - 5);
+	return ptr;
 }
 
-/* Append data to the buffer.
- * Mostly unnecessary, but can be used to add any raw
- * iproto-format data to the buffer.
- * Normally tp_tuple(), tp_field() and tp_sz() should be used
- * instead.
- */
-static inline ssize_t
-tp_append(struct tp *p, const void *data, size_t size) {
-	if (tpunlikely(tp_ensure(p, size) == -1))
-		return -1;
-	memcpy(p->p, data, size);
-	return tp_use(p, size);
-}
-
-/* Set the current request id.
- *
- * tp_ping(&req);
- * tp_reqid(&req, 777);
- */
-static inline void
-tp_reqid(struct tp *p, uint32_t reqid) {
-	assert(p->h != NULL);
-	p->h->reqid = reqid;
-}
-
-/* Return the current request id */
-static inline uint32_t
-tp_getreqid(struct tp *p) {
-	assert(p->h != NULL);
-	return p->h->reqid;
-}
-
-/* Get tuple count */
-static inline uint32_t
-tp_tuplecount(struct tp *p) {
-	assert(p->t != NULL);
-	return *(uint32_t*)(p->t);
-}
-
-/* Write a tuple header */
-static inline ssize_t
-tp_tuple(struct tp *p) {
-	assert(p->h != NULL);
-	if (tpunlikely(tp_ensure(p, sizeof(uint32_t)) == -1))
-		return -1;
-	*(uint32_t*)(p->t = p->p) = 0;
-	p->p += sizeof(uint32_t);
-	p->h->len += sizeof(uint32_t);
-	if (p->h->type == TP_SELECT) {
-		((struct tp_hselect*)
-		((char*)p->h + sizeof(struct tp_h)))->keyc++;
-	}
-	return tp_used(p);
-}
-
-/* Ber128 calculation functions, internally used by the library */
-static inline size_t
-tp_ber128sizeof(uint32_t value) {
-	return (  tplikely(value < (1 <<  7))) ? 1 :
-	       (  tplikely(value < (1 << 14))) ? 2 :
-	       (tpunlikely(value < (1 << 21))) ? 3 :
-	       (tpunlikely(value < (1 << 28))) ? 4 : 5;
-}
-
-static tpnoinline void tphot
-tp_ber128save_slowpath(struct tp *p, uint32_t value) {
-	if (tpunlikely(value >= (1 << 21))) {
-		if (tpunlikely(value >= (1 << 28)))
-			*(p->p++) = (value >> 28) | 0x80;
-		*(p->p++) = (value >> 21) | 0x80;
-	}
-	p->p[0] = ((value >> 14) | 0x80);
-	p->p[1] = ((value >>  7) | 0x80);
-	p->p[2] =   value & 0x7F;
-	p->p += 3;
-}
-
-static inline void tphot
-tp_ber128save(struct tp *p, uint32_t value) {
-	if (tpunlikely(value >= (1 << 14))) {
-		tp_ber128save_slowpath(p, value);
-		return;
-	}
-	if (tplikely(value >= (1 << 7)))
-		*(p->p++) = ((value >> 7) | 0x80);
-	*(p->p++) = ((value) & 0x7F);
-}
-
-static tpnoinline int tphot
-tp_ber128load_slowpath(struct tp *p, uint32_t *value) {
-	if (tplikely(! (p->f[2] & 0x80))) {
-		*value = (p->f[0] & 0x7f) << 14 |
-		         (p->f[1] & 0x7f) << 7  |
-		         (p->f[2] & 0x7f);
-		p->f += 3;
-	} else
-	if (! (p->f[3] & 0x80)) {
-		*value = (p->f[0] & 0x7f) << 21 |
-		         (p->f[1] & 0x7f) << 14 |
-		         (p->f[2] & 0x7f) << 7  |
-		         (p->f[3] & 0x7f);
-		p->f += 4;
-	} else
-	if (! (p->f[4] & 0x80)) {
-		*value = (p->f[0] & 0x7f) << 28 |
-		         (p->f[1] & 0x7f) << 21 |
-		         (p->f[2] & 0x7f) << 14 |
-		         (p->f[3] & 0x7f) << 7  |
-		         (p->f[4] & 0x7f);
-		p->f += 5;
-	} else
-		return -1;
-	return 0;
-}
-
-static inline int tphot
-tp_ber128load(struct tp *p, uint32_t *value) {
-	if (tplikely(! (p->f[0] & 0x80))) {
-		*value = *(p->f++) & 0x7f;
-	} else
-	if (tplikely(! (p->f[1] & 0x80))) {
-		*value = (p->f[0] & 0x7f) << 7 | (p->f[1] & 0x7f);
-		p->f += 2;
-	} else
-		return tp_ber128load_slowpath(p, value);
-	return 0;
-}
-
-/* Write a tuple field
- * Note: the tuple must be started prior to calling
- * this function with tp_tuple() call.
- */
-static inline ssize_t
-tp_field(struct tp *p, const char *data, size_t size) {
-	assert(p->h != NULL);
-	assert(p->t != NULL);
-	register int esz = tp_ber128sizeof(size);
-	if (tpunlikely(tp_ensure(p, esz + size) == -1))
-		return -1;
-	tp_ber128save(p, size);
-	memcpy(p->p, data, size);
-	p->p += size;
-	(*(uint32_t*)p->t)++;
-	p->h->len += esz + size;
-	return tp_used(p);
-}
-
-/* Set the current request.
- * Note: this is an internal helper function, not part of the
- * tp.h API.
- */
-static inline void
-tp_setreq(struct tp *p) {
-	p->h = (struct tp_h*)p->p;
-	p->t = NULL;
-	p->u = NULL;
-}
-
-/* Set current request and append data to the buffer.
- * Note: this is an internal helper function, not part of the
- * tp.h API. tp_ping(), tp_update() and other functions
- * which directly create a request header should be used
- * instead.
- */
-static inline ssize_t
-tp_appendreq(struct tp *p, void *h, size_t size) {
-	int isallocated = p->p != NULL;
-	tp_setreq(p);
-	ssize_t rc = tp_append(p, h, size);
-	if (tpunlikely(rc == -1))
-		return -1;
-	if (!isallocated)
-		p->h = (struct tp_h*)p->s;
-	return rc;
-}
-
-/* Create a ping request.
+/**
+ * Create a ping request.
  *
  * char buf[64];
  * struct tp req;
  * tp_init(&req, buf, sizeof(buf), NULL, NULL);
  * tp_ping(&req);
  */
-static inline ssize_t
-tp_ping(struct tp *p) {
-	struct tp_h h = { TP_PING, 0, 0 };
-	return tp_appendreq(p, &h, sizeof(h));
+static inline char*
+tp_ping(struct tp *p)
+{
+	int sz = 5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_CODE) +
+		mp_sizeof_uint(TP_PING) +
+		mp_sizeof_uint(TP_SYNC) +
+		5;
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	p->size = p->p;
+	char *h = mp_encode_map(p->p + 5, 2);
+	h = mp_encode_uint(h, TP_CODE);
+	h = mp_encode_uint(h, TP_PING);
+	h = mp_encode_uint(h, TP_SYNC);
+	p->sync = h;
+	*h = 0xce;
+	*(uint32_t*)(h + 1) = 0;
+	h += 5;
+	return tp_add(p, sz);
 }
 
-/* Create an insert request.
+/**
+ * Append a select request.
  *
  * char buf[64];
  * struct tp req;
  * tp_init(&req, buf, sizeof(buf), NULL, NULL);
- * tp_insert(&req, 0, TP_FRET);
- * tp_tuple(&req);
+ * tp_select(&req, 0, 0, 0, 100);
+ * tp_key(&req, 1);
+ * tp_sz(&req, "key");
+ */
+static inline char*
+tp_select(struct tp *p, uint32_t space, uint32_t index,
+	  uint32_t offset, uint32_t limit)
+{
+	int sz = 5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_CODE) +
+		mp_sizeof_uint(TP_SELECT) +
+		mp_sizeof_uint(TP_SYNC) +
+		5 +
+		mp_sizeof_map(5) +
+		mp_sizeof_uint(TP_SPACE) +
+		mp_sizeof_uint(space) +
+		mp_sizeof_uint(TP_INDEX) +
+		mp_sizeof_uint(index) +
+		mp_sizeof_uint(TP_OFFSET) +
+		mp_sizeof_uint(offset) +
+		mp_sizeof_uint(TP_LIMIT) +
+		mp_sizeof_uint(limit) +
+		mp_sizeof_uint(TP_KEY);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	p->size = p->p;
+	char *h = mp_encode_map(p->p + 5, 2);
+	h = mp_encode_uint(h, TP_CODE);
+	h = mp_encode_uint(h, TP_SELECT);
+	h = mp_encode_uint(h, TP_SYNC);
+	p->sync = h;
+	*h = 0xce;
+	*(uint32_t*)(h + 1) = 0;
+	h += 5;
+	h = mp_encode_map(h, 5);
+	h = mp_encode_uint(h, TP_SPACE);
+	h = mp_encode_uint(h, space);
+	h = mp_encode_uint(h, TP_INDEX);
+	h = mp_encode_uint(h, index);
+	h = mp_encode_uint(h, TP_OFFSET);
+	h = mp_encode_uint(h, offset);
+	h = mp_encode_uint(h, TP_LIMIT);
+	h = mp_encode_uint(h, limit);
+	h = mp_encode_uint(h, TP_KEY);
+	return tp_add(p, sz);
+}
+
+/**
+ * Create an insert request.
+ *
+ * char buf[64];
+ * struct tp req;
+ * tp_init(&req, buf, sizeof(buf), NULL, NULL);
+ * tp_insert(&req, 0);
+ * tp_tuple(&req, 2);
  * tp_sz(&req, "key");
  * tp_sz(&req, "value");
  */
-static inline ssize_t
-tp_insert(struct tp *p, uint32_t space, uint32_t flags) {
-	struct {
-		struct tp_h h;
-		struct tp_hinsert i;
-	} h;
-	h.h.type = TP_INSERT;
-	h.h.len = sizeof(struct tp_hinsert);
-	h.h.reqid = 0;
-	h.i.space = space;
-	h.i.flags = flags;
-	return tp_appendreq(p, &h, sizeof(h));
+static inline char*
+tp_insert(struct tp *p, uint32_t space)
+{
+	int sz = 5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_CODE) +
+		mp_sizeof_uint(TP_INSERT) +
+		mp_sizeof_uint(TP_SYNC) +
+		5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_SPACE) +
+		mp_sizeof_uint(space) +
+		mp_sizeof_uint(TP_TUPLE);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	p->size = p->p;
+	char *h = mp_encode_map(p->p + 5, 2);
+	h = mp_encode_uint(h, TP_CODE);
+	h = mp_encode_uint(h, TP_INSERT);
+	h = mp_encode_uint(h, TP_SYNC);
+	p->sync = h;
+	*h = 0xce;
+	*(uint32_t*)(h + 1) = 0;
+	h += 5;
+	h = mp_encode_map(h, 2);
+	h = mp_encode_uint(h, TP_SPACE);
+	h = mp_encode_uint(h, space);
+	h = mp_encode_uint(h, TP_TUPLE);
+	return tp_add(p, sz);
 }
 
-/* Create a delete request.
+/**
+ * Create an replace request.
  *
  * char buf[64];
  * struct tp req;
  * tp_init(&req, buf, sizeof(buf), NULL, NULL);
- * tp_delete(&req, 0, 0);
- * tp_tuple(&req);
+ * tp_insert(&req, 0);
+ * tp_tuple(&req, 2);
  * tp_sz(&req, "key");
+ * tp_sz(&req, "value");
  */
-static inline ssize_t
-tp_delete(struct tp *p, uint32_t space, uint32_t flags) {
-	struct {
-		struct tp_h h;
-		struct tp_hdelete d;
-	} h;
-	h.h.type = TP_DELETE;
-	h.h.len = sizeof(struct tp_hdelete);
-	h.h.reqid = 0;
-	h.d.space = space;
-	h.d.flags = flags;
-	return tp_appendreq(p, &h, sizeof(h));
+static inline char*
+tp_replace(struct tp *p, uint32_t space)
+{
+	int sz = 5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_CODE) +
+		mp_sizeof_uint(TP_REPLACE) +
+		mp_sizeof_uint(TP_SYNC) +
+		5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_SPACE) +
+		mp_sizeof_uint(space) +
+		mp_sizeof_uint(TP_TUPLE);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	p->size = p->p;
+	char *h = mp_encode_map(p->p + 5, 2);
+	h = mp_encode_uint(h, TP_CODE);
+	h = mp_encode_uint(h, TP_REPLACE);
+	h = mp_encode_uint(h, TP_SYNC);
+	p->sync = h;
+	*h = 0xce;
+	*(uint32_t*)(h + 1) = 0;
+	h += 5;
+	h = mp_encode_map(h, 2);
+	h = mp_encode_uint(h, TP_SPACE);
+	h = mp_encode_uint(h, space);
+	h = mp_encode_uint(h, TP_TUPLE);
+	return tp_add(p, sz);
 }
 
-/* Create a call request.
+/**
+ * Create a delete request.
+ *
+ * char buf[64];
+ * struct tp req;
+ * tp_init(&req, buf, sizeof(buf), NULL, NULL);
+ * tp_delete(&req, 0);
+ * tp_key(&req, 1);
+ * tp_sz(&req, "key");
+ */
+static inline char*
+tp_delete(struct tp *p, uint32_t space)
+{
+	int sz = 5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_CODE) +
+		mp_sizeof_uint(TP_DELETE) +
+		mp_sizeof_uint(TP_SYNC) +
+		5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_SPACE) +
+		mp_sizeof_uint(space) +
+		mp_sizeof_uint(TP_KEY);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	p->size = p->p;
+	char *h = mp_encode_map(p->p + 5, 2);
+	h = mp_encode_uint(h, TP_CODE);
+	h = mp_encode_uint(h, TP_DELETE);
+	h = mp_encode_uint(h, TP_SYNC);
+	p->sync = h;
+	*h = 0xce;
+	*(uint32_t*)(h + 1) = 0;
+	h += 5;
+	h = mp_encode_map(h, 2);
+	h = mp_encode_uint(h, TP_SPACE);
+	h = mp_encode_uint(h, space);
+	h = mp_encode_uint(h, TP_KEY);
+	return tp_add(p, sz);
+}
+
+/**
+ * Create a call request.
  *
  * char buf[64];
  * struct tp req;
  * tp_init(&req, buf, sizeof(buf), NULL, NULL);
  *
  * char proc[] = "hello_proc";
- * tp_call(&req, 0, proc, sizeof(proc) - 1);
- * tp_tuple(&req);
+ * tp_call(&req, proc, sizeof(proc) - 1);
+ * tp_encode_array(&req, 2);
  * tp_sz(&req, "arg1");
  * tp_sz(&req, "arg2");
  */
-static inline ssize_t
-tp_call(struct tp *p, uint32_t flags, const char *name, size_t name_len) {
-	struct {
-		struct tp_h h;
-		struct tp_hcall c;
-	} h;
-	size_t sz = tp_ber128sizeof(name_len);
-	h.h.type = TP_CALL;
-	h.h.len = sizeof(struct tp_hcall) + sz + name_len;
-	h.h.reqid = 0;
-	h.c.flags = flags;
-	if (tpunlikely(tp_ensure(p, sizeof(h) + sz + name_len) == -1))
-		return -1;
-	tp_setreq(p);
-	memcpy(p->p, &h, sizeof(h));
-	p->p += sizeof(h);
-	tp_ber128save(p, name_len);
-	memcpy(p->p, name, name_len);
-	p->p += name_len;
-	return tp_used(p);
+static inline char*
+tp_call(struct tp *p, const char *function, int len)
+{
+	int sz = 5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_CODE) +
+		mp_sizeof_uint(TP_CALL) +
+		mp_sizeof_uint(TP_SYNC) +
+		5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_FUNCTION) +
+		mp_sizeof_str(len) +
+		mp_sizeof_uint(TP_TUPLE);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	p->size = p->p;
+	char *h = mp_encode_map(p->p + 5, 2);
+	h = mp_encode_uint(h, TP_CODE);
+	h = mp_encode_uint(h, TP_CALL);
+	h = mp_encode_uint(h, TP_SYNC);
+	p->sync = h;
+	*h = 0xce;
+	*(uint32_t*)(h + 1) = 0;
+	h += 5;
+	h = mp_encode_map(h, 2);
+	h = mp_encode_uint(h, TP_FUNCTION);
+	h = mp_encode_str(h, function, len);
+	h = mp_encode_uint(h, TP_TUPLE);
+	return tp_add(p, sz);
 }
 
-/* Append a select request.
+/**
+ * Create an update request.
  *
  * char buf[64];
  * struct tp req;
  * tp_init(&req, buf, sizeof(buf), NULL, NULL);
- * tp_select(&req, 0, 0, 0, 100);
- * tp_tuple(&req);
- * tp_sz(&req, "key");
+ * tp_update(&req, 0); // update of space 0
+ * tp_key(&req, 1); // key with one part
+ * tp_sz(&req, "key"); // one and only part of the key
+ * tp_updatebegin(&req, 2); // update with two operations
+ * tp_op(&req, "+", 2); // add to field 2 ..
+ * tp_encode_uint(&req, 1); // .. a value 1
+ * tp_op(&req, "=", 3); // set a field 3 ..
+ * tp_sz(&req, "value"); // .. a value "value"
  */
-static inline ssize_t
-tp_select(struct tp *p, uint32_t space, uint32_t index,
-          uint32_t offset, uint32_t limit) {
-	struct {
-		struct tp_h h;
-		struct tp_hselect s;
-	} h;
-	h.h.type = TP_SELECT;
-	h.h.len = sizeof(struct tp_hselect);
-	h.h.reqid = 0;
-	h.s.space = space;
-	h.s.index = index;
-	h.s.offset = offset;
-	h.s.limit = limit;
-	h.s.keyc = 0;
-	return tp_appendreq(p, &h, sizeof(h));
+static inline char*
+tp_update(struct tp *p, uint32_t space)
+{
+	int sz = 5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_CODE) +
+		mp_sizeof_uint(TP_UPDATE) +
+		mp_sizeof_uint(TP_SYNC) +
+		5 +
+		mp_sizeof_map(3) +
+		mp_sizeof_uint(TP_SPACE) +
+		mp_sizeof_uint(space) +
+		mp_sizeof_uint(TP_KEY);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	p->size = p->p;
+	char *h = mp_encode_map(p->p + 5, 2);
+	h = mp_encode_uint(h, TP_CODE);
+	h = mp_encode_uint(h, TP_UPDATE);
+	h = mp_encode_uint(h, TP_SYNC);
+	p->sync = h;
+	*h = 0xce;
+	*(uint32_t*)(h + 1) = 0;
+	h += 5;
+	h = mp_encode_map(h, 3);
+	h = mp_encode_uint(h, TP_SPACE);
+	h = mp_encode_uint(h, space);
+	h = mp_encode_uint(h, TP_KEY);
+	return tp_add(p, sz);
 }
 
-/* Create an update request.
- *
- * char buf[64];
- * struct tp req;
- * tp_init(&req, buf, sizeof(buf), NULL, NULL);
- * tp_update(&req, 0, 0);
- * tp_tuple(&req);
- * tp_sz(&req, "key");
- * tp_updatebegin(&req);
- * tp_op(&req, 1, TP_OPSET, "VALUE", 5);
+/**
+ * Begin update operations.
+ * See tp_update description for details.
  */
-static inline ssize_t
-tp_update(struct tp *p, uint32_t space, uint32_t flags) {
-	struct {
-		struct tp_h h;
-		struct tp_hupdate u;
-	} h;
-	h.h.type = TP_UPDATE;
-	h.h.len = sizeof(struct tp_hupdate);
-	h.h.reqid = 0;
-	h.u.space = space;
-	h.u.flags = flags;
-	return tp_appendreq(p, &h, sizeof(h));
+static inline char*
+tp_updatebegin(struct tp *p, uint32_t op_count)
+{
+	int sz = mp_sizeof_uint(TP_TUPLE) + mp_sizeof_array(op_count);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	char *h = mp_encode_uint(p->p, TP_TUPLE);
+	mp_encode_array(h, op_count);
+	return tp_add(p, sz);
 }
 
-/* Append the number of operations the update request
- * is going to contain.
- * Must be called right after appending the key which
- * identifies the tuple which must be updated. Since
- * the key can be multipart, tp_tuple() must be used to
- * append it.
- *
- * In other words, this call sequence creates a proper
- * UPDATE request:
- * tp_init(...)
- * tp_update()
- * tp_tuple()
- * tp_sz(), tp_sz(), ...
- * tp_updatebegin()
- * tp_op(), tp_op(), ...
+/**
+ * Add an update operation.
+ * See tp_update description.
+ * Operation op could be:
+ * "=" - assign operation argument to field <field_no>;
+ *  will extend the tuple if <field_no> == <max_field_no> + 1
+ * "#" - delete <argument> fields starting from <field_no>
+ * "!" - insert <argument> before <field_no>
+ * The following operation(s) are only defined for integer
+ * types:
+ * "+" - add argument to field <field_no>, argument
+ * are integer
+ * "-" - subtract argument from the field <field_no>
+ * "&" - bitwise AND of argument and field <field_no>
+ * "^" - bitwise XOR of argument and field <field_no>
+ * "|" - bitwise OR of argument and field <field_no>
  */
-static inline ssize_t
-tp_updatebegin(struct tp *p) {
-	assert(p->h != NULL);
-	assert(p->h->type == TP_UPDATE);
-	if (tpunlikely(tp_ensure(p, sizeof(uint32_t)) == -1))
+static inline char*
+tp_op(struct tp *p, char op, uint32_t field_no)
+{
+	int sz = mp_sizeof_array(3) + mp_sizeof_str(1) +
+		mp_sizeof_uint(field_no);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	char *h = mp_encode_array(p->p, 3);
+	h = mp_encode_str(h, &op, 1);
+	h = mp_encode_uint(h, field_no);
+	return tp_add(p, sz);
+}
+
+/**
+ * xor
+ * The function is for internal use, not part of the API
+ */
+static inline void
+xor(unsigned char *to, unsigned const char *left,
+    unsigned const char *right, uint32_t len)
+{
+	const uint8_t *end = to + len;
+	while (to < end)
+		*to++= *left++ ^ *right++;
+}
+
+/**
+ * scramble_prepare
+ * The function is for internal use, not part of the API
+ */
+static inline void
+scramble_prepare(void *out, const void *salt, const void *password,
+		 int password_len)
+{
+	unsigned char hash1[SCRAMBLE_SIZE];
+	unsigned char hash2[SCRAMBLE_SIZE];
+	SHA1_CTX ctx;
+
+	SHA1Init(&ctx);
+	SHA1Update(&ctx, password, password_len);
+	SHA1Final(hash1, &ctx);
+
+	SHA1Init(&ctx);
+	SHA1Update(&ctx, hash1, SCRAMBLE_SIZE);
+	SHA1Final(hash2, &ctx);
+
+	SHA1Init(&ctx);
+	SHA1Update(&ctx, salt, SCRAMBLE_SIZE);
+	SHA1Update(&ctx, hash2, SCRAMBLE_SIZE);
+	SHA1Final(out, &ctx);
+
+	xor(out, hash1, out, SCRAMBLE_SIZE);
+}
+
+/**
+ * Create an auth request.
+ *
+ * salt_base64 must be gathered from tpgreeings struct,
+ * that is initialized during tp_greeting call.
+ *
+ * tp_auth(p, greet.salt_base64, "admin", 5, "pass", 4);
+ */
+static inline char*
+tp_auth(struct tp *p, const char *salt_base64, const char *user, int ulen, const char *pass, int plen)
+{
+	int sz = 5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_CODE) +
+		mp_sizeof_uint(TP_AUTH) +
+		mp_sizeof_uint(TP_SYNC) +
+		5 +
+		mp_sizeof_map(2) +
+		mp_sizeof_uint(TP_USERNAME) +
+		mp_sizeof_str(ulen) +
+		mp_sizeof_uint(TP_TUPLE) +
+		mp_sizeof_array(2) +
+		mp_sizeof_str(0) +
+		mp_sizeof_str(SCRAMBLE_SIZE);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	p->size = p->p;
+	char *h = mp_encode_map(p->p + 5, 2);
+	h = mp_encode_uint(h, TP_CODE);
+	h = mp_encode_uint(h, TP_AUTH);
+	h = mp_encode_uint(h, TP_SYNC);
+	p->sync = h;
+	*h = 0xce;
+	*(uint32_t*)(h + 1) = 0;
+	h += 5;
+	h = mp_encode_map(h, 2);
+	h = mp_encode_uint(h, TP_USERNAME);
+	h = mp_encode_str(h, user, ulen);
+	h = mp_encode_uint(h, TP_TUPLE);
+	h = mp_encode_array(h, 2);
+	h = mp_encode_str(h, 0, 0);
+
+	char salt[64];
+	base64_decode(salt_base64, 44, salt, 64);
+	char scramble[SCRAMBLE_SIZE];
+	scramble_prepare(scramble, salt, pass, plen);
+	h = mp_encode_str(h, scramble, SCRAMBLE_SIZE);
+
+	return tp_add(p, sz);
+}
+
+/**
+ * Set the current request id.
+ */
+static inline void
+tp_reqid(struct tp *p, uint32_t reqid)
+{
+	assert(p->sync != NULL);
+	char *h = p->sync;
+	*h = 0xce;
+	*(uint32_t*)(h + 1) = mp_bswap_u32(reqid);
+}
+
+/**
+ * Add a nil value to the request
+ */
+static inline char*
+tp_encode_nil(struct tp *p)
+{
+	int sz = mp_sizeof_nil();
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_nil(p->p);
+	return tp_add(p, sz);
+}
+
+/**
+ * Add an uint value to the request
+ */
+static inline char*
+tp_encode_uint(struct tp *p, uint64_t num)
+{
+	int sz = mp_sizeof_uint(num);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_uint(p->p, num);
+	return tp_add(p, sz);
+}
+
+/**
+ * Add an int value to the request
+ * the value must be less than zero
+ */
+static inline char*
+tp_encode_int(struct tp *p, int64_t num)
+{
+	int sz = mp_sizeof_int(num);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_int(p->p, num);
+	return tp_add(p, sz);
+}
+
+/**
+ * Add n string value to the request, with lenght provided.
+ */
+static inline char*
+tp_encode_str(struct tp *p, const char *str, uint32_t len)
+{
+	int sz = mp_sizeof_str(len);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_str(p->p, str, len);
+	return tp_add(p, sz);
+}
+
+/**
+ * Add n zero-end srting value to the request.
+ */
+static inline char*
+tp_encode_sz(struct tp *p, const char *str)
+{
+	uint32_t len = (uint32_t)strlen(str);
+	int sz = mp_sizeof_str(len);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_str(p->p, str, len);
+	return tp_add(p, sz);
+}
+
+/**
+ * Add n zero-end srting value to the request.
+ * (added for compatibility with tarantool 1.5 connector)
+ */
+static inline char*
+tp_sz(struct tp *p, const char *str)
+{
+	return tp_encode_sz(p, str);
+}
+
+/**
+ * Add an binary data to the request.
+ */
+static inline char*
+tp_encode_bin(struct tp *p, const char *str, uint32_t len)
+{
+	int sz = mp_sizeof_bin(len);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_bin(p->p, str, len);
+	return tp_add(p, sz);
+}
+
+/**
+ * Add n array to the request with a given size
+ *
+ * tp_encode_array(p, 3);
+ * tp_encode_uint(p, 1);
+ * tp_encode_uint(p, 2);
+ * tp_encode_uint(p, 3);
+ */
+static inline char*
+tp_encode_array(struct tp *p, uint32_t size)
+{
+	int sz = mp_sizeof_array(size);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_array(p->p, size);
+	return tp_add(p, sz);
+}
+
+/**
+ * Add n map to the request with a given size
+ *
+ * tp_encode_array(p, 2);
+ * tp_encode_sz(p, "name");
+ * tp_encode_sz(p, "Alan");
+ * tp_encode_sz(p, "birth");
+ * tp_encode_uint(p, 1912);
+ */
+static inline char*
+tp_encode_map(struct tp *p, uint32_t size)
+{
+	int sz = mp_sizeof_map(size);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_map(p->p, size);
+	return tp_add(p, sz);
+}
+
+/**
+ * Add a bool value to the request.
+ */
+static inline char*
+tp_encode_bool(struct tp *p, bool val)
+{
+	int sz = mp_sizeof_bool(val);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_bool(p->p, val);
+	return tp_add(p, sz);
+}
+
+/**
+ * Add a float value to the request.
+ */
+static inline char*
+tp_encode_float(struct tp *p, float num)
+{
+	int sz = mp_sizeof_float(num);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_float(p->p, num);
+	return tp_add(p, sz);
+}
+
+/**
+ * Add a double float value to the request.
+ */
+static inline char*
+tp_encode_double(struct tp *p, double num)
+{
+	int sz = mp_sizeof_double(num);
+	if (tpunlikely(tp_ensure(p, sz) == -1))
+		return NULL;
+	mp_encode_double(p->p, num);
+	return tp_add(p, sz);
+}
+
+/**
+ *
+ */
+static inline char*
+tp_format(struct tp *p, const char *format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	size_t unused = tp_unused(p);
+	size_t sz = mp_vformat(p->p, unused, format, args);
+	if (sz > unused) {
+		if (tpunlikely(tp_ensure(p, sz) == -1)) {
+			va_end(args);
+			return NULL;
+		}
+		mp_vformat(p->p, unused, format, args);
+	}
+	va_end(args);
+	return tp_add(p, sz);
+}
+
+
+/**
+ * Write a tuple header
+ * Same as tp_encode_array, added for compatibility.
+ */
+static inline char*
+tp_tuple(struct tp *p, uint32_t field_count)
+{
+	return tp_encode_array(p, field_count);
+}
+
+/**
+ * Write a key header
+ * Same as tp_encode_array, added for compatibility.
+ */
+static inline char*
+tp_key(struct tp *p, uint32_t part_count)
+{
+	return tp_encode_array(p, part_count);
+}
+
+/**
+ * Init msgpack iterator by a pointer to msgpack array begin.
+ * First elemet will be accessible after tp_array_itr_next call.
+ * Returns -1 on error
+ */
+static inline int
+tp_array_itr_init(struct tp_array_itr *itr, const char *data, size_t size)
+{
+	memset(itr, 0, sizeof(*itr));
+	if (size == 0 || mp_typeof(*data) != MP_ARRAY)
 		return -1;
-	*(uint32_t*)(p->u = p->p) = 0;
-	p->p += sizeof(uint32_t);
-	p->h->len += sizeof(uint32_t);
-	return tp_used(p);
+	const char *e = data;
+	if (mp_check(&e, data + size))
+		return -1;
+	itr->data = data;
+	itr->first_elem = data;
+	itr->elem_count = mp_decode_array(&itr->first_elem);
+	itr->cur_index = -1;
+	return 0;
 }
 
-/* Append a single UPDATE operation.
- *
- * May be called after tp_updatebegin().
- * Can be used to create TP_OPSET, TP_OPADD, TP_OPAND,
- * TP_OPXOR, TP_OPOR operations.
- *
- * See: tp_update() for example.
+/**
+ * Iterate to next position.
+ * return true if success, or false if there are no elemens left
+ */
+static inline bool
+tp_array_itr_next(struct tp_array_itr *itr)
+{
+	itr->cur_index++;
+	if ((uint32_t)itr->cur_index >= itr->elem_count)
+		return false;
+	if (itr->cur_index == 0)
+		itr->elem = itr->first_elem;
+	else
+		itr->elem = itr->elem_end;
+	itr->elem_end = itr->elem;
+	mp_next(&itr->elem_end);
+	return true;
+}
+
+/**
+ * Reset iterator to the begining. First elemet will be
+ * accessible after tp_array_itr_next call.
+ * return true if success, or false if there are no elemens left
+ */
+static inline void
+tp_array_itr_reset(struct tp_array_itr *itr)
+{
+	itr->cur_index = -1;
+	itr->elem = 0;
+	itr->elem_end = 0;
+}
+
+/**
+ * Init msgpack map iterator by a pointer to msgpack map begin.
+ * First elemet will be accessible after tp_map_itr_next call.
+ * Returns -1 on error
+ */
+static inline int
+tp_map_itr_init(struct tp_map_itr *itr, const char *data, size_t size)
+{
+	memset(itr, 0, sizeof(*itr));
+	if (size == 0 || mp_typeof(*data) != MP_MAP)
+		return -1;
+	const char *e = data;
+	if (mp_check(&e, data + size))
+		return -1;
+	itr->data = data;
+	itr->first_key = data;
+	itr->pair_count = mp_decode_array(&itr->first_key);
+	itr->cur_index = -1;
+	return 0;
+}
+
+/**
+ * Iterate to next position.
+ * return true if success, or false if there are no pairs left
+ */
+static inline bool
+tp_map_itr_next(struct tp_map_itr *itr)
+{
+	itr->cur_index++;
+	if ((uint32_t)itr->cur_index >= itr->pair_count)
+		return false;
+	if (itr->cur_index == 0)
+		itr->key = itr->first_key;
+	else
+		itr->key = itr->value_end;
+	itr->key_end = itr->key;
+	mp_next(&itr->value);
+	itr->value = itr->key_end;
+	itr->value_end = itr->value;
+	mp_next(&itr->value_end);
+	return true;
+}
+
+/**
+ * Reset iterator to the begining. First pair will be
+ * accessible after tp_map_itr_next call.
+ * return true if success, or false if there are no pairs left
+ */
+static inline void
+tp_map_itr_reset(struct tp_map_itr *itr)
+{
+	itr->cur_index = -1;
+	itr->key = 0;
+	itr->key_end = 0;
+	itr->value = 0;
+	itr->value_end = 0;
+}
+
+/**
+ * Initialize struct tpresponse with a data buffer.
+ * Returns -1 if an error occured
+ * Returns 0 if buffer contains only part of the response
+ * Return size in bytes of the response in buffer on success
  */
 static inline ssize_t
-tp_op(struct tp *p, uint32_t field, uint8_t op, const char *data,
-      size_t size) {
-	assert(p->h != NULL);
-	assert(p->u != NULL);
-	assert(p->h->type == TP_UPDATE);
-	size_t sz = 4 + 1 + tp_ber128sizeof(size) + size;
-	if (tpunlikely(tp_ensure(p, sz)) == -1)
+tp_reply(struct tpresponse *r, const char * const buf, size_t size)
+{
+	memset(r, 0, sizeof(*r));
+	if (size == 0)
+		return 0;
+	const char *p = buf;
+	/* len */
+	const char *test = p;
+	if (mp_check(&test, buf + size))
 		return -1;
-	/* field */
-	*(uint32_t*)(p->p) = field;
-	p->p += sizeof(uint32_t);
-	/* operation */
-	*(uint8_t*)(p->p) = op;
-	p->p += sizeof(uint8_t);
-	/* data */
-	tp_ber128save(p, size);
-	if (tplikely(data))
-		memcpy(p->p, data, size);
-	p->p += size;
-	/* update offset and count */
-	p->h->len += sz;
-	(*(uint32_t*)p->u)++;
-	return tp_used(p);
+	if (mp_typeof(*p) != MP_UINT)
+		return -1;
+	uint32_t len = mp_decode_uint(&p);
+	if (size < len + (uint32_t)(p - buf))
+		return 0;
+	/* header */
+	test = p;
+	if (mp_check(&test, buf + size))
+		return -1;
+	if (mp_typeof(*p) != MP_MAP)
+		return -1;
+	uint32_t n = mp_decode_map(&p);
+	while (n-- > 0) {
+		if (mp_typeof(*p) != MP_UINT)
+			return -1;
+		uint32_t key = mp_decode_uint(&p);
+		if (mp_typeof(*p) != MP_UINT)
+			return -1;
+		switch (key) {
+		case TP_SYNC:
+			if (mp_typeof(*p) != MP_UINT)
+				return -1;
+			r->sync = mp_decode_uint(&p);
+			break;
+		case TP_CODE:
+			if (mp_typeof(*p) != MP_UINT)
+				return -1;
+			r->code = mp_decode_uint(&p);
+			break;
+		default:
+			return -1;
+		}
+		r->bitmap |= (1ULL << key);
+	}
+
+	/* body */
+	if (p == buf + len + 5)
+		return len + 5; /* no body */
+	test = p;
+	if (mp_check(&test, buf + size))
+		return -1;
+	if (mp_typeof(*p) != MP_MAP)
+		return -1;
+	n = mp_decode_map(&p);
+	while (n-- > 0) {
+		uint32_t key = mp_decode_uint(&p);
+		switch (key) {
+		case TP_ERROR: {
+			if (mp_typeof(*p) != MP_STR)
+				return -1;
+			uint32_t elen = 0;
+			r->error = mp_decode_str(&p, &elen);
+			r->error_end = r->error + elen;
+			break;
+		}
+		case TP_DATA: {
+			if (mp_typeof(*p) != MP_ARRAY)
+				return -1;
+			r->data = p;
+			mp_next(&p);
+			r->data_end = p;
+			break;
+		}
+		}
+		r->bitmap |= (1ULL << key);
+	}
+	if (r->data) {
+		if (tp_array_itr_init(&r->tuple_itr, r->data, r->data_end - r->data))
+			return -1;
+	}
+	return p - buf;
 }
 
-/* Append a SPLICE operation. This operation is unlike any other,
- * since it takes three arguments instead of one.
+/**
+ * Return the current request id
  */
-static inline ssize_t
-tp_opsplice(struct tp *p, uint32_t field, uint32_t offset,
-	    uint32_t cut, const char *paste, size_t paste_len) {
-	uint32_t olen = tp_ber128sizeof(sizeof(offset)),
-	         clen = tp_ber128sizeof(sizeof(cut)),
-	         plen = tp_ber128sizeof(paste_len);
-	uint32_t sz = olen + sizeof(offset) + clen + sizeof(cut) +
-	              plen + paste_len;
-	ssize_t rc = tp_op(p, field, TP_OPSPLICE, NULL, sz);
-	if (tpunlikely(rc == -1))
-		return -1;
-	p->p -= sz;
-	tp_ber128save(p, sizeof(offset));
-	memcpy(p->p, &offset, sizeof(offset));
-	p->p += sizeof(offset);
-	tp_ber128save(p, sizeof(cut));
-	memcpy(p->p, &cut, sizeof(cut));
-	p->p += sizeof(cut);
-	tp_ber128save(p, paste_len);
-	memcpy(p->p, paste, paste_len);
-	p->p += paste_len;
-	return rc;
+static inline uint32_t
+tp_getreqid(struct tpresponse *r)
+{
+	return r->sync;
 }
 
-/* Append a '\0' terminated string as a tuple field. */
-static inline ssize_t
-tp_sz(struct tp *p, const char *sz) {
-	return tp_field(p, sz, strlen(sz));
+/**
+ * Check if the response has a tuple.
+ * Automatically checked during tp_next() iteration.
+ */
+static inline int
+tp_hasdata(struct tpresponse *r)
+{
+	return r->tuple_itr.elem_count > 0;
+}
+
+/**
+ * Get tuple count in response
+ */
+static inline uint32_t
+tp_tuplecount(const struct tpresponse *r)
+{
+	return r->tuple_itr.elem_count;
+}
+
+/**
+ * Rewind iteration to the first tuple.
+ * Note that initialization of tpresponse via tp_reply
+ * rewinds tuple iteration automatically
+ */
+static inline void
+tp_rewind(struct tpresponse *r)
+{
+	tp_array_itr_reset(&r->tuple_itr);
+	memset(&r->field_itr, 0, sizeof(r->field_itr));
+}
+
+/**
+ * Skip to the next tuple or to the first tuple after rewind
+ */
+static inline int
+tp_next(struct tpresponse *r)
+{
+	if (!tp_array_itr_next(&r->tuple_itr)) {
+		memset(&r->field_itr, 0, sizeof(r->field_itr));
+		return 0;
+	}
+	tp_array_itr_init(&r->field_itr, r->tuple_itr.elem, r->tuple_itr.elem_end - r->tuple_itr.elem);
+	return 1;
+
+}
+
+/**
+ * Check if there is a one more tuple.
+ */
+static inline int
+tp_hasnext(struct tpresponse *r)
+{
+	return (uint32_t)(r->tuple_itr.cur_index + 1) < r->tuple_itr.elem_count;
+}
+
+/**
+ * Get the current tuple data, all fields.
+ */
+static inline const char *
+tp_gettuple(struct tpresponse *r)
+{
+	return r->tuple_itr.elem;
+}
+
+/**
+ * Get the current tuple size in bytes.
+ */
+static inline uint32_t
+tp_tuplesize(struct tpresponse *r)
+{
+	return (uint32_t)(r->tuple_itr.elem_end - r->tuple_itr.elem);
+}
+
+/**
+ *  Get a pointer to the end of the current tuple.
+ */
+static inline const char *
+tp_tupleend(struct tpresponse *r)
+{
+	return r->tuple_itr.elem_end;
 }
 
 /*
- * Returns the number of bytes which are required to fully
- * store a reply in the buffer.
- * The return value can be negative, which indicates that
- * there is a complete reply in the buffer which is not parsed
- * and discarded yet.
+ * Rewind iteration to the first tuple field of the current tuple.
+ * Note that iterating tuples of the response
+ * rewinds field iteration automatically
  */
-static inline ssize_t
-tp_reqbuf(const char *buf, size_t size) {
-	if (tpunlikely(size < sizeof(struct tp_h)))
-		return sizeof(struct tp_h) - size;
-	register int sz =
-		((struct tp_h*)buf)->len + sizeof(struct tp_h);
-	return (tplikely((int)size < sz)) ?
-	                 sz - size : -(size - sz);
+static inline void
+tp_rewindfield(struct tpresponse *r)
+{
+	tp_array_itr_reset(&r->field_itr);
 }
 
-/* Same as tp_reqbuf(), but works on the buffer in struct tp.
- */
-static inline ssize_t
-tp_req(struct tp *p) {
-	return tp_reqbuf(p->s, tp_size(p));
-}
-
-/* Get the size of a yet unprocessed reply data.
- *
- * This is not part of the API.
- */
-static inline size_t
-tp_unfetched(struct tp *p) {
-	return p->p - p->c;
-}
-
-/* Advance the reply processed pointer.
- *
- * This is not part of the API, tp_use() is a higher level
- * function.
- */
-static inline void*
-tp_fetch(struct tp *p, int inc) {
-	assert((int)tp_unfetched(p) >= inc);
-	register char *po = p->c;
-	p->c += inc;
-	return po;
-}
-
-/* Get the last server error.
-*/
-static inline char*
-tp_replyerror(struct tp *p) {
-	return p->c;
-}
-
-/* Get the length of the last error message.
+/**
+ * Skip to the next field.
  */
 static inline int
-tp_replyerrorlen(struct tp *p) {
-	return tp_unfetched(p);
-}
-
-/* Get the tuple count in the response (there must be
- * no error).
- */
-static inline uint32_t
-tp_replycount(struct tp *p) {
-	return p->cnt;
-}
-
-/* Get the current response return code.
- */
-static inline uint32_t
-tp_replycode(struct tp *p) {
-	return p->code;
-}
-
-/* Get the current response operation code. */
-static inline uint32_t
-tp_replyop(struct tp *p) {
-	return p->h->type;
+tp_nextfield(struct tpresponse *r)
+{
+	return tp_array_itr_next(&r->field_itr);
 }
 
 /*
- * Initialize the buffer with a fully read server response.
- * The response is parsed.
- *
- * struct tp rep;
- * tp_init(&rep, reply_buf, reply_size, NULL, NULL);
- *
- * ssize_t server_code = tp_reply(&rep);
- *
- * printf("op:    %d\n", tp_replyop(&rep));
- * printf("count: %d\n", tp_replycount(&rep));
- * printf("code:  %zu\n", server_code);
- *
- * if (server_code != 0) {
- *   printf("error: %-.*s\n", tp_replyerrorlen(&rep),
- *          tp_replyerror(&rep));
- * }
- *
+ * Check if the current tuple has a one more field.
  */
-tpfunction_unused static ssize_t
-tp_reply(struct tp *p) {
-	ssize_t used = tp_req(p);
-	if (tpunlikely(used > 0))
-		return -1;
-	/* this is end of packet in continious buffer */
-	p->p = p->e + used; /* end - used */
-	p->c = p->s;
-	p->h = tp_fetch(p, sizeof(struct tp_h));
-	p->t = p->f = p->u = NULL;
-	p->cnt = 0;
-	p->code = 0;
-	if (tpunlikely(p->h->type == TP_PING))
-		return 0;
-	if (tpunlikely(p->h->type != TP_UPDATE &&
-	                p->h->type != TP_INSERT &&
-	                p->h->type != TP_DELETE &&
-	                p->h->type != TP_SELECT &&
-	                p->h->type != TP_CALL))
-		return -1;
-	p->code = *(uint32_t*)tp_fetch(p, sizeof(uint32_t));
-	if (p->code != 0)
-		return p->code;
-	/* BOX_QUIET */
-	if (tpunlikely(tp_unfetched(p) == 0))
-		return p->code;
-	p->cnt = *(uint32_t*)tp_fetch(p, sizeof(uint32_t));
-	return p->code;
+static inline int
+tp_hasnextfield(struct tpresponse *r)
+{
+	return (uint32_t)(r->field_itr.cur_index + 1) < r->field_itr.elem_count;
 }
 
-/* Example: iteration over returned tuples.
- *
- * while (tp_next(&rep)) {
- *   printf("tuple fields: %d\n", tp_tuplecount(&rep));
- *   printf("tuple size: %d\n", tp_tuplesize(&rep));
- *   printf("[");
- *   while (tp_nextfield(&rep)) {
- *     printf("%-.*s", tp_getfieldsize(rep), tp_getfield(&rep));
- *     if (tp_hasnextfield(&rep))
- *       printf(", ");
- *   }
- *   printf("]\n");
- * }
-*/
 
-/* Rewind iteration to the first tuple. */
-static inline void
-tp_rewind(struct tp *p) {
-	p->t = NULL;
-	p->f = NULL;
+/**
+ * Get the current field.
+ */
+static inline const char *
+tp_getfield(struct tpresponse *r)
+{
+	return r->field_itr.elem;
 }
 
-/* Rewind iteration to the first tuple field of the current tuple. */
-static inline void
-tp_rewindfield(struct tp *p) {
-	p->f = NULL;
-}
-
-/* Get the current tuple data, all fields. */
-static inline char*
-tp_gettuple(struct tp *p) {
-	return p->t;
-}
-
-/* Get the current tuple size. */
+/**
+ * Get the current field size in bytes.
+ */
 static inline uint32_t
-tp_tuplesize(struct tp *p) {
-	return p->tsz;
+tp_getfieldsize(struct tpresponse *r)
+{
+	return (uint32_t)(r->field_itr.elem_end - r->field_itr.elem);
 }
 
-/* Get the current field. */
-static inline char*
-tp_getfield(struct tp *p) {
-	return p->f;
+/*
+ * Determine MsgPack type by a first byte of encoded data.
+ */
+static inline enum tp_type
+tp_typeof(const char c)
+{
+	return mp_typeof(c);
 }
 
-/* Get the current field size. */
-static inline uint32_t
-tp_getfieldsize(struct tp *p) {
-	return p->fsz;
+/**
+ * Read unsigned integer value
+ */
+static inline uint64_t
+tp_get_uint(const char *field)
+{
+	return mp_decode_uint(&field);
 }
 
-/* Get a pointer to the end of the current tuple. */
-static inline char*
-tp_tupleend(struct tp *p) {
-	/* tuple_size + p->t + cardinaltiy_size +
-	 * fields_size */
-	return p->t + 4 + p->tsz;
+/**
+ * Read signed integer value
+ */
+static inline int64_t
+tp_get_int(const char *field)
+{
+	return mp_decode_int(&field);
 }
 
-/* Check if the response has a tuple.
- * Automatically checked during tp_next() iteration. */
-static inline int
-tp_hasdata(struct tp *p) {
-	return tp_replyop(p) != TP_PING && tp_unfetched(p) > 0;
+/**
+ * Read float value
+ */
+static inline float
+tp_get_float(const char *field)
+{
+	return mp_decode_float(&field);
 }
 
-/* Check if there is a one more tuple. */
-static inline int
-tp_hasnext(struct tp *p) {
-	assert(p->t != NULL);
-	return (p->p - tp_tupleend(p)) >= 4;
+/**
+ * Read double value
+ */
+static inline double
+tp_get_double(const char *field)
+{
+	return mp_decode_double(&field);
 }
 
-/* Check if the current tuple has a one more field. */
-static inline int
-tp_hasnextfield(struct tp *p) {
-	assert(p->t != NULL);
-	register char *f = p->f + p->fsz;
-	if (tpunlikely(p->f == NULL))
-		f = p->t + 4;
-	return (tp_tupleend(p) - f) >= 1;
+/**
+ * Read bool value
+ */
+static inline bool
+tp_get_bool(const char *field)
+{
+	return mp_decode_bool(&field);
 }
 
-/* Skip to the next tuple.
- * Tuple can be accessed using:
- * tp_tuplecount(), tp_tuplesize(), tp_gettuple(). */
-static inline int
-tp_next(struct tp *p) {
-	if (tpunlikely(p->t == NULL)) {
-		if (tpunlikely(! tp_hasdata(p)))
-			return 0;
-		p->t = p->c + 4;
-		goto fetch;
-	}
-	if (tpunlikely(! tp_hasnext(p)))
-		return 0;
-	p->t = tp_tupleend(p) + 4;
-fetch:
-	p->tsz = *(uint32_t*)(p->t - 4);
-	if (tpunlikely((p->t + p->tsz) > p->e))
-		return -1;
-	p->f = NULL;
-	return 1;
+/**
+ * Read string value
+ */
+static inline const char *
+tp_get_str(const char *field, uint32_t *size)
+{
+	return mp_decode_str(&field, size);
 }
 
-/* Skip to the next field.
- * Data can be accessed using: tp_getfieldsize(), tp_getfield(). */
-static inline int
-tp_nextfield(struct tp *p) {
-	assert(p->t != NULL);
-	if (tpunlikely(p->f == NULL)) {
-		if (tpunlikely(! tp_hasnextfield(p)))
-			return 0;
-		p->f = p->t + 4;
-		goto fetch;
-	}
-	if (tpunlikely(! tp_hasnextfield(p)))
-		return 0;
-	p->f += p->fsz;
-fetch:;
-	register int rc = tp_ber128load(p, &p->fsz);
-	if (tpunlikely(rc == -1))
-		return -1;
-	if (tpunlikely((p->f + p->fsz) > p->e))
-		return -1;
-	return 1;
+/**
+ * Read binary data value
+ */
+static inline const char *
+tp_get_bin(const char *field, uint32_t *size)
+{
+	return mp_decode_bin(&field, size);
 }
+
+/* }}} */
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif /* TP_H_INCLUDED */
+#endif

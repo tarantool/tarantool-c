@@ -52,7 +52,7 @@ extern "C" {
 # define TB_PREFIX tarantool
 #endif
 
-#include TB_INCLUDE(tp.h)
+#include TB_INCLUDE(tp.1.5.h)
 #include TB_INCLUDE(file.h)
 #include TB_INCLUDE(session.h)
 #include TB_INCLUDE(console.h)
