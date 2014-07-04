@@ -6,8 +6,9 @@
 #include <string.h>
 #include <assert.h>
 #include "msgpuck.h"
-#include "sha1.h"
-#include "base64.h"
+#include "third_party/sha1.h"
+#include "third_party/base64.h"
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
