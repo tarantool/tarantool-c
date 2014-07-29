@@ -17,3 +17,6 @@ set(LIBTB_TEST16SRC test.c)
 add_executable(${LIBTB_TEST16NAME} ${LIBTB_TEST16SRC})
 target_link_libraries(${LIBTB_TEST16NAME} tb)
 set_target_properties(${LIBTB_TEST16NAME} PROPERTIES COMPILE_FLAGS "${LIBTB_TESTCFLAGS}")
+
+add_executable(tph_cpp tph_cpp.cc)
+set_target_properties(tph_cpp PROPERTIES COMPILE_FLAGS "-W -Wall -ansi -Werror")

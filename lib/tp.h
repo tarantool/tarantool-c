@@ -2,7 +2,6 @@
 #define TP_H_INCLUDED
 
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 #include <assert.h>
 #include "msgpuck.h"
@@ -38,6 +37,21 @@ extern "C" {
 
 /* {{{ API declaration */
 struct tp;
+
+/* available types */
+enum tp_type {
+	TP_NIL = MP_NIL,
+	TP_UINT = MP_UINT,
+	TP_INT = MP_INT,
+	TP_STR = MP_STR,
+	TP_BIN = MP_BIN,
+	TP_ARRAY = MP_ARRAY,
+	TP_MAP = MP_MAP,
+	TP_BOOL = MP_BOOL,
+	TP_FLOAT = MP_FLOAT,
+	TP_DOUBLE = MP_DOUBLE,
+	TP_EXT = MP_EXT
+};
 
 typedef char *(*tp_reserve)(struct tp *p, size_t req, size_t *size);
 
@@ -129,7 +143,7 @@ struct tpresponse {
  * For example salt is used for autorizaion (tp_auth).
  * Returns 0 if buffer is too small or greetings size (128) on success
  */
-static ssize_t
+static inline ssize_t
 tp_greeting(struct tpgreeting *g, char *buf, size_t size);
 
 /**
@@ -147,7 +161,7 @@ tp_greeting(struct tpgreeting *g, char *buf, size_t size);
  * when the buffer is no longer needed.
  *  (eg. free(p->s) or tp_free(p) );
  */
-static void
+static inline void
 tp_init(struct tp *p, char *buf, size_t size,
         tp_reserve reserve, void *obj);
 
@@ -170,38 +184,38 @@ tp_init(struct tp *p, char *buf, size_t size,
  * 	return NULL;
  * }
 */
-tpfunction_unused static char*
+tpfunction_unused static inline char*
 tp_realloc(struct tp *p, size_t required, size_t *size);
 
 /**
  * Free function for use in a pair with tp_realloc.
  * Don't use it when tp inited with static buffer!
  */
-static void
+static inline void
 tp_free(struct tp *p);
 
 /**
  * Get currently allocated buffer pointer
  */
-static char*
+static inline char *
 tp_buf(struct tp *p);
 
 /**
  * Get currently allocated buffer size
  */
-static size_t
+static inline size_t
 tp_size(struct tp *p);
 
 /**
  * Get the size of data in the buffer
  */
-static size_t
+static inline size_t
 tp_used(struct tp *p);
 
 /**
  * Get the size available for write
  */
-static size_t
+static inline size_t
 tp_unused(struct tp *p);
 
 /**
@@ -212,7 +226,7 @@ tp_unused(struct tp *p);
  * tp_init(&req, buf, sizeof(buf), NULL, NULL);
  * tp_ping(&req);
  */
-static inline char*
+static inline char *
 tp_ping(struct tp *p);
 
 /**
@@ -223,7 +237,7 @@ tp_ping(struct tp *p);
  *
  * tp_auth(p, greet.salt_base64, "admin", 5, "pass", 4);
  */
-static char*
+static inline char *
 tp_auth(struct tp *p, const char *salt_base64, const char *user, int ulen, const char *pass, int plen);
 
 /**
@@ -236,7 +250,7 @@ tp_auth(struct tp *p, const char *salt_base64, const char *user, int ulen, const
  * tp_key(&req, 1);
  * tp_sz(&req, "key");
  */
-static char*
+static inline char *
 tp_select(struct tp *p, uint32_t space, uint32_t index,
 	  uint32_t offset, uint32_t limit);
 
@@ -251,7 +265,7 @@ tp_select(struct tp *p, uint32_t space, uint32_t index,
  * tp_sz(&req, "key");
  * tp_sz(&req, "value");
  */
-static inline char*
+static inline char *
 tp_insert(struct tp *p, uint32_t space);
 
 /**
@@ -265,7 +279,7 @@ tp_insert(struct tp *p, uint32_t space);
  * tp_sz(&req, "key");
  * tp_sz(&req, "value");
  */
-static char*
+static inline char *
 tp_replace(struct tp *p, uint32_t space);
 
 /**
@@ -278,7 +292,7 @@ tp_replace(struct tp *p, uint32_t space);
  * tp_key(&req, 1);
  * tp_sz(&req, "key");
  */
-static char*
+static inline char *
 tp_delete(struct tp *p, uint32_t space);
 
 /**
@@ -296,14 +310,14 @@ tp_delete(struct tp *p, uint32_t space);
  * tp_op(&req, "=", 3); // set a field 3 ..
  * tp_sz(&req, "value"); // .. a value "value"
  */
-static char*
+static inline char *
 tp_update(struct tp *p, uint32_t space);
 
 /**
  * Begin update operations.
  * See tp_update description for details.
  */
-static char*
+static inline char *
 tp_updatebegin(struct tp *p, uint32_t op_count);
 
 /**
@@ -323,7 +337,7 @@ tp_updatebegin(struct tp *p, uint32_t op_count);
  * "^" - bitwise XOR of argument and field <field_no>
  * "|" - bitwise OR of argument and field <field_no>
  */
-static inline char*
+static inline char *
 tp_op(struct tp *p, char op, uint32_t field_no);
 
 /**
@@ -339,71 +353,71 @@ tp_op(struct tp *p, char op, uint32_t field_no);
  * tp_sz(&req, "arg1");
  * tp_sz(&req, "arg2");
  */
-static char*
+static inline char*
 tp_call(struct tp *p, const char *function, int len);
 
 /**
  *
  */
-static char*
+static inline char *
 tp_format(struct tp *p, const char *format, ...);
 
 /**
  * Write a tuple header
  * Same as tp_encode_array, added for compatibility.
  */
-static char*
+static inline char *
 tp_tuple(struct tp *p, uint32_t field_count);
 
 /**
  * Write a key header
  * Same as tp_encode_array, added for compatibility.
  */
-static char*
+static inline char *
 tp_key(struct tp *p, uint32_t part_count);
 
 /**
  * Add an uint value to the request
  */
-static char*
+static inline char *
 tp_encode_uint(struct tp *p, uint64_t num);
 
 /**
  * Add an int value to the request
  * the value must be less than zero
  */
-static char*
+static inline char *
 tp_encode_int(struct tp *p, int64_t num);
 
 /**
  * Add n string value to the request, with lenght provided.
  */
-static char*
+static inline char *
 tp_encode_str(struct tp *p, const char *str, uint32_t len);
 
 /**
  * Add n zero-end srting value to the request.
  */
-static char*
+static inline char *
 tp_encode_sz(struct tp *p, const char *str);
 
 /**
  * Add n zero-end srting value to the request.
  * (added for compatibility with tarantool 1.5 connector)
  */
-static char*
+static inline char *
 tp_sz(struct tp *p, const char *str);
 
 /**
  * Add a nil value to the request
  */
-static char*
+static inline char *
 tp_encode_nil(struct tp *p);
 
 /**
  * Add an binary data to the request.
  */
-static char*
+static inline char *
 tp_encode_bin(struct tp *p, const char *str, uint32_t len);
 
 /**
@@ -414,7 +428,7 @@ tp_encode_bin(struct tp *p, const char *str, uint32_t len);
  * tp_encode_uint(p, 2);
  * tp_encode_uint(p, 3);
  */
-static char*
+static inline char *
 tp_encode_array(struct tp *p, uint32_t size);
 
 /**
@@ -426,25 +440,25 @@ tp_encode_array(struct tp *p, uint32_t size);
  * tp_encode_sz(p, "birth");
  * tp_encode_uint(p, 1912);
  */
-static char*
+static inline char *
 tp_encode_map(struct tp *p, uint32_t size);
 
 /**
  * Add a bool value to the request.
  */
-static char*
+static inline char *
 tp_encode_bool(struct tp *p, bool val);
 
 /**
  * Add a float value to the request.
  */
-static char*
+static inline char *
 tp_encode_float(struct tp *p, float num);
 
 /**
  * Add a double float value to the request.
  */
-static char*
+static inline char *
 tp_encode_double(struct tp *p, double num);
 
 /**
@@ -467,38 +481,38 @@ tp_ensure(struct tp *p, size_t size);
  * Returns 0 if buffer contains only part of the response
  * Return size in bytes of the response in buffer on success
  */
-static ssize_t
+static inline ssize_t
 tp_reply(struct tpresponse *r, const char * const buf, size_t size);
 
 /**
  * Return the current request id
  */
-static uint32_t
+static inline uint32_t
 tp_getreqid(struct tpresponse *r);
 
 /**
  * Check if the response has a tuple.
  * Automatically checked during tp_next() iteration.
  */
-static int
+static inline int
 tp_hasdata(struct tpresponse *r);
 
 /**
  * Get tuple count in response
  */
-static uint32_t
+static inline uint32_t
 tp_tuplecount(const struct tpresponse *r);
 
 /**
  * Skip to the next tuple or to the first tuple after rewind
  */
-static int
+static inline int
 tp_next(struct tpresponse *r);
 
 /**
  * Check if there is a one more tuple.
  */
-static int
+static inline int
 tp_hasnext(struct tpresponse *r);
 
 /**
@@ -506,25 +520,25 @@ tp_hasnext(struct tpresponse *r);
  * Note that initialization of tpresponse via tp_reply
  * rewinds tuple iteration automatically
  */
-static void
+static inline void
 tp_rewind(struct tpresponse *r);
 
 /**
  * Get the current tuple data, all fields.
  */
-static const char *
+static inline const char *
 tp_gettuple(struct tpresponse *r);
 
 /**
  * Get the current tuple size in bytes.
  */
-static uint32_t
+static inline uint32_t
 tp_tuplesize(struct tpresponse *r);
 
 /**
  *  Get a pointer to the end of the current tuple.
  */
-static const char *
+static inline const char *
 tp_tupleend(struct tpresponse *r);
 
 /**
@@ -536,7 +550,7 @@ tp_nextfield(struct tpresponse *r);
 /**
  * Get the current field.
  */
-static const char *
+static inline const char *
 tp_getfield(struct tpresponse *r);
 
 /*
@@ -544,68 +558,68 @@ tp_getfield(struct tpresponse *r);
  * Note that iterating tuples of the response
  * rewinds field iteration automatically
  */
-static void
+static inline void
 tp_rewindfield(struct tpresponse *r);
 
 /*
  * Check if the current tuple has a one more field.
  */
-static int
+static inline int
 tp_hasnextfield(struct tpresponse *r);
 
 
 /**
  * Get the current field size in bytes.
  */
-static uint32_t
+static inline uint32_t
 tp_getfieldsize(struct tpresponse *r);
 
 /*
  * Determine MsgPack type by a first byte of encoded data.
  */
-static enum tp_type
+static inline enum tp_type
 tp_typeof(const char c);
 
 /**
  * Read unsigned integer value
  */
-static uint64_t
+static inline uint64_t
 tp_get_uint(const char *field);
 
 /**
  * Read signed integer value
  */
-static int64_t
+static inline int64_t
 tp_get_int(const char *field);
 
 /**
  * Read float value
  */
-static float
+static inline float
 tp_get_float(const char *field);
 
 /**
  * Read double value
  */
-static double
+static inline double
 tp_get_double(const char *field);
 
 /**
  * Read bool value
  */
-static bool
+static inline bool
 tp_get_bool(const char *field);
 
 /**
  * Read string value
  */
-static const char *
+static inline const char *
 tp_get_str(const char *field, uint32_t *size);
 
 /**
  * Read binary data value
  */
-static const char *
+static inline const char *
 tp_get_bin(const char *field, uint32_t *size);
 
 
@@ -614,14 +628,14 @@ tp_get_bin(const char *field, uint32_t *size);
  * First elemet will be accessible after tp_array_itr_next call.
  * Returns -1 on error
  */
-static int
+static inline int
 tp_array_itr_init(struct tp_array_itr *itr, const char *data, size_t size);
 
 /**
  * Iterate to next position.
  * return true if success, or false if there are no elemens left
  */
-static bool
+static inline bool
 tp_array_itr_next(struct tp_array_itr *itr);
 
 /**
@@ -629,7 +643,7 @@ tp_array_itr_next(struct tp_array_itr *itr);
  * accessible after tp_array_itr_next call.
  * return true if success, or false if there are no elemens left
  */
-static void
+static inline void
 tp_array_itr_reset(struct tp_array_itr *itr);
 
 /**
@@ -637,14 +651,14 @@ tp_array_itr_reset(struct tp_array_itr *itr);
  * First elemet will be accessible after tp_map_itr_next call.
  * Returns -1 on error
  */
-static int
+static inline int
 tp_map_itr_init(struct tp_map_itr *itr, const char *data, size_t size);
 
 /**
  * Iterate to next position.
  * return true if success, or false if there are no pairs left
  */
-static bool
+static inline bool
 tp_map_itr_next(struct tp_map_itr *itr);
 
 /**
@@ -652,28 +666,13 @@ tp_map_itr_next(struct tp_map_itr *itr);
  * accessible after tp_map_itr_next call.
  * return true if success, or false if there are no pairs left
  */
-static void
+static inline void
 tp_map_itr_reset(struct tp_map_itr *itr);
 
 /* }}} */
 
 
 /* {{{ Implementation */
-
-/* available types */
-enum tp_type {
-	TP_NIL = MP_NIL,
-	TP_UINT = MP_UINT,
-	TP_INT = MP_INT,
-	TP_STR = MP_STR,
-	TP_BIN = MP_BIN,
-	TP_ARRAY = MP_ARRAY,
-	TP_MAP = MP_MAP,
-	TP_BOOL = MP_BOOL,
-	TP_FLOAT = MP_FLOAT,
-	TP_DOUBLE = MP_DOUBLE,
-	TP_EXT = MP_EXT
-};
 
 /* header */
 enum tp_header_key_t {
@@ -794,7 +793,7 @@ tp_realloc(struct tp *p, size_t required, size_t *size)
 	if (tpunlikely(toalloc < required))
 		toalloc = tp_size(p) + required;
 	*size = toalloc;
-	return realloc(p->s, toalloc);
+	return (char *) realloc(p->s, toalloc);
 }
 
 /**
@@ -873,7 +872,7 @@ tp_add(struct tp *p, size_t size)
 	assert(p->size);
 	*p->size = 0xce;
 	*(uint32_t*)(p->size + 1) = mp_bswap_u32(p->p - p->size - 5);
-	return ptr;
+	return (char *) ptr;
 }
 
 /**
@@ -1226,8 +1225,8 @@ tp_op(struct tp *p, char op, uint32_t field_no)
  * The function is for internal use, not part of the API
  */
 static inline void
-xor(unsigned char *to, unsigned const char *left,
-    unsigned const char *right, uint32_t len)
+tp_xor(unsigned char *to, const unsigned char *left,
+       const unsigned char *right, uint32_t len)
 {
 	const uint8_t *end = to + len;
 	while (to < end)
@@ -1247,7 +1246,7 @@ scramble_prepare(void *out, const void *salt, const void *password,
 	SHA1_CTX ctx;
 
 	SHA1Init(&ctx);
-	SHA1Update(&ctx, password, password_len);
+	SHA1Update(&ctx, (const unsigned char *) password, password_len);
 	SHA1Final(hash1, &ctx);
 
 	SHA1Init(&ctx);
@@ -1255,11 +1254,12 @@ scramble_prepare(void *out, const void *salt, const void *password,
 	SHA1Final(hash2, &ctx);
 
 	SHA1Init(&ctx);
-	SHA1Update(&ctx, salt, SCRAMBLE_SIZE);
+	SHA1Update(&ctx, (const unsigned char *) salt, SCRAMBLE_SIZE);
 	SHA1Update(&ctx, hash2, SCRAMBLE_SIZE);
-	SHA1Final(out, &ctx);
+	SHA1Final((unsigned char *) out, &ctx);
 
-	xor(out, hash1, out, SCRAMBLE_SIZE);
+	tp_xor((unsigned char *) out, hash1, (const unsigned char *) out,
+	       SCRAMBLE_SIZE);
 }
 
 /**
@@ -1270,7 +1270,7 @@ scramble_prepare(void *out, const void *salt, const void *password,
  *
  * tp_auth(p, greet.salt_base64, "admin", 5, "pass", 4);
  */
-static inline char*
+static inline char *
 tp_auth(struct tp *p, const char *salt_base64, const char *user, int ulen, const char *pass, int plen)
 {
 	int sz = 5 +
@@ -1481,7 +1481,7 @@ tp_encode_float(struct tp *p, float num)
 /**
  * Add a double float value to the request.
  */
-static inline char*
+static inline char *
 tp_encode_double(struct tp *p, double num)
 {
 	int sz = mp_sizeof_double(num);
@@ -1494,7 +1494,7 @@ tp_encode_double(struct tp *p, double num)
 /**
  *
  */
-static inline char*
+static inline char *
 tp_format(struct tp *p, const char *format, ...)
 {
 	va_list args;
@@ -1879,7 +1879,7 @@ tp_getfieldsize(struct tpresponse *r)
 static inline enum tp_type
 tp_typeof(const char c)
 {
-	return mp_typeof(c);
+	return (enum tp_type) mp_typeof(c);
 }
 
 /**

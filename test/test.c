@@ -42,10 +42,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-//#include <arpa/inet.h>
 
 #include <lib/tp.h>
-//#include <tp_io.h>
 
 #include <stdio.h>
 #include <limits.h>
