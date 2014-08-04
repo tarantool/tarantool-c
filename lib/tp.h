@@ -60,7 +60,7 @@ typedef char *(*tp_reserve)(struct tp *p, size_t req, size_t *size);
  */
 struct tpgreeting {
 	const char *description; /* Points to a text containg tarantool name and version */
-	const char *salt_base64; /* Points to connecion salt in base64 encodong */
+	const char *salt_base64; /* Points to connection salt in base64 encoding */
 };
 
 /*
@@ -71,7 +71,7 @@ struct tpgreeting {
 */
 struct tp {
 	char *s, *p, *e;       /* start, pos, end */
-	char *size;            /* pointer to lenght field of current request */
+	char *size;            /* pointer to length field of current request */
 	char *sync;            /* pointer to sync field of current request */
 	tp_reserve reserve;    /* realloc function pointer */
 	void *obj;             /* realloc function pointer */
@@ -125,10 +125,10 @@ struct tp_map_itr {
  */
 struct tpresponse {
 	uint64_t bitmap;               /* bitmap of field IDs that was read from response */
-	const char *buf;               /* points to begin of buffer */
+	const char *buf;               /* points to beginning of buffer */
 	uint32_t code;                 /* response code (0 is success, or errno if not) */
 	uint32_t sync;                 /* synchronization id */
-	const char *error;             /* eror message (NULL if not present) */
+	const char *error;             /* error message (NULL if not present) */
 	const char *error_end;         /* end of error message (NULL if not present) */
 	const char *data;              /* tuple data (NULL if not present) */
 	const char *data_end;          /* end if tuple data (NULL if not present) */
@@ -137,10 +137,10 @@ struct tpresponse {
 };
 
 /**
- * Receice greetings from the server.
+ * Receive greetings from the server.
  * Note, the input buffer is not copied,
  * so freeing or reusing the input buffer will invalidate tpgreeting struct
- * For example salt is used for autorizaion (tp_auth).
+ * For example salt is used for authorization (tp_auth).
  * Returns 0 if buffer is too small or greetings size (128) on success
  */
 static inline ssize_t
@@ -159,7 +159,7 @@ tp_greeting(struct tpgreeting *g, char *buf, size_t size);
  * provided.
  * If reserve function is provided, data must be manually freed
  * when the buffer is no longer needed.
- *  (eg. free(p->s) or tp_free(p) );
+ *  (e.g. free(p->s) or tp_free(p) );
  */
 static inline void
 tp_init(struct tp *p, char *buf, size_t size,
@@ -176,9 +176,9 @@ tp_init(struct tp *p, char *buf, size_t size,
  *
  * data must be manually freed when the buffer is no longer
  * needed.
- * (eg. free(p->s) or tp_free(p) );
+ * (e.g. free(p->s) or tp_free(p) );
  * if realloc will return NULL, then you must destroy previous memory.
- * (eg.
+ * (e.g.
  * if (tp_realloc(p, ..) == NULL) {
  * 	tp_free(p)
  * 	return NULL;
@@ -232,7 +232,7 @@ tp_ping(struct tp *p);
 /**
  * Create an auth request.
  *
- * salt_base64 must be gathered from tpgreeings struct,
+ * salt_base64 must be gathered from tpgreeting struct,
  * that is initialized during tp_greeting call.
  *
  * tp_auth(p, greet.salt_base64, "admin", 5, "pass", 4);
@@ -269,7 +269,7 @@ static inline char *
 tp_insert(struct tp *p, uint32_t space);
 
 /**
- * Create an replace request.
+ * Create a replace request.
  *
  * char buf[64];
  * struct tp req;
@@ -390,19 +390,19 @@ static inline char *
 tp_encode_int(struct tp *p, int64_t num);
 
 /**
- * Add n string value to the request, with lenght provided.
+ * Add a string value to the request, with length provided.
  */
 static inline char *
 tp_encode_str(struct tp *p, const char *str, uint32_t len);
 
 /**
- * Add n zero-end srting value to the request.
+ * Add a zero-end string value to the request.
  */
 static inline char *
 tp_encode_sz(struct tp *p, const char *str);
 
 /**
- * Add n zero-end srting value to the request.
+ * Add a zero-end string value to the request.
  * (added for compatibility with tarantool 1.5 connector)
  */
 static inline char *
@@ -415,13 +415,13 @@ static inline char *
 tp_encode_nil(struct tp *p);
 
 /**
- * Add an binary data to the request.
+ * Add binary data to the request.
  */
 static inline char *
 tp_encode_bin(struct tp *p, const char *str, uint32_t len);
 
 /**
- * Add n array to the request with a given size
+ * Add an array to the request with a given size
  *
  * tp_encode_array(p, 3);
  * tp_encode_uint(p, 1);
@@ -432,7 +432,7 @@ static inline char *
 tp_encode_array(struct tp *p, uint32_t size);
 
 /**
- * Add n map to the request with a given size
+ * Add a map to the request with a given size
  *
  * tp_encode_array(p, 2);
  * tp_encode_sz(p, "name");
@@ -510,7 +510,7 @@ static inline int
 tp_next(struct tpresponse *r);
 
 /**
- * Check if there is a one more tuple.
+ * Check if there is one more tuple.
  */
 static inline int
 tp_hasnext(struct tpresponse *r);
@@ -562,7 +562,7 @@ static inline void
 tp_rewindfield(struct tpresponse *r);
 
 /*
- * Check if the current tuple has a one more field.
+ * Check if the current tuple has one more field.
  */
 static inline int
 tp_hasnextfield(struct tpresponse *r);
@@ -575,7 +575,7 @@ static inline uint32_t
 tp_getfieldsize(struct tpresponse *r);
 
 /*
- * Determine MsgPack type by a first byte of encoded data.
+ * Determine MsgPack type by first byte of encoded data.
  */
 static inline enum tp_type
 tp_typeof(const char c);
@@ -624,8 +624,8 @@ tp_get_bin(const char *field, uint32_t *size);
 
 
 /**
- * Init msgpack iterator by a pointer to msgpack array begin.
- * First elemet will be accessible after tp_array_itr_next call.
+ * Init msgpack iterator by a pointer to msgpack array beginning.
+ * First element will be accessible after tp_array_itr_next call.
  * Returns -1 on error
  */
 static inline int
@@ -633,22 +633,22 @@ tp_array_itr_init(struct tp_array_itr *itr, const char *data, size_t size);
 
 /**
  * Iterate to next position.
- * return true if success, or false if there are no elemens left
+ * return true if success, or false if there are no elements left
  */
 static inline bool
 tp_array_itr_next(struct tp_array_itr *itr);
 
 /**
- * Reset iterator to the begining. First elemet will be
+ * Reset iterator to the beginning. First element will be
  * accessible after tp_array_itr_next call.
- * return true if success, or false if there are no elemens left
+ * return true if success, or false if there are no elements left
  */
 static inline void
 tp_array_itr_reset(struct tp_array_itr *itr);
 
 /**
- * Init msgpack map iterator by a pointer to msgpack map begin.
- * First elemet will be accessible after tp_map_itr_next call.
+ * Init msgpack map iterator by a pointer to msgpack map beginning.
+ * First element will be accessible after tp_map_itr_next call.
  * Returns -1 on error
  */
 static inline int
@@ -662,7 +662,7 @@ static inline bool
 tp_map_itr_next(struct tp_map_itr *itr);
 
 /**
- * Reset iterator to the begining. First pair will be
+ * Reset iterator to the beginning. First pair will be
  * accessible after tp_map_itr_next call.
  * return true if success, or false if there are no pairs left
  */
@@ -714,10 +714,10 @@ enum tp_request_type {
 static const uint32_t SCRAMBLE_SIZE = 20;
 
 /**
- * Receice greetings from the server.
+ * Receive greetings from the server.
  * Note, the input buffer is not copied,
  * so freeing or reusing the input buffer will invalidate tpgreeting struct
- * For example salt is used for autorizaion (tp_auth).
+ * For example salt is used for authorization (tp_auth).
  * Returns 0 if buffer is too small or greetings size (128) on success
  */
 static inline ssize_t
@@ -778,9 +778,9 @@ tp_unused(struct tp *p)
  *
  * data must be manually freed when the buffer is no longer
  * needed.
- * (eg. free(p->s) or tp_free(p) );
+ * (e.g. free(p->s) or tp_free(p) );
  * if realloc will return NULL, then you must destroy previous memory.
- * (eg.
+ * (e.g.
  * if (tp_realloc(p, ..) == NULL) {
  * 	tp_free(p)
  * 	return NULL;
@@ -819,7 +819,7 @@ tp_free(struct tp *p)
  * provided.
  * If reserve function is provided, data must be manually freed
  * when the buffer is no longer needed.
- *  (eg. free(p->s) or tp_free(p) );
+ *  (e.g. free(p->s) or tp_free(p) );
  */
 static inline void
 tp_init(struct tp *p, char *buf, size_t size,
@@ -837,7 +837,7 @@ tp_init(struct tp *p, char *buf, size_t size,
 /**
  * Ensure that buffer has enough space to fill size bytes, resize
  * buffer if needed. Returns -1 on error, and new allocated size
- * of success.
+ * on success.
  */
 static inline ssize_t
 tp_ensure(struct tp *p, size_t size)
@@ -861,8 +861,8 @@ tp_ensure(struct tp *p, size_t size)
 }
 
 /**
- * Accept a data of specified size.
- * This is an function for internal use, and is not part of an API
+ * Accept data of specified size.
+ * This is a function for internal use, and is not part of an API
  */
 static inline char*
 tp_add(struct tp *p, size_t size)
@@ -1003,7 +1003,7 @@ tp_insert(struct tp *p, uint32_t space)
 }
 
 /**
- * Create an replace request.
+ * Create a replace request.
  *
  * char buf[64];
  * struct tp req;
@@ -1265,7 +1265,7 @@ scramble_prepare(void *out, const void *salt, const void *password,
 /**
  * Create an auth request.
  *
- * salt_base64 must be gathered from tpgreeings struct,
+ * salt_base64 must be gathered from tpgreeting struct,
  * that is initialized during tp_greeting call.
  *
  * tp_auth(p, greet.salt_base64, "admin", 5, "pass", 4);
@@ -1366,7 +1366,7 @@ tp_encode_int(struct tp *p, int64_t num)
 }
 
 /**
- * Add n string value to the request, with lenght provided.
+ * Add a string value to the request, with length provided.
  */
 static inline char*
 tp_encode_str(struct tp *p, const char *str, uint32_t len)
@@ -1379,7 +1379,7 @@ tp_encode_str(struct tp *p, const char *str, uint32_t len)
 }
 
 /**
- * Add n zero-end srting value to the request.
+ * Add a zero-end string value to the request.
  */
 static inline char*
 tp_encode_sz(struct tp *p, const char *str)
@@ -1393,7 +1393,7 @@ tp_encode_sz(struct tp *p, const char *str)
 }
 
 /**
- * Add n zero-end srting value to the request.
+ * Add a zero-end string value to the request.
  * (added for compatibility with tarantool 1.5 connector)
  */
 static inline char*
@@ -1403,7 +1403,7 @@ tp_sz(struct tp *p, const char *str)
 }
 
 /**
- * Add an binary data to the request.
+ * Add binary data to the request.
  */
 static inline char*
 tp_encode_bin(struct tp *p, const char *str, uint32_t len)
@@ -1416,7 +1416,7 @@ tp_encode_bin(struct tp *p, const char *str, uint32_t len)
 }
 
 /**
- * Add n array to the request with a given size
+ * Add an array to the request with a given size
  *
  * tp_encode_array(p, 3);
  * tp_encode_uint(p, 1);
@@ -1434,7 +1434,7 @@ tp_encode_array(struct tp *p, uint32_t size)
 }
 
 /**
- * Add n map to the request with a given size
+ * Add a map to the request with a given size
  *
  * tp_encode_array(p, 2);
  * tp_encode_sz(p, "name");
@@ -1535,7 +1535,7 @@ tp_key(struct tp *p, uint32_t part_count)
 
 /**
  * Init msgpack iterator by a pointer to msgpack array begin.
- * First elemet will be accessible after tp_array_itr_next call.
+ * First element will be accessible after tp_array_itr_next call.
  * Returns -1 on error
  */
 static inline int
@@ -1556,7 +1556,7 @@ tp_array_itr_init(struct tp_array_itr *itr, const char *data, size_t size)
 
 /**
  * Iterate to next position.
- * return true if success, or false if there are no elemens left
+ * return true if success, or false if there are no elements left
  */
 static inline bool
 tp_array_itr_next(struct tp_array_itr *itr)
@@ -1574,9 +1574,9 @@ tp_array_itr_next(struct tp_array_itr *itr)
 }
 
 /**
- * Reset iterator to the begining. First elemet will be
+ * Reset iterator to the beginning. First element will be
  * accessible after tp_array_itr_next call.
- * return true if success, or false if there are no elemens left
+ * return true if success, or false if there are no elements left
  */
 static inline void
 tp_array_itr_reset(struct tp_array_itr *itr)
@@ -1588,7 +1588,7 @@ tp_array_itr_reset(struct tp_array_itr *itr)
 
 /**
  * Init msgpack map iterator by a pointer to msgpack map begin.
- * First elemet will be accessible after tp_map_itr_next call.
+ * First element will be accessible after tp_map_itr_next call.
  * Returns -1 on error
  */
 static inline int
@@ -1630,7 +1630,7 @@ tp_map_itr_next(struct tp_map_itr *itr)
 }
 
 /**
- * Reset iterator to the begining. First pair will be
+ * Reset iterator to the beginning. First pair will be
  * accessible after tp_map_itr_next call.
  * return true if success, or false if there are no pairs left
  */
@@ -1790,7 +1790,7 @@ tp_next(struct tpresponse *r)
 }
 
 /**
- * Check if there is a one more tuple.
+ * Check if there is one more tuple.
  */
 static inline int
 tp_hasnext(struct tpresponse *r)
@@ -1846,7 +1846,7 @@ tp_nextfield(struct tpresponse *r)
 }
 
 /*
- * Check if the current tuple has a one more field.
+ * Check if the current tuple has one more field.
  */
 static inline int
 tp_hasnextfield(struct tpresponse *r)
@@ -1874,7 +1874,7 @@ tp_getfieldsize(struct tpresponse *r)
 }
 
 /*
- * Determine MsgPack type by a first byte of encoded data.
+ * Determine MsgPack type by first byte of encoded data.
  */
 static inline enum tp_type
 tp_typeof(const char c)
