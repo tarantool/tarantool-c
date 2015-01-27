@@ -47,13 +47,7 @@
 
 #include <stdio.h>
 #include <limits.h>
-
-
-#ifdef NDEBUG
-#define VERIFY(x) x
-#else
-#define VERIFY(x) assert(x)
-#endif
+#include "unit.h"
 
 #if 0
 static void
@@ -228,7 +222,7 @@ main(int argc, char * argv[])
 	sa.sin_family = AF_INET;
 	sa.sin_addr.s_addr = 0x100007F;
 	sa.sin_port = htons(33013);
-	VERIFY(connect(s, (struct sockaddr *)&sa, sizeof(sa)) == 0);
+	fail_unless(connect(s, (struct sockaddr *)&sa, sizeof(sa)) == 0);
 	printf("connected\n");
 
 	const int gbufsize = 128;

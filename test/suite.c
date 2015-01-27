@@ -29,6 +29,7 @@
 */
 
 #include "tarantool.h"
+#include "unit.h"
 
 #include <stdio.h>
 #include <limits.h>
@@ -81,7 +82,7 @@ static void tb_lex_ws(void) {
 	struct tblex l;
 	tb_lexinit(&l, tnt_sql_keywords, sz, sizeof(sz) - 1);
 	struct tbtoken *tk;
-	assert(tb_lex(&l, &tk) == TB_TEOF);
+	fail_unless(tb_lex(&l, &tk) == TB_TEOF);
 	tb_lexfree(&l);
 }
 
@@ -96,16 +97,16 @@ static void tb_lex_int(void) {
 	struct tblex l;
 	tb_lexinit(&l, tnt_sql_keywords, sz, sizeof(sz) - 1);
 	struct tbtoken *tk;
-	assert(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 123);
-	assert(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 34);
-	assert(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 56);
-	assert(tb_lex(&l, &tk) == TB_TNUM64 && TB_TI64(tk) == 888);
-	assert(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 56);
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 123);
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 34);
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 56);
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM64 && TB_TI64(tk) == 888);
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 56);
 
-	assert(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == INT_MAX - 1);
-	assert(tb_lex(&l, &tk) == TB_TNUM64 && TB_TI64(tk) == INT_MAX);
-	assert(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == INT_MIN);
-	assert(tb_lex(&l, &tk) == TB_TEOF);
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == INT_MAX - 1);
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM64 && TB_TI64(tk) == INT_MAX);
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == INT_MIN);
+	fail_unless(tb_lex(&l, &tk) == TB_TEOF);
 	tb_lexfree(&l);
 }
 
@@ -115,15 +116,15 @@ static void tb_lex_punct(void) {
 	struct tblex l;
 	tb_lexinit(&l, tnt_sql_keywords, sz, sizeof(sz) - 1);
 	struct tbtoken *tk;
-	assert(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 123);
-	assert(tb_lex(&l, &tk) == ',' && TB_TI32(tk) == ',');
-	assert(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 34);
-	assert(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == -10);
-	assert(tb_lex(&l, &tk) == ':' && TB_TI32(tk) == ':');
-	assert(tb_lex(&l, &tk) == '('&& TB_TI32(tk) == '(');
-	assert(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 56);
-	assert(tb_lex(&l, &tk) == ')' && TB_TI32(tk) == ')');
-	assert(tb_lex(&l, &tk) == TB_TEOF);
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 123);
+	fail_unless(tb_lex(&l, &tk) == ',' && TB_TI32(tk) == ',');
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 34);
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == -10);
+	fail_unless(tb_lex(&l, &tk) == ':' && TB_TI32(tk) == ':');
+	fail_unless(tb_lex(&l, &tk) == '('&& TB_TI32(tk) == '(');
+	fail_unless(tb_lex(&l, &tk) == TB_TNUM32 && TB_TI32(tk) == 56);
+	fail_unless(tb_lex(&l, &tk) == ')' && TB_TI32(tk) == ')');
+	fail_unless(tb_lex(&l, &tk) == TB_TEOF);
 	tb_lexfree(&l);
 }
 
@@ -133,16 +134,16 @@ static void tb_lex_str(void) {
 	struct tblex l;
 	tb_lexinit(&l, tnt_sql_keywords, sz, sizeof(sz) - 1);
 	struct tbtoken *tk;
-	assert(tb_lex(&l, &tk) == TB_TSTRING &&
+	fail_unless(tb_lex(&l, &tk) == TB_TSTRING &&
 	       TB_TS(tk)->size == 5 &&
 	       memcmp(TB_TS(tk)->data, "hello", 5) == 0);
-	assert(tb_lex(&l, &tk) == TB_TSTRING &&
+	fail_unless(tb_lex(&l, &tk) == TB_TSTRING &&
 	       TB_TS(tk)->size == 5 &&
 	       memcmp(TB_TS(tk)->data, "world", 5) == 0);
-	assert(tb_lex(&l, &tk) == TB_TSTRING &&
+	fail_unless(tb_lex(&l, &tk) == TB_TSTRING &&
 	       TB_TS(tk)->size == 22 &&
 	       memcmp(TB_TS(tk)->data, "всем привет!", 22) == 0);
-	assert(tb_lex(&l, &tk) == TB_TEOF);
+	fail_unless(tb_lex(&l, &tk) == TB_TEOF);
 	tb_lexfree(&l);
 }
 
@@ -152,25 +153,25 @@ static void tb_lex_ids(void) {
 	struct tblex l;
 	tb_lexinit(&l, tnt_sql_keywords, sz, sizeof(sz) - 1);
 	struct tbtoken *tk;
-	assert(tb_lex(&l, &tk) == TB_TID &&
+	fail_unless(tb_lex(&l, &tk) == TB_TID &&
 	       TB_TS(tk)->size == 5 &&
 	       memcmp(TB_TS(tk)->data, "hello", 5) == 0);
-	assert(tb_lex(&l, &tk) == TB_TID &&
+	fail_unless(tb_lex(&l, &tk) == TB_TID &&
 	       TB_TS(tk)->size == 8 &&
 	       memcmp(TB_TS(tk)->data, "этот", 8) == 0);
-	assert(tb_lex(&l, &tk) == TB_TID &&
+	fail_unless(tb_lex(&l, &tk) == TB_TID &&
 	       TB_TS(tk)->size == 16 &&
 	       memcmp(TB_TS(tk)->data, "безумный", 16) == 0);
-	assert(tb_lex(&l, &tk) == TB_TID &&
+	fail_unless(tb_lex(&l, &tk) == TB_TID &&
 	       TB_TS(tk)->size == 16 &&
 	       memcmp(TB_TS(tk)->data, "безумный", 16) == 0);
-	assert(tb_lex(&l, &tk) == TB_TID &&
+	fail_unless(tb_lex(&l, &tk) == TB_TID &&
 	       TB_TS(tk)->size == 6 &&
 	       memcmp(TB_TS(tk)->data, "мир", 6) == 0);
-	assert(tb_lex(&l, &tk) == TB_TID &&
+	fail_unless(tb_lex(&l, &tk) == TB_TID &&
 	       TB_TS(tk)->size == 5 &&
 	       memcmp(TB_TS(tk)->data, "world", 5) == 0);
-	assert(tb_lex(&l, &tk) == TB_TEOF);
+	fail_unless(tb_lex(&l, &tk) == TB_TEOF);
 	tb_lexfree(&l);
 }
 
@@ -180,14 +181,14 @@ static void tb_lex_kw(void) {
 	struct tblex l;
 	tb_lexinit(&l, tnt_sql_keywords, sz, sizeof(sz) - 1);
 	struct tbtoken *tk;
-	assert(tb_lex(&l, &tk) == TB_TINSERT);
-	assert(tb_lex(&l, &tk) == TB_TUPDATE);
-	assert(tb_lex(&l, &tk) == TB_TINTO);
-	assert(tb_lex(&l, &tk) == TB_TOR);
-	assert(tb_lex(&l, &tk) == TB_TFROM);
-	assert(tb_lex(&l, &tk) == TB_TWHERE);
-	assert(tb_lex(&l, &tk) == TB_TVALUES);
-	assert(tb_lex(&l, &tk) == TB_TEOF);
+	fail_unless(tb_lex(&l, &tk) == TB_TINSERT);
+	fail_unless(tb_lex(&l, &tk) == TB_TUPDATE);
+	fail_unless(tb_lex(&l, &tk) == TB_TINTO);
+	fail_unless(tb_lex(&l, &tk) == TB_TOR);
+	fail_unless(tb_lex(&l, &tk) == TB_TFROM);
+	fail_unless(tb_lex(&l, &tk) == TB_TWHERE);
+	fail_unless(tb_lex(&l, &tk) == TB_TVALUES);
+	fail_unless(tb_lex(&l, &tk) == TB_TEOF);
 	tb_lexfree(&l);
 }
 
@@ -196,24 +197,29 @@ static void tb_lex_stack(void) {
 	char sz[] = "  1 'hey' ,.55";
 	struct tblex l;
 	tb_lexinit(&l, tnt_sql_keywords, sz, sizeof(sz) - 1);
-	struct tbtoken *tk1, *tk2, *tk3, *tk4, *tk5, *tk6;
-	assert(tb_lex(&l, &tk1) == TB_TNUM32);
-	assert(tb_lex(&l, &tk2) == TB_TSTRING);
-	assert(tb_lex(&l, &tk3) == ',');
-	assert(tb_lex(&l, &tk4) == '.');
-	assert(tb_lex(&l, &tk5) == TB_TNUM32);
-	assert(tb_lex(&l, &tk6) == TB_TEOF);
+	struct tbtoken *tk1 = NULL;
+	struct tbtoken *tk2 = NULL;
+	struct tbtoken *tk3 = NULL;
+	struct tbtoken *tk4 = NULL;
+	struct tbtoken *tk5 = NULL;
+	struct tbtoken *tk6 = NULL;
+	fail_unless(tb_lex(&l, &tk1) == TB_TNUM32);
+	fail_unless(tb_lex(&l, &tk2) == TB_TSTRING);
+	fail_unless(tb_lex(&l, &tk3) == ',');
+	fail_unless(tb_lex(&l, &tk4) == '.');
+	fail_unless(tb_lex(&l, &tk5) == TB_TNUM32);
+	fail_unless(tb_lex(&l, &tk6) == TB_TEOF);
 	tb_lexpush(&l, tk5);
 	tb_lexpush(&l, tk4);
 	tb_lexpush(&l, tk3);
 	tb_lexpush(&l, tk2);
 	tb_lexpush(&l, tk1);
-	assert(tb_lex(&l, &tk1) == TB_TNUM32);
-	assert(tb_lex(&l, &tk2) == TB_TSTRING);
-	assert(tb_lex(&l, &tk3) == ',');
-	assert(tb_lex(&l, &tk4) == '.');
-	assert(tb_lex(&l, &tk5) == TB_TNUM32);
-	assert(tb_lex(&l, &tk6) == TB_TEOF);
+	fail_unless(tb_lex(&l, &tk1) == TB_TNUM32);
+	fail_unless(tb_lex(&l, &tk2) == TB_TSTRING);
+	fail_unless(tb_lex(&l, &tk3) == ',');
+	fail_unless(tb_lex(&l, &tk4) == '.');
+	fail_unless(tb_lex(&l, &tk5) == TB_TNUM32);
+	fail_unless(tb_lex(&l, &tk6) == TB_TEOF);
 	tb_lexfree(&l);
 }
 
@@ -223,7 +229,7 @@ static void tb_lex_badstr1(void) {
 	struct tblex l;
 	tb_lexinit(&l, tnt_sql_keywords, sz, sizeof(sz) - 1);
 	struct tbtoken *tk;
-	assert(tb_lex(&l, &tk) == TB_TERROR);
+	fail_unless(tb_lex(&l, &tk) == TB_TERROR);
 	tb_lexfree(&l);
 }
 
@@ -233,7 +239,7 @@ static void tb_lex_badstr2(void) {
 	struct tblex l;
 	tb_lexinit(&l, tnt_sql_keywords, sz, sizeof(sz) - 1);
 	struct tbtoken *tk;
-	assert(tb_lex(&l, &tk) == TB_TERROR);
+	fail_unless(tb_lex(&l, &tk) == TB_TERROR);
 	tb_lexfree(&l);
 }
 
