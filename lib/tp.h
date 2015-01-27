@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "msgpuck.h"
+#include "msgpuck/msgpuck.h"
 #include "third_party/sha1.h"
 #include "third_party/base64.h"
 #include <stdarg.h>

@@ -18,7 +18,7 @@ endif()
 
 add_definitions("-DTB_LOCAL=${LIBTB_ROOT}/lib")
 
-include_directories("${LIBTB_ROOT}" "${LIBTB_ROOT}/lib" "${LIBTB_ROOT}/lib/msgpuck" "${LIBTB_ROOT}/lib/third_party")
+include_directories("${LIBTB_ROOT}/lib")
 
 set(LIBTB_SRC
     ${LIBTB_ROOT}/lib/file.c
