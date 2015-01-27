@@ -28,7 +28,7 @@
  * SUCH DAMAGE.
 */
 
-#include <lib/tarantool.h>
+#include "tarantool.h"
 #include <ctype.h>
 #include <limits.h>
 

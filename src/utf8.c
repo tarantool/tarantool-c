@@ -28,7 +28,7 @@
  * SUCH DAMAGE.
 */
 
-#include <lib/tarantool.h>
+#include "tarantool.h"
 
 int tb_utf8init(struct tbutf8 *u, unsigned char *data, size_t size)
 {

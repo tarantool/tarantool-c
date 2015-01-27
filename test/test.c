@@ -43,7 +43,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include <lib/tp.h>
+#include <tp.h>
 
 #include <stdio.h>
 #include <limits.h>

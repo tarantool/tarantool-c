@@ -28,7 +28,7 @@
  * SUCH DAMAGE.
 */
 
-#include <lib/tarantool.h>
+#include "tarantool.h"
 
 int tb_conwrite(struct tbses *s, char *buf, size_t size)
 {

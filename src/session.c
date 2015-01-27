@@ -28,7 +28,7 @@
  * SUCH DAMAGE.
 */
 
-#include <lib/tarantool.h>
+#include "tarantool.h"
 
 #include <sys/time.h>
 #include <sys/types.h>
