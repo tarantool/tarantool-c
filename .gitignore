@@ -1,0 +1,12 @@
+*.o
+*.so
+*.so.*
+*.a
+CMakeFiles
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+install_manifest.txt
+test/suite
+test/tph_cpp
+test/test.1.6

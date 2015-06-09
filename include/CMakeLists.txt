@@ -1,0 +1,6 @@
+if(NOT DEFINED CMAKE_INSTALL_INCLUDEDIR)
+    set(CMAKE_INSTALL_INCLUDEDIR include)
+endif(NOT DEFINED CMAKE_INSTALL_INCLUDEDIR)
+
+# installation of tarantool C client library headers
+install(DIRECTORY tarantool DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
