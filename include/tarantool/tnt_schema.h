@@ -30,12 +30,26 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \internal
+ * \file tnt_schema.h
+ * \brief Tarantool schema
+ */
+
+/**
+ * \internal
+ * \brief types in schema/indexes
+ */
 enum field_type {
 	FT_STR = 0,
 	FT_NUM,
 	FT_OTHER
 };
 
+/**
+ * \internal
+ * \brief field value information
+ */
 struct tnt_schema_fval {
 	uint32_t        field_number;
 	char           *field_name;
@@ -43,6 +57,10 @@ struct tnt_schema_fval {
 	enum field_type field_type;
 };
 
+/**
+ * \internal
+ * \brief index value information
+ */
 struct tnt_schema_ival {
 	char      *index_name;
 	uint32_t   index_name_len;
@@ -51,6 +69,10 @@ struct tnt_schema_ival {
 	struct tnt_schema_fval *index_parts;
 };
 
+/**
+ * \internal
+ * \brief space value information
+ */
 struct tnt_schema_sval {
 	char      *space_name;
 	uint32_t   space_name_len;
@@ -60,9 +82,12 @@ struct tnt_schema_sval {
 	struct mh_assoc_t      *index_hash;
 };
 
+/**
+ * \brief Schema of tarantool instance
+ */
 struct tnt_schema {
-	struct mh_assoc_t *space_hash;
-	int alloc;
+	struct mh_assoc_t *space_hash; /*!< hash with spaces */
+	int alloc; /*!< allocation mark */
 };
 
 /**

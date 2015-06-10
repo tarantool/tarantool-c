@@ -31,6 +31,11 @@
  */
 
 /**
+ * \file tnt_update.h
+ * \brief Update operation
+ */
+
+/**
  * \brief Generate and write update operation with predefined 
  *
  * \param s     stream pointer

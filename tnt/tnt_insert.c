@@ -8,10 +8,9 @@
 
 #include <tarantool/tnt_reply.h>
 #include <tarantool/tnt_stream.h>
-#include <tarantool/tnt_insert.h>
 #include <tarantool/tnt_buf.h>
 #include <tarantool/tnt_object.h>
-#include <tarantool/tnt_replace.h>
+#include <tarantool/tnt_insert.h>
 
 #include "tnt_proto_internal.h"
 

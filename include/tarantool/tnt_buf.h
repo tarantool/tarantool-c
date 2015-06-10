@@ -30,29 +30,43 @@
  * SUCH DAMAGE.
  */
 
-/*
+/**
+ * \file tnt_buf.h
+ * \brief basic buffer structure
+ */
+
+/*!
  * Type for resize function
  */
 typedef char *(*tnt_buf_resize_t)(struct tnt_stream *, size_t);
 
-/*
+/*!
  * Stream buffer substructure
  */
 struct tnt_stream_buf {
-	char   *data;   /* buffer data */
-	size_t  size;   /* buffer used */
-	size_t  alloc;  /* current buffer size */
-	size_t  rdoff;  /* read offset */
-	char *(*resize)(struct tnt_stream *, size_t); /* resize function */
-	void  (*free)(struct tnt_stream *);
-	void   *subdata;
-	int     as;     /* constructed from user's string */
+	char   *data;   /*!< buffer data */
+	size_t  size;   /*!< buffer used */
+	size_t  alloc;  /*!< current buffer size */
+	size_t  rdoff;  /*!< read offset */
+	char *(*resize)(struct tnt_stream *, size_t); /*!< resize function */
+	void  (*free)(struct tnt_stream *); /*!< custom free function */
+	void   *subdata; /*!< subclass */
+	int     as;      /*!< constructed from user's string */
 };
 
 /* buffer stream accessors */
 
+/*!
+ * \brief cast tnt_stream to tnt_stream_buf structure
+ */
 #define TNT_SBUF_CAST(S) ((struct tnt_stream_buf *)(S)->data)
+/*!
+ * \brief get data field from tnt_stream_buf
+ */
 #define TNT_SBUF_DATA(S) TNT_SBUF_CAST(S)->data
+/*!
+ * \brief get size field from tnt_stream_buf
+ */
 #define TNT_SBUF_SIZE(S) TNT_SBUF_CAST(S)->size
 
 /**
@@ -60,7 +74,7 @@ struct tnt_stream_buf {
  *
  * if stream pointer is NULL, then new stream will be created.
  *
- * \param pointer to allocated stream buffer
+ * \param   s pointer to allocated stream buffer
  *
  * \returns pointer to newly allocated sbuf object
  * \retval  NULL memory allocation failure

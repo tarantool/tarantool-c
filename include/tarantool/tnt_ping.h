@@ -31,6 +31,11 @@
  */
 
 /**
+ * \file tnt_ping.h
+ * \brief Ping request
+ */
+
+/**
  * \brief Construct ping request and write it into stream
  *
  * \param s stream object to write request to

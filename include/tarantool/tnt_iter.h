@@ -30,8 +30,14 @@
  * SUCH DAMAGE.
  */
 
-/* tuple iterator type */
+/**
+ * \file tnt_iter.h
+ * \brief Custom iterator types (msgpack/reply)
+ */
 
+/*!
+ * iterator types
+ */
 enum tnt_iter_type {
 	TNT_ITER_ARRAY,
 	TNT_ITER_MAP,
@@ -40,47 +46,87 @@ enum tnt_iter_type {
 //	TNT_ITER_STORAGE
 };
 
-/* msgpack array iterator */
+/*!
+ * \brief msgpack array iterator
+ */
 struct tnt_iter_array {
-	const char *data; /* pointer to the beginning of array */
-	const char *first_elem; /* pointer to the first element of array */
-	const char *elem; /* pointer to current element of array */
-	const char *elem_end; /* pointer to current element end of array */
-	uint32_t elem_count; /* number of elements in array */
-	int cur_index; /* index of current element */
+	const char *data; /*!< pointer to the beginning of array */
+	const char *first_elem; /*!< pointer to the first element of array */
+	const char *elem; /*!< pointer to current element of array */
+	const char *elem_end; /*!< pointer to current element end of array */
+	uint32_t elem_count; /*!< number of elements in array */
+	int cur_index; /*!< index of current element */
 };
 
 /* msgpack array iterator accessors */
+
+/**
+ * \brief access msgpack array iterator
+ */
 #define TNT_IARRAY(I) (&(I)->data.array)
+/**
+ * \brief access current element form iterator
+ */
 #define TNT_IARRAY_ELEM(I) TNT_IARRAY(I)->elem
+/**
+ * \brief access end of current element from iterator
+ */
 #define TNT_IARRAY_ELEM_END(I) TNT_IARRAY(I)->elem_end
 
-/* msgpack map iterator */
+/*!
+ * \brief msgpack map iterator
+ */
 struct tnt_iter_map {
-	const char *data; /* pointer to the beginning of map */
-	const char *first_key; /* pointer to the first key of map */
-	const char *key; /* pointer to current key of map */
-	const char *key_end; /* pointer to current key end */
-	const char *value; /* pointer to current value of map */
-	const char *value_end; /* pointer to current value end */
-	uint32_t pair_count; /* number of key-values pairs in array */
-	int cur_index; /* index of current pair */
+	const char *data; /*!< pointer to the beginning of map */
+	const char *first_key; /*!< pointer to the first key of map */
+	const char *key; /*!< pointer to current key of map */
+	const char *key_end; /*!< pointer to current key end */
+	const char *value; /*!< pointer to current value of map */
+	const char *value_end; /*!< pointer to current value end */
+	uint32_t pair_count; /*!< number of key-values pairs in array */
+	int cur_index; /*!< index of current pair */
 };
 
 /* msgpack array iterator accessors */
+
+/**
+ * \brief access msgpack map iterator
+ */
 #define TNT_IMAP(I) (&(I)->data.map)
+/**
+ * \brief access current key from iterator
+ */
 #define TNT_IMAP_KEY(I) TNT_IMAP(I)->key
+/**
+ * \brief access current key end from iterator
+ */
 #define TNT_IMAP_KEY_END(I) TNT_IMAP(I)->key_end
+/**
+ * \brief access current value from iterator
+ */
 #define TNT_IMAP_VAL(I) TNT_IMAP(I)->value
+/**
+ * \brief access current value end from iterator
+ */
 #define TNT_IMAP_VAL_END(I) TNT_IMAP(I)->value_end
 
-/* reply iterator */
+/*!
+ * \brief reply iterator
+ */
 struct tnt_iter_reply {
-	struct tnt_stream *s; /* stream pointer */
-	struct tnt_reply r;   /* current reply */
+	struct tnt_stream *s; /*!< stream pointer */
+	struct tnt_reply r;   /*!< current reply */
 };
+
 /* reply iterator accessors */
+
+/**
+ * \brief access reply iterator
+ */
 #define TNT_IREPLY(I) (&(I)->data.reply)
+/**
+ * \brief access current reply form iterator
+ */
 #define TNT_IREPLY_PTR(I) &TNT_IREPLY(I)->r
 
 /* request iterator */
@@ -105,26 +151,34 @@ struct tnt_iter_reply {
 // #define TNT_ISTORAGE_TUPLE(I) &TNT_ISTORAGE(I)->t
 // #define TNT_ISTORAGE_STREAM(I) TNT_ISTORAGE(I)->s
 
+/**
+ * \brief iterator status
+ */
 enum tnt_iter_status {
-	TNT_ITER_OK,
-	TNT_ITER_FAIL
+	TNT_ITER_OK, /*!< iterator is ok */
+	TNT_ITER_FAIL /*!< error or end of iteration */
 };
 
-/* common iterator object */
-
+/**
+ * \brief Common iterator object
+ */
 struct tnt_iter {
-	enum tnt_iter_type type;
-	enum tnt_iter_status status;
-	int alloc;
+	enum tnt_iter_type type; /*!< iterator type
+				  * \sa enum tnt_iter_type
+				  */
+	enum tnt_iter_status status; /*!< iterator status
+				      * \sa enum tnt_iter_status
+				      */
+	int alloc; /*!< allocation mark */
 	/* interface callbacks */
-	int  (*next)(struct tnt_iter *iter);
-	void (*rewind)(struct tnt_iter *iter);
-	void (*free)(struct tnt_iter *iter);
+	int  (*next)(struct tnt_iter *iter); /*!< callback for next element */
+	void (*rewind)(struct tnt_iter *iter); /*!< callback for rewind */
+	void (*free)(struct tnt_iter *iter); /*!< callback for free of custom iter type */
 	/* iterator data */
 	union {
-		struct tnt_iter_array array;
-		struct tnt_iter_map map;
-		struct tnt_iter_reply reply;
+		struct tnt_iter_array array; /*!< msgpack array iterator */
+		struct tnt_iter_map map; /*!< msgpack map iterator */
+		struct tnt_iter_reply reply; /*!< reply iterator */
 //		struct tnt_iter_request request;
 //		struct tnt_iter_storage storage;
 	} data;
@@ -186,7 +240,7 @@ struct tnt_iter *tnt_iter_map(struct tnt_iter *i, const char *data, size_t size)
  * \brief create and initialize tuple reply iterator;
  *
  * \param i pointer to allocated structure
- * \param s tnt_net stream pointer 
+ * \param s tnt_net stream pointer
  *
  * if stream iterator pointer is NULL, then new stream
  * iterator will be created.

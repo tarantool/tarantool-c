@@ -1,0 +1,39 @@
+Source: tarantool-c
+Section: libs
+Priority: optional
+Maintainer: Eugine Blikh <bigbes@gmail.com>
+Build-Depends: debhelper (>= 9),
+               cdbs (>= 0.4.93~),
+               dpkg-dev (>= 1.16.1~)
+Standards-Version: 3.9.5
+Homepage: https://github.com/tarantool/tarantool-c
+Vcs-Git: git://github.com/tarantool/tarantool-c.git
+Vcs-Browser: https://github.com/tarantool/tarantool-c
+
+Package: libtarantool-c
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Multi-Arch: same
+Description: tarantool-c client library
+ libtarantool-c is a library providing client API for tarantool database.
+
+Package: libtarantool-c-dbg
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Multi-Arch: same
+Description: tarantool-c client library
+ libtarantool-c is a library providing client API for tarantool database.
+ .
+ This package cotains debug information.
+
+Package: libtarantool-c-dev
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Multi-Arch: same
+Description: tarantool-c client library
+ libtarantool-c is a library providing client API for tarantool database.
+ .
+ This package cotains development files.

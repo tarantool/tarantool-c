@@ -1,6 +1,5 @@
 #ifndef TNT_AUTH_H_INCLUDED
 #define TNT_AUTH_H_INCLUDED
-
 /*
  * Redistribution and use in source and binary forms, with or
  * without modification, are permitted provided that the following
@@ -31,6 +30,11 @@
  */
 
 /**
+ * \file tnt_auth.h
+ * \brief aithentication request
+ */
+
+/**
  * \brief Write authentication request to stream
  *
  * if user == NULL or user == "guest" then it'll be deauth
@@ -48,6 +52,8 @@ ssize_t tnt_auth(struct tnt_stream *s, const char *user, int ulen,
 
 /**
  * \brief Write deauth request to stream
+ *
+ * shortcut for tnt_auth(s, NULL, 0, NULL, 0)
  *
  * \param s stream instance
  *

@@ -30,21 +30,28 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \file tnt_stream.h
+ * \brief Basic stream object
+ */
+
 #include <sys/types.h>
 #include <sys/uio.h>
 
-/* stream interface */
-
+/**
+ * \brief Basic stream object
+ * all function pointers are NULL, if operation is not supported
+ */
 struct tnt_stream {
-	int alloc;
-	ssize_t (*write)(struct tnt_stream *s, const char *buf, size_t size);
-	ssize_t (*writev)(struct tnt_stream *s, struct iovec *iov, int count);
-	ssize_t (*read)(struct tnt_stream *s, char *buf, size_t size);
-	int (*read_reply)(struct tnt_stream *s, struct tnt_reply *r);
-	void (*free)(struct tnt_stream *s);
-	void *data;
-	uint32_t wrcnt; /* count of write operations */
-	uint64_t reqid;
+	int alloc; /*!< Allocation mark */
+	ssize_t (*write)(struct tnt_stream *s, const char *buf, size_t size); /*!< write to buffer function */
+	ssize_t (*writev)(struct tnt_stream *s, struct iovec *iov, int count); /*!< writev function */
+	ssize_t (*read)(struct tnt_stream *s, char *buf, size_t size); /*!< read from buffer function */
+	int (*read_reply)(struct tnt_stream *s, struct tnt_reply *r); /*!< read reply from buffer */
+	void (*free)(struct tnt_stream *s); /*!< free custom buffer types (destructor) */
+	void *data; /*!< subclass data */
+	uint32_t wrcnt; /*!< count of write operations */
+	uint64_t reqid; /*!< request id of current operation */
 };
 
 /**

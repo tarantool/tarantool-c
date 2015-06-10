@@ -325,7 +325,7 @@ tnt_io_send_raw(struct tnt_stream_net *s, const char *buf, size_t size, int all)
 	do {
 		ssize_t r;
 		if (s->sbuf.tx) {
-			r = s->sbuf.tx(s->sbuf.buf, buf + off, size - off);
+			r = s->sbuf.tx(&s->sbuf, buf + off, size - off);
 		} else {
 			do {
 				r = send(s->fd, buf + off, size - off, 0);
@@ -348,7 +348,7 @@ tnt_io_sendv_raw(struct tnt_stream_net *s, struct iovec *iov, int count, int all
 	while (count > 0) {
 		ssize_t r;
 		if (s->sbuf.txv) {
-			r = s->sbuf.txv(s->sbuf.buf, iov, MIN(count, IOV_MAX));
+			r = s->sbuf.txv(&s->sbuf, iov, MIN(count, IOV_MAX));
 		} else {
 			do {
 				r = writev(s->fd, iov, count);
@@ -442,7 +442,7 @@ tnt_io_recv_raw(struct tnt_stream_net *s, char *buf, size_t size, int all)
 	do {
 		ssize_t r;
 		if (s->rbuf.tx) {
-			r = s->rbuf.tx(s->rbuf.buf, buf + off, size - off);
+			r = s->rbuf.tx(&s->rbuf, buf + off, size - off);
 		} else {
 			do {
 				r = recv(s->fd, buf + off, size - off, 0);

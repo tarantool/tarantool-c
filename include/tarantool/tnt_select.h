@@ -31,6 +31,11 @@
  */
 
 /**
+ * \file tnt_select.h
+ * \brief Select request
+ */
+
+/**
  * \brief Construct select request and write it into stream 
  *
  * \param s        stream object

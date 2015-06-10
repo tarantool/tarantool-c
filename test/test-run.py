@@ -68,6 +68,11 @@ def main():
     finally:
         pass
 
-    return retval
+    if (retval):
+        print "Everything is OK"
+    else:
+        print "FAILED"
+
+    return (-1 if not retval else 0)
 
 exit(main())

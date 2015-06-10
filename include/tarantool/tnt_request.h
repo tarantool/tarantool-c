@@ -30,11 +30,16 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \file tnt_request.h
+ * \brief Request creation using connection schema
+ */
+
 struct tnt_request {
 	struct {
 		uint32_t sync; /*!< Request sync id. Generated when encoded */
 		enum tnt_request_type type; /*!< Request type */
-	} hdr;
+	} hdr; /*!< fields for header */
 	uint32_t space_id; /*!< Space number */
 	uint32_t index_id; /*!< Index number */
 	uint32_t offset; /*!< Offset for select */

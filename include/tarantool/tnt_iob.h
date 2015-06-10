@@ -30,6 +30,12 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \internal
+ * \file tnt_iob.h
+ * \brief Basic network layer static sized buffer
+ */
+
 typedef ssize_t (*tnt_iob_tx_t)(void *ptr, const char *buf, size_t size);
 typedef ssize_t (*tnt_iob_txv_t)(void *ptr, struct iovec *iov, int count);
 

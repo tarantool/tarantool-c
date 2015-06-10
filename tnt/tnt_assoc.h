@@ -62,6 +62,10 @@ tnt_mem_calloc(size_t count, size_t size) {
 #include		      <PMurHash.h>
 #include                      <mhash.h>
 
+/*!
+ * \file tnt_assoc.h
+ */
+
 /*! \struct mh_assoc_t */
 
 /*! \fn void mh_assoc_clear(struct mh_assoc_t *h)

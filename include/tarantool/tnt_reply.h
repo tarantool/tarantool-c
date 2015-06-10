@@ -30,17 +30,32 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \file tnt_reply.h
+ * \brief Basic reply structure (parsing responses, e.t.c)
+ */
+
+/**
+ * \brief Callback for recv reply from buffer
+ *
+ * \param ptr  pointer to buffer and offset
+ * \param dst  copy reply to
+ * \param size size to recv to
+ *
+ * \returns size of bytes written
+ * \retval  -1 error
+ */
 typedef ssize_t (*tnt_reply_t)(void *ptr, char *dst, ssize_t size);
 
 /*!
  * \brief basic reply structure
  */
 struct tnt_reply {
-	int alloc;
+	int alloc;              /*!< allocation mark */
 	uint64_t bitmap;	/*!< bitmap of field IDs that was read */
 	const char *buf;	/*!< points to beginning of buffer */
 	size_t buf_size;        /*!< size of query buffer */
-	uint64_t code;		/*!< response code (0 is success, errno if not) */
+	uint64_t code;		/*!< response code (0 is success, error number if not) */
 	uint64_t sync;		/*!< synchronization id */
 	const char *error;	/*!< error message (NULL if not present) */
 	const char *error_end;	/*!< end of error message (NULL if not present) */
@@ -48,8 +63,10 @@ struct tnt_reply {
 	const char *data_end;	/*!< end if tuple data (NULL if not present) */
 };
 
-#define TNT_REPLY_ERR(R) ((R)->code >> 8)
-#define TNT_REPLY_LIST(R) (&(R)->tuples)
+/*!
+ * \brief Get error number
+ */
+#define TNT_REPLY_ERR(R) (((R)->code << 15) - 1)
 
 /*!
  * \brief Allocate and init reply object
@@ -59,7 +76,7 @@ struct tnt_reply {
  * \param r reply object pointer
  *
  * \returns reply object pointer
- * \rerval  NULL memory allocation failure
+ * \retval  NULL memory allocation failure
  */
 struct tnt_reply *tnt_reply_init(struct tnt_reply *r);
 
@@ -73,10 +90,10 @@ void tnt_reply_free(struct tnt_reply *r);
 /*!
  * \brief process buffer as iproto reply
  *
- * \param r[in]    reply object pointer
- * \param buf[in]  buffer data pointer
- * \param size[in] buffer data size
- * \param off[out] returned offset, may be NULL
+ * \param[in]  r    reply object pointer
+ * \param[in]  buf  buffer data pointer
+ * \param[in]  size buffer data size
+ * \param[out] off  returned offset, may be NULL
  *
  * if reply is fully read, then zero is returned and offset set to the
  * end of reply data in buffer.
@@ -88,7 +105,7 @@ void tnt_reply_free(struct tnt_reply *r);
  *
  * \returns status of processing reply
  * \retval 0  read reply
- * \retval 1  need <offset> bytes more
+ * \retval 1  need 'offset' bytes more
  * \retval -1 error while parsing request
  */
 int tnt_reply(struct tnt_reply *r, char *buf, size_t size, size_t *off);

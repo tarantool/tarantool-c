@@ -31,6 +31,11 @@
  */
 
 /**
+ * \file tnt_call.h
+ * \brief Call request
+ */
+
+/**
  * \brief Construct call request and write it into stream
  *
  * \param s    stream object to write request to
@@ -42,6 +47,20 @@
  * \retval number of bytes written to stream
  */
 ssize_t tnt_call(struct tnt_stream *s, const char *proc, size_t plen,
+		 struct tnt_stream *args);
+
+/**
+ * \brief Construct eval request and write it into stream
+ *
+ * \param s    stream object to write request to
+ * \param expr expression to evaluate 
+ * \param elen expression length
+ * \param args tnt_object instance with messagepack array with args to eval
+ *             expression with
+ *
+ * \retval number of bytes written to stream
+ */
+ssize_t tnt_eval(struct tnt_stream *s, const char *expr, size_t elen,
 		 struct tnt_stream *args);
 
 #endif /* TNT_CALL_H_INCLUDED */

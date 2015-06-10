@@ -30,6 +30,12 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \internal
+ * \file tnt_mem.h
+ * \brief Basic memory functions
+ */
+
 #define tntfunction_unused __attribute__((unused))
 
 #if !defined __GNUC_MINOR__ || defined __INTEL_COMPILER || \

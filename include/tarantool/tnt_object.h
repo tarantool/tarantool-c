@@ -30,15 +30,20 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \file tnt_object.h
+ * \brief Object for manipulating msgpack objects
+ */
+
 #include <msgpuck/msgpuck.h>
 
 /**
  * \brief for internal use
  */
 struct tnt_sbo_stack {
-	size_t       offset;
-	uint32_t     size;
-	enum mp_type type;
+	size_t   offset;
+	uint32_t size;
+	int8_t   type;
 };
 
 /**
@@ -149,6 +154,7 @@ struct tnt_stream *tnt_object_as(struct tnt_stream *s, char *buf, size_t buf_len
 
 /**
  * \brief verify that object is valid msgpack structure
+ * \param s object pointer
  * \param type -1 on check without validating type, otherwise `enum mp_type`
  */
 int tnt_object_verify(struct tnt_stream *s, int8_t type);
@@ -161,13 +167,14 @@ int tnt_object_reset(struct tnt_stream *s);
 
 /**
  * \brief create tnt_object from format string/values (va_list variation)
- * Example: mp_format(buf, sz, "[%d {%d%s%d%s}]", 42, 0, "false", 1, "true");
- * to get a msgpack array of two items: number 42 and map (0->"false, 2->"true")
- * Does not write items that don't fit to data_size argument.
  *
- * \param data - a buffer
- * \param data_size - a buffer size
- * \param format - zero-end string, containing structure of resulting
+ * \code{.c}
+ * \*to get a msgpack array of two items: number 42 and map (0->"false, 2->"true")*\
+ * tnt_object_format(s, "[%d {%d%s%d%s}]", 42, 0, "false", 1, "true");
+ * \endcode
+ *
+ * \param s   tnt_object instance
+ * \param fmt zero-end string, containing structure of resulting
  * msgpack and types of next arguments.
  * Format can contain '[' and ']' pairs, defining arrays,
  * '{' and '}' pairs, defining maps, and format specifiers, described below:
@@ -187,18 +194,18 @@ int tnt_object_reset(struct tnt_stream *s);
  * %s - zero-end string
  * %.*s - string with specified length
  * %% is ignored
- * %<smth else> assert and undefined behaviour
+ * %'smth else' assert and undefined behaviour
  * NIL - a nil value
  * all other symbols are ignored.
  *
  * \sa tnt_object_vformat
  * \sa tnt_object_format
  */
-ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl);
+ssize_t tnt_object_format(struct tnt_stream *s, const char *fmt, ...);
 /**
  * \brief create tnt_object from format string/values
  * \sa tnt_object_vformat
  * \sa tnt_object_format
  */
-ssize_t tnt_object_format(struct tnt_stream *s, const char *fmt, ...);
+ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl);
 #endif /* TNT_OBJECT_H_INCLUDED */

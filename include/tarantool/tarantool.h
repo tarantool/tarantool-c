@@ -30,6 +30,11 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \file tarantool.h
+ * \brief base header to include
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,10 +50,8 @@ extern "C" {
 #include <tarantool/tnt_object.h>
 #include <tarantool/tnt_iter.h>
 #include <tarantool/tnt_call.h>
-#include <tarantool/tnt_eval.h>
 #include <tarantool/tnt_ping.h>
 #include <tarantool/tnt_insert.h>
-#include <tarantool/tnt_replace.h>
 #include <tarantool/tnt_delete.h>
 #include <tarantool/tnt_auth.h>
 #include <tarantool/tnt_select.h>

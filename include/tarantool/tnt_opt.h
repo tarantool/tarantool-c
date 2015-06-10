@@ -30,20 +30,76 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \file tnt_opt.h
+ * \brief Networking layer options
+ */
+
+struct tnt_iob;
+
+/**
+ * \brief Callback type for read (instead of reading from socket)
+ *
+ * \param b   context for read operation
+ * \param buf buf to read to
+ * \param len size to read
+ *
+ * \returns size that was read
+ * \retval  -1 error, errno must be set
+ */
+typedef ssize_t (*recv_cb_t)(struct tnt_iob *b, void *buf, size_t len);
+
+/**
+ * \brief Callback type for write (instead of writing into socket)
+ *
+ * \param b   context for write operation
+ * \param buf buf to write
+ * \param len size to write
+ *
+ * \returns size that was written
+ * \retval  -1 error, errno must be set
+ */
+typedef ssize_t (*send_cb_t)(struct tnt_iob *b, void *buf, size_t len);
+
+/**
+ * \brief Callback type for write with iovec (instead of writing into socket)
+ *
+ * \param b   context for write operation
+ * \param buf iovec to write
+ * \param len iovec len
+ *
+ * \returns size that was written
+ * \retval  -1 error, errno must be set
+ */
+typedef ssize_t (*sendv_cb_t)(struct tnt_iob *b, const struct iovec *iov, int iov_count);
+
+/**
+ * \brief Options for connection
+ */
 enum tnt_opt_type {
-	TNT_OPT_URI,
-	TNT_OPT_TMOUT_CONNECT,
-	TNT_OPT_TMOUT_RECV,
-	TNT_OPT_TMOUT_SEND,
-	TNT_OPT_SEND_CB,
-	TNT_OPT_SEND_CBV,
-	TNT_OPT_SEND_CB_ARG,
-	TNT_OPT_SEND_BUF,
-	TNT_OPT_RECV_CB,
-	TNT_OPT_RECV_CB_ARG,
-	TNT_OPT_RECV_BUF
+	TNT_OPT_URI, /*!< Options for setting URI */
+	TNT_OPT_TMOUT_CONNECT, /*!< Option for setting timeout on connect */
+	TNT_OPT_TMOUT_RECV, /*!< Option for setting timeout on recv */
+	TNT_OPT_TMOUT_SEND, /*!< Option for setting timeout in send */
+	TNT_OPT_SEND_CB, /*!< callback, that's executed on send
+			  * \sa send_cb_t
+			  */
+	TNT_OPT_SEND_CBV, /*!< callback, that's executed on send with iovector
+			   * \sa sendv_cb_t
+			   */
+	TNT_OPT_SEND_CB_ARG, /*!< callback context for send */
+	TNT_OPT_SEND_BUF, /*!< Option for setting send buffer size */
+	TNT_OPT_RECV_CB,  /*!< callback, that's executed on recv */
+	TNT_OPT_RECV_CB_ARG, /*!< callback context for recv
+			      * \sa recv_cb_t
+			      */
+	TNT_OPT_RECV_BUF /*!< Option for setting recv buffer size */
 };
 
+/**
+ * \internal
+ * \brief structure, that is used for options
+ */
 struct tnt_opt {
 	const char *uristr;
 	struct uri *uri;
@@ -59,9 +115,18 @@ struct tnt_opt {
 	int recv_buf;
 };
 
+/**
+ * \internal
+ */
 int tnt_opt_init(struct tnt_opt *opt);
+/**
+ * \internal
+ */
 void tnt_opt_free(struct tnt_opt *opt);
 
+/**
+ * \internal
+ */
 int
 tnt_opt_set(struct tnt_opt *opt, enum tnt_opt_type name, va_list args);
 

@@ -31,6 +31,11 @@
  */
 
 /**
+ * \file tnt_insert.h
+ * \brief Insert/Replace request
+ */
+
+/**
  * \brief Construct insert request and write it into stream
  *
  * \param s     stream object to write request to
@@ -40,5 +45,16 @@
  * \retval number of bytes written to stream
  */
 ssize_t tnt_insert(struct tnt_stream *s, uint32_t space, struct tnt_stream *tuple);
+
+/**
+ * \brief Construct replace request and write it into stream
+ *
+ * \param s     stream object to write request to
+ * \param space space no to replace tuple into
+ * \param tuple (tnt_object instance) msgpack array with tuple to replace to
+ *
+ * \retval number of bytes written to stream
+ */
+ssize_t tnt_replace(struct tnt_stream *s, uint32_t space, struct tnt_stream *tuple);
 
 #endif /* TNT_INSERT_H_INCLUDED */

@@ -30,6 +30,12 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \internal
+ * \file tnt_io.h
+ * \brief Basic network layer io
+ */
+
 enum tnt_error tnt_io_connect(struct tnt_stream_net *s);
 void tnt_io_close(struct tnt_stream_net *s);
 

@@ -31,6 +31,11 @@
  */
 
 /**
+ * \file tnt_delete.h
+ * \brief Delete request
+ */
+
+/**
  * \brief Write delete request to stream
  *
  * \param s     stream instance

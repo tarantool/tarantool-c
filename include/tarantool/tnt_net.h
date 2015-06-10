@@ -30,6 +30,11 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \file tnt_net.h
+ * \brief Basic tarantool client library header for network stream layer
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,33 +48,43 @@ extern "C" {
 #include <tarantool/tnt_opt.h>
 #include <tarantool/tnt_iob.h>
 
+/**
+ * \brief Internal error codes
+ */
 enum tnt_error {
-	TNT_EOK,
-	TNT_EFAIL,
-	TNT_EMEMORY,
-	TNT_ESYSTEM,
-	TNT_EBIG,
-	TNT_ESIZE,
-	TNT_ERESOLVE,
-	TNT_ETMOUT,
-	TNT_EBADVAL,
-	TNT_ELOGIN,
-	TNT_LAST
+	TNT_EOK, /*!< Everything is OK */
+	TNT_EFAIL, /*!< Fail */
+	TNT_EMEMORY, /*!< Memory allocation failed */
+	TNT_ESYSTEM, /*!< System error */
+	TNT_EBIG, /*!< Buffer is too big */
+	TNT_ESIZE, /*!< Bad buffer size */
+	TNT_ERESOLVE, /*!< gethostbyname(2) failed */
+	TNT_ETMOUT, /*!< Operation timeout */
+	TNT_EBADVAL, /*!< Bad argument (value) */
+	TNT_ELOGIN, /*!< Failed to login */
+	TNT_LAST /*!< Not an error */
 };
 
+/**
+ * \brief Network stream structure
+ */
 struct tnt_stream_net {
-	struct tnt_opt opt;
-	int connected;
-	int fd;
-	struct tnt_iob sbuf;
-	struct tnt_iob rbuf;
-	enum tnt_error error;
-	int errno_;
-	char *greeting;
-	struct tnt_schema *schema;
-	int inited;
+	struct tnt_opt opt; /*!< Options for connection */
+	int connected; /*!< Connection status. 1 - true, 0 - false */
+	int fd; /*!< fd of connection */
+	struct tnt_iob sbuf; /*!< Send buffer */
+	struct tnt_iob rbuf; /*!< Recv buffer */
+	enum tnt_error error; /*!< If retval == -1, then error is set. */
+	int errno_; /*!< If TNT_ESYSTEM then errno_ is set */
+	char *greeting; /*!< Pointer to greeting, if connected */
+	struct tnt_schema *schema; /*!< Collation for space/index string<->number */
+	int inited; /*!< 1 if iob/schema were allocated */
 };
 
+/*!
+ * \internal
+ * \brief Cast tnt_stream to tnt_net
+ */
 #define TNT_SNET_CAST(S) ((struct tnt_stream_net*)(S)->data)
 
 /**
@@ -115,10 +130,25 @@ struct tnt_stream *tnt_net(struct tnt_stream *s);
  * URI format:
  * * "[login:password@]host:port" for tcp sockets
  * * "[login:password@]/tmp/socket_path.sock" for unix sockets
- *
+ * \sa enum tnt_opt_type
  */
 int tnt_set(struct tnt_stream *s, int opt, ...);
-/*int tnt_init(struct tnt_stream *s);*/
+
+/*!
+ * \internal
+ * \brief Initialize network stream
+ *
+ * It must happened before connection, but after options are set.
+ * 1) creation of tnt_iob's (sbuf,rbuf)
+ * 2) schema creation
+ *
+ * \param s stream for initialization
+ *
+ * \returns status
+ * \retval 0  ok
+ * \retval -1 error (oom/einval)
+ */
+int tnt_init(struct tnt_stream *s);
 
 /**
  * \brief Connect to tarantool with preconfigured and allocated settings

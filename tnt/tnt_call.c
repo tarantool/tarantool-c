@@ -13,7 +13,6 @@
 #include <tarantool/tnt_buf.h>
 #include <tarantool/tnt_object.h>
 #include <tarantool/tnt_call.h>
-#include <tarantool/tnt_eval.h>
 
 #include "tnt_proto_internal.h"
 

@@ -30,13 +30,22 @@
  * SUCH DAMAGE.
  */
 
-/* header */
+/**
+ * \file tnt_proto.h
+ * \brief IProto protocol constants
+ */
+
+/**
+ * \brief Request/response header field types (keys)
+ */
 enum tnt_header_key_t {
 	TNT_CODE = 0x00,
 	TNT_SYNC = 0x01
 };
 
-/* request body */
+/**
+ * \brief Request body field types (keys)
+ */
 enum tnt_body_key_t {
 	TNT_SPACE = 0x10,
 	TNT_INDEX = 0x11,
@@ -57,13 +66,17 @@ enum tnt_body_key_t {
 	TNT_VCLOCK = 0x26
 };
 
-/* response body */
+/**
+ * \brief Response body field types (keys)
+ */
 enum tnt_response_key_t {
 	TNT_DATA = 0x30,
 	TNT_ERROR = 0x31
 };
 
-/* request types */
+/**
+ * \brief Request types
+ */
 enum tnt_request_type {
 	TNT_OP_SELECT = 1,
 	TNT_OP_INSERT = 2,
@@ -78,6 +91,9 @@ enum tnt_request_type {
 	TNT_OP_SUBSCRIBE = 66
 };
 
+/**
+ * \brief Update operations
+ */
 enum tnt_update_op_t {
 	TNT_UOP_ADDITION = '+',
 	TNT_UOP_SUBSTRACT = '-',
@@ -90,6 +106,9 @@ enum tnt_update_op_t {
 	TNT_UOP_SPLICE = ':',
 };
 
+/**
+ * \brief Iterator types
+ */
 enum tnt_iterator_t {
 	TNT_ITER_EQ = 0,
 	TNT_ITER_REQ,
@@ -105,11 +124,26 @@ enum tnt_iterator_t {
 	TNT_ITER_NEIGHBOR,
 };
 
+/**
+ * \internal
+ */
 #define TNT_SCRAMBLE_SIZE 20
+/**
+ * \internal
+ */
 #define TNT_GREETING_SIZE 128
+/**
+ * \internal
+ */
 #define TNT_VERSION_SIZE  64
+/**
+ * \internal
+ */
 #define TNT_SALT_SIZE     44
 
+/**
+ * \brief System spaces
+ */
 enum tnt_spaces_t {
 	tnt_sp_space = 280,
 	tnt_sp_index = 288,
@@ -123,6 +157,9 @@ enum tnt_spaces_t {
 	tnt_vsp_priv  = 313,
 };
 
+/**
+ * \brief System indexes
+ */
 enum tnt_indexes_t {
 	tnt_vin_primary = 0,
 	tnt_vin_owner   = 1,
