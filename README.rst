@@ -74,3 +74,5 @@ After you've installed tarantool-c build and execute this code:
 
 
 For more examples, please, visit `test/{tarantool-tcp.c,tarantool-unix.c}` files.
+
+For RPM/DEB packages - use instructions from http://tarantool.org/download.html to add repositories.
