@@ -295,7 +295,7 @@ int tnt_request_set_tuple_format(struct tnt_request *req, const char *fmt, ...);
  * \retval 0  ok
  * \retval -1 out of memory
  */
-ssize_t tnt_request_compile(struct tnt_stream *s, struct tnt_request *req);
+int64_t tnt_request_compile(struct tnt_stream *s, struct tnt_request *req);
 /**
  * \brief Encode request to stream object
  *
@@ -306,7 +306,7 @@ ssize_t tnt_request_compile(struct tnt_stream *s, struct tnt_request *req);
  * \retval 0  ok
  * \retval -1 out of memory
  */
-ssize_t tnt_request_encode(struct tnt_request *req);
+int64_t tnt_request_encode(struct tnt_request *req);
 
 /**
  * \brief create select request object
