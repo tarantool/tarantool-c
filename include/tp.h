@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "msgpuck.h"
-#include "sha1.h"
-#include "base64.h"
 #include <stdarg.h>
+
+#include <msgpuck.h>
+#include <sha1.h>
+#include <base64.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -252,7 +254,7 @@ tp_auth(struct tp *p, const char *salt_base64, const char *user, int ulen, const
  */
 static inline char *
 tp_select(struct tp *p, uint32_t space, uint32_t index,
-	  uint32_t offset, uint32_t limit);
+	  uint32_t offset, enum tp_iterator_type iterator, uint32_t limit);
 
 /**
  * Create an insert request.
@@ -721,6 +723,21 @@ enum tp_request_type {
 	TP_SUBSCRIBE = 66
 };
 
+enum tp_iterator_type {
+	TP_ITERATOR_EQ = 0,
+	TP_ITERATOR_REQ,
+	TP_ITERATOR_ALL,
+	TP_ITERATOR_LT,
+	TP_ITERATOR_LE,
+	TP_ITERATOR_GE,
+	TP_ITERATOR_GT,
+	TP_ITERATOR_BITS_ALL_SET,
+	TP_ITERATOR_BITS_ANY_SET,
+	TP_ITERATOR_BITS_ALL_NON_SET,
+	TP_ITERATOR_OVERLAPS,
+	TP_ITERATOR_NEIGHBOR
+};
+
 static const uint32_t SCRAMBLE_SIZE = 20;
 
 /**
@@ -950,10 +967,10 @@ tp_ping(struct tp *p)
  */
 static inline char *
 tp_select(struct tp *p, uint32_t space, uint32_t index,
-	  uint32_t offset, uint32_t limit)
+	  uint32_t offset, enum tp_iterator_type iterator, uint32_t limit)
 {
 	int hsz = tpi_sizeof_header(TP_SELECT);
-	int  sz = mp_sizeof_map(5) +
+	int  sz = mp_sizeof_map(6) +
 		mp_sizeof_uint(TP_SPACE) +
 		mp_sizeof_uint(space) +
 		mp_sizeof_uint(TP_INDEX) +
@@ -962,11 +979,13 @@ tp_select(struct tp *p, uint32_t space, uint32_t index,
 		mp_sizeof_uint(offset) +
 		mp_sizeof_uint(TP_LIMIT) +
 		mp_sizeof_uint(limit) +
+		mp_sizeof_uint(TP_ITERATOR) +
+		mp_sizeof_uint(iterator) +
 		mp_sizeof_uint(TP_KEY);
 	if (tpunlikely(tp_ensure(p, sz + hsz) == -1))
 		return NULL;
 	char *h = tpi_encode_header(p, TP_SELECT);
-	h = mp_encode_map(h, 5);
+	h = mp_encode_map(h, 6);
 	h = mp_encode_uint(h, TP_SPACE);
 	h = mp_encode_uint(h, space);
 	h = mp_encode_uint(h, TP_INDEX);
@@ -975,6 +994,8 @@ tp_select(struct tp *p, uint32_t space, uint32_t index,
 	h = mp_encode_uint(h, offset);
 	h = mp_encode_uint(h, TP_LIMIT);
 	h = mp_encode_uint(h, limit);
+	h = mp_encode_uint(h, TP_ITERATOR);
+	h = mp_encode_uint(h, iterator);
 	h = mp_encode_uint(h, TP_KEY);
 	return tp_add(p, sz + hsz);
 }
