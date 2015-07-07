@@ -2,6 +2,20 @@ cmake_minimum_required(VERSION 2.8)
 
 project(LIBTNT)
 
+if(POLICY CMP0037)
+    cmake_policy(SET CMP0037 OLD) # don't blame custom target names
+endif(POLICY CMP0037)
+
+FIND_LIBRARY(MSGPUCK_LIBRARY NAMES msgpuck)
+FIND_PATH(MSGPUCK_INCLUDE_DIR NAMES msgpuck/msgpuck.h)
+SET (MSGPUCK_FOUND FALSE)
+
+IF (MSGPUCK_LIBRARY)
+    SET (MESGPUCK_FOUND TRUE)
+    MESSAGE(STATUS "Found msgpuck: ${MSGPUCK_LIBRARY} ${MSGPUCK_INCLUDE_DIR}")
+    include_directories("${MSGPUCK_INCLUDE_DIR}")
+ENDIF()
+
 include_directories("${PROJECT_SOURCE_DIR}/third_party")
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/tnt")

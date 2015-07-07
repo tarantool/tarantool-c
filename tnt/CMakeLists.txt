@@ -34,7 +34,7 @@ set (TNT_SOURCES
      tnt_schema.c
      tnt_iter.c
      tnt_request.c
-     ../third_party/msgpuck/msgpuck.c
+     ${MSGPUCK_INCLUDE_DIR}/msgpuck/msgpuck.h
      ../third_party/sha1.c
      ../third_party/base64.c
      ../third_party/PMurHash.c
