@@ -6,21 +6,22 @@ if(POLICY CMP0037)
     cmake_policy(SET CMP0037 OLD) # don't blame custom target names
 endif(POLICY CMP0037)
 
+option(ENABLE_BUNDLED_MSGPUCK "Enable building with the bundled msgpuck" ON)
+
+if (NOT ENABLE_BUNDLED_MSGPUCK)
+    set (MSGPUCK_REQUIRED ON)
+    include (cmake/FindMsgPuck.cmake)
+elseif (NOT EXISTS "${PROJECT_SOURCE_DIR}/third_party/msgpuck/msgpuck.h")
+    message(FATAL_ERROR "Could not find msgpuck development files")
+else (NOT ENABLE_BUNDLED_MSGPUCK)
+    set (MSGPUCK_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/third_party")
+    set (MSGPUCK_FOUND TRUE)
+endif (NOT ENABLE_BUNDLED_MSGPUCK)
+
 include_directories("${PROJECT_SOURCE_DIR}/third_party")
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/tnt")
 include_directories("${PROJECT_SOURCE_DIR}/tntnet")
-#include_directories("${PROJECT_SOURCE_DIR}/tntrpl")
-
-find_path(MSGPUCK_INCLUDE_DIR NAMES msgpuck/msgpuck.h PATHS ${PROJECT_SOURCE_DIR}/third_party)
-set(MSGPUCK_FOUND FALSE)
-
-if(MSGPUCK_INCLUDE_DIR)
-    set(MESGPUCK_FOUND TRUE)
-    include_directories("${MSGPUCK_INCLUDE_DIR}")
-else()
-    message(FATAL_ERROR "Msgpuck not found")
-endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -std=gnu99 -D__USE_XOPEN")
 
@@ -45,7 +46,6 @@ message(STATUS "  CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  PREFIX: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "  C_COMPILER: ${CMAKE_C_COMPILER}")
 message(STATUS "  C_FLAGS:${CMAKE_C_FLAGS}")
-message(STATUS "  msgpuck: ${MSGPUCK_INCLUDE_DIR}")
 message(STATUS "------------------------------------------------")
 
 add_subdirectory(include)
