@@ -55,6 +55,70 @@ enum tp_type {
 	TP_EXT = MP_EXT
 };
 
+/* header */
+enum tp_header_key_t {
+	TP_CODE = 0x00,
+	TP_SYNC = 0x01
+};
+
+/* request body */
+enum tp_body_key_t {
+	TP_SPACE = 0x10,
+	TP_INDEX = 0x11,
+	TP_LIMIT = 0x12,
+	TP_OFFSET = 0x13,
+	TP_ITERATOR = 0x14,
+	TP_KEY = 0x20,
+	TP_TUPLE = 0x21,
+	TP_FUNCTION = 0x22,
+	TP_USERNAME = 0x23,
+	TP_EXPRESSION = 0x27,
+	TP_SERVER_ID = 0x02,
+	TP_LSN = 0x03,
+	TP_TIMESTAMP = 0x04,
+	TP_SERVER_UUID = 0x24,
+	TP_CLUSTER_UUID = 0x25,
+	TP_VCLOCK = 0x26
+};
+
+/* response body */
+enum tp_response_key_t {
+	TP_DATA = 0x30,
+	TP_ERROR = 0x31
+};
+
+/* request types */
+enum tp_request_type {
+	TP_SELECT = 1,
+	TP_INSERT = 2,
+	TP_REPLACE = 3,
+	TP_UPDATE = 4,
+	TP_DELETE = 5,
+	TP_CALL = 6,
+	TP_AUTH = 7,
+	TP_EVAL = 8,
+	TP_PING = 64,
+	TP_JOIN = 65,
+	TP_SUBSCRIBE = 66
+};
+
+enum tp_iterator_type {
+	TP_ITERATOR_EQ = 0,
+	TP_ITERATOR_REQ,
+	TP_ITERATOR_ALL,
+	TP_ITERATOR_LT,
+	TP_ITERATOR_LE,
+	TP_ITERATOR_GE,
+	TP_ITERATOR_GT,
+	TP_ITERATOR_BITS_ALL_SET,
+	TP_ITERATOR_BITS_ANY_SET,
+	TP_ITERATOR_BITS_ALL_NON_SET,
+	TP_ITERATOR_OVERLAPS,
+	TP_ITERATOR_NEIGHBOR
+};
+
+static const uint32_t SCRAMBLE_SIZE = 20;
+
 typedef char *(*tp_reserve)(struct tp *p, size_t req, size_t *size);
 
 /**
@@ -676,70 +740,6 @@ tp_map_itr_reset(struct tp_map_itr *itr);
 
 /* {{{ Implementation */
 
-/* header */
-enum tp_header_key_t {
-	TP_CODE = 0x00,
-	TP_SYNC = 0x01
-};
-
-/* request body */
-enum tp_body_key_t {
-	TP_SPACE = 0x10,
-	TP_INDEX = 0x11,
-	TP_LIMIT = 0x12,
-	TP_OFFSET = 0x13,
-	TP_ITERATOR = 0x14,
-	TP_KEY = 0x20,
-	TP_TUPLE = 0x21,
-	TP_FUNCTION = 0x22,
-	TP_USERNAME = 0x23,
-	TP_EXPRESSION = 0x27,
-	TP_SERVER_ID = 0x02,
-	TP_LSN = 0x03,
-	TP_TIMESTAMP = 0x04,
-	TP_SERVER_UUID = 0x24,
-	TP_CLUSTER_UUID = 0x25,
-	TP_VCLOCK = 0x26
-};
-
-/* response body */
-enum tp_response_key_t {
-	TP_DATA = 0x30,
-	TP_ERROR = 0x31
-};
-
-/* request types */
-enum tp_request_type {
-	TP_SELECT = 1,
-	TP_INSERT = 2,
-	TP_REPLACE = 3,
-	TP_UPDATE = 4,
-	TP_DELETE = 5,
-	TP_CALL = 6,
-	TP_AUTH = 7,
-	TP_EVAL = 8,
-	TP_PING = 64,
-	TP_JOIN = 65,
-	TP_SUBSCRIBE = 66
-};
-
-enum tp_iterator_type {
-	TP_ITERATOR_EQ = 0,
-	TP_ITERATOR_REQ,
-	TP_ITERATOR_ALL,
-	TP_ITERATOR_LT,
-	TP_ITERATOR_LE,
-	TP_ITERATOR_GE,
-	TP_ITERATOR_GT,
-	TP_ITERATOR_BITS_ALL_SET,
-	TP_ITERATOR_BITS_ANY_SET,
-	TP_ITERATOR_BITS_ALL_NON_SET,
-	TP_ITERATOR_OVERLAPS,
-	TP_ITERATOR_NEIGHBOR
-};
-
-static const uint32_t SCRAMBLE_SIZE = 20;
-
 /**
  * Receive greetings from the server.
  * Note, the input buffer is not copied,
@@ -1012,7 +1012,7 @@ tpi_encode_store(struct tp *p, enum tp_request_type type, uint32_t space)
 		mp_sizeof_uint(TP_SPACE) +
 		mp_sizeof_uint(space) +
 		mp_sizeof_uint(TP_TUPLE);
-	if (tpunlikely(tp_ensure(p, sz) == -1))
+	if (tpunlikely(tp_ensure(p, sz + hsz) == -1))
 		return NULL;
 	char *h = tpi_encode_header(p, type);
 	h = mp_encode_map(h, 2);
@@ -1074,13 +1074,13 @@ tp_delete(struct tp *p, uint32_t space)
 		mp_sizeof_uint(TP_SPACE) +
 		mp_sizeof_uint(space) +
 		mp_sizeof_uint(TP_KEY);
-	if (tpunlikely(tp_ensure(p, hsz + sz) == -1))
+	if (tpunlikely(tp_ensure(p, sz + hsz) == -1))
 		return NULL;
 	char *h = tpi_encode_header(p, TP_DELETE);
 	h = mp_encode_uint(h, TP_SPACE);
 	h = mp_encode_uint(h, space);
 	h = mp_encode_uint(h, TP_KEY);
-	return tp_add(p, hsz + sz);
+	return tp_add(p, sz + hsz);
 }
 
 /**
@@ -1104,7 +1104,7 @@ tp_call(struct tp *p, const char *function, int len)
 		mp_sizeof_uint(TP_FUNCTION) +
 		mp_sizeof_str(len) +
 		mp_sizeof_uint(TP_TUPLE);
-	if (tpunlikely(tp_ensure(p, hsz + sz) == -1))
+	if (tpunlikely(tp_ensure(p, sz + hsz) == -1))
 		return NULL;
 	char *h = tpi_encode_header(p, TP_CALL);
 	h = mp_encode_map(h, 2);
@@ -1135,7 +1135,7 @@ tp_eval(struct tp *p, const char *expr, int len)
 		mp_sizeof_uint(TP_FUNCTION) +
 		mp_sizeof_str(len) +
 		mp_sizeof_uint(TP_TUPLE);
-	if (tpunlikely(tp_ensure(p, hsz + sz) == -1))
+	if (tpunlikely(tp_ensure(p, sz + hsz) == -1))
 		return NULL;
 	char *h = tpi_encode_header(p, TP_EVAL);
 	h = mp_encode_map(h, 2);
@@ -1168,7 +1168,7 @@ tp_update(struct tp *p, uint32_t space)
 		mp_sizeof_uint(TP_SPACE) +
 		mp_sizeof_uint(space) +
 		mp_sizeof_uint(TP_KEY);
-	if (tpunlikely(tp_ensure(p, sz) == -1))
+	if (tpunlikely(tp_ensure(p, sz + hsz) == -1))
 		return NULL;
 	char *h = tpi_encode_header(p, TP_UPDATE);
 	h = mp_encode_map(h, 3);
@@ -1311,7 +1311,7 @@ tp_auth(struct tp *p, const char *salt_base64, const char *user,
 	int  sz = mp_sizeof_array(2) +
 		      mp_sizeof_str(0) +
 		      mp_sizeof_str(SCRAMBLE_SIZE);
-	if (tpunlikely(tp_ensure(p, sz) == -1))
+	if (tpunlikely(tp_ensure(p, sz + hsz) == -1))
 		return NULL;
 	char *h = tpi_encode_header(p, TP_AUTH);
 	h = mp_encode_map(h, 2);
@@ -1340,7 +1340,7 @@ tp_deauth(struct tp *p)
 {
 	int hsz = tpi_sizeof_header(TP_AUTH);
 	int  sz = mp_sizeof_array(0);
-	if (tpunlikely(tp_ensure(p, sz) == -1))
+	if (tpunlikely(tp_ensure(p, sz + hsz) == -1))
 		return NULL;
 	p->size = p->p;
 	char *h = tpi_encode_header(p, TP_AUTH);
@@ -1350,7 +1350,7 @@ tp_deauth(struct tp *p)
 	h = mp_encode_uint(h, TP_TUPLE);
 	h = mp_encode_array(h, 0);
 
-	return tp_add(p, sz);
+	return tp_add(p, sz + hsz);
 }
 
 /**
