@@ -1,8 +1,10 @@
 #include "test.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <tarantool/tarantool.h>
+
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_opt.h>
 

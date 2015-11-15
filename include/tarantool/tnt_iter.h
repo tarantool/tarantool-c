@@ -64,10 +64,12 @@ struct tnt_iter_array {
  * \brief access msgpack array iterator
  */
 #define TNT_IARRAY(I) (&(I)->data.array)
+
 /**
  * \brief access current element form iterator
  */
 #define TNT_IARRAY_ELEM(I) TNT_IARRAY(I)->elem
+
 /**
  * \brief access end of current element from iterator
  */
@@ -93,18 +95,22 @@ struct tnt_iter_map {
  * \brief access msgpack map iterator
  */
 #define TNT_IMAP(I) (&(I)->data.map)
+
 /**
  * \brief access current key from iterator
  */
 #define TNT_IMAP_KEY(I) TNT_IMAP(I)->key
+
 /**
  * \brief access current key end from iterator
  */
 #define TNT_IMAP_KEY_END(I) TNT_IMAP(I)->key_end
+
 /**
  * \brief access current value from iterator
  */
 #define TNT_IMAP_VAL(I) TNT_IMAP(I)->value
+
 /**
  * \brief access current value end from iterator
  */
@@ -124,6 +130,7 @@ struct tnt_iter_reply {
  * \brief access reply iterator
  */
 #define TNT_IREPLY(I) (&(I)->data.reply)
+
 /**
  * \brief access current reply form iterator
  */
@@ -195,7 +202,9 @@ struct tnt_iter {
  * \returns iterator pointer
  * \retval  NULL on error.
  */
-struct tnt_iter *tnt_iter_array_object(struct tnt_iter *i, struct tnt_stream *s);
+struct tnt_iter *
+tnt_iter_array_object(struct tnt_iter *i, struct tnt_stream *s);
+
 /**
  * \brief create msgpack array iterator from pointer
  *
@@ -208,7 +217,9 @@ struct tnt_iter *tnt_iter_array_object(struct tnt_iter *i, struct tnt_stream *s)
  * \returns iterator pointer
  * \retval  NULL on error.
  */
-struct tnt_iter *tnt_iter_array(struct tnt_iter *i, const char *data, size_t size);
+struct tnt_iter *
+tnt_iter_array(struct tnt_iter *i, const char *data, size_t size);
+
 /**
  * \brief create msgpack map iterator from object
  *
@@ -220,7 +231,9 @@ struct tnt_iter *tnt_iter_array(struct tnt_iter *i, const char *data, size_t siz
  * \returns iterator pointer
  * \retval  NULL error.
  */
-struct tnt_iter *tnt_iter_map_object(struct tnt_iter *i, struct tnt_stream *s);
+struct tnt_iter *
+tnt_iter_map_object(struct tnt_iter *i, struct tnt_stream *s);
+
 /**
  * \brief create msgpack map iterator from pointer
  *
@@ -233,8 +246,8 @@ struct tnt_iter *tnt_iter_map_object(struct tnt_iter *i, struct tnt_stream *s);
  * \returns iterator pointer
  * \retval  NULL error.
  */
-struct tnt_iter *tnt_iter_map(struct tnt_iter *i, const char *data, size_t size);
-
+struct tnt_iter *
+tnt_iter_map(struct tnt_iter *i, const char *data, size_t size);
 
 /**
  * \brief create and initialize tuple reply iterator;
@@ -248,7 +261,8 @@ struct tnt_iter *tnt_iter_map(struct tnt_iter *i, const char *data, size_t size)
  * \returns stream iterator pointer
  * \retval NULL error.
 */
-struct tnt_iter *tnt_iter_reply(struct tnt_iter *i, struct tnt_stream *s);
+struct tnt_iter *
+tnt_iter_reply(struct tnt_iter *i, struct tnt_stream *s);
 
 // struct tnt_iter *tnt_iter_request(struct tnt_iter *i, struct tnt_stream *s);
 // struct tnt_iter *tnt_iter_storag(struct tnt_iter *i, struct tnt_stream *s);
@@ -258,7 +272,8 @@ struct tnt_iter *tnt_iter_reply(struct tnt_iter *i, struct tnt_stream *s);
  *
  * \param i iterator pointer
  */
-void tnt_iter_free(struct tnt_iter *i);
+void
+tnt_iter_free(struct tnt_iter *i);
 
 /**
  * \brief iterate to next element in tuple
@@ -271,14 +286,16 @@ void tnt_iter_free(struct tnt_iter *i);
  * \retval 0 end of iteration
  * \retval 1 next step of iteration
  */
-int tnt_next(struct tnt_iter *i);
+int
+tnt_next(struct tnt_iter *i);
 
 /**
  * \brief reset iterator pos to beginning
  *
  * \param i iterator pointer
  */
-void tnt_rewind(struct tnt_iter *i);
+void
+tnt_rewind(struct tnt_iter *i);
 
 
 #endif /* TNT_ITER_H_INCLUDED */

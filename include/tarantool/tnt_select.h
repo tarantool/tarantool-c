@@ -30,13 +30,15 @@
  * SUCH DAMAGE.
  */
 
+#include <tarantool/tnt_stream.h>
+
 /**
  * \file tnt_select.h
  * \brief Select request
  */
 
 /**
- * \brief Construct select request and write it into stream 
+ * \brief Construct select request and write it into stream
  *
  * \param s        stream object
  * \param space    space no

@@ -44,7 +44,8 @@
  *
  * \retval number of bytes written to stream
  */
-ssize_t tnt_insert(struct tnt_stream *s, uint32_t space, struct tnt_stream *tuple);
+ssize_t
+tnt_insert(struct tnt_stream *s, uint32_t space, struct tnt_stream *tuple);
 
 /**
  * \brief Construct replace request and write it into stream
@@ -55,6 +56,7 @@ ssize_t tnt_insert(struct tnt_stream *s, uint32_t space, struct tnt_stream *tupl
  *
  * \retval number of bytes written to stream
  */
-ssize_t tnt_replace(struct tnt_stream *s, uint32_t space, struct tnt_stream *tuple);
+ssize_t
+tnt_replace(struct tnt_stream *s, uint32_t space, struct tnt_stream *tuple);
 
 #endif /* TNT_INSERT_H_INCLUDED */

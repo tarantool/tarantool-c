@@ -45,7 +45,8 @@
  *
  * \retval number of bytes written to stream
  */
-ssize_t tnt_delete(struct tnt_stream *s, uint32_t space, uint32_t index,
-		   struct tnt_stream *key);
+ssize_t
+tnt_delete(struct tnt_stream *s, uint32_t space, uint32_t index,
+	   struct tnt_stream *key);
 
 #endif /* TNT_DELETE_H_INCLUDED */

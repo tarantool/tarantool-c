@@ -47,8 +47,9 @@
  *
  * \retval number of bytes written to stream
  */
-ssize_t tnt_auth(struct tnt_stream *s, const char *user, int ulen,
-		 const char *pass, int plen);
+ssize_t
+tnt_auth(struct tnt_stream *s, const char *user, int ulen, const char *pass,
+	 int plen);
 
 /**
  * \brief Write deauth request to stream
@@ -59,6 +60,7 @@ ssize_t tnt_auth(struct tnt_stream *s, const char *user, int ulen,
  *
  * \retval number of bytes written to stream
  */
-ssize_t tnt_deauth(struct tnt_stream *s);
+ssize_t
+tnt_deauth(struct tnt_stream *s);
 
 #endif /* TNT_AUTH_H_INCLUDED */

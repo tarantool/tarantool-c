@@ -82,13 +82,15 @@ struct tnt_request {
  * \returns pointer to request object
  * \retval  NULL memory allocation failure
  */
-struct tnt_request *tnt_request_init(struct tnt_request *req, struct tnt_stream *stream);
+struct tnt_request *
+tnt_request_init(struct tnt_request *req, struct tnt_stream *stream);
 /**
  * \brief Free request object
  *
  * \param req request object
  */
-void tnt_request_free(struct tnt_request *req);
+void
+tnt_request_free(struct tnt_request *req);
 
 /**
  * \brief Set request space from number
@@ -101,7 +103,9 @@ void tnt_request_free(struct tnt_request *req);
  * \sa tnt_request_set_sspace
  * \sa tnt_request_set_sspacez
  */
-int tnt_request_set_space(struct tnt_request *req, uint32_t space);
+int
+tnt_request_set_space(struct tnt_request *req, uint32_t space);
+
 /**
  * \brief Set request space from string
  *
@@ -115,7 +119,10 @@ int tnt_request_set_space(struct tnt_request *req, uint32_t space);
  * \sa tnt_request_set_sspace
  * \sa tnt_request_set_sspacez
  */
-int tnt_request_set_sspace(struct tnt_request *req, const char *space, uint32_t slen);
+int
+tnt_request_set_sspace(struct tnt_request *req, const char *space,
+		       uint32_t slen);
+
 /**
  * \brief Set request space from NULL-terminated string
  *
@@ -140,7 +147,9 @@ int tnt_request_set_sspacez(struct tnt_request *req, const char *space);
  * \sa tnt_request_set_sindex
  * \sa tnt_request_set_sindexz
  */
-int tnt_request_set_index(struct tnt_request *req, uint32_t index);
+int
+tnt_request_set_index(struct tnt_request *req, uint32_t index);
+
 /**
  * \brief Set request index from string
  *
@@ -154,7 +163,10 @@ int tnt_request_set_index(struct tnt_request *req, uint32_t index);
  * \sa tnt_request_set_sindex
  * \sa tnt_request_set_sindexz
  */
-int tnt_request_set_sindex(struct tnt_request *req, const char *index, uint32_t ilen);
+int
+tnt_request_set_sindex(struct tnt_request *req, const char *index,
+		       uint32_t ilen);
+
 /**
  * \brief Set request index from NULL-terminated string
  *
@@ -167,7 +179,9 @@ int tnt_request_set_sindex(struct tnt_request *req, const char *index, uint32_t 
  * \sa tnt_request_set_sindex
  * \sa tnt_request_set_sindexz
  */
-int tnt_request_set_sindexz(struct tnt_request *req, const char *index);
+int
+tnt_request_set_sindexz(struct tnt_request *req, const char *index);
+
 /**
  * \brief Set offset for select
  *
@@ -176,7 +190,9 @@ int tnt_request_set_sindexz(struct tnt_request *req, const char *index);
  *
  * \retval 0 ok
  */
-int tnt_request_set_offset(struct tnt_request *req, uint32_t offset);
+int
+tnt_request_set_offset(struct tnt_request *req, uint32_t offset);
+
 /**
  * \brief Set limit for select
  *
@@ -185,7 +201,9 @@ int tnt_request_set_offset(struct tnt_request *req, uint32_t offset);
  *
  * \retval 0 ok
  */
-int tnt_request_set_limit(struct tnt_request *req, uint32_t limit);
+int
+tnt_request_set_limit(struct tnt_request *req, uint32_t limit);
+
 /**
  * \brief Set iterator for select
  *
@@ -194,7 +212,9 @@ int tnt_request_set_limit(struct tnt_request *req, uint32_t limit);
  *
  * \retval 0 ok
  */
-int tnt_request_set_iterator(struct tnt_request *req, enum tnt_iterator_t iter);
+int
+tnt_request_set_iterator(struct tnt_request *req, enum tnt_iterator_t iter);
+
 /**
  * \brief Set field offset for update operation
  *
@@ -203,7 +223,9 @@ int tnt_request_set_iterator(struct tnt_request *req, enum tnt_iterator_t iter);
  *
  * \retval 0 ok
  */
-int tnt_request_set_foffset(struct tnt_request *req, uint32_t foffset);
+int
+tnt_request_set_foffset(struct tnt_request *req, uint32_t foffset);
+
 /**
  * \brief Set key from predefined object
  *
@@ -212,7 +234,9 @@ int tnt_request_set_foffset(struct tnt_request *req, uint32_t foffset);
  *
  * \retval 0 ok
  */
-int tnt_request_set_key(struct tnt_request *req, struct tnt_stream *s);
+int
+tnt_request_set_key(struct tnt_request *req, struct tnt_stream *s);
+
 /**
  * \brief Set key from print-like function
  *
@@ -224,7 +248,9 @@ int tnt_request_set_key(struct tnt_request *req, struct tnt_stream *s);
  * \retval -1 oom/format error
  * \sa tnt_object_format
  */
-int tnt_request_set_key_format(struct tnt_request *req, const char *fmt, ...);
+int
+tnt_request_set_key_format(struct tnt_request *req, const char *fmt, ...);
+
 /**
  * \brief Set function from string
  *
@@ -234,7 +260,9 @@ int tnt_request_set_key_format(struct tnt_request *req, const char *fmt, ...);
  *
  * \retval 0 ok
  */
-int tnt_request_set_func(struct tnt_request *req, const char *func, uint32_t flen);
+int
+tnt_request_set_func(struct tnt_request *req, const char *func, uint32_t flen);
+
 /**
  * \brief Set function from NULL-terminated string
  *
@@ -243,7 +271,9 @@ int tnt_request_set_func(struct tnt_request *req, const char *func, uint32_t fle
  *
  * \retval 0 ok
  */
-int tnt_request_set_funcz(struct tnt_request *req, const char *func);
+int
+tnt_request_set_funcz(struct tnt_request *req, const char *func);
+
 /**
  * \brief Set expression from string
  *
@@ -254,7 +284,9 @@ int tnt_request_set_funcz(struct tnt_request *req, const char *func);
  * \retval 0  ok
  * \retval -1 error
  */
-int tnt_request_set_expr(struct tnt_request *req, const char *expr, uint32_t elen);
+int
+tnt_request_set_expr(struct tnt_request *req, const char *expr, uint32_t elen);
+
 /**
  * \brief Set expression from NULL-terminated string
  *
@@ -264,7 +296,9 @@ int tnt_request_set_expr(struct tnt_request *req, const char *expr, uint32_t ele
  * \retval 0  ok
  * \retval -1 error
  */
-int tnt_request_set_exprz(struct tnt_request *req, const char *expr);
+int
+tnt_request_set_exprz(struct tnt_request *req, const char *expr);
+
 /**
  * \brief Set tuple from predefined object
  *
@@ -273,7 +307,9 @@ int tnt_request_set_exprz(struct tnt_request *req, const char *expr);
  *
  * \retval 0 ok
  */
-int tnt_request_set_tuple(struct tnt_request *req, struct tnt_stream *s);
+int
+tnt_request_set_tuple(struct tnt_request *req, struct tnt_stream *s);
+
 /**
  * \brief Set tuple from print-like function
  *
@@ -285,7 +321,9 @@ int tnt_request_set_tuple(struct tnt_request *req, struct tnt_stream *s);
  * \retval -1 oom/format error
  * \sa tnt_object_format
  */
-int tnt_request_set_tuple_format(struct tnt_request *req, const char *fmt, ...);
+int
+tnt_request_set_tuple_format(struct tnt_request *req, const char *fmt, ...);
+
 /**
  * \brief Encode request to stream object
  *
@@ -295,7 +333,9 @@ int tnt_request_set_tuple_format(struct tnt_request *req, const char *fmt, ...);
  * \retval 0  ok
  * \retval -1 out of memory
  */
-int64_t tnt_request_compile(struct tnt_stream *s, struct tnt_request *req);
+int64_t
+tnt_request_compile(struct tnt_stream *s, struct tnt_request *req);
+
 /**
  * \brief Encode request to stream object
  *
@@ -306,52 +346,70 @@ int64_t tnt_request_compile(struct tnt_stream *s, struct tnt_request *req);
  * \retval 0  ok
  * \retval -1 out of memory
  */
-int64_t tnt_request_encode(struct tnt_request *req);
+int64_t
+tnt_request_encode(struct tnt_request *req);
 
 /**
  * \brief create select request object
  * \sa tnt_request_init
  */
-struct tnt_request *tnt_request_select(struct tnt_request *req, struct tnt_stream *stream);
+struct tnt_request *
+tnt_request_select(struct tnt_request *req, struct tnt_stream *stream);
+
 /**
  * \brief create insert request object
  * \sa tnt_request_init
  */
-struct tnt_request *tnt_request_insert(struct tnt_request *req, struct tnt_stream *stream);
+struct tnt_request *
+tnt_request_insert(struct tnt_request *req, struct tnt_stream *stream);
+
 /**
  * \brief create replace request object
  * \sa tnt_request_init
  */
-struct tnt_request *tnt_request_replace(struct tnt_request *req, struct tnt_stream *stream);
+struct tnt_request *
+tnt_request_replace(struct tnt_request *req, struct tnt_stream *stream);
+
 /**
  * \brief create update request object
  * \sa tnt_request_init
  */
-struct tnt_request *tnt_request_update(struct tnt_request *req, struct tnt_stream *stream);
+struct tnt_request *
+tnt_request_update(struct tnt_request *req, struct tnt_stream *stream);
+
 /**
  * \brief create delete request object
  * \sa tnt_request_init
  */
-struct tnt_request *tnt_request_delete(struct tnt_request *req, struct tnt_stream *stream);
+struct tnt_request *
+tnt_request_delete(struct tnt_request *req, struct tnt_stream *stream);
+
 /**
  * \brief create call request object
  * \sa tnt_request_init
  */
-struct tnt_request *tnt_request_call(struct tnt_request *req, struct tnt_stream *stream);
+struct tnt_request *
+tnt_request_call(struct tnt_request *req, struct tnt_stream *stream);
+
 /**
  * \brief create auth request object
  * \sa tnt_request_init
  */
-struct tnt_request *tnt_request_auth(struct tnt_request *req, struct tnt_stream *stream);
+struct tnt_request *
+tnt_request_auth(struct tnt_request *req, struct tnt_stream *stream);
+
 /**
  * \brief create eval request object
  * \sa tnt_request_init
  */
-struct tnt_request *tnt_request_eval(struct tnt_request *req, struct tnt_stream *stream);
+struct tnt_request *
+tnt_request_eval(struct tnt_request *req, struct tnt_stream *stream);
+
 /**
  * \brief create ping request object
  * \sa tnt_request_init
  */
-struct tnt_request *tnt_request_ping(struct tnt_request *req, struct tnt_stream *stream);
+struct tnt_request *
+tnt_request_ping(struct tnt_request *req, struct tnt_stream *stream);
 
 #endif /* TNT_REQUEST_H_INCLUDED */

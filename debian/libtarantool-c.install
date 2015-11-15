@@ -1,4 +1,3 @@
 usr/lib/libtarantool.so*
-usr/lib/libtarantoolnet.so*
 usr/lib/libtarantool.a
-usr/lib/libtarantoolnet.a
+

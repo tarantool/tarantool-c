@@ -35,6 +35,8 @@
  * \brief Object for manipulating msgpack objects
  */
 
+#include <stdarg.h>
+
 #include <msgpuck/msgpuck.h>
 
 /**
@@ -83,7 +85,8 @@ struct tnt_sbuf_object {
  * \retval  -1 (something was written before
  * \retval   0 success
  */
-int tnt_object_type(struct tnt_stream *s, enum TNT_SBO_TYPE type);
+int
+tnt_object_type(struct tnt_stream *s, enum TNT_SBO_TYPE type);
 
 /**
  * \brief create and initialize tnt_object
@@ -97,73 +100,99 @@ int tnt_object_type(struct tnt_stream *s, enum TNT_SBO_TYPE type);
  * \returns object pointer
  * \retval NULL error
  */
-struct tnt_stream *tnt_object(struct tnt_stream *s);
+struct tnt_stream *
+tnt_object(struct tnt_stream *s);
 
 /**
  * \brief Add nil to an stream object
  */
-ssize_t tnt_object_add_nil (struct tnt_stream *s);
+ssize_t
+tnt_object_add_nil(struct tnt_stream *s);
+
 /**
  * \brief Add integer to an stream object
  */
-ssize_t tnt_object_add_int (struct tnt_stream *s, int64_t value);
+ssize_t
+tnt_object_add_int(struct tnt_stream *s, int64_t value);
+
 /**
  * \brief Add string to an stream object
  */
-ssize_t tnt_object_add_str (struct tnt_stream *s, const char *str, uint32_t len);
+ssize_t
+tnt_object_add_str(struct tnt_stream *s, const char *str, uint32_t len);
+
 /**
  * \brief Add null terminated string to an stream object
  */
-ssize_t tnt_object_add_strz (struct tnt_stream *s, const char *strz);
+ssize_t
+tnt_object_add_strz(struct tnt_stream *s, const char *strz);
+
 /**
  * \brief Add binary object to an stream object
  */
-ssize_t tnt_object_add_bin (struct tnt_stream *s, const void *bin, uint32_t len);
+ssize_t
+tnt_object_add_bin(struct tnt_stream *s, const void *bin, uint32_t len);
+
 /**
  * \brief Add boolean to an stream object
  */
-ssize_t tnt_object_add_bool (struct tnt_stream *s, char value);
+ssize_t
+tnt_object_add_bool(struct tnt_stream *s, char value);
+
 /**
  * \brief Add floating value to an stream object
  */
-ssize_t tnt_object_add_float (struct tnt_stream *s, float value);
+ssize_t
+tnt_object_add_float(struct tnt_stream *s, float value);
+
 /**
  * \brief Add double precision floating value to an stream object
  */
-ssize_t tnt_object_add_double (struct tnt_stream *s, double value);
+ssize_t
+tnt_object_add_double(struct tnt_stream *s, double value);
+
 /**
  * \brief Append array header to stream object
  * \sa TNT_SBO_TYPE
  */
-ssize_t tnt_object_add_array (struct tnt_stream *s, uint32_t size);
+ssize_t
+tnt_object_add_array(struct tnt_stream *s, uint32_t size);
+
 /**
  * \brief Append map header to stream object
  * \sa TNT_SBO_TYPE
  */
-ssize_t tnt_object_add_map (struct tnt_stream *s, uint32_t size);
+ssize_t
+tnt_object_add_map(struct tnt_stream *s, uint32_t size);
+
 /**
  * \brief Cloase array/map in case TNT_SBO_PACKED/TNT_SBO_SPARSE were used
  * \sa TNT_SBO_TYPE
  */
-ssize_t tnt_object_container_close (struct tnt_stream *s);
+ssize_t
+tnt_object_container_close(struct tnt_stream *s);
 
 /**
  * \brief create immutable tnt_object from given buffer
  */
-struct tnt_stream *tnt_object_as(struct tnt_stream *s, char *buf, size_t buf_len);
+struct tnt_stream *
+tnt_object_as(struct tnt_stream *s, char *buf, size_t buf_len);
 
 /**
  * \brief verify that object is valid msgpack structure
  * \param s object pointer
  * \param type -1 on check without validating type, otherwise `enum mp_type`
  */
-int tnt_object_verify(struct tnt_stream *s, int8_t type);
+int
+tnt_object_verify(struct tnt_stream *s, uint8_t type);
+
 /**
  * \brief reset tnt_object to basic state
  * this function doesn't deallocate memory, but instead it simply sets all
  * pointers to beginning
  */
-int tnt_object_reset(struct tnt_stream *s);
+int
+tnt_object_reset(struct tnt_stream *s);
 
 /**
  * \brief create tnt_object from format string/values (va_list variation)
@@ -201,11 +230,15 @@ int tnt_object_reset(struct tnt_stream *s);
  * \sa tnt_object_vformat
  * \sa tnt_object_format
  */
-ssize_t tnt_object_format(struct tnt_stream *s, const char *fmt, ...);
+ssize_t
+tnt_object_format(struct tnt_stream *s, const char *fmt, ...);
+
 /**
  * \brief create tnt_object from format string/values
  * \sa tnt_object_vformat
  * \sa tnt_object_format
  */
-ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl);
+ssize_t
+tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl);
+
 #endif /* TNT_OBJECT_H_INCLUDED */

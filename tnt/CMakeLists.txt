@@ -3,7 +3,7 @@
 #============================================================================#
 
 set(LIBTNT_NAME "tnt")
-set(LIBTNT_VERSIONMAJOR "1.0")
+set(LIBTNT_VERSIONMAJOR "2.0")
 set(LIBTNT_VERSIONMINOR "0")
 set(LIBTNT_VERSION "${LIBTNT_VERSIONMAJOR}.${LIBTNT_VERSIONMINOR}")
 set(LIBTNT_SOVERSION "${LIBTNT_VERSIONMAJOR}")
@@ -18,7 +18,7 @@ endif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
 
 ## source files
 set (TNT_SOURCES
-	 tnt_mem.c
+     tnt_mem.c
      tnt_reply.c
      tnt_stream.c
      tnt_buf.c
@@ -34,6 +34,11 @@ set (TNT_SOURCES
      tnt_schema.c
      tnt_iter.c
      tnt_request.c
+     tnt_iob.c
+     tnt_io.c
+     tnt_opt.c
+     tnt_net.c
+     ../third_party/uri.c
      ../third_party/msgpuck.c
      ../third_party/sha1.c
      ../third_party/base64.c

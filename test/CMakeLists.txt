@@ -8,7 +8,6 @@ add_executable(tarantool-test-tcp
     ${common_files})
 set_target_properties(tarantool-test-tcp PROPERTIES OUTPUT_NAME "tarantool-tcp")
 target_link_libraries(tarantool-test-tcp tnt)
-target_link_libraries(tarantool-test-tcp tntnet)
 
 project(tarantool-test-unix)
 add_executable(tarantool-test-unix
@@ -16,7 +15,6 @@ add_executable(tarantool-test-unix
     ${common_files})
 set_target_properties(tarantool-test-unix PROPERTIES OUTPUT_NAME "tarantool-unix")
 target_link_libraries(tarantool-test-unix tnt)
-target_link_libraries(tarantool-test-unix tntnet)
 
 add_custom_target(test
     COMMAND ${PROJECT_SOURCE_DIR}/test-run.py --builddir=${PROJECT_BINARY_DIR}

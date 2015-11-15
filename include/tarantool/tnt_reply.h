@@ -78,14 +78,16 @@ struct tnt_reply {
  * \returns reply object pointer
  * \retval  NULL memory allocation failure
  */
-struct tnt_reply *tnt_reply_init(struct tnt_reply *r);
+struct tnt_reply *
+tnt_reply_init(struct tnt_reply *r);
 
 /*!
  * \brief Free previously inited reply object
  *
  * \param r reply object pointer
  */
-void tnt_reply_free(struct tnt_reply *r);
+void
+tnt_reply_free(struct tnt_reply *r);
 
 /*!
  * \brief process buffer as iproto reply
@@ -108,7 +110,8 @@ void tnt_reply_free(struct tnt_reply *r);
  * \retval 1  need 'offset' bytes more
  * \retval -1 error while parsing request
  */
-int tnt_reply(struct tnt_reply *r, char *buf, size_t size, size_t *off);
+int
+tnt_reply(struct tnt_reply *r, char *buf, size_t size, size_t *off);
 
 /*!
  * \brief Process iproto reply with supplied recv function
@@ -121,6 +124,7 @@ int tnt_reply(struct tnt_reply *r, char *buf, size_t size, size_t *off);
  * \retval  0 ok
  * \retval -1 error, while parsing response
  */
-int tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr);
+int
+tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr);
 
 #endif /* TNT_REPLY_H_INCLUDED */

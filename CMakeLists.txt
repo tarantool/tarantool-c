@@ -52,7 +52,6 @@ message(STATUS "------------------------------------------------")
 add_subdirectory(include)
 add_subdirectory(tnt)
 add_subdirectory(test)
-add_subdirectory(tntnet)
 #add_subdirectory(tntrpl)
 
 message(STATUS "------------------------------------------------")

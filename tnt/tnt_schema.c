@@ -128,7 +128,7 @@ tnt_schema_add_space(
 		struct mh_assoc_t *schema,
 		const char **data) {
 	struct tnt_schema_sval *space = NULL;
-	struct assoc_val *sstr = NULL, *snum = NULL;
+	struct assoc_val *space_string = NULL, *space_number = NULL;
 	const char *tuple = *data;
 	if (mp_typeof(*tuple) != MP_ARRAY) goto error;
 	uint32_t tuple_len = mp_decode_array(&tuple);
@@ -142,7 +142,7 @@ tnt_schema_add_space(
 	mp_next(&tuple);
 	if (mp_typeof(*tuple) != MP_STR) goto error;
 	const char *space_name_tmp = mp_decode_str(&tuple,
-			 			   &space->space_name_len);
+						   &space->space_name_len);
 	space->space_name = tnt_mem_alloc(space->space_name_len);
 	if (!space->space_name) goto error;
 	memcpy(space->space_name, space_name_tmp, space->space_name_len);
@@ -152,7 +152,9 @@ tnt_schema_add_space(
 	mp_next(&tuple);
 	/* skip format */
 	mp_next(&tuple);
-	/* parse format */
+	/* skip format */
+	mp_next(&tuple);
+	/* parse format
 	if (mp_typeof(*tuple) != MP_ARRAY) goto error;
 	uint32_t fmt_len = mp_decode_array(&tuple);
 	if (fmt_len) {
@@ -196,29 +198,29 @@ tnt_schema_add_space(
 				}
 			}
 		}
-	}
+	} */
 	space->index_hash = mh_assoc_new();
 	if (!space->index_hash) goto error;
-	sstr = tnt_mem_alloc(sizeof(struct assoc_val));
-	if (!sstr) goto error;
-	sstr->key.id     = space->space_name;
-	sstr->key.id_len = space->space_name_len;
-	sstr->data = space;
-	snum = tnt_mem_alloc(sizeof(struct assoc_val));
-	if (!snum) goto error;
-	snum->key.id = (void *)&(space->space_number);
-	snum->key.id_len = sizeof(space->space_number);
-	snum->data = space;
-	mh_assoc_put(schema, (const struct assoc_val **)&sstr,
+	space_string = tnt_mem_alloc(sizeof(struct assoc_val));
+	if (!space_string) goto error;
+	space_string->key.id     = space->space_name;
+	space_string->key.id_len = space->space_name_len;
+	space_string->data = space;
+	space_number = tnt_mem_alloc(sizeof(struct assoc_val));
+	if (!space_number) goto error;
+	space_number->key.id = (void *)&(space->space_number);
+	space_number->key.id_len = sizeof(space->space_number);
+	space_number->data = space;
+	mh_assoc_put(schema, (const struct assoc_val **)&space_string,
 		     NULL, NULL);
-	mh_assoc_put(schema, (const struct assoc_val **)&snum,
+	mh_assoc_put(schema, (const struct assoc_val **)&space_number,
 		     NULL, NULL);
 	*data = tuple;
 	return 0;
 error:
 	tnt_schema_sval_free(space);
-	if (sstr) tnt_mem_free(sstr);
-	if (snum) tnt_mem_free(snum);
+	if (space_string) tnt_mem_free(space_string);
+	if (space_number) tnt_mem_free(space_number);
 	return -1;
 }
 
@@ -243,7 +245,7 @@ static inline int
 tnt_schema_add_index(struct mh_assoc_t *schema, const char **data) {
 	const struct tnt_schema_sval *space = NULL;
 	struct tnt_schema_ival *index = NULL;
-	struct assoc_val *inum = NULL, *istr = NULL;
+	struct assoc_val *index_number = NULL, *index_string = NULL;
 	const char *tuple = *data;
 	if (mp_typeof(*tuple) != MP_ARRAY) goto error;
 	int64_t tuple_len = mp_decode_array(&tuple);
@@ -273,6 +275,9 @@ tnt_schema_add_index(struct mh_assoc_t *schema, const char **data) {
 	mp_next(&tuple);
 	/* skip unique flag */
 	mp_next(&tuple);
+	/* skip fields */
+	mp_next(&tuple);
+	/*
 	uint32_t part_count = mp_decode_uint(&tuple);
 	if (mp_typeof(*tuple) != MP_UINT) goto error;
 	uint32_t rpart_count = part_count;
@@ -303,28 +308,28 @@ tnt_schema_add_index(struct mh_assoc_t *schema, const char **data) {
 				val->field_type = FT_OTHER;
 		}
 		index->index_parts_len++;
-	}
-	istr = tnt_mem_alloc(sizeof(struct assoc_val));
-	if (!istr) goto error;
-	istr->key.id     = index->index_name;
-	istr->key.id_len = index->index_name_len;
-	istr->data = index;
-	inum = tnt_mem_alloc(sizeof(struct assoc_val));
-	if (!inum) goto error;
-	inum->key.id     = (void *)&(index->index_number);
-	inum->key.id_len = sizeof(uint32_t);
-	inum->data = index;
+	} */
+	index_string = tnt_mem_alloc(sizeof(struct assoc_val));
+	if (!index_string) goto error;
+	index_string->key.id     = index->index_name;
+	index_string->key.id_len = index->index_name_len;
+	index_string->data = index;
+	index_number = tnt_mem_alloc(sizeof(struct assoc_val));
+	if (!index_number) goto error;
+	index_number->key.id     = (void *)&(index->index_number);
+	index_number->key.id_len = sizeof(uint32_t);
+	index_number->data = index;
 	mh_assoc_put(space->index_hash,
-		     (const struct assoc_val **)&istr,
+		     (const struct assoc_val **)&index_string,
 		     NULL, NULL);
 	mh_assoc_put(space->index_hash,
-		     (const struct assoc_val **)&inum,
+		     (const struct assoc_val **)&index_number,
 		     NULL, NULL);
 	*data = tuple;
 	return 0;
 error:
-	if (istr) tnt_mem_free(istr);
-	if (inum) tnt_mem_free(inum);
+	if (index_string) tnt_mem_free(index_string);
+	if (index_number) tnt_mem_free(index_number);
 	tnt_schema_ival_free(index);
 	return -1;
 }

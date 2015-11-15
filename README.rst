@@ -29,11 +29,11 @@ This project using CMake for generating Makefiles:
 
     $ cmake .
     $ make
-    #For testing against installed tarantool
+    #### For testing against installed tarantool
     $ make test
-    #For building documentation using Doxygen
+    #### For building documentation using Doxygen
     $ make doc
-    #For installing into system (headers+libraries)
+    #### For installing into system (headers+libraries)
     $ make install
 
 Or you can install it using yum/apt into your favorite linux distribution

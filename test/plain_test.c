@@ -10,7 +10,6 @@
 
 #include <msgpuck/msgpuck.h>
 
-#include <tarantool/tarantool.h>
 #include <tarantool/tnt_net.h>
 
 void hexDump (char *desc, void *addr, int len) {

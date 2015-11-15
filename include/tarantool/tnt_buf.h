@@ -79,6 +79,7 @@ struct tnt_stream_buf {
  * \returns pointer to newly allocated sbuf object
  * \retval  NULL memory allocation failure
  */
-struct tnt_stream *tnt_buf(struct tnt_stream *s);
+struct tnt_stream *
+tnt_buf(struct tnt_stream *s);
 
 #endif /* TNT_BUF_H_INCLUDED */

@@ -49,10 +49,11 @@ struct tnt_iob {
 	void *ptr;
 };
 
-int tnt_iob_init(struct tnt_iob *iob, size_t size,
-		 tnt_iob_tx_t tx,
-		 tnt_iob_txv_t txv, void *ptr);
+int
+tnt_iob_init(struct tnt_iob *iob, size_t size, tnt_iob_tx_t tx,
+	     tnt_iob_txv_t txv, void *ptr);
 
-void tnt_iob_free(struct tnt_iob *iob);
+void
+tnt_iob_free(struct tnt_iob *iob);
 
 #endif /* TNT_IOB_H_INCLUDED */

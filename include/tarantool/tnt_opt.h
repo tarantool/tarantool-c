@@ -30,6 +30,8 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/time.h>
+
 /**
  * \file tnt_opt.h
  * \brief Networking layer options
@@ -118,11 +120,14 @@ struct tnt_opt {
 /**
  * \internal
  */
-int tnt_opt_init(struct tnt_opt *opt);
+int
+tnt_opt_init(struct tnt_opt *opt);
+
 /**
  * \internal
  */
-void tnt_opt_free(struct tnt_opt *opt);
+void
+tnt_opt_free(struct tnt_opt *opt);
 
 /**
  * \internal

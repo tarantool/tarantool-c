@@ -43,5 +43,7 @@
  * \returns   number of bytes written to stream
  * \retval -1 oom
  */
-ssize_t tnt_ping(struct tnt_stream *s);
+ssize_t
+tnt_ping(struct tnt_stream *s);
+
 #endif /* TNT_PING_H_INCLUDED */

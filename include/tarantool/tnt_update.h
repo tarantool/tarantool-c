@@ -30,13 +30,15 @@
  * SUCH DAMAGE.
  */
 
+#include <tarantool/tnt_stream.h>
+
 /**
  * \file tnt_update.h
  * \brief Update operation
  */
 
 /**
- * \brief Generate and write update operation with predefined 
+ * \brief Generate and write update operation with predefined
  *
  * \param s     stream pointer
  * \param space space no

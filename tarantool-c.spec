@@ -38,9 +38,6 @@ make DESTDIR=%{buildroot} install
 "%{_libdir}/libtarantool.a"
 "%{_libdir}/libtarantool.so"
 "%{_libdir}/libtarantool.so.*"
-"%{_libdir}/libtarantoolnet.a"
-"%{_libdir}/libtarantoolnet.so"
-"%{_libdir}/libtarantoolnet.so.*"
 
 %files devel
 %dir "%{_includedir}/tarantool"

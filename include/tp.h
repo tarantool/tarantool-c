@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <stdarg.h>
 
-#include <msgpuck.h>
+#include <msgpuck/msgpuck.h>
 #include <sha1.h>
 #include <base64.h>
 

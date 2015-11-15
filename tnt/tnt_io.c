@@ -51,7 +51,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <tarantool/tarantool.h>
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_io.h>
 

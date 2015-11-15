@@ -30,23 +30,37 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/uio.h>
+#include <tarantool/tnt_net.h>
+
 /**
  * \internal
  * \file tnt_io.h
  * \brief Basic network layer io
  */
 
-enum tnt_error tnt_io_connect(struct tnt_stream_net *s);
-void tnt_io_close(struct tnt_stream_net *s);
+enum tnt_error
+tnt_io_connect(struct tnt_stream_net *s);
+void
+tnt_io_close(struct tnt_stream_net *s);
 
-ssize_t tnt_io_flush(struct tnt_stream_net *s);
+ssize_t
+tnt_io_flush(struct tnt_stream_net *s);
 
-ssize_t tnt_io_send_raw(struct tnt_stream_net *s, const char *buf, size_t size, int all);
-ssize_t tnt_io_sendv_raw(struct tnt_stream_net *s, struct iovec *iov, int count, int all);
-ssize_t tnt_io_recv_raw(struct tnt_stream_net *s, char *buf, size_t size, int all);
+ssize_t
+tnt_io_send_raw(struct tnt_stream_net *s, const char *buf,
+		size_t size, int all);
+ssize_t
+tnt_io_sendv_raw(struct tnt_stream_net *s, struct iovec *iov,
+		 int count, int all);
+ssize_t
+tnt_io_recv_raw(struct tnt_stream_net *s, char *buf, size_t size, int all);
 
-ssize_t tnt_io_send(struct tnt_stream_net *s, const char *buf, size_t size);
-ssize_t tnt_io_sendv(struct tnt_stream_net *s, struct iovec *iov, int count);
-ssize_t tnt_io_recv(struct tnt_stream_net *s, char *buf, size_t size);
+ssize_t
+tnt_io_send(struct tnt_stream_net *s, const char *buf, size_t size);
+ssize_t
+tnt_io_sendv(struct tnt_stream_net *s, struct iovec *iov, int count);
+ssize_t
+tnt_io_recv(struct tnt_stream_net *s, char *buf, size_t size);
 
 #endif /* TNT_IO_H_INCLUDED */

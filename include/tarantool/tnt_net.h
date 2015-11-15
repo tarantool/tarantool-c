@@ -106,7 +106,8 @@ struct tnt_stream_net {
  * tnt_close(s);
  * \endcode
  */
-struct tnt_stream *tnt_net(struct tnt_stream *s);
+struct tnt_stream *
+tnt_net(struct tnt_stream *s);
 
 /**
  * \brief Set options for connection
@@ -132,7 +133,8 @@ struct tnt_stream *tnt_net(struct tnt_stream *s);
  * * "[login:password@]/tmp/socket_path.sock" for unix sockets
  * \sa enum tnt_opt_type
  */
-int tnt_set(struct tnt_stream *s, int opt, ...);
+int
+tnt_set(struct tnt_stream *s, int opt, ...);
 
 /*!
  * \internal
@@ -148,7 +150,8 @@ int tnt_set(struct tnt_stream *s, int opt, ...);
  * \retval 0  ok
  * \retval -1 error (oom/einval)
  */
-int tnt_init(struct tnt_stream *s);
+int
+tnt_init(struct tnt_stream *s);
 
 /**
  * \brief Connect to tarantool with preconfigured and allocated settings
@@ -158,12 +161,15 @@ int tnt_init(struct tnt_stream *s);
  * \retval 0  ok
  * \retval -1 error (network/oom)
  */
-int  tnt_connect(struct tnt_stream *s);
+int
+tnt_connect(struct tnt_stream *s);
+
 /**
  * \brief Close connection
  * \param s stream pointer
  */
-void tnt_close(struct tnt_stream *s);
+void
+tnt_close(struct tnt_stream *s);
 
 /**
  * \brief Send written to buffer queries
@@ -173,24 +179,32 @@ void tnt_close(struct tnt_stream *s);
  * \returns number of bytes written to socket
  * \retval -1 on network error
  */
-ssize_t tnt_flush(struct tnt_stream *s);
+ssize_t
+tnt_flush(struct tnt_stream *s);
+
 /**
  * \brief Get tnt_net stream fd
  */
-int     tnt_fd(struct tnt_stream *s);
+int
+tnt_fd(struct tnt_stream *s);
 
 /**
  * \brief Error accessor for tnt_net stream
  */
-enum  tnt_error tnt_error(struct tnt_stream *s);
+enum tnt_error
+tnt_error(struct tnt_stream *s);
+
 /**
  * \brief Format error as string
  */
-char *tnt_strerror(struct tnt_stream *s);
+char *
+tnt_strerror(struct tnt_stream *s);
+
 /**
  * \brief Get last errno on socket
  */
-int   tnt_errno(struct tnt_stream *s);
+int
+tnt_errno(struct tnt_stream *s);
 
 /**
  * \brief Authenticate with given cridentials and take schema from server
@@ -204,7 +218,9 @@ int   tnt_errno(struct tnt_stream *s);
  * \retval  -1 error
  * \retval  0  ok
  */
-int tnt_authenticate  (struct tnt_stream *s);
+int
+tnt_authenticate(struct tnt_stream *s);
+
 /**
  * \brief Flush space/index schema and get it from server
  *
@@ -214,7 +230,8 @@ int tnt_authenticate  (struct tnt_stream *s);
  * \retval  -1 error
  * \retval  0  ok
  */
-int tnt_reload_schema (struct tnt_stream *s);
+int
+tnt_reload_schema(struct tnt_stream *s);
 
 #ifdef __cplusplus
 }

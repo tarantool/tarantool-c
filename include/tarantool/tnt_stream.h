@@ -38,6 +38,8 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 
+#include <tarantool/tnt_reply.h>
+
 /**
  * \brief Basic stream object
  * all function pointers are NULL, if operation is not supported

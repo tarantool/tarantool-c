@@ -38,7 +38,16 @@
 
 #include <uri.h>
 
-#include <tarantool/tarantool.h>
+#include <tarantool/tnt_proto.h>
+#include <tarantool/tnt_reply.h>
+#include <tarantool/tnt_stream.h>
+#include <tarantool/tnt_object.h>
+#include <tarantool/tnt_mem.h>
+#include <tarantool/tnt_schema.h>
+#include <tarantool/tnt_select.h>
+#include <tarantool/tnt_iter.h>
+#include <tarantool/tnt_auth.h>
+
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_io.h>
 

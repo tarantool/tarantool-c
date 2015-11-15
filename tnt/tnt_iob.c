@@ -36,7 +36,7 @@
 #include <unistd.h>
 #include <sys/uio.h>
 
-#include <tarantool/tarantool.h>
+#include <tarantool/tnt_mem.h>
 #include <tarantool/tnt_iob.h>
 
 int

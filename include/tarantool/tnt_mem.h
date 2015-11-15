@@ -72,23 +72,31 @@ typedef void *(tnt_allocator_t)(void *ptr, size_t size);
 /**
  * \brief initialize memory allocation function
  */
-void *tnt_mem_init(tnt_allocator_t alloc);
+void *
+tnt_mem_init(tnt_allocator_t alloc);
 
 /**
  * \brief Internal function
  */
-void *tnt_mem_alloc(size_t size);
+void *
+tnt_mem_alloc(size_t size);
+
 /**
  * \brief Internal function
  */
-void *tnt_mem_realloc(void *ptr, size_t size);
+void *
+tnt_mem_realloc(void *ptr, size_t size);
+
 /**
  * \brief Internal function
  */
-char *tnt_mem_dup(char *sz);
+char *
+tnt_mem_dup(char *sz);
+
 /**
  * \brief Internal function
  */
-void tnt_mem_free(void *ptr);
+void
+tnt_mem_free(void *ptr);
 
 #endif /* TNT_MEM_H_INCLUDED */

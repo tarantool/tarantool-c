@@ -40,7 +40,7 @@
 
 #include <uri.h>
 
-#include <tarantool/tarantool.h>
+#include <tarantool/tnt_mem.h>
 #include <tarantool/tnt_net.h>
 
 int

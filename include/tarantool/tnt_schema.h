@@ -30,11 +30,14 @@
  * SUCH DAMAGE.
  */
 
+
 /**
  * \internal
  * \file tnt_schema.h
  * \brief Tarantool schema
  */
+
+struct mh_assoc_t;
 
 /**
  * \internal
@@ -104,7 +107,9 @@ struct tnt_schema {
  * \retval  -1 failed parsing/oom
  * \retval  0 ok
  */
-int tnt_schema_add_spaces  (struct tnt_schema *sch, const char *data, uint32_t dlen);
+int
+tnt_schema_add_spaces(struct tnt_schema *sch, const char *data, uint32_t dlen);
+
 /**
  * \brief Add indexes definitions to schema
  *
@@ -119,7 +124,9 @@ int tnt_schema_add_spaces  (struct tnt_schema *sch, const char *data, uint32_t d
  * \retval  -1 failed parsing/oom
  * \retval  0 ok
  */
-int tnt_schema_add_indexes (struct tnt_schema *sch, const char *data, uint32_t dlen);
+int
+tnt_schema_add_indexes(struct tnt_schema *sch, const char *data,
+		       uint32_t dlen);
 
 /**
  * \brief Get spaceno by space name
@@ -133,6 +140,7 @@ int tnt_schema_add_indexes (struct tnt_schema *sch, const char *data, uint32_t d
  */
 int32_t
 tnt_schema_stosid (struct tnt_schema *sch, const char *sstr, uint32_t sslen);
+
 /**
  * \brief Get indexno by space no and index name
  *
@@ -157,16 +165,21 @@ tnt_schema_stoiid (struct tnt_schema *sch, uint32_t sno, const char *istr,
  * \returns new schema object
  * \retval  NULL oom
  */
-struct tnt_schema *tnt_schema_new(struct tnt_schema *sch);
+struct tnt_schema *
+tnt_schema_new(struct tnt_schema *sch);
+
 /**
  * \brief Reset schema to default state (empty)
  * \param sch schema pointer
  */
-void tnt_schema_flush  (struct tnt_schema *sch);
+void
+tnt_schema_flush  (struct tnt_schema *sch);
+
 /**
  * \brief Reset and free schema
  * \param sch schema pointer
  */
-void tnt_schema_delete (struct tnt_schema *sch);
+void
+tnt_schema_delete (struct tnt_schema *sch);
 
 #endif /* TNT_SCHEMA_H_INCLUDED */
