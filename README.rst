@@ -16,6 +16,7 @@ Tarantool-c depends on `msgpuck <https://github.com/tarantool/msgpuck>`_.
 Documentation is avaliable in headers and examples are in tests.
 
 It consinsts of:
+
 * tnt    - tarantool IProto library
 * tntnet - tarantool network io library
 
