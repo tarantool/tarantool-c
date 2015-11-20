@@ -29,6 +29,9 @@ matrix:
 
 before_install:
   - git submodule update --init --recursive
+  - sudo apt-get update
+  - sudo apt-get -y install lxc-docker
+  - docker pull tarantool/build:$OS$DIST
 
 install:
   - uname -a
@@ -46,7 +49,7 @@ script:
   - cd pack
   - mkdir -p out
   - cp build.sh out/
-  - docker run -v $(CURDIR)/out:/home/rpm/result tarantool/build:$OS$DIST sh /home/rpm/result/build.sh
+  - docker run -v out:/home/rpm/result tarantool/build:$OS$DIST sh /home/rpm/result/build.sh
 
 notifications:
   irc:
