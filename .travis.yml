@@ -1,9 +1,6 @@
 sudo: required
 services:
   - docker
-
-language: c
-
 matrix:
     include:
       - os: linux
