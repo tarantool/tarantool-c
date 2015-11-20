@@ -1,8 +1,27 @@
 language: c
 
-compiler:
-  - clang
-  - gcc
+matrix:
+    include:
+      - os: linux
+        compiller: clang
+        env: OS=el DIST=6 PACK=rpm
+      - os: linux
+        compiller: clang
+        env: OS=el DIST=7 PACK=rpm
+      - os: linux
+        compiller: clang
+        env: OS=fedora DIST=20 PACK=rpm
+      - os: linux
+        compiller: clang
+        env: OS=fedora DIST=21 PACK=rpm
+      - os: linux
+        compiller: clang
+        env: OS=fedora DIST=22 PACK=rpm
+      - os: linux
+        compiller: clang
+        env: OS=fedora DIST=23 PACK=rpm
+      - os: linux
+        compiller: gcc
 
 before_install:
   - git submodule update --init --recursive
@@ -19,7 +38,8 @@ install:
 script:
   - cmake . -DCMAKE_BUILD_TYPE=Debug
   - make
-  - sudo make test
+  #- sudo make test
+  - cd pack && sudo sh ./pack.sh $PACK $OS $DIST
 
 notifications:
   irc:
@@ -27,4 +47,4 @@ notifications:
       - irc.freenode.net#tarantool
     on_success: change
     on_failure: always
-  email: false
+  email: true
