@@ -43,7 +43,10 @@ script:
   - cmake . -DCMAKE_BUILD_TYPE=Debug
   - make
   #- sudo make test
-  - cd pack && sudo sh ./pack.sh $PACK $OS $DIST
+  - cd pack
+  - mkdir -p out
+  - cp build.sh out/
+  - docker run -v $(CURDIR)/out:/home/rpm/result tarantool/build:$OS$DIST sh /home/rpm/result/build.sh
 
 notifications:
   irc:
