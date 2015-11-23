@@ -17,7 +17,7 @@ env:
 
 matrix:
     exclude:
-    - env: PACK=rpm
+      - env: PACK=rpm
         compiler: clang
 
 before_install:
