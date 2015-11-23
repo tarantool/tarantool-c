@@ -1,7 +1,7 @@
 # Travis-CI wrapper for parallel builds
 if [ $# -eq 3 ] ; then
     make build-$1 os=$2 dist=$3
-    #make export-$1 is=$2 dist=$3
+    make export-$1 os=$2 dist=$3
 else
     echo 'build skipped'
     echo 'Usage:'
