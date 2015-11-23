@@ -17,13 +17,13 @@ env:
 
 matrix:
     exclude:
-        - compiler: clang
-          env: PACK=rpm
+    - env: PACK=rpm
+        compiler: clang
 
 before_install:
   - git submodule update --init --recursive
   - sudo apt-get update
-  - docker pull tarantool/build:$OS$DIST
+  #- docker pull tarantool/build:$OS$DIST
 
 #install:
 #  - uname -a
