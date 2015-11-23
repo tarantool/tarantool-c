@@ -5,6 +5,7 @@ services:
 language: c
 compiler:
     - clang
+    - gcc
 env:
     - OS=el DIST=6 PACK=rpm
     - OS=el DIST=7 PACK=rpm
@@ -12,6 +13,12 @@ env:
     - OS=fedora DIST=21 PACK=rpm
     - OS=fedora DIST=22 PACK=rpm
     - OS=fedora DIST=23 PACK=rpm
+    - PACK=none
+
+matrix:
+    exclude:
+        - compiler: clang
+          env: PACK=rpm
 
 before_install:
   - git submodule update --init --recursive
