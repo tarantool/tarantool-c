@@ -29,7 +29,7 @@ script:
   - cd pack
   - mkdir -p out
   - cp build.sh out/
-  - docker run -v out:/home/rpm/result tarantool/build:$OS$DIST sh /home/rpm/result/build.sh
+  - docker run -v `pwd`/out:/home/rpm/result tarantool/build:$OS$DIST sh /home/rpm/result/build.sh
 
 notifications:
   irc:
