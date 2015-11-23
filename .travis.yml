@@ -6,7 +6,12 @@ language: c
 compiler:
     - gcc
 env:
+    - OS=el DIST=6 PACK=rpm
     - OS=el DIST=7 PACK=rpm
+    - OS=fedora DIST=20 PACK=rpm
+    - OS=fedora DIST=21 PACK=rpm
+    - OS=fedora DIST=22 PACK=rpm
+    - OS=fedora DIST=23 PACK=rpm
 
 before_install:
   - git submodule update --init --recursive
@@ -30,6 +35,7 @@ script:
   - mkdir -p out
   - cp build.sh out/
   - docker run -v `pwd`/out:/home/rpm/result tarantool/build:$OS$DIST sh /home/rpm/result/build.sh
+  - ls -lia out/
 
 notifications:
   irc:
