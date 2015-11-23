@@ -39,7 +39,7 @@ script:
   #- make
   #- sudo make test
   - cd pack
-  ./pack.sh $PACK $OS $DIST
+  - sh pack.sh $PACK $OS $DIST
   #- mkdir -p out
   #- cp build.sh out/
   #- docker run -v `pwd`/out:/home/rpm/result tarantool/build:$OS$DIST sh /home/rpm/result/build.sh
