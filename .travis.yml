@@ -17,7 +17,9 @@ env:
 
 matrix:
     exclude:
-      - env: PACK=rpm
+      - env: OS=fedora DIST=23 PACK=rpm
+        compiler: clang
+      - env: OS=fedora DIST=22 PACK=rpm
         compiler: clang
 
 before_install:
@@ -40,10 +42,6 @@ script:
   #- sudo make test
   - cd pack
   - sh pack.sh $PACK $OS $DIST
-  #- mkdir -p out
-  #- cp build.sh out/
-  #- docker run -v `pwd`/out:/home/rpm/result tarantool/build:$OS$DIST sh /home/rpm/result/build.sh
-  - ls -lia out/
 
 notifications:
   irc:
