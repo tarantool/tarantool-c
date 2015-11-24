@@ -57,6 +57,7 @@ struct tnt_reply {
 	size_t buf_size;        /*!< size of query buffer */
 	uint64_t code;		/*!< response code (0 is success, error number if not) */
 	uint64_t sync;		/*!< synchronization id */
+	uint64_t schema_id;	/*!< unique schema id */
 	const char *error;	/*!< error message (NULL if not present) */
 	const char *error_end;	/*!< end of error message (NULL if not present) */
 	const char *data;	/*!< tuple data (NULL if not present) */
