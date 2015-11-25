@@ -11,6 +11,19 @@ export-rpm:
 	rm -f out/*.src.rpm
 	package_cloud push karcher/test-repo/$(os)/$(dist)/ out/*.rpm --skip-errors
 	rm -f out/*.rpm
+build-deb:
+	mkdir -p out
+	cp build_deb.sh out/
+	cp build_py.py out/
+	docker run -v $(CURDIR)/out:/home/deb/result tarantool/build:$(os)-$(dist) sh /home/deb/result/build_deb.sh $(os) $(dist) master $(product) $(uri)
+
+export-deb:
+	package_cloud push karcher/test-repo/$(os)/$(dist)/ out/*.deb --skip-errors
+	rm out/*.deb
+	package_cloud push karcher/test-repo/$(os)/$(dist)/ out/*.dsc --skip-errors
+	rm out/*.dsc
+	rm -f out/*.gz
+	rm -f out/*.xz
 clean:
 	docker rm `docker ps -aq`
 	rm -rf out
