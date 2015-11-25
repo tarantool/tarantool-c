@@ -7,19 +7,22 @@ compiler:
     - clang
     - gcc
 env:
-    - OS=el DIST=6 PACK=rpm
-    - OS=el DIST=7 PACK=rpm
-    - OS=fedora DIST=20 PACK=rpm
-    - OS=fedora DIST=21 PACK=rpm
-    - OS=fedora DIST=22 PACK=rpm
-    - OS=fedora DIST=23 PACK=rpm
-    - OS=ubuntu DIST=trusty PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
-    - OS=ubuntu DIST=precise PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
-    - OS=ubuntu DIST=vivid PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
-    - OS=debian DIST=jessie PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
-    - OS=debian DIST=wheezy PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
-    - OS=debian DIST=stretch PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
-    - PACK=none
+    global:
+      - OUT_REPO=karcher/test-repo
+    matrix:
+      - OS=el DIST=6 PACK=rpm
+      - OS=el DIST=7 PACK=rpm
+      - OS=fedora DIST=20 PACK=rpm
+      - OS=fedora DIST=21 PACK=rpm
+      - OS=fedora DIST=22 PACK=rpm
+      - OS=fedora DIST=23 PACK=rpm
+      - OS=ubuntu DIST=trusty PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
+      - OS=ubuntu DIST=precise PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
+      - OS=ubuntu DIST=vivid PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
+      - OS=debian DIST=jessie PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
+      - OS=debian DIST=wheezy PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
+      - OS=debian DIST=stretch PACK=deb PROD=tarantool-c P_URI=https://github.com/tarantool/tarantool-c.git
+      - PACK=none
 
 matrix:
     exclude:
@@ -68,7 +71,7 @@ script:
   #- make
   #- sudo make test
   - cd pack
-  - sh pack.sh $PACK $OS $DIST $PROD $P_URI
+  - sh pack.sh $PACK $OS $DIST $TRAVIS_BRANCH $OUT_REPO $PROD $P_URI
 
 notifications:
   irc:

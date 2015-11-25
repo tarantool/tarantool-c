@@ -1,6 +1,6 @@
 mkdir -p rpmbuild/SOURCES
 
-git clone https://github.com/tarantool/tarantool-c.git
+git clone -b $1 https://github.com/tarantool/tarantool-c.git
 cd tarantool-c
 git submodule update --init --recursive
 tar cvf `cat tarantool-c.spec | grep Version: |sed -e  's/Version: //'`.tar.gz . --exclude=.git
