@@ -19,9 +19,9 @@ build-deb:
 
 export-deb:
 	package_cloud push karcher/test-repo/$(os)/$(dist)/ out/*.deb --skip-errors
-	rm out/*.deb
+	rm -f out/*.deb
 	package_cloud push karcher/test-repo/$(os)/$(dist)/ out/*.dsc --skip-errors
-	rm out/*.dsc
+	rm -f out/*.dsc
 	rm -f out/*.gz
 	rm -f out/*.xz
 clean:
