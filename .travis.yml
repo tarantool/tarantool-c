@@ -8,7 +8,7 @@ compiler:
     - gcc
 env:
     global:
-      - OUT_REPO=karcher/test-repo
+      - OUT_REPO=tarantool/modules
     matrix:
       - OS=el DIST=6 PACK=rpm
       - OS=el DIST=7 PACK=rpm
@@ -59,17 +59,9 @@ before_install:
 install:
   - uname -a
   - lsb_release -c -s
-  # uncomment this to disable packaging for failed tests
-  #- curl http://tarantool.org/dist/public.key | sudo apt-key add -
-  #- echo "deb http://tarantool.org/dist/master/ubuntu/ `lsb_release -c -s` main" | sudo tee -a /etc/apt/sources.list.d/tarantool.list
-  #- sudo apt-get update > /dev/null
-  #- sudo apt-get -q install tarantool tarantool-dev
-  #- sudo apt-get -q install python-yaml
 
 script:
-  #- cmake . -DCMAKE_BUILD_TYPE=Debug
-  #- make
-  #- sudo make test
+  - if [ $PACK == 'none' ]; then bash test.sh'; fi 
   - cd build/pack
   - bash pack.sh $PACK $OS $DIST $TRAVIS_BRANCH $OUT_REPO $PROD $P_URI
 
