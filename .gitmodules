@@ -1,3 +1,6 @@
 [submodule "third_party/msgpuck"]
 	path = third_party/msgpuck
 	url = https://github.com/tarantool/msgpuck.git
+[submodule "build"]
+	path = build
+	url = https://github.com/tarantool/build.git
