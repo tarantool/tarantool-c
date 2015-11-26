@@ -61,7 +61,7 @@ install:
   - lsb_release -c -s
 
 script:
-  - if [ $PACK == 'none' ]; then bash test.sh'; fi 
+  - bash test.sh $PACK
   - cd build/pack
   - bash pack.sh $PACK $OS $DIST $TRAVIS_BRANCH $OUT_REPO $PROD $P_URI
 
