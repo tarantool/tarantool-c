@@ -71,7 +71,7 @@ script:
   #- make
   #- sudo make test
   - cd build/pack
-  - sh pack.sh $PACK $OS $DIST $TRAVIS_BRANCH $OUT_REPO $PROD $P_URI
+  - bash pack.sh $PACK $OS $DIST $TRAVIS_BRANCH $OUT_REPO $PROD $P_URI
 
 notifications:
   irc:
