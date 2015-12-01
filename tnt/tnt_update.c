@@ -83,7 +83,7 @@ struct tnt_stream *tnt_update_container(struct tnt_stream *ops) {
 	tnt_object_type(ops, TNT_SBO_SPARSE);
 	if (tnt_object_add_array(ops, 0) == -1) {
 		tnt_stream_free(ops);
-		return 0;
+		return NULL;
 	}
 	return ops;
 }
@@ -92,6 +92,16 @@ int tnt_update_container_close(struct tnt_stream *ops) {
 	struct tnt_sbuf_object *opob = TNT_SOBJ_CAST(ops);
 	opob->stack->size = ops->wrcnt - 1;
 	tnt_object_container_close(ops);
+	return 0;
+}
+
+int tnt_update_container_reset(struct tnt_stream *ops) {
+	tnt_object_reset(ops);
+	tnt_object_type(ops, TNT_SBO_SPARSE);
+	if (tnt_object_add_array(ops, 0) == -1) {
+		tnt_stream_free(ops);
+		return -1;
+	}
 	return 0;
 }
 

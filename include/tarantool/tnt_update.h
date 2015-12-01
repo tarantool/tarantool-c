@@ -199,6 +199,11 @@ struct tnt_stream *tnt_update_container(struct tnt_stream *ops);
 /**
  * \brief shortcut for tnt_object_container_close()
  */
+struct tnt_stream *
+tnt_update_container(struct tnt_stream *ops);
+
 int tnt_update_container_close(struct tnt_stream *ops);
+
+int tnt_update_container_reset(struct tnt_stream *ops);
 
 #endif /* TNT_UPDATE_H_INCLUDED */

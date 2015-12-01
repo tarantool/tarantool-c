@@ -297,7 +297,7 @@ tnt_object_container_close (struct tnt_stream *s)
 	return -1;
 }
 
-int tnt_object_verify(struct tnt_stream *obj, uint8_t type)
+int tnt_object_verify(struct tnt_stream *obj, int8_t type)
 {
 	const char *pos = TNT_SBUF_DATA(obj);
 	const char *end = pos + TNT_SBUF_SIZE(obj);
