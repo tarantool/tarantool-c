@@ -95,6 +95,11 @@ int tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr) {
 				goto rollback;
 			r->code = mp_decode_uint(&p);
 			break;
+		case TNT_SCHEMA_ID:
+			if (mp_typeof(*p) != MP_UINT)
+				goto rollback;
+			r->schema_id = mp_decode_uint(&p);
+			break;
 		default:
 			goto rollback;
 		}

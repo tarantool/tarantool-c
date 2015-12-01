@@ -39,8 +39,12 @@
  * \brief Request/response header field types (keys)
  */
 enum tnt_header_key_t {
-	TNT_CODE = 0x00,
-	TNT_SYNC = 0x01
+	TNT_CODE      = 0x00,
+	TNT_SYNC      = 0x01,
+	TNT_SERVER_ID = 0x02,
+	TNT_LSN       = 0x03,
+	TNT_TIMESTAMP = 0x04,
+	TNT_SCHEMA_ID = 0x05
 };
 
 /**
@@ -57,13 +61,12 @@ enum tnt_body_key_t {
 	TNT_TUPLE = 0x21,
 	TNT_FUNCTION = 0x22,
 	TNT_USERNAME = 0x23,
-	TNT_EXPRESSION = 0x27,
-	TNT_SERVER_ID = 0x02,
-	TNT_LSN = 0x03,
-	TNT_TIMESTAMP = 0x04,
 	TNT_SERVER_UUID = 0x24,
 	TNT_CLUSTER_UUID = 0x25,
-	TNT_VCLOCK = 0x26
+	TNT_VCLOCK = 0x26,
+	TNT_EXPRESSION = 0x27,
+	TNT_OPS = 0x28,
+
 };
 
 /**
