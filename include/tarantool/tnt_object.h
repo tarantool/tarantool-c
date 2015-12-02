@@ -184,7 +184,7 @@ tnt_object_as(struct tnt_stream *s, char *buf, size_t buf_len);
  * \param type -1 on check without validating type, otherwise `enum mp_type`
  */
 int
-tnt_object_verify(struct tnt_stream *s, uint8_t type);
+tnt_object_verify(struct tnt_stream *s, int8_t type);
 
 /**
  * \brief reset tnt_object to basic state
