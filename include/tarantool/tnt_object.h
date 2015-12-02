@@ -166,7 +166,7 @@ ssize_t
 tnt_object_add_map(struct tnt_stream *s, uint32_t size);
 
 /**
- * \brief Cloase array/map in case TNT_SBO_PACKED/TNT_SBO_SPARSE were used
+ * \brief Close array/map in case TNT_SBO_PACKED/TNT_SBO_SPARSE were used
  * \sa TNT_SBO_TYPE
  */
 ssize_t
