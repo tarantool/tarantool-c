@@ -82,4 +82,7 @@ struct tnt_stream_buf {
 struct tnt_stream *
 tnt_buf(struct tnt_stream *s);
 
+struct tnt_stream *
+tnt_buf_as(struct tnt_stream *s, char *buf, size_t buf_len);
+
 #endif /* TNT_BUF_H_INCLUDED */

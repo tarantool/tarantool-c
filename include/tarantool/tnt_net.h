@@ -233,6 +233,23 @@ tnt_authenticate(struct tnt_stream *s);
 int
 tnt_reload_schema(struct tnt_stream *s);
 
+/**
+ * \brief Get space number from space name
+ *
+ * \returns space number
+ * \retval  -1 error
+ */
+int tnt_get_spaceno(struct tnt_stream *s, const char *space, size_t space_len);
+
+/**
+ * \brief Get index number from index name and spaceid
+ *
+ * \returns index number
+ * \retval  -1 error
+ */
+int tnt_get_indexno(struct tnt_stream *s, int spaceno, const char *index,
+		    size_t index_len);
+
 #ifdef __cplusplus
 }
 #endif

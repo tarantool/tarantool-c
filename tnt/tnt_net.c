@@ -365,3 +365,15 @@ int tnt_errno(struct tnt_stream *s) {
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
 	return sn->errno_;
 }
+
+int tnt_get_spaceno(struct tnt_stream *s, const char *space,
+		    size_t space_len) {
+	struct tnt_schema *sch = (TNT_SNET_CAST(s))->schema;
+	return tnt_schema_stosid(sch, space, space_len);
+}
+
+int tnt_get_indexno(struct tnt_stream *s, int spaceno, const char *index,
+		    size_t index_len) {
+	struct tnt_schema *sch = TNT_SNET_CAST(s)->schema;
+	return tnt_schema_stoiid(sch, spaceno, index, index_len);
+}

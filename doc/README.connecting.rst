@@ -132,10 +132,23 @@ Functions to work with errors:
 
     See also :ref:`schema-description`
 
+.. c:function:: tnt_get_spaceno(struct tnt_stream *s, const char *space, size_t space_len)
+                tnt_get_indexno(struct tnt_stream *s, int space, const char *index, size_t index_len)
+
+    Get space/index number from their names. If you're using ``tnt_get_indexno``,
+    then space number is required.
+
+=====================================================================
+                               Freeing
+=====================================================================
+
+.. c:function:: void tnt_stream_free(struct tnt_stream *s)
+
+    This function is used to free every stream object in this library
+
 =====================================================================
                             Example:
 =====================================================================
-
 
 .. code-block:: c
 

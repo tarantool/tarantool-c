@@ -100,42 +100,10 @@ tnt_request_free(struct tnt_request *req);
  *
  * \retval 0 ok
  * \sa tnt_request_set_space
- * \sa tnt_request_set_sspace
- * \sa tnt_request_set_sspacez
  */
 int
 tnt_request_set_space(struct tnt_request *req, uint32_t space);
 
-/**
- * \brief Set request space from string
- *
- * \param req   request object
- * \param space space string
- * \param slen  space string length
- *
- * \retval 0  ok
- * \retval -1 if schema is not set or space is not found in schema
- * \sa tnt_request_set_space
- * \sa tnt_request_set_sspace
- * \sa tnt_request_set_sspacez
- */
-int
-tnt_request_set_sspace(struct tnt_request *req, const char *space,
-		       uint32_t slen);
-
-/**
- * \brief Set request space from NULL-terminated string
- *
- * \param req   request object
- * \param space space string
- *
- * \retval 0  ok
- * \retval -1 if schema is not set or space is not found in schema
- * \sa tnt_request_set_space
- * \sa tnt_request_set_sspace
- * \sa tnt_request_set_sspacez
- */
-int tnt_request_set_sspacez(struct tnt_request *req, const char *space);
 /**
  * \brief Set request index from number
  *
@@ -144,43 +112,9 @@ int tnt_request_set_sspacez(struct tnt_request *req, const char *space);
  *
  * \retval 0  ok
  * \sa tnt_request_set_index
- * \sa tnt_request_set_sindex
- * \sa tnt_request_set_sindexz
  */
 int
 tnt_request_set_index(struct tnt_request *req, uint32_t index);
-
-/**
- * \brief Set request index from string
- *
- * \param req   request object
- * \param index pointer to index string
- * \param ilen  index string length
- *
- * \retval 0  ok
- * \retval -1 if schema is not set or index is not found in schema
- * \sa tnt_request_set_index
- * \sa tnt_request_set_sindex
- * \sa tnt_request_set_sindexz
- */
-int
-tnt_request_set_sindex(struct tnt_request *req, const char *index,
-		       uint32_t ilen);
-
-/**
- * \brief Set request index from NULL-terminated string
- *
- * \param req       request object
- * \param index     pointer to index string
- *
- * \retval 0  ok
- * \retval -1 if schema is not set or index is not found in schema
- * \sa tnt_request_set_index
- * \sa tnt_request_set_sindex
- * \sa tnt_request_set_sindexz
- */
-int
-tnt_request_set_sindexz(struct tnt_request *req, const char *index);
 
 /**
  * \brief Set offset for select

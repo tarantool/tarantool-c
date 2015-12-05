@@ -5,6 +5,7 @@ cmake_install.cmake
 
 *.a
 *.so*
+*.dylib
 .*.swp
 
 test/tarantool-*

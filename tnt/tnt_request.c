@@ -69,46 +69,10 @@ int tnt_request_set_space(struct tnt_request *req, uint32_t space)
 	return 0;
 }
 
-int
-tnt_request_set_sspace(struct tnt_request *req, const char *space,
-		       uint32_t slen)
-{
-	if (!req->stream || !space) return -1;
-	struct tnt_schema *sch = (TNT_SNET_CAST(req->stream))->schema;
-	int32_t sno = tnt_schema_stosid(sch, space, slen);
-	if (sno == -1) return -1;
-	return tnt_request_set_space(req, sno);
-}
-
-int
-tnt_request_set_sspacez(struct tnt_request *req, const char *space)
-{
-	if (!req->stream || !space) return -1;
-	return tnt_request_set_sspace(req, space, strlen(space));
-}
-
 int tnt_request_set_index(struct tnt_request *req, uint32_t index)
 {
 	req->index_id = index;
 	return 0;
-}
-
-int
-tnt_request_set_sindex(struct tnt_request *req, const char *index,
-		       uint32_t ilen)
-{
-	if (!req->stream || !index || !req->space_id) return -1;
-	struct tnt_schema *sch = TNT_SNET_CAST(req->stream)->schema;
-	int32_t ino = tnt_schema_stoiid(sch, req->space_id, index, ilen);
-	if (ino == -1) return -1;
-	return tnt_request_set_index(req, ino);
-}
-
-int
-tnt_request_set_sindexz(struct tnt_request *req, const char *index)
-{
-	if (!req->stream || !index) return -1;
-	return tnt_request_set_sindex(req, index, strlen(index));
 }
 
 int tnt_request_set_offset(struct tnt_request *req, uint32_t offset)

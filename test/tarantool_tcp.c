@@ -13,6 +13,41 @@
 #define header() note("*** %s: prep ***", __func__)
 #define footer() note("*** %s: done ***", __func__)
 
+int
+tnt_request_set_sspace(struct tnt_request *req, const char *space,
+		       uint32_t slen)
+{
+	if (!req->stream || !space) return -1;
+	int32_t sno = tnt_get_spaceno(req->stream, space, slen);
+	if (sno == -1) return -1;
+	return tnt_request_set_space(req, sno);
+}
+
+int
+tnt_request_set_sspacez(struct tnt_request *req, const char *space)
+{
+	if (!req->stream || !space) return -1;
+	return tnt_request_set_sspace(req, space, strlen(space));
+}
+
+
+int
+tnt_request_set_sindex(struct tnt_request *req, const char *index,
+		       uint32_t ilen)
+{
+	if (!req->stream || !index || !req->space_id) return -1;
+	int32_t ino = tnt_get_indexno(req->stream, req->space_id, index, ilen);
+	if (ino == -1) return -1;
+	return tnt_request_set_index(req, ino);
+}
+
+int
+tnt_request_set_sindexz(struct tnt_request *req, const char *index)
+{
+	if (!req->stream || !index) return -1;
+	return tnt_request_set_sindex(req, index, strlen(index));
+}
+
 /*
 static int
 test_() {

@@ -79,6 +79,7 @@ static char* tnt_buf_resize(struct tnt_stream *s, size_t size) {
 
 static ssize_t
 tnt_buf_write(struct tnt_stream *s, const char *buf, size_t size) {
+	if (TNT_SBUF_CAST(s)->as == 1) return -1;
 	char *p = TNT_SBUF_CAST(s)->resize(s, size);
 	if (p == NULL)
 		return -1;
@@ -90,6 +91,7 @@ tnt_buf_write(struct tnt_stream *s, const char *buf, size_t size) {
 
 static ssize_t
 tnt_buf_writev(struct tnt_stream *s, struct iovec *iov, int count) {
+	if (TNT_SBUF_CAST(s)->as == 1) return -1;
 	size_t size = 0;
 	int i;
 	for (i = 0 ; i < count ; i++)
@@ -148,5 +150,22 @@ struct tnt_stream *tnt_buf(struct tnt_stream *s) {
 	sb->free    = NULL;
 	sb->subdata = NULL;
 	sb->as      = 0;
+	return s;
+}
+
+struct tnt_stream *tnt_buf_as(struct tnt_stream *s, char *buf, size_t buf_len)
+{
+	if (s == NULL) {
+		s = tnt_buf(s);
+		if (s == NULL)
+			return NULL;
+	}
+	struct tnt_stream_buf *sb = TNT_SBUF_CAST(s);
+
+	sb->data = buf;
+	sb->size = buf_len;
+	sb->alloc = buf_len;
+	sb->as = 1;
+
 	return s;
 }
