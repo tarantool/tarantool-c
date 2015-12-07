@@ -51,10 +51,10 @@ typedef ssize_t (*tnt_reply_t)(void *ptr, char *dst, ssize_t size);
  * \brief basic reply structure
  */
 struct tnt_reply {
-	int alloc;              /*!< allocation mark */
+	int alloc;		/*!< allocation mark */
 	uint64_t bitmap;	/*!< bitmap of field IDs that was read */
 	const char *buf;	/*!< points to beginning of buffer */
-	size_t buf_size;        /*!< size of query buffer */
+	size_t buf_size;	/*!< size of query buffer */
 	uint64_t code;		/*!< response code (0 is success, error number if not) */
 	uint64_t sync;		/*!< synchronization id */
 	uint64_t schema_id;	/*!< unique schema id */

@@ -21,7 +21,7 @@ tnt_sbuf_object_free(struct tnt_stream *s)
 }
 
 int
-tnt_object_type(struct tnt_stream *s, enum TNT_SBO_TYPE type)
+tnt_object_type(struct tnt_stream *s, enum tnt_sbo_type type)
 {
 	if (s->wrcnt > 0) return -1;
 	TNT_SOBJ_CAST(s)->type = type;

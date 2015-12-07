@@ -59,6 +59,27 @@
         };
 
 =====================================================================
+                           Creation
+=====================================================================
+
+.. c:function:: struct tnt_request *tnt_request_init(struct tnt_request *req)
+
+    Allocate and initialize request
+
+.. c:function:: struct tnt_request *tnt_request_select(struct tnt_request *req)
+                struct tnt_request *tnt_request_insert(struct tnt_request *req)
+                struct tnt_request *tnt_request_replace(struct tnt_request *req)
+                struct tnt_request *tnt_request_update(struct tnt_request *req)
+                struct tnt_request *tnt_request_delete(struct tnt_request *req)
+                struct tnt_request *tnt_request_call(struct tnt_request *req)
+                struct tnt_request *tnt_request_auth(struct tnt_request *req)
+                struct tnt_request *tnt_request_eval(struct tnt_request *req)
+                struct tnt_request *tnt_request_upsert(struct tnt_request *req)
+                struct tnt_request *tnt_request_ping(struct tnt_request *req)
+
+    Shortcuts for initialization of requests
+
+=====================================================================
                     Set/get request fields
 =====================================================================
 
@@ -74,31 +95,13 @@
               uint32_t tnt_request.index_id;
               uint32_t tnt_request.offset;
               uint32_t tnt_request.limit;
-              int tnt_request.foffset;
+              int tnt_request.index_base;
 
     Field with specified values.
 
 .. c:member:: enum tnt_iterator_t tnt_request.iterator
 
     Set request iterator type.
-
-.. c:function:: int tnt_request_set_sspace(struct tnt_request *req, const char *space, uint32_t slen)
-                int tnt_request_set_sspacez(struct tnt_request *req, const char *space)
-
-    Set space id from string - get ID of space from :ref:`schema` by name. If
-    function ``<...>_sspacez`` is used, then length is calculated using
-    ``strlen(str)``
-
-    Returns ``-1`` if can't find space with this name.
-
-.. c:function:: int tnt_request_set_sindex (struct tnt_request *req, const char *index, uint32_t ilen)
-                int tnt_request_set_sindexz(struct tnt_request *req, const char *index)
-
-    Set index id from string - get ID of index from :ref:`schema` by name. If
-    function ``<...>_sindexz`` is used, then length is calculated using
-    ``strlen(str)``. Must be called after ``spaceid`` is set
-
-    Returns ``-1`` if can't find index with this name or if ``spaceid`` isn't set.
 
 .. c:function:: int tnt_request_set_key(struct tnt_request *req, struct tnt_stream *obj)
                 int tnt_request_set_key_format(struct tnt_request *req, const char *fmt, ...)
@@ -133,12 +136,15 @@
 
     Returns ``-1`` if called not in ``func`` command.
 
+.. c:function:: int tnt_request_set_ops(struct tnt_request *req, struct tnt_stream *s)
+
+    Set operations for ``update`` or ``upsert`` from stream object.
+
 =====================================================================
                        Manipulating requests
 =====================================================================
 
 .. c:function:: tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
-                tnt_request_encode(struct tnt_request *req)
 
     Compile request into stream. If ``tnt_request_encode`` is used, then request
     is compiled into stream, that's pinned to it.

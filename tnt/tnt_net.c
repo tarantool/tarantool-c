@@ -58,7 +58,7 @@ static void tnt_net_free(struct tnt_stream *s) {
 	tnt_iob_free(&sn->sbuf);
 	tnt_iob_free(&sn->rbuf);
 	tnt_opt_free(&sn->opt);
-	tnt_schema_delete(sn->schema);
+	tnt_schema_free(sn->schema);
 	tnt_mem_free(sn->schema);
 	tnt_mem_free(s->data);
 	s->data = NULL;
@@ -169,129 +169,81 @@ int tnt_init(struct tnt_stream *s) {
 	return 0;
 }
 
-int tnt_reload_schema(struct tnt_stream *s) {
+int tnt_reload_schema(struct tnt_stream *s)
+{
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
-	if (!sn->connected)
+	if (!sn->connected || s->wrcnt != 0)
 		return -1;
-	struct tnt_stream *obj = tnt_object(NULL);
-	tnt_object_add_array(obj, 0);
 	uint32_t oldsync = tnt_stream_reqid(s, 127);
-	tnt_select(s, tnt_vsp_space, tnt_vin_name,
-		   UINT32_MAX, 0, TNT_ITER_ALL, obj);
-	tnt_select(s, tnt_vsp_index, tnt_vin_name,
-		   UINT32_MAX, 0, TNT_ITER_ALL, obj);
+	tnt_get_space(s);
+	tnt_get_index(s);
 	tnt_stream_reqid(s, oldsync);
 	tnt_flush(s);
 	struct tnt_iter it; tnt_iter_reply(&it, s);
-	int sloaded = 0;
 	struct tnt_reply bkp; tnt_reply_init(&bkp);
+	int sloaded = 0;
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
 		switch (r->sync) {
 		case(127):
-			if (r->error) goto error;
-			tnt_schema_add_spaces(sn->schema, r->data,
-					      r->data_end - r->data);
+			if (r->error)
+				goto error;
+			tnt_schema_add_spaces(sn->schema, r);
 			sloaded += 1;
 			break;
 		case(128):
-			if (r->error) goto error;
+			if (r->error)
+				goto error;
 			if (!(sloaded & 1)) {
 				memcpy(&bkp, r, sizeof(struct tnt_reply));
 				r->buf = NULL;
 				break;
 			}
 			sloaded += 2;
-			tnt_schema_add_indexes(sn->schema, r->data,
-					       r->data_end - r->data);
+			tnt_schema_add_indexes(sn->schema, r);
 			break;
 		default:
 			goto error;
 		}
 	}
 	if (bkp.buf) {
-		tnt_schema_add_indexes(sn->schema, bkp.data,
-				       bkp.data_end - bkp.data);
+		tnt_schema_add_indexes(sn->schema, &bkp);
 		sloaded += 2;
 		tnt_reply_free(&bkp);
 	}
 	if (sloaded != 3) goto error;
 
 	tnt_iter_free(&it);
-	tnt_stream_free(obj);
 	return 0;
 error:
 	tnt_iter_free(&it);
-	tnt_stream_free(obj);
 	return -1;
 }
 
-int tnt_authenticate(struct tnt_stream *s) {
+static int
+tnt_authenticate(struct tnt_stream *s)
+{
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
-	if (!sn->connected)
+	if (!sn->connected || s->wrcnt != 0)
 		return -1;
-	if (sn->schema) tnt_schema_flush(sn->schema);
 	struct uri *uri = sn->opt.uri;
-	struct tnt_stream *obj = tnt_object(NULL);
-	tnt_object_add_array(obj, 0);
-	uint32_t oldsync = tnt_stream_reqid(s, 127);
-	tnt_auth(s, uri->login, uri->login_len,
-		 uri->password, uri->password_len);
-	tnt_select(s, tnt_vsp_space, tnt_vin_name,
-		   UINT32_MAX, 0, TNT_ITER_ALL, obj);
-	tnt_select(s, tnt_vsp_index, tnt_vin_name,
-		   UINT32_MAX, 0, TNT_ITER_ALL, obj);
-	tnt_stream_reqid(s, oldsync);
+	tnt_auth(s, uri->login, uri->login_len, uri->password,
+		 uri->password_len);
 	tnt_flush(s);
-	struct tnt_iter it; tnt_iter_reply(&it, s);
-	int sloaded = 0;
-	struct tnt_reply bkp; tnt_reply_init(&bkp);
-	while (tnt_next(&it)) {
-		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
-		switch (r->sync) {
-		case(127):
-			if (r->error) goto error;
-			sloaded += 1;
-			break;
-		case(128):
-			if (r->error) goto error;
-			tnt_schema_add_spaces(sn->schema, r->data,
-					      r->data_end - r->data);
-			sloaded += 2;
-			break;
-		case(129):
-			if (r->error) goto error;
-			if (!(sloaded & 2)) {
-				memcpy(&bkp, r, sizeof(struct tnt_reply));
-				r->buf = NULL;
-				break;
-			}
-			sloaded += 4;
-			tnt_schema_add_indexes(sn->schema, r->data,
-					       r->data_end - r->data);
-			break;
-		default:
-			goto error;
-		}
+	struct tnt_reply rep; tnt_reply_init(&rep);
+	if (s->read_reply(s, &rep) == -1)
+		return -1;
+	if (rep.error != NULL) {
+		if (TNT_REPLY_ERR(&rep) == TNT_ER_PASSWORD_MISMATCH)
+			sn->error = TNT_ELOGIN;
+		return -1;
 	}
-	if (bkp.buf) {
-		tnt_schema_add_indexes(sn->schema, bkp.data,
-				       bkp.data_end - bkp.data);
-		sloaded += 4;
-		tnt_reply_free(&bkp);
-	}
-	if (sloaded != 7) goto error;
-
-	tnt_iter_free(&it);
-	tnt_stream_free(obj);
+	tnt_reload_schema(s);
 	return 0;
-error:
-	tnt_iter_free(&it);
-	tnt_stream_free(obj);
-	return -1;
 }
 
-int tnt_connect(struct tnt_stream *s) {
+int tnt_connect(struct tnt_stream *s)
+{
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
 	if (!sn->inited) tnt_init(s);
 	if (sn->connected)
@@ -350,7 +302,8 @@ static struct tnt_error_desc tnt_error_list[] =
 	{ TNT_LAST,      NULL                      }
 };
 
-char *tnt_strerror(struct tnt_stream *s) {
+char *tnt_strerror(struct tnt_stream *s)
+{
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
 	if (sn->error == TNT_ESYSTEM) {
 		static char msg[256];
@@ -367,13 +320,15 @@ int tnt_errno(struct tnt_stream *s) {
 }
 
 int tnt_get_spaceno(struct tnt_stream *s, const char *space,
-		    size_t space_len) {
+		    size_t space_len)
+{
 	struct tnt_schema *sch = (TNT_SNET_CAST(s))->schema;
 	return tnt_schema_stosid(sch, space, space_len);
 }
 
 int tnt_get_indexno(struct tnt_stream *s, int spaceno, const char *index,
-		    size_t index_len) {
+		    size_t index_len)
+{
 	struct tnt_schema *sch = TNT_SNET_CAST(s)->schema;
 	return tnt_schema_stoiid(sch, spaceno, index, index_len);
 }

@@ -59,6 +59,48 @@ tnt_update(struct tnt_stream *s, uint32_t space, uint32_t index,
 	return s->writev(s, v, v_sz);
 }
 
+ssize_t
+tnt_upsert(struct tnt_stream *s, uint32_t space,
+	   struct tnt_stream *tuple, struct tnt_stream *ops)
+{
+	if (tnt_object_verify(tuple, MP_ARRAY))
+		return -1;
+	if (tnt_object_verify(ops, MP_ARRAY))
+		return -1;
+	struct tnt_iheader hdr;
+	struct iovec v[6]; int v_sz = 6;
+	char *data = NULL, *body_start = NULL;
+	encode_header(&hdr, TNT_OP_UPSERT, s->reqid++);
+	v[1].iov_base = (void *)hdr.header;
+	v[1].iov_len  = hdr.end - hdr.header;
+	char body[64]; body_start = body; data = body;
+
+	data = mp_encode_map(data, 4);
+	data = mp_encode_uint(data, TNT_SPACE);
+	data = mp_encode_uint(data, space);
+	data = mp_encode_uint(data, TNT_TUPLE);
+	v[2].iov_base = (void *)body_start;
+	v[2].iov_len  = data - body_start;
+	body_start = data;
+	v[3].iov_base = TNT_SBUF_DATA(tuple);
+	v[3].iov_len  = TNT_SBUF_SIZE(tuple);
+	data = mp_encode_uint(data, TNT_OPS);
+	v[4].iov_base = (void *)body_start;
+	v[4].iov_len  = data - body_start;
+	body_start = data;
+	v[5].iov_base = TNT_SBUF_DATA(ops);
+	v[5].iov_len  = TNT_SBUF_SIZE(ops);
+
+	size_t package_len = 0;
+	for (int i = 1; i < v_sz; ++i)
+		package_len += v[i].iov_len;
+	char len_prefix[9];
+	char *len_end = mp_encode_luint32(len_prefix, package_len);
+	v[0].iov_base = len_prefix;
+	v[0].iov_len = len_end - len_prefix;
+	return s->writev(s, v, v_sz);
+}
+
 static ssize_t tnt_update_op_len(char op) {
 	switch (op) {
 	case (TNT_UOP_ADDITION):

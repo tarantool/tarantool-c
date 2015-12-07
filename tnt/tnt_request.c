@@ -21,8 +21,7 @@
 
 #include "tnt_proto_internal.h"
 
-struct tnt_request *tnt_request_init(struct tnt_request *req,
-				     struct tnt_stream *stream) {
+struct tnt_request *tnt_request_init(struct tnt_request *req) {
 	int alloc = (req == NULL);
 	if (req == NULL) {
 		req = tnt_mem_alloc(sizeof(struct tnt_request));
@@ -30,25 +29,27 @@ struct tnt_request *tnt_request_init(struct tnt_request *req,
 	}
 	memset(req, 0, sizeof(struct tnt_request));
 	req->limit = UINT32_MAX;
-	req->stream = stream;
 	req->alloc = alloc;
 	return req;
 };
 
 void tnt_request_free(struct tnt_request *req) {
-	if (req->key_object) tnt_stream_free(req->key_object);
+	if (req->key_object)
+		tnt_stream_free(req->key_object);
 	req->key_object = NULL;
-	if (req->tuple_object) tnt_stream_free(req->tuple_object);
+	if (req->tuple_object)
+		tnt_stream_free(req->tuple_object);
 	req->tuple_object = NULL;
 	if (req->alloc) tnt_mem_free(req);
 }
 
-#define TNT_REQUEST_CUSTOM(NM, CNM) 						\
-struct tnt_request *tnt_request_##NM(struct tnt_request *req,			\
-				     struct tnt_stream *stream) {		\
-	req = tnt_request_init(req, stream);					\
-	req->hdr.type = TNT_OP_##CNM;						\
-	return req;								\
+#define TNT_REQUEST_CUSTOM(NM, CNM)				\
+struct tnt_request *tnt_request_##NM(struct tnt_request *req) {	\
+	req = tnt_request_init(req);				\
+	if (req) {						\
+		req->hdr.type = TNT_OP_##CNM;			\
+	}							\
+	return req;						\
 }
 
 TNT_REQUEST_CUSTOM(select, SELECT);
@@ -59,6 +60,7 @@ TNT_REQUEST_CUSTOM(delete, DELETE);
 TNT_REQUEST_CUSTOM(call, CALL);
 TNT_REQUEST_CUSTOM(auth, AUTH);
 TNT_REQUEST_CUSTOM(eval, EVAL);
+TNT_REQUEST_CUSTOM(upsert, UPSERT);
 TNT_REQUEST_CUSTOM(ping, PING);
 
 #undef TNT_REQUEST_CUSTOM
@@ -94,9 +96,9 @@ tnt_request_set_iterator(struct tnt_request *req, enum tnt_iterator_t iterator)
 	return 0;
 }
 
-int tnt_request_set_foffset(struct tnt_request *req, uint32_t foffset)
+int tnt_request_set_index_base(struct tnt_request *req, uint32_t index_base)
 {
-	req->foffset = foffset;
+	req->index_base = index_base;
 	return 0;
 }
 
@@ -113,12 +115,14 @@ int tnt_request_set_key_format(struct tnt_request *req, const char *fmt, ...)
 		tnt_object_reset(req->key_object);
 	else
 		req->key_object = tnt_object(NULL);
-	if (!req->key_object) return -1;
+	if (!req->key_object)
+		return -1;
 	va_list args;
 	va_start(args, fmt);
 	ssize_t res = tnt_object_vformat(req->key_object, fmt, args);
 	va_end(args);
-	if (res == -1) return -1;
+	if (res == -1)
+		return -1;
 	return tnt_request_set_key(req, req->key_object);
 }
 
@@ -126,8 +130,10 @@ int
 tnt_request_set_func(struct tnt_request *req, const char *func,
 		     uint32_t flen)
 {
-	if (req->hdr.type != TNT_OP_CALL) return -1;
-	if (!func) return -1;
+	if (req->hdr.type != TNT_OP_CALL)
+		return -1;
+	if (!func)
+		return -1;
 	req->key = func; req->key_end = req->key + flen;
 	return 0;
 }
@@ -135,8 +141,10 @@ tnt_request_set_func(struct tnt_request *req, const char *func,
 int
 tnt_request_set_funcz(struct tnt_request *req, const char *func)
 {
-	if (req->hdr.type != TNT_OP_CALL) return -1;
-	if (!func) return -1;
+	if (req->hdr.type != TNT_OP_CALL)
+		return -1;
+	if (!func)
+		return -1;
 	req->key = func; req->key_end = req->key + strlen(req->key);
 	return 0;
 }
@@ -145,8 +153,10 @@ int
 tnt_request_set_expr(struct tnt_request *req, const char *expr,
 		     uint32_t elen)
 {
-	if (req->hdr.type != TNT_OP_EVAL) return -1;
-	if (!expr) return -1;
+	if (req->hdr.type != TNT_OP_EVAL)
+		return -1;
+	if (!expr)
+		return -1;
 	req->key = expr; req->key_end = req->key + elen;
 	return 0;
 }
@@ -154,10 +164,27 @@ tnt_request_set_expr(struct tnt_request *req, const char *expr,
 int
 tnt_request_set_exprz(struct tnt_request *req, const char *expr)
 {
-	if (req->hdr.type != TNT_OP_EVAL) return -1;
-	if (!expr) return -1;
+	if (req->hdr.type != TNT_OP_EVAL)
+		return -1;
+	if (!expr)
+		return -1;
 	req->key = expr; req->key_end = req->key + strlen(req->key);
 	return 0;
+}
+
+int
+tnt_request_set_ops(struct tnt_request *req, struct tnt_stream *s)
+{
+	if (req->hdr.type == TNT_OP_UPDATE) {
+		req->tuple     = TNT_SBUF_DATA(s);
+		req->tuple_end = req->tuple + TNT_SBUF_SIZE(s);
+		return 0;
+	} else if (req->hdr.type == TNT_OP_UPSERT) {
+		req->key     = TNT_SBUF_DATA(s);
+		req->key_end = req->key + TNT_SBUF_SIZE(s);
+		return 0;
+	}
+	return -1;
 }
 
 int tnt_request_set_tuple(struct tnt_request *req, struct tnt_stream *s)
@@ -173,20 +200,22 @@ int tnt_request_set_tuple_format(struct tnt_request *req, const char *fmt, ...)
 		tnt_object_reset(req->tuple_object);
 	else
 		req->tuple_object = tnt_object(NULL);
-	if (!req->tuple_object) return -1;
+	if (!req->tuple_object)
+		return -1;
 	va_list args;
 	va_start(args, fmt);
 	ssize_t res = tnt_object_vformat(req->tuple_object, fmt, args);
 	va_end(args);
-	if (res == -1) return -1;
+	if (res == -1)
+		return -1;
 	return tnt_request_set_tuple(req, req->tuple_object);
 }
 
 int64_t
 tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
 {
-	enum tnt_request_type tp = req->hdr.type;
-	req->hdr.sync = req->stream->reqid++;
+	enum tnt_request_t tp = req->hdr.type;
+	req->hdr.sync = s->reqid++;
 	/* header */
 	/* int (9) + 1 + sync + 1 + op */
 	struct iovec v[10]; int v_sz = 0;
@@ -208,7 +237,8 @@ tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
 		nd += 1;
 	}
 	if (req->index_id && (tp == TNT_OP_SELECT ||
-	    tp == TNT_OP_UPDATE || tp == TNT_OP_DELETE)) {
+			      tp == TNT_OP_UPDATE ||
+			      tp == TNT_OP_DELETE)) {
 		pos = mp_encode_uint(pos, TNT_INDEX);     /* 1 */
 		pos = mp_encode_uint(pos, req->index_id); /* 5 */
 		nd += 1;
@@ -243,6 +273,9 @@ tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
 		case TNT_OP_DELETE:
 			pos = mp_encode_uint(pos, TNT_KEY); /* 1 */
 			break;
+		case TNT_OP_UPSERT:
+			pos = mp_encode_uint(pos, TNT_OPS); /* 1 */
+			break;
 		default:
 			return -1;
 		}
@@ -262,9 +295,9 @@ tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
 		v[v_sz++].iov_len = req->tuple_end - req->tuple;
 		nd += 1;
 	}
-	if (req->foffset && tp == TNT_OP_UPDATE) {
-		pos = mp_encode_uint(pos, TNT_TUPLE);       /* 1 */
-		pos = mp_encode_uint(pos, req->foffset); /* 1 */
+	if (req->index_base && (tp == TNT_OP_UPDATE || tp == TNT_OP_UPSERT)) {
+		pos = mp_encode_uint(pos, TNT_INDEX_BASE);  /* 1 */
+		pos = mp_encode_uint(pos, req->index_base); /* 1 */
 		nd += 1;
 	}
 	assert(mp_sizeof_map(nd) == 1);
@@ -280,12 +313,7 @@ tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
 	v[0].iov_len  += nd;
 	mp_encode_luint32(v[0].iov_base, plen);
 	ssize_t rv = s->writev(s, v, v_sz);
-	if (rv == -1) return -1;
+	if (rv == -1)
+		return -1;
 	return req->hdr.sync;
-}
-
-int64_t
-tnt_request_encode(struct tnt_request *req) {
-	if (!req->stream) return -1;
-	return tnt_request_compile(req->stream, req);
 }

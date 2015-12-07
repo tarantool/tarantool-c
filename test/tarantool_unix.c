@@ -15,14 +15,14 @@
 
 static int
 test_connect_unix(char *uri) {
-	plan(4);
+	plan(3);
 	header();
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(tnt), -1, "Connecting");
-	isnt(tnt_authenticate(tnt), -1, "Authenticating");
+//	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
 	footer();
 	return check_plan();
@@ -30,14 +30,14 @@ test_connect_unix(char *uri) {
 
 static int
 test_ping(char *uri) {
-	plan(8);
+	plan(7);
 	header();
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(tnt), -1, "Connecting");
-	isnt(tnt_authenticate(tnt), -1, "Authenticating");
+//	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
 	isnt(tnt_ping(tnt), -1, "Create ping");
 	isnt(tnt_flush(tnt), -1, "Send to server");
@@ -52,15 +52,15 @@ test_ping(char *uri) {
 
 static int
 test_auth_call(char *uri) {
-	plan(24);
+	plan(23);
 	header();
 
 	const char bb1[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			 "\x00\x00\x01\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
+			 "\x00\x00\x02\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
 			 "\x00\x01\x91\xa5\x67\x75\x65\x73\x74";
 	size_t bb1_len = sizeof(bb1) - 1;
 	const char bb2[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			 "\x00\x00\x03\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
+			 "\x00\x00\x04\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
 			 "\x00\x01\xa4\x74\x65\x73\x74";
 	size_t bb2_len = sizeof(bb2) - 1;
 
@@ -73,7 +73,7 @@ test_auth_call(char *uri) {
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(tnt), -1, "Connecting");
-	isnt(tnt_authenticate(tnt), -1, "Authenticating");
+//	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
 	isnt(tnt_deauth(tnt), -1, "Create deauth");
 	isnt(tnt_flush(tnt), -1, "Send to server");
@@ -112,14 +112,14 @@ test_auth_call(char *uri) {
 
 static int
 test_insert_replace_delete(char *uri) {
-	plan(187);
+	plan(186);
 	header();
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(tnt), -1, "Connecting");
-	isnt(tnt_authenticate(tnt), -1, "Authenticating");
+//	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 	tnt_stream_reqid(tnt, 0);
 
 	for (int i = 0; i < 10; ++i) {

@@ -14,38 +14,35 @@
 #define footer() note("*** %s: done ***", __func__)
 
 int
-tnt_request_set_sspace(struct tnt_request *req, const char *space,
-		       uint32_t slen)
+tnt_request_set_sspace(struct tnt_stream *s, struct tnt_request *req,
+		       const char *space, uint32_t slen)
 {
-	if (!req->stream || !space) return -1;
-	int32_t sno = tnt_get_spaceno(req->stream, space, slen);
+	int32_t sno = tnt_get_spaceno(s, space, slen);
 	if (sno == -1) return -1;
 	return tnt_request_set_space(req, sno);
 }
 
 int
-tnt_request_set_sspacez(struct tnt_request *req, const char *space)
+tnt_request_set_sspacez(struct tnt_stream *s, struct tnt_request *req,
+			const char *space)
 {
-	if (!req->stream || !space) return -1;
-	return tnt_request_set_sspace(req, space, strlen(space));
+	return tnt_request_set_sspace(s, req, space, strlen(space));
 }
 
-
 int
-tnt_request_set_sindex(struct tnt_request *req, const char *index,
-		       uint32_t ilen)
+tnt_request_set_sindex(struct tnt_stream *s, struct tnt_request *req,
+		       const char *index, uint32_t ilen)
 {
-	if (!req->stream || !index || !req->space_id) return -1;
-	int32_t ino = tnt_get_indexno(req->stream, req->space_id, index, ilen);
+	int32_t ino = tnt_get_indexno(s, req->space_id, index, ilen);
 	if (ino == -1) return -1;
 	return tnt_request_set_index(req, ino);
 }
 
 int
-tnt_request_set_sindexz(struct tnt_request *req, const char *index)
+tnt_request_set_sindexz(struct tnt_stream *s, struct tnt_request *req,
+			const char *index)
 {
-	if (!req->stream || !index) return -1;
-	return tnt_request_set_sindex(req, index, strlen(index));
+	return tnt_request_set_sindex(s, req, index, strlen(index));
 }
 
 /*
@@ -61,7 +58,7 @@ test_() {
 
 static int
 test_connect_tcp() {
-	plan(9);
+	plan(7);
 	header();
 
 	char uri[128] = {0};
@@ -73,7 +70,7 @@ test_connect_tcp() {
 	is  (s->alloc, 1, "Checking s->alloc");
 	isnt(tnt_set(s, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(s), -1, "Connecting");
-	isnt(tnt_authenticate(s), -1, "Authenticating");
+//	isnt(tnt_authenticate(s), -1, "Authenticating");
 	tnt_close(s);
 	tnt_stream_free(s);
 
@@ -81,7 +78,7 @@ test_connect_tcp() {
 	is  (sa.alloc, 0, "Checking sa.alloc");
 	isnt(tnt_set(&sa, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(&sa), -1, "Connecting");
-	isnt(tnt_authenticate(&sa), -1, "Authenticating");
+//	isnt(tnt_authenticate(&sa), -1, "Authenticating");
 	tnt_close(&sa);
 	tnt_stream_free(&sa);
 
@@ -290,42 +287,42 @@ test_object() {
 
 static int
 test_request_01(char *uri) {
-	plan(9);
+	plan(8);
 	header();
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(tnt), -1, "Connecting");
-	isnt(tnt_authenticate(tnt), -1, "Authenticating");
+//	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
 	struct tnt_stream *arg; arg = tnt_object(NULL);
 	isnt(arg, NULL, "Check object creation");
 	is  (tnt_object_add_array(arg, 0), 1, "Append elem");
 
-	struct tnt_request *req1 = tnt_request_call(NULL, tnt);
+	struct tnt_request *req1 = tnt_request_call(NULL);
 	tnt_request_set_funcz(req1, "test_4");
 	tnt_request_set_tuple(req1, arg);
 	uint64_t sync1 = tnt_request_compile(tnt, req1);
 
-	struct tnt_request *req2 = tnt_request_eval(NULL, tnt);
+	struct tnt_request *req2 = tnt_request_eval(NULL);
 	tnt_request_set_exprz(req2, "return test_4()");
 	tnt_request_set_tuple(req2, arg);
 	uint64_t sync2 = tnt_request_compile(tnt, req2);
 
-	const char bb1[] = "\xce\x00\x00\x00\x10\x82\x00\x06\x01\x00\x82\x22\xa6\x74"
+	const char bb1[] = "\xce\x00\x00\x00\x10\x82\x00\x06\x01\x01\x82\x22\xa6\x74"
 			   "\x65\x73\x74\x5f\x34\x21\x90\xce\x00\x00\x00\x19\x82\x00"
-			   "\x08\x01\x01\x82\x27\xaf\x72\x65\x74\x75\x72\x6e\x20\x74"
+			   "\x08\x01\x02\x82\x27\xaf\x72\x65\x74\x75\x72\x6e\x20\x74"
 			   "\x65\x73\x74\x5f\x34\x28\x29\x21\x90";
 	size_t bb1_len = sizeof(bb1) - 1;
 
 	const char bb2[] = "\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			   "\x00\x00\x00\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
+			   "\x00\x00\x01\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
 			   "\x00\x01\x91\xa4\x74\x65\x73\x74";
 	size_t bb2_len = sizeof(bb2) - 1;
 
 	const char bb3[] = "\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			   "\x00\x00\x01\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
+			   "\x00\x00\x02\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
 			   "\x00\x01\xa4\x74\x65\x73\x74";
 	size_t bb3_len = sizeof(bb3) - 1;
 
@@ -350,11 +347,11 @@ test_request_01(char *uri) {
 
 static int
 test_request_02(char *uri) {
-	plan(18);
+	plan(17);
 	header();
 
 	const char bb1[] = "\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			   "\x00\x00\x00\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
+			   "\x00\x00\x01\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
 			   "\x00\x01\x97\xcd\x01\x19\x01\xa7\x5f\x76\x73\x70\x61\x63"
 			   "\x65\xa7\x73\x79\x73\x76\x69\x65\x77\x00\xa0\x97\x82\xa4"
 			   "\x6e\x61\x6d\x65\xa2\x69\x64\xa4\x74\x79\x70\x65\xa3\x6e"
@@ -369,7 +366,7 @@ test_request_02(char *uri) {
 			   "\x72\x82\xa4\x6e\x61\x6d\x65\xa6\x66\x6f\x72\x6d\x61\x74"
 			   "\xa4\x74\x79\x70\x65\xa1\x2a";
 	size_t bb1_len = sizeof(bb1) - 1;
-	const char bb2[] = "\xce\x00\x00\x00\x1c\x82\x00\x01\x01\x00\x84\x10\xcd\x01"
+	const char bb2[] = "\xce\x00\x00\x00\x1c\x82\x00\x01\x01\x01\x84\x10\xcd\x01"
 			   "\x19\x11\x02\x12\xce\xff\xff\xff\xff\x20\x91\xa7\x5f\x76"
 			   "\x73\x70\x61\x63\x65";
 	size_t bb2_len = sizeof(bb2) - 1;
@@ -378,7 +375,7 @@ test_request_02(char *uri) {
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(tnt), -1, "Connecting");
-	isnt(tnt_authenticate(tnt), -1, "Authenticating");
+//	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
 	struct tnt_stream *key = NULL; key = tnt_object(NULL);
 	isnt(key, NULL, "Check object creation");
@@ -386,7 +383,7 @@ test_request_02(char *uri) {
 	is  (tnt_object_add_strz(key, "_vspace"), 8, "Create key");
 
 	struct tnt_request *req = NULL;
-	req = tnt_request_select(NULL, tnt);
+	req = tnt_request_select(NULL);
 	isnt(req, NULL, "Check request creation");
 	is  (req->hdr.type, TNT_OP_SELECT, "Check that we inited select");
 	is  (tnt_request_set_space(req, 281), 0, "Set space");
@@ -409,11 +406,11 @@ test_request_02(char *uri) {
 
 static int
 test_request_03(char *uri) {
-	plan(18);
+	plan(17);
 	header();
 
 	const char bb1[] = "\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			   "\x00\x00\x00\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
+			   "\x00\x00\x01\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
 			   "\x00\x01\x97\xcd\x01\x19\x01\xa7\x5f\x76\x73\x70\x61\x63"
 			   "\x65\xa7\x73\x79\x73\x76\x69\x65\x77\x00\xa0\x97\x82\xa4"
 			   "\x6e\x61\x6d\x65\xa2\x69\x64\xa4\x74\x79\x70\x65\xa3\x6e"
@@ -429,7 +426,7 @@ test_request_03(char *uri) {
 			   "\xa4\x74\x79\x70\x65\xa1\x2a";
 	size_t bb1_len = sizeof(bb1) - 1;
 
-	const char bb2[] = "\xce\x00\x00\x00\x1c\x82\x00\x01\x01\x00\x84\x10\xcd\x01"
+	const char bb2[] = "\xce\x00\x00\x00\x1c\x82\x00\x01\x01\x01\x84\x10\xcd\x01"
 			   "\x19\x11\x02\x12\xce\xff\xff\xff\xff\x20\x91\xa7\x5f\x76"
 			   "\x73\x70\x61\x63\x65";
 	size_t bb2_len = sizeof(bb2) - 1;
@@ -438,18 +435,18 @@ test_request_03(char *uri) {
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(tnt), -1, "Connecting");
-	isnt(tnt_authenticate(tnt), -1, "Authenticating");
+//	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
 	struct tnt_stream *key = NULL; key = tnt_object(NULL);
 	isnt(key, NULL, "Check object creation");
 	is  (tnt_object_add_array(key, 1), 1, "Create key");
 	is  (tnt_object_add_strz(key, "_vspace"), 8, "Create key");
 
-	struct tnt_request *req = NULL; req = tnt_request_select(NULL, tnt);
+	struct tnt_request *req = NULL; req = tnt_request_select(NULL);
 	isnt(req, NULL, "Check request creation");
 	is  (req->hdr.type, TNT_OP_SELECT, "Check that we inited select");
-	is  (tnt_request_set_sspace(req, "_vspace", 7), 0, "Set space");
-	is  (tnt_request_set_sindex(req, "name", 4), 0, "Set index");
+	is  (tnt_request_set_sspace(tnt, req, "_vspace", 7), 0, "Set space");
+	is  (tnt_request_set_sindex(tnt, req, "name", 4), 0, "Set index");
 	is  (tnt_request_set_key(req, key), 0, "Set key");
 	isnt(tnt_request_compile(tnt, req), -1, "Compile request");
 	is  (check_nbytes(tnt, bb2, bb2_len), 0, "Check request");
@@ -468,16 +465,16 @@ test_request_03(char *uri) {
 
 static int
 test_request_04(char *uri) {
-	plan(21);
+	plan(20);
 	header();
 
-	const char bb1[] = "\xce\x00\x00\x00\x1c\x82\x00\x01\x01\x00\x86\x10\xcd\x01"
+	const char bb1[] = "\xce\x00\x00\x00\x1c\x82\x00\x01\x01\x01\x86\x10\xcd\x01"
 			   "\x19\x11\x02\x12\x01\x13\x01\x14\x06\x20\x91\xa7\x5f\x76"
 			   "\x73\x70\x61\x63\x65";
 	size_t bb1_len = sizeof(bb1) - 1;
 
 	const char bb2[] = "\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			   "\x00\x00\x00\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
+			   "\x00\x00\x01\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
 			   "\x00\x01\x97\xcd\x02\x01\x01\xa7\x6d\x73\x67\x70\x61\x63"
 			   "\x6b\xa5\x6d\x65\x6d\x74\x78\x00\xa0\x90";
 	size_t bb2_len = sizeof(bb2) - 1;
@@ -486,18 +483,18 @@ test_request_04(char *uri) {
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(tnt), -1, "Connecting");
-	isnt(tnt_authenticate(tnt), -1, "Authenticating");
+//	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
 	struct tnt_stream *key = NULL; key = tnt_object(NULL);
 	isnt(key, NULL, "Check object creation");
 	is  (tnt_object_add_array(key, 1), 1, "Create key");
 	is  (tnt_object_add_strz(key, "_vspace"), 8, "Create key");
 
-	struct tnt_request *req = NULL; req = tnt_request_select(NULL, tnt);
+	struct tnt_request *req = NULL; req = tnt_request_select(NULL);
 	isnt(req, NULL, "Check request creation");
 	is  (req->hdr.type, TNT_OP_SELECT, "Check that we inited select");
-	is  (tnt_request_set_sspace(req, "_vspace", 7), 0, "Set space");
-	is  (tnt_request_set_sindex(req, "name", 4), 0, "Set index");
+	is  (tnt_request_set_sspace(tnt, req, "_vspace", 7), 0, "Set space");
+	is  (tnt_request_set_sindex(tnt, req, "name", 4), 0, "Set index");
 	is  (tnt_request_set_key(req, key), 0, "Set key");
 	is  (tnt_request_set_offset(req, 1), 0, "Set offset");
 	is  (tnt_request_set_limit(req, 1), 0, "Set limit");
@@ -520,7 +517,7 @@ test_request_04(char *uri) {
 
 static int
 test_request_05(char *uri) {
-	plan(260);
+	plan(261);
 	header();
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
@@ -536,10 +533,10 @@ test_request_05(char *uri) {
 		struct tnt_stream *val = tnt_object(NULL);
 		tnt_object_format(val, "[%d%d%.*s]", i, i + 10, ex_len, ex);
 
-		struct tnt_request *req = tnt_request_insert(NULL, tnt);
+		struct tnt_request *req = tnt_request_insert(NULL);
 		isnt(req, NULL, "Check request creation");
 		is  (req->hdr.type, TNT_OP_INSERT, "Check that we inited delete");
-		is  (tnt_request_set_sspacez(req, "test"), 0, "Set space");
+		is  (tnt_request_set_sspacez(tnt, req, "test"), 0, "Set space");
 		is  (tnt_request_set_tuple(req, val), 0, "Set tuple");
 		isnt(tnt_request_compile(tnt, req), -1, "Compile request");
 
@@ -578,10 +575,10 @@ test_request_05(char *uri) {
 		struct tnt_stream *val = tnt_object(NULL);
 		tnt_object_format(val, "[%d%d%.*s]", i, i + 5, ex_len, ex);
 
-		struct tnt_request *req = tnt_request_replace(NULL, tnt);
+		struct tnt_request *req = tnt_request_replace(NULL);
 		isnt(req, NULL, "Check request creation");
 		is  (req->hdr.type, TNT_OP_REPLACE, "Check that we inited replace");
-		is  (tnt_request_set_sspacez(req, "test"), 0, "Set space");
+		is  (tnt_request_set_sspacez(tnt, req, "test"), 0, "Set space");
 		is  (tnt_request_set_tuple(req, val), 0, "Set tuple");
 		isnt(tnt_request_compile(tnt, req), -1, "Compile request");
 
@@ -614,8 +611,8 @@ test_request_05(char *uri) {
 	struct tnt_stream *key = NULL; key = tnt_object(NULL);
 	isnt(key, NULL, "Check object creation");
 	is  (tnt_object_add_array(key, 0), 1, "Create key");
-	struct tnt_request *req = tnt_request_select(NULL, tnt);
-	tnt_request_set_sspacez(req, "test"), 0, "Set space";
+	struct tnt_request *req = tnt_request_select(NULL);
+	is (tnt_request_set_sspacez(tnt, req, "test"), 0, "Set space");
 	tnt_request_set_key(req, key);
 	tnt_request_compile(tnt, req);
 
@@ -659,10 +656,10 @@ test_request_05(char *uri) {
 		struct tnt_stream *key = tnt_object(NULL);
 		tnt_object_format(key, "[%d]", i);
 
-		struct tnt_request *req = tnt_request_delete(NULL, tnt);
+		struct tnt_request *req = tnt_request_delete(NULL);
 		isnt(req, NULL, "Check request creation");
 		is  (req->hdr.type, TNT_OP_DELETE, "Check that we inited replace");
-		is  (tnt_request_set_sspacez(req, "test"), 0, "Set space");
+		is  (tnt_request_set_sspacez(tnt, req, "test"), 0, "Set space");
 		is  (tnt_request_set_tuple(req, key), 0, "Set tuple");
 		isnt(tnt_request_compile(tnt, req), -1, "Compile request");
 
@@ -849,6 +846,38 @@ test_msgpack_mapa_iter() {
 	return check_plan();
 }
 
+/*
+static inline int
+test_msgpack_mapa_iter() {
+	plan(5);
+	header();
+
+	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
+	isnt(tnt, NULL, "Check connection creation");
+	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
+	isnt(tnt_connect(tnt), -1, "Connecting");
+	tnt_stream_reqid(tnt, 0);
+
+	struct tnt_request *req = tnt_request_replace(NULL);
+	isnt(req, NULL, "Check request creation");
+	is  (req->hdr.type, TNT_OP_REPLACE, "Check that we inited replace");
+	is  (tnt_request_set_sspacez(tnt, req, "test"), 0, "Set space");
+	is  (tnt_request_set_tuple_format(req, "[%d%s%d%s]", 1, "hello", 2, "world"), 0, "Set tuple");
+	isnt(tnt_request_compile(tnt, req), -1, "Compile request");
+	tnt_request_free(req);
+
+	struct tnt_request *req = tnt_request_upsert(NULL);
+	isnt(req, NULL, "Check request creation");
+	is  (req->hdr.type, TNT_OP_UPDATE, "CHeck that we inited upsert");
+	is  (tnt_request_set_sspacez(tnt, req, "test"), 0, "Set space");
+	is  (tnt_request_set_tuple(req, val), 0, ""
+	tnt_stream_free(val);
+	tnt_stream_free(val);
+
+	footer();
+	return check_plan();
+}
+*/
 int main() {
 	plan(9);
 

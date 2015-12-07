@@ -215,11 +215,11 @@ int dump_schema(struct tnt_stream *s) {
 	mh_foreach(schema, spos) {
 		struct tnt_schema_sval *sval = NULL;
 		sval = (*mh_assoc_node(schema, spos))->data;
-		printf("  %d: %s\n", sval->space_number, sval->space_name);
-		mh_foreach(sval->index_hash, ipos) {
+		printf("  %d: %s\n", sval->number, sval->name);
+		mh_foreach(sval->index, ipos) {
 			struct tnt_schema_ival *ival = NULL;
-			ival = (*mh_assoc_node(sval->index_hash, ipos))->data;
-			printf("    %d: %s\n", ival->index_number, ival->index_name);
+			ival = (*mh_assoc_node(sval->index, ipos))->data;
+			printf("    %d: %s\n", ival->number, ival->name);
 		}
 	}
 	return 0;

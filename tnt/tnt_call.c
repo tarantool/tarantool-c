@@ -18,7 +18,7 @@
 
 static ssize_t
 tnt_rpc_base(struct tnt_stream *s, const char *proc, size_t proc_len,
-	     struct tnt_stream *args, enum tnt_request_type op)
+	     struct tnt_stream *args, enum tnt_request_t op)
 {
 	if (!proc || proc_len == 0)
 		return -1;

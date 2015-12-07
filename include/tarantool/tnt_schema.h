@@ -41,35 +41,12 @@ struct mh_assoc_t;
 
 /**
  * \internal
- * \brief types in schema/indexes
- */
-enum field_type {
-	FT_STR = 0,
-	FT_NUM,
-	FT_OTHER
-};
-
-/**
- * \internal
- * \brief field value information
- */
-struct tnt_schema_fval {
-	uint32_t        field_number;
-	char           *field_name;
-	uint32_t        field_name_len;
-	enum field_type field_type;
-};
-
-/**
- * \internal
  * \brief index value information
  */
 struct tnt_schema_ival {
-	char      *index_name;
-	uint32_t   index_name_len;
-	uint32_t   index_number;
-	uint32_t   index_parts_len;
-	struct tnt_schema_fval *index_parts;
+	const char *name;
+	uint32_t    name_len;
+	uint32_t    number;
 };
 
 /**
@@ -77,12 +54,10 @@ struct tnt_schema_ival {
  * \brief space value information
  */
 struct tnt_schema_sval {
-	char      *space_name;
-	uint32_t   space_name_len;
-	uint32_t   space_number;
-	uint32_t   schema_list_len;
-	struct tnt_schema_fval *schema_list;
-	struct mh_assoc_t      *index_hash;
+	char              *name;
+	uint32_t           name_len;
+	uint32_t           number;
+	struct mh_assoc_t *index;
 };
 
 /**
@@ -108,7 +83,7 @@ struct tnt_schema {
  * \retval  0 ok
  */
 int
-tnt_schema_add_spaces(struct tnt_schema *sch, const char *data, uint32_t dlen);
+tnt_schema_add_spaces(struct tnt_schema *sch, struct tnt_reply *r);
 
 /**
  * \brief Add indexes definitions to schema
@@ -125,8 +100,7 @@ tnt_schema_add_spaces(struct tnt_schema *sch, const char *data, uint32_t dlen);
  * \retval  0 ok
  */
 int
-tnt_schema_add_indexes(struct tnt_schema *sch, const char *data,
-		       uint32_t dlen);
+tnt_schema_add_indexes(struct tnt_schema *sch, struct tnt_reply *r);
 
 /**
  * \brief Get spaceno by space name
@@ -173,13 +147,19 @@ tnt_schema_new(struct tnt_schema *sch);
  * \param sch schema pointer
  */
 void
-tnt_schema_flush  (struct tnt_schema *sch);
+tnt_schema_flush(struct tnt_schema *sch);
 
 /**
  * \brief Reset and free schema
  * \param sch schema pointer
  */
 void
-tnt_schema_delete (struct tnt_schema *sch);
+tnt_schema_free(struct tnt_schema *sch);
+
+ssize_t
+tnt_get_space(struct tnt_stream *s);
+
+ssize_t
+tnt_get_index(struct tnt_stream *s);
 
 #endif /* TNT_SCHEMA_H_INCLUDED */

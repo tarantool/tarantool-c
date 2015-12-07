@@ -1731,7 +1731,8 @@ tp_reply(struct tpresponse *r, const char * const buf, size_t size)
 			r->code = mp_decode_uint(&p);
 			break;
 		default:
-			return -1;
+			mp_next(&p);
+			break;
 		}
 		r->bitmap |= (1ULL << key);
 	}
@@ -1764,6 +1765,9 @@ tp_reply(struct tpresponse *r, const char * const buf, size_t size)
 			r->data_end = p;
 			break;
 		}
+		default:
+			mp_next(&p);
+			break;
 		}
 		r->bitmap |= (1ULL << key);
 	}

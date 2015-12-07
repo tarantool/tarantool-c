@@ -16,7 +16,7 @@
 
 static ssize_t
 tnt_store_base(struct tnt_stream *s, uint32_t space, struct tnt_stream *tuple,
-	       enum tnt_request_type op)
+	       enum tnt_request_t op)
 {
 	if (tnt_object_verify(tuple, MP_ARRAY))
 		return -1;

@@ -57,7 +57,7 @@ struct tnt_sbo_stack {
  *                    everything is moved to n bytes, when called
  *                    "tnt_object_container_close"
  */
-enum TNT_SBO_TYPE {
+enum tnt_sbo_type {
 	TNT_SBO_SIMPLE = 0,
 	TNT_SBO_SPARSE,
 	TNT_SBO_PACKED,
@@ -67,7 +67,7 @@ struct tnt_sbuf_object {
 	struct tnt_sbo_stack *stack;
 	uint8_t stack_size;
 	uint8_t stack_alloc;
-	enum TNT_SBO_TYPE type;
+	enum tnt_sbo_type type;
 };
 
 #define TNT_OBJ_CAST(SB) ((struct tnt_sbuf_object *)(SB)->subdata)
@@ -86,7 +86,7 @@ struct tnt_sbuf_object {
  * \retval   0 success
  */
 int
-tnt_object_type(struct tnt_stream *s, enum TNT_SBO_TYPE type);
+tnt_object_type(struct tnt_stream *s, enum tnt_sbo_type type);
 
 /**
  * \brief create and initialize tnt_object
@@ -153,21 +153,21 @@ tnt_object_add_double(struct tnt_stream *s, double value);
 
 /**
  * \brief Append array header to stream object
- * \sa TNT_SBO_TYPE
+ * \sa tnt_sbo_type
  */
 ssize_t
 tnt_object_add_array(struct tnt_stream *s, uint32_t size);
 
 /**
  * \brief Append map header to stream object
- * \sa TNT_SBO_TYPE
+ * \sa tnt_sbo_type
  */
 ssize_t
 tnt_object_add_map(struct tnt_stream *s, uint32_t size);
 
 /**
  * \brief Close array/map in case TNT_SBO_PACKED/TNT_SBO_SPARSE were used
- * \sa TNT_SBO_TYPE
+ * \sa tnt_sbo_type
  */
 ssize_t
 tnt_object_container_close(struct tnt_stream *s);

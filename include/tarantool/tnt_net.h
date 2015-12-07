@@ -207,21 +207,6 @@ int
 tnt_errno(struct tnt_stream *s);
 
 /**
- * \brief Authenticate with given cridentials and take schema from server
- *
- * If you want to authenticate with another user - use tnt_auth() and
- * tnt_reload_schema() instead. Try not to substitude URI.
- *
- * \param s stream pointer
- *
- * \returns result of ops
- * \retval  -1 error
- * \retval  0  ok
- */
-int
-tnt_authenticate(struct tnt_stream *s);
-
-/**
  * \brief Flush space/index schema and get it from server
  *
  * \param s stream pointer
