@@ -1,6 +1,8 @@
+%global build_version %(git describe --long | sed "s/[0-9]*\.[0-9]*\.[0-9]*-//" | sed "s/-[a-z 0-9]*//")
+
 Name: tarantool-c
 Version: 1.0.0
-Release: 1%{?dist}
+Release: %{build_version}
 Summary: Tarantool C connector
 Group: Development/Languages
 License: BSD
