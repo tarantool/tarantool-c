@@ -53,7 +53,7 @@
             const char * tuple;
             const char * tuple_end;
             struct tnt_stream * tuple_object;
-            int foffset;
+            int index_base;
             int alloc;
             struct tnt_stream * stream;
         };
@@ -91,11 +91,11 @@
 
     Type of request.
 
-.. c:member:: uint32_t tnt_request.space_id;
-              uint32_t tnt_request.index_id;
-              uint32_t tnt_request.offset;
-              uint32_t tnt_request.limit;
-              int tnt_request.index_base;
+.. c:member:: uint32_t tnt_request.space_id
+              uint32_t tnt_request.index_id
+              uint32_t tnt_request.offset
+              uint32_t tnt_request.limit
+              int tnt_request.index_base
 
     Field with specified values.
 

@@ -19,7 +19,7 @@ write requests.
 
 It's done with basic functions:
 
-* :struct:`struct tnt_request`/:func:`tnt_request_compile`
+* :c:type:`struct tnt_request`/:func:`tnt_request_compile`
 * :func:`tnt_select`/:func:`tnt_insert`/...
 
 =====================================================================

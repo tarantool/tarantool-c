@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 
 project(LIBTNT)
 
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+set(CMAKE_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_INCLUDE_PATH})
+
 if(POLICY CMP0037)
     cmake_policy(SET CMP0037 OLD) # don't blame custom target names
 endif(POLICY CMP0037)
@@ -39,6 +42,8 @@ endif()
 
 add_custom_target (doc
     COMMAND doxygen ${PROJECT_SOURCE_DIR}/Doxyfile)
+
+add_subdirectory(doc)
 
 message(STATUS "------------------------------------------------")
 message(STATUS "        Tarantool library configuration:")

@@ -19,6 +19,7 @@ Basic network layer with batching support is implemented in multiple parts:
     allocated.
 
     Returns NULL if can't allocate Memory
+
 =====================================================================
                           Error handling
 =====================================================================
@@ -132,8 +133,8 @@ Functions to work with errors:
 
     See also :ref:`schema-description`
 
-.. c:function:: tnt_get_spaceno(struct tnt_stream *s, const char *space, size_t space_len)
-                tnt_get_indexno(struct tnt_stream *s, int space, const char *index, size_t index_len)
+.. c:function:: int32_t tnt_get_spaceno(struct tnt_stream *s, const char *space, size_t space_len)
+                int32_t tnt_get_indexno(struct tnt_stream *s, int space, const char *index, size_t index_len)
 
     Get space/index number from their names. If you're using ``tnt_get_indexno``,
     then space number is required.

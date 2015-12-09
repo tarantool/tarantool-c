@@ -4,7 +4,7 @@
 
 Basic MsgPack object layer (msgpuck wrapper). It supports array/map traversal,
 dynamic size msgpack arrays and e.t.c. For detailed analyze read
-`Message Pack specification`_
+`MessagePack specification`_
 
 =====================================================================
                         MsgPack introduction
@@ -52,7 +52,7 @@ one extra byte in addition to the strings themselves.
                           Object creation
 =====================================================================
 
-.. c:function:: struct tnt_stream *tnt_object(struct tnt_stream *s);
+.. c:function:: struct tnt_stream *tnt_object(struct tnt_stream *s)
 
     Create empty msgpack object. If ``s`` is passed as ``NULL``, then object is
     allocated. Otherwise allocated object will be initialized.

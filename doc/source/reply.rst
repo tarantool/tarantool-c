@@ -29,7 +29,7 @@
 .. c:member:: uint64_t tnt_reply.code
 
     Return code of query. If ``code == 0`` then it's ok, otherwise use
-    :macro:`TNT_REPLY_ERROR` to convert it to errorcode.
+    :c:macro:`TNT_REPLY_ERROR` to convert it to errorcode.
 
 .. c:member:: uint64_t tnt_reply.sync
 
