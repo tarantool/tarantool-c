@@ -1,0 +1,489 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MessagePack layer &mdash; tarantool-c 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="tarantool-c 0.2.0 documentation" href="index.html"/>
+        <link rel="next" title="Reply parsing" href="reply.html"/>
+        <link rel="prev" title="Networking layer in tarantool-c" href="connection.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> tarantool-c
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#create-connection">Create connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#error-handling">Error handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#manipulating-connection">Manipulating connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#freeing">Freeing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#example">Example:</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">MessagePack layer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#msgpack-introduction">MsgPack introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#object-creation">Object creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scalar-msgpack-types">Scalar MsgPack types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#array-map-manipulation">Array/Map manipulation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#array-map-in-msgpack">Array/Map in MsgPack</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#working-with-array-map">Working with Array/Map</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#object-manipulation">Object manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reply.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="request.html#working-with-update">Working with Update</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="request.html#container-for-operations">Container for operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="request.html#operations">Operations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="request.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#creation">Creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#set-get-request-fields">Set/get request fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#manipulating-requests">Manipulating requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with schema</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#create-schema">Create schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#creating-requests-for-schema-acquiring">Creating requests for schema acquiring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#adding-responses">Adding responses</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="buffering.html">Buffer for requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#create-buffer">Create buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#create-requests">Create requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#parse-response">Parse response</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">tarantool-c</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>MessagePack layer</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="messagepack-layer">
+<h1>MessagePack layer<a class="headerlink" href="#messagepack-layer" title="Permalink to this headline">¶</a></h1>
+<p>Basic MsgPack object layer (msgpuck wrapper). It supports array/map traversal,
+dynamic size msgpack arrays and e.t.c. For detailed analyze read
+<a class="reference external" href="https://github.com/msgpack/msgpack/blob/master/spec.md">MessagePack specification</a></p>
+<div class="section" id="msgpack-introduction">
+<h2>MsgPack introduction<a class="headerlink" href="#msgpack-introduction" title="Permalink to this headline">¶</a></h2>
+<p>MessagePack is an efficient binary serialization format. It lets you exchange
+data among multiple languages like JSON. But it&#8217;s faster and smaller. Small
+integers are encoded into a single byte, and typical short strings require only
+one extra byte in addition to the strings themselves.</p>
+<div class="section" id="types">
+<h3>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">integer</span></code> (<code class="docutils literal"><span class="pre">int</span></code> &lt; 0 and <code class="docutils literal"><span class="pre">uint</span></code> &gt;= 0) represents an integer</li>
+<li><code class="docutils literal"><span class="pre">nil</span></code> represents <code class="docutils literal"><span class="pre">nil</span></code></li>
+<li><code class="docutils literal"><span class="pre">boolean</span></code> represents <code class="docutils literal"><span class="pre">true</span></code> or <code class="docutils literal"><span class="pre">false</span></code></li>
+<li><code class="docutils literal"><span class="pre">float</span></code> - 4 bytes, <code class="docutils literal"><span class="pre">double</span></code> - 8 bytes) represents a floating
+point number</li>
+<li><code class="docutils literal"><span class="pre">string</span></code> represents a UTF-8 string</li>
+<li><code class="docutils literal"><span class="pre">binary</span></code> represents a byte array</li>
+<li><code class="docutils literal"><span class="pre">array</span></code> represents a sequence of objects</li>
+<li><code class="docutils literal"><span class="pre">map</span></code> represents key-value pairs of objects</li>
+<li><code class="docutils literal"><span class="pre">extension</span></code> represents a tuple of type information and a byte array where
+type information is an integer whose meaning is defined by applications</li>
+</ul>
+</div>
+<div class="section" id="limitations">
+<h3>Limitations<a class="headerlink" href="#limitations" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>a value of an Integer object is limited from -(2^63) upto (2^64)-1</li>
+<li>a value of a Float object is IEEE 754 single or double precision
+floating-point number</li>
+<li>maximum length of a Binary object is (2^32)-1</li>
+<li>maximum byte size of a String object is (2^32)-1</li>
+<li>String objects may contain invalid byte sequence and the behavior of a
+deserializer depends on the actual implementation when it received invalid
+byte sequence</li>
+<li>Deserializers should provide functionality to get the original byte array so
+that applications can decide how to handle the object</li>
+<li>maximum number of elements of an Array object is (2^32)-1</li>
+<li>maximum number of key-value associations of a Map object is (2^32)-1</li>
+</ul>
+</div>
+</div>
+<div class="section" id="object-creation">
+<h2>Object creation<a class="headerlink" href="#object-creation" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.tnt_object">
+struct tnt_stream *<code class="descname">tnt_object</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create empty msgpack object. If <code class="docutils literal"><span class="pre">s</span></code> is passed as <code class="docutils literal"><span class="pre">NULL</span></code>, then object is
+allocated. Otherwise allocated object will be initialized.</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="descname">struct tnt_stream *tnt_object_as(struct tnt_stream *s, char *buf,</code></dt>
+<dt>
+<code class="descname">size_t buf_len)</code></dt>
+<dd><p>Create read-only msgpack object from buffer. Source string isn&#8217;t copied.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>*     buf</strong> (<em>char</em>) &#8211; input buffer</li>
+<li><strong>buf_len</strong> (<em>size_t</em>) &#8211; length of buffer</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="scalar-msgpack-types">
+<h2>Scalar MsgPack types<a class="headerlink" href="#scalar-msgpack-types" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.tnt_object_add_nil">
+ssize_t <code class="descname">tnt_object_add_nil</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_nil" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append <code class="docutils literal"><span class="pre">nil</span></code> to a stream object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_add_int">
+ssize_t <code class="descname">tnt_object_add_int</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, int64_t<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add integer to a stream object. If it&#8217;s value is more or equal zero, then
+it&#8217;s packed in <code class="docutils literal"><span class="pre">uint</span></code> MsgPack type, otherwise it&#8217;ll be <code class="docutils literal"><span class="pre">int</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_add_str">
+ssize_t <code class="descname">tnt_object_add_str</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, const char<em>&nbsp;*str</em>, uint32_t<em>&nbsp;len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_str" title="Permalink to this definition">¶</a></dt>
+<dt id="c.tnt_object_add_strz">
+ssize_t <code class="descname">tnt_object_add_strz</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, const char<em>&nbsp;*str</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_strz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append utf-8 string to a stream object. If using <code class="docutils literal"><span class="pre">&lt;...&gt;_strz</span></code> function,
+then length is calculated using <code class="docutils literal"><span class="pre">strlen(str)</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="descname">ssize_t tnt_object_add_bin(struct tnt_stream *s, const char *bin,</code></dt>
+<dt>
+<code class="descname">uint32_t len)</code></dt>
+<dd><p>Append byte array to a stream object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_add_bool">
+ssize_t <code class="descname">tnt_object_add_bool</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, char<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_bool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append boolean value to a stream object. If <code class="docutils literal"><span class="pre">value</span> <span class="pre">==</span> <span class="pre">0</span></code>, then appending
+<code class="docutils literal"><span class="pre">false</span></code>, otherwise <code class="docutils literal"><span class="pre">true</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_add_float">
+ssize_t <code class="descname">tnt_object_add_float</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, float<em>&nbsp;val</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append float value to a stream object. <code class="docutils literal"><span class="pre">float</span></code> means 4-byte floating point
+number.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_add_double">
+ssize_t <code class="descname">tnt_object_add_double</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, double<em>&nbsp;val</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append double value to a stream object. <code class="docutils literal"><span class="pre">double</span></code> means 8-byte floating
+point number.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="array-map-manipulation">
+<h2>Array/Map manipulation<a class="headerlink" href="#array-map-manipulation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="array-map-in-msgpack">
+<h3>Array/Map in MsgPack<a class="headerlink" href="#array-map-in-msgpack" title="Permalink to this headline">¶</a></h3>
+<p>To understand why&#8217;s there many problems when working with MsgPack map/arrays
+with dynamic size we need to understand how it&#8217;s originally specified.</p>
+<p>Arrays/Maps are a sequence of elements following the &#8216;header&#8217;. Depending on
+the number of elements in the sequence length of header varies. (length of
+map is number of pairs of elements in it).</p>
+<p>For example:</p>
+<ul class="simple">
+<li>length(elements) &lt; 16 =&gt; length(header) == 1 byte</li>
+<li>length(elements) &lt; (2^16) =&gt; length(header) == 3 byte</li>
+<li>length(elements) &lt; (2^32) =&gt; length(header) == 5 byte</li>
+</ul>
+</div>
+<div class="section" id="working-with-array-map">
+<h3>Working with Array/Map<a class="headerlink" href="#working-with-array-map" title="Permalink to this headline">¶</a></h3>
+<p>So when you, dynamically, add 1 element and it&#8217;s length becomes 16 - header
+grow by 2 bytes (the same applies to 2^32). There&#8217;s three strategies to work
+with it:</p>
+<dl class="containertype">
+<dt id="containertype-TNT_SBO_SIMPLE">
+<code class="descname">TNT_SBO_SIMPLE</code><a class="headerlink" href="#containertype-TNT_SBO_SIMPLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set size before adding elements into it. It&#8217;s default option.</p>
+</dd></dl>
+
+<dl class="containertype">
+<dt id="containertype-TNT_SBO_SPARSE">
+<code class="descname">TNT_SBO_SPARSE</code><a class="headerlink" href="#containertype-TNT_SBO_SPARSE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Every container&#8217;s header has length of 5 bytes. It&#8217;s recommended if you have
+very big tuples.</p>
+</dd></dl>
+
+<dl class="containertype">
+<dt id="containertype-TNT_SBO_PACKED">
+<code class="descname">TNT_SBO_PACKED</code><a class="headerlink" href="#containertype-TNT_SBO_PACKED" title="Permalink to this definition">¶</a></dt>
+<dd><p>When you&#8217;re finished to work with container - it will be packed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_type">
+int <code class="descname">tnt_object_type</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, enum TNT_SBO_TYPE<em>&nbsp;type</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function for setting object type. You can set it only when container is
+empty.</p>
+<p>Returns -1 if it&#8217;s not empty.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_add_array">
+ssize_t <code class="descname">tnt_object_add_array</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, uint32_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append array header to stream object. If <a class="reference internal" href="#containertype-TNT_SBO_SPARSE"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_SPARSE</span></code></a> or
+<a class="reference internal" href="#containertype-TNT_SBO_PACKED"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_PACKED</span></code></a> is set as container type, then size is
+ignored.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_add_map">
+ssize_t <code class="descname">tnt_object_add_map</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, uint32_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append map header to stream object. If <a class="reference internal" href="#containertype-TNT_SBO_SPARSE"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_SPARSE</span></code></a> or
+<a class="reference internal" href="#containertype-TNT_SBO_PACKED"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_PACKED</span></code></a> is set as container type, then size is
+ignored.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_container_close">
+ssize_t <code class="descname">tnt_object_container_close</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_container_close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close latest opened container. It&#8217;s used when you set <code class="xref py py-func docutils literal"><span class="pre">tnt_object_type()</span></code>
+with <a class="reference internal" href="#containertype-TNT_SBO_SPARSE"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_SPARSE</span></code></a> or <a class="reference internal" href="#containertype-TNT_SBO_PACKED"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_PACKED</span></code></a> value.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="object-manipulation">
+<h2>Object manipulation<a class="headerlink" href="#object-manipulation" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.tnt_object_format">
+ssize_t <code class="descname">tnt_object_format</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, const char<em>&nbsp;*fmt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_format" title="Permalink to this definition">¶</a></dt>
+<dt id="c.tnt_object_vformat">
+ssize_t <code class="descname">tnt_object_vformat</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, const char<em>&nbsp;*fmt</em>, va_list<em>&nbsp;vl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_vformat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append msgpack values formatted to the stream object. <code class="docutils literal"><span class="pre">&lt;...&gt;_vformat</span></code>
+function uses <code class="docutils literal"><span class="pre">va_list</span></code> as third argument.</p>
+<p>Format string consists from:</p>
+<ul class="simple">
+<li>&#8216;[&#8216; and &#8216;]&#8217; pairs, defining arrays,</li>
+<li>&#8216;{&#8216; and &#8216;}&#8217; pairs, defining maps</li>
+<li>%d, %i - int</li>
+<li>%u - unsigned int</li>
+<li>%ld, %li - long</li>
+<li>%lu - unsigned long</li>
+<li>%lld, %lli - long long</li>
+<li>%llu - unsigned long long</li>
+<li>%hd, %hi - short</li>
+<li>%hu - unsigned short</li>
+<li>%hhd, %hhi - char (as number)</li>
+<li>%hhu - unsigned char (as number)</li>
+<li>%f - float</li>
+<li>%lf - double</li>
+<li>%b - bool</li>
+<li>%s - zero-end string</li>
+<li>%.*s - string with specified length</li>
+<li>%% is ignored</li>
+<li>%&#8217;smth else&#8217; assert and undefined behaviour</li>
+<li>NIL - a nil value</li>
+</ul>
+<p>all other symbols are ignored.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_verify">
+int <code class="descname">tnt_object_verify</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, int8_t<em>&nbsp;type</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_verify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify that object is valid msgpack structure. If <code class="docutils literal"><span class="pre">type</span> <span class="pre">==</span> <span class="pre">-1</span></code>, then it
+doesn&#8217;t verify first type, otherwise it checks that first type is <code class="docutils literal"><span class="pre">type</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_object_reset">
+int <code class="descname">tnt_object_reset</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset stream object to basic state.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="reply.html" class="btn btn-neutral float-right" title="Reply parsing" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="connection.html" class="btn btn-neutral" title="Networking layer in tarantool-c" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Tarantool Team.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,439 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Networking layer in tarantool-c &mdash; tarantool-c 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="tarantool-c 0.2.0 documentation" href="index.html"/>
+        <link rel="next" title="MessagePack layer" href="msgpackobject.html"/>
+        <link rel="prev" title="Welcome to tarantool-c’s documentation!" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> tarantool-c
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Networking layer in tarantool-c</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#create-connection">Create connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-handling">Error handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#manipulating-connection">Manipulating connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#freeing">Freeing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example:</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#msgpack-introduction">MsgPack introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#object-creation">Object creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#scalar-msgpack-types">Scalar MsgPack types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#array-map-manipulation">Array/Map manipulation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#array-map-in-msgpack">Array/Map in MsgPack</a></li>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#working-with-array-map">Working with Array/Map</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#object-manipulation">Object manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reply.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="request.html#working-with-update">Working with Update</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="request.html#container-for-operations">Container for operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="request.html#operations">Operations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="request.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#creation">Creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#set-get-request-fields">Set/get request fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#manipulating-requests">Manipulating requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with schema</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#create-schema">Create schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#creating-requests-for-schema-acquiring">Creating requests for schema acquiring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#adding-responses">Adding responses</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="buffering.html">Buffer for requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#create-buffer">Create buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#create-requests">Create requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#parse-response">Parse response</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">tarantool-c</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Networking layer in tarantool-c</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="networking-layer-in-tarantool-c">
+<h1>Networking layer in tarantool-c<a class="headerlink" href="#networking-layer-in-tarantool-c" title="Permalink to this headline">¶</a></h1>
+<p>Basic network layer with batching support is implemented in multiple parts:</p>
+<ul class="simple">
+<li>tnt_net.c - client side layer</li>
+<li>tnt_io.c  - network abstraction layer</li>
+<li>tnt_iob.c - network buffer layer</li>
+<li>tnt_opt.c - network options layer</li>
+</ul>
+<div class="section" id="create-connection">
+<h2>Create connection<a class="headerlink" href="#create-connection" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.tnt_net">
+struct tnt_stream *<code class="descname">tnt_net</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a tarantool connection object. If <code class="docutils literal"><span class="pre">s</span></code> is NULL, then it&#8217;ll be
+allocated.</p>
+<p>Returns NULL if can&#8217;t allocate Memory</p>
+</dd></dl>
+
+</div>
+<div class="section" id="error-handling">
+<h2>Error handling<a class="headerlink" href="#error-handling" title="Permalink to this headline">¶</a></h2>
+<p>Possible error types:</p>
+<dl class="errtype">
+<dt id="errtype-TNT_EOK">
+<code class="descname">TNT_EOK</code><a class="headerlink" href="#errtype-TNT_EOK" title="Permalink to this definition">¶</a></dt>
+<dd><p>Not an error.</p>
+</dd></dl>
+
+<dl class="errtype">
+<dt id="errtype-TNT_EFAIL">
+<code class="descname">TNT_EFAIL</code><a class="headerlink" href="#errtype-TNT_EFAIL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Failed to parse URI, bad protocol for sockets or bad configuration option
+for <code class="xref py py-func docutils literal"><span class="pre">tnt_set()</span></code>.</p>
+</dd></dl>
+
+<dl class="errtype">
+<dt id="errtype-TNT_EMEMORY">
+<code class="descname">TNT_EMEMORY</code><a class="headerlink" href="#errtype-TNT_EMEMORY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memory allocation failed.</p>
+</dd></dl>
+
+<dl class="errtype">
+<dt id="errtype-TNT_ESYSTEM">
+<code class="descname">TNT_ESYSTEM</code><a class="headerlink" href="#errtype-TNT_ESYSTEM" title="Permalink to this definition">¶</a></dt>
+<dd><p>System error, <code class="docutils literal"><span class="pre">_errno</span></code> would be set. Acquire it with <code class="xref py py-func docutils literal"><span class="pre">tnt_errno()</span></code>.</p>
+</dd></dl>
+
+<dl class="errtype">
+<dt id="errtype-TNT_EBIG">
+<code class="descname">TNT_EBIG</code><a class="headerlink" href="#errtype-TNT_EBIG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Buffer is too big (in case send/read buffer is less then fragment you&#8217;re
+trying to write in it/read from).</p>
+</dd></dl>
+
+<dl class="errtype">
+<dt id="errtype-TNT_ERESOLVE">
+<code class="descname">TNT_ERESOLVE</code><a class="headerlink" href="#errtype-TNT_ERESOLVE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Failed to resolve hostname (gethostbyname(2) failed).</p>
+</dd></dl>
+
+<dl class="errtype">
+<dt id="errtype-TNT_ETMOUT">
+<code class="descname">TNT_ETMOUT</code><a class="headerlink" href="#errtype-TNT_ETMOUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout was reached while <code class="docutils literal"><span class="pre">connect</span></code>/<code class="docutils literal"><span class="pre">read</span></code>/<code class="docutils literal"><span class="pre">write</span></code>.</p>
+</dd></dl>
+
+<p>Functions to work with errors:</p>
+<dl class="function">
+<dt id="c.tnt_error">
+enum <a class="reference internal" href="#c.tnt_error" title="tnt_error">tnt_error</a> <code class="descname">tnt_error</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return errcode of last operation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_strerror">
+char *<code class="descname">tnt_strerror</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_strerror" title="Permalink to this definition">¶</a></dt>
+<dd><p>Format error as string message (in case it&#8217;s <a class="reference internal" href="#errtype-TNT_ESYSTEM"><code class="xref std std-errtype docutils literal"><span class="pre">TNT_ESYSTEM</span></code></a>, then
+driver uses system function <code class="docutils literal"><span class="pre">strerror()</span></code> to format message)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_errno">
+int <code class="descname">tnt_errno</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_errno" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get errno of last error (in case it&#8217;s <a class="reference internal" href="#errtype-TNT_ESYSTEM"><code class="xref std std-errtype docutils literal"><span class="pre">TNT_ESYSTEM</span></code></a>)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="manipulating-connection">
+<h2>Manipulating connection<a class="headerlink" href="#manipulating-connection" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.tnt_set">
+int <code class="descname">tnt_set</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, int<em>&nbsp;opt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set options for connection, possible options are:</p>
+<ul class="simple">
+<li>TNT_OPT_URI (<code class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code>) - uri for connecting to tarantool.</li>
+<li>TNT_OPT_TMOUT_CONNECT (<code class="docutils literal"><span class="pre">struct</span> <span class="pre">timeval</span> <span class="pre">*</span></code>) - option for setting timeout
+on connect.</li>
+<li>TNT_OPT_TMOUT_SEND (<code class="docutils literal"><span class="pre">struct</span> <span class="pre">timeval</span> <span class="pre">*</span></code>) - option for setting timeout
+on send.</li>
+<li>TNT_OPT_SEND_CB (<code class="docutils literal"><span class="pre">ssize_t</span> <span class="pre">(*send_cb_t)(struct</span> <span class="pre">tnt_iob</span> <span class="pre">*b,</span> <span class="pre">void</span> <span class="pre">*buf,</span> <span class="pre">\</span>
+<span class="pre">size_t</span> <span class="pre">len)</span></code>) - callback to be called instead of write into socket.</li>
+<li>TNT_OPT_SEND_CBV (<code class="docutils literal"><span class="pre">ssize_t</span> <span class="pre">(*sendv_cb_t)(struct</span> <span class="pre">tnt_iob</span> <span class="pre">*b,</span> <span class="pre">const</span> <span class="pre">\</span>
+<span class="pre">struct</span> <span class="pre">iovec</span> <span class="pre">*iov,</span> <span class="pre">int</span> <span class="pre">iov_count)</span></code>) - callback to be called instead of
+write into socket.</li>
+<li>TNT_OPT_SEND_BUF (<code class="docutils literal"><span class="pre">int</span></code>) - size of buffer for sending.</li>
+<li>TNT_OPT_SEND_CB_ARG (<code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>) - context for send callbacks.</li>
+<li>TNT_OPT_RECV_CB (<code class="docutils literal"><span class="pre">ssize_t</span> <span class="pre">(*recv_cb_t)(struct</span> <span class="pre">tnt_iob</span> <span class="pre">*b,</span> <span class="pre">void</span> <span class="pre">*buf,</span> <span class="pre">\</span>
+<span class="pre">size_t</span> <span class="pre">len)</span></code>) - callback to be called instead of read from socket.</li>
+<li>TNT_OPT_RECV_BUF (<code class="docutils literal"><span class="pre">int</span></code>) - size of buffer for recv.</li>
+<li>TNT_OPT_RECV_CB_ARG (<code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>) - context for recv callback.</li>
+</ul>
+<p>It will return -1 and store error in
+Can return TNT_EFAIL if can&#8217;t parse URI or option is not defined.
+Can return TNT_EMEMORY if can&#8217;t allocate memory for URI.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_connect">
+int <code class="descname">tnt_connect</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to tarantool with preconfigured and allocated settings</p>
+<p>Returns -1 in one of next cases:</p>
+<ul class="simple">
+<li>Can&#8217;t connect</li>
+<li>Can&#8217;t read greeting</li>
+<li>Can&#8217;t authenticate (if login/password was provided with URI)</li>
+<li>OOM while authenticating and getting schema</li>
+<li>Can&#8217;t parse schema</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_close">
+void <code class="descname">tnt_close</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close connection to tarantool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_flush">
+ssize_t <code class="descname">tnt_flush</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flush all buffered data to socket.</p>
+<p>Returns -1 in case of network error.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_fd">
+int <code class="descname">tnt_fd</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_fd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return file descriptor of connection.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_reload_schema">
+int <code class="descname">tnt_reload_schema</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_reload_schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reload schema from server - old schema is purged and then new schema is
+downloaded/parsed from server.</p>
+<p>See also <span class="xref std std-ref">schema-description</span></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_get_spaceno">
+int32_t <code class="descname">tnt_get_spaceno</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, const char<em>&nbsp;*space</em>, size_t<em>&nbsp;space_len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_get_spaceno" title="Permalink to this definition">¶</a></dt>
+<dt id="c.tnt_get_indexno">
+int32_t <code class="descname">tnt_get_indexno</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em>, int<em>&nbsp;space</em>, const char<em>&nbsp;*index</em>, size_t<em>&nbsp;index_len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_get_indexno" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get space/index number from their names. If you&#8217;re using <code class="docutils literal"><span class="pre">tnt_get_indexno</span></code>,
+then space number is required.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="freeing">
+<h2>Freeing<a class="headerlink" href="#freeing" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.tnt_stream_free">
+void <code class="descname">tnt_stream_free</code><span class="sig-paren">(</span>struct tnt_stream<em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is used to free every stream object in this library</p>
+</dd></dl>
+
+</div>
+<div class="section" id="example">
+<h2>Example:<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="cp">#include &lt;stdio.h&gt;</span>
+
+<span class="cp">#include &lt;tarantool/tarantool.h&gt;</span>
+<span class="cp">#include &lt;tarantool/tnt_net.h&gt;</span>
+<span class="cp">#include &lt;tarantool/tnt_opt.h&gt;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">uri</span> <span class="o">=</span> <span class="s">&quot;localhost:3301&quot;</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">tnt</span> <span class="o">=</span> <span class="n">tnt_net</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span> <span class="c1">// Allocating stream</span>
+    <span class="n">tnt_set</span><span class="p">(</span><span class="n">tnt</span><span class="p">,</span> <span class="n">TNT_OPT_URI</span><span class="p">,</span> <span class="n">uri</span><span class="p">);</span>          <span class="c1">// Set URI</span>
+    <span class="n">tnt_set</span><span class="p">(</span><span class="n">tnt</span><span class="p">,</span> <span class="n">TNT_OPT_SEND_BUF</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>       <span class="c1">// Disable buffering for send</span>
+    <span class="n">tnt_set</span><span class="p">(</span><span class="n">tnt</span><span class="p">,</span> <span class="n">TNT_OPT_RECV_BUF</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>       <span class="c1">// Disable buffering for recv</span>
+    <span class="n">tnt_connect</span><span class="p">(</span><span class="n">tnt</span><span class="p">);</span>                        <span class="c1">// Initialize stream and</span>
+                                             <span class="c1">// connect to Tarantool</span>
+    <span class="n">tnt_ping</span><span class="p">(</span><span class="n">tnt</span><span class="p">);</span>                           <span class="c1">// Send ping request</span>
+    <span class="k">struct</span> <span class="n">tnt_reply</span> <span class="o">*</span> <span class="n">reply</span> <span class="o">=</span> <span class="n">tnt_reply_init</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span> <span class="c1">// Initialize reply</span>
+    <span class="n">tnt</span><span class="o">-&gt;</span><span class="n">read_reply</span><span class="p">(</span><span class="n">tnt</span><span class="p">,</span> <span class="n">reply</span><span class="p">);</span>             <span class="c1">// Read reply from server</span>
+    <span class="n">tnt_reply_free</span><span class="p">(</span><span class="n">reply</span><span class="p">);</span>                   <span class="c1">// Free reply</span>
+    <span class="n">tnt_close</span><span class="p">(</span><span class="n">tnt</span><span class="p">);</span> <span class="n">tnt_stream_free</span><span class="p">(</span><span class="n">tnt</span><span class="p">);</span>    <span class="c1">// Close connection and free</span>
+                                             <span class="c1">// stream object</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="msgpackobject.html" class="btn btn-neutral float-right" title="MessagePack layer" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to tarantool-c’s documentation!" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Tarantool Team.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

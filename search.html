@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Search &mdash; tarantool-c 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="tarantool-c 0.2.0 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> tarantool-c
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="#" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#create-connection">Create connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#error-handling">Error handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#manipulating-connection">Manipulating connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#freeing">Freeing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#example">Example:</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#msgpack-introduction">MsgPack introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#object-creation">Object creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#scalar-msgpack-types">Scalar MsgPack types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#array-map-manipulation">Array/Map manipulation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#array-map-in-msgpack">Array/Map in MsgPack</a></li>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#working-with-array-map">Working with Array/Map</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#object-manipulation">Object manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reply.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="request.html#working-with-update">Working with Update</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="request.html#container-for-operations">Container for operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="request.html#operations">Operations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="request.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#creation">Creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#set-get-request-fields">Set/get request fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#manipulating-requests">Manipulating requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with schema</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#create-schema">Create schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#creating-requests-for-schema-acquiring">Creating requests for schema acquiring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#adding-responses">Adding responses</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="buffering.html">Buffer for requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#create-buffer">Create buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#create-requests">Create requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#parse-response">Parse response</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">tarantool-c</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li></li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <noscript>
+  <div id="fallback" class="admonition warning">
+    <p class="last">
+      Please activate JavaScript to enable the search
+      functionality.
+    </p>
+  </div>
+  </noscript>
+
+  
+  <div id="search-results">
+  
+  </div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Tarantool Team.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/searchtools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+  
+  <script type="text/javascript">
+    jQuery(function() { Search.loadIndex("searchindex.js"); });
+  </script>
+  
+  <script type="text/javascript" id="searchindexloader"></script>
+   
+
+
+</body>
+</html>

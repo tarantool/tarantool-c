@@ -1,0 +1,817 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Index &mdash; tarantool-c 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="tarantool-c 0.2.0 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> tarantool-c
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#create-connection">Create connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#error-handling">Error handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#manipulating-connection">Manipulating connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#freeing">Freeing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#example">Example:</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#msgpack-introduction">MsgPack introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#object-creation">Object creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#scalar-msgpack-types">Scalar MsgPack types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#array-map-manipulation">Array/Map manipulation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#array-map-in-msgpack">Array/Map in MsgPack</a></li>
+<li class="toctree-l3"><a class="reference internal" href="msgpackobject.html#working-with-array-map">Working with Array/Map</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#object-manipulation">Object manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="msgpackobject.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reply.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="request.html#working-with-update">Working with Update</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="request.html#container-for-operations">Container for operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="request.html#operations">Operations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="request.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#creation">Creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#set-get-request-fields">Set/get request fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#manipulating-requests">Manipulating requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="request_builder.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with schema</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#create-schema">Create schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#creating-requests-for-schema-acquiring">Creating requests for schema acquiring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html#adding-responses">Adding responses</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="buffering.html">Buffer for requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#create-buffer">Create buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#create-requests">Create requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="buffering.html#parse-response">Parse response</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">tarantool-c</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#C"><strong>C</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ 
+</div>
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt>
+    containertype
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="msgpackobject.html#containertype-TNT_SBO_PACKED">TNT_SBO_PACKED</a>
+  </dt>
+
+        
+  <dt><a href="msgpackobject.html#containertype-TNT_SBO_SIMPLE">TNT_SBO_SIMPLE</a>
+  </dt>
+
+        
+  <dt><a href="msgpackobject.html#containertype-TNT_SBO_SPARSE">TNT_SBO_SPARSE</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt>
+    error code value
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_EBIG">TNT_EBIG</a>
+  </dt>
+
+        
+  <dt><a href="connection.html#errtype-TNT_EFAIL">TNT_EFAIL</a>
+  </dt>
+
+        
+  <dt><a href="connection.html#errtype-TNT_EMEMORY">TNT_EMEMORY</a>
+  </dt>
+
+        
+  <dt><a href="connection.html#errtype-TNT_EOK">TNT_EOK</a>
+  </dt>
+
+        
+  <dt><a href="connection.html#errtype-TNT_ERESOLVE">TNT_ERESOLVE</a>
+  </dt>
+
+        
+  <dt><a href="connection.html#errtype-TNT_ESYSTEM">TNT_ESYSTEM</a>
+  </dt>
+
+        
+  <dt><a href="connection.html#errtype-TNT_ETMOUT">TNT_ETMOUT</a>
+  </dt>
+
+      </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="request.html#c.tnt_auth">tnt_auth (C function)</a>
+  </dt>
+
+      
+  <dt><a href="buffering.html#c.tnt_buf">tnt_buf (C function)</a>
+  </dt>
+
+      
+  <dt><a href="buffering.html#c.tnt_buf_as">tnt_buf_as (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_call">tnt_call (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_close">tnt_close (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_connect">tnt_connect (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_deauth">tnt_deauth (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_delete">tnt_delete (C function)</a>
+  </dt>
+
+      
+  <dt>
+    TNT_EBIG
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_EBIG">error code value</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt>
+    TNT_EFAIL
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_EFAIL">error code value</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt>
+    TNT_EMEMORY
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_EMEMORY">error code value</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt>
+    TNT_EOK
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_EOK">error code value</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt>
+    TNT_ERESOLVE
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_ERESOLVE">error code value</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="connection.html#c.tnt_errno">tnt_errno (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_error">tnt_error (C function)</a>
+  </dt>
+
+      
+  <dt>
+    TNT_ESYSTEM
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_ESYSTEM">error code value</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt>
+    TNT_ETMOUT
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_ETMOUT">error code value</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="request.html#c.tnt_eval">tnt_eval (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_fd">tnt_fd (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_flush">tnt_flush (C function)</a>
+  </dt>
+
+      
+  <dt><a href="schema.html#c.tnt_get_indexes">tnt_get_indexes (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_get_indexno">tnt_get_indexno (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_get_spaceno">tnt_get_spaceno (C function)</a>
+  </dt>
+
+      
+  <dt><a href="schema.html#c.tnt_get_spaces">tnt_get_spaces (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_insert">tnt_insert (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_iterator_t">tnt_iterator_t (C type)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_net">tnt_net (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object">tnt_object (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_add_array">tnt_object_add_array (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_add_bool">tnt_object_add_bool (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_add_double">tnt_object_add_double (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_add_float">tnt_object_add_float (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_add_int">tnt_object_add_int (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_add_map">tnt_object_add_map (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_add_nil">tnt_object_add_nil (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_add_str">tnt_object_add_str (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_add_strz">tnt_object_add_strz (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_container_close">tnt_object_container_close (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_format">tnt_object_format (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_reset">tnt_object_reset (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_type">tnt_object_type (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_verify">tnt_object_verify (C function)</a>
+  </dt>
+
+      
+  <dt><a href="msgpackobject.html#c.tnt_object_vformat">tnt_object_vformat (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_ping">tnt_ping (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_reload_schema">tnt_reload_schema (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_replace">tnt_replace (C function)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply">tnt_reply (C type)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply.code">tnt_reply.code (C member)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply.data">tnt_reply.data (C member)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply.data_end">tnt_reply.data_end (C member)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply.error">tnt_reply.error (C member)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply.error_end">tnt_reply.error_end (C member)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply.schema_id">tnt_reply.schema_id (C member)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply.sync">tnt_reply.sync (C member)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.TNT_REPLY_ERR">TNT_REPLY_ERR (C macro)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="reply.html#c.tnt_reply_free">tnt_reply_free (C function)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply_init">tnt_reply_init (C function)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply_t">tnt_reply_t (C type)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request">tnt_request (C type)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request.hdr.sync">tnt_request.hdr.sync (C member)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request.hdr.type">tnt_request.hdr.type (C member)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request.index_base">tnt_request.index_base (C member)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request.index_id">tnt_request.index_id (C member)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request.iterator">tnt_request.iterator (C member)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request.limit">tnt_request.limit (C member)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request.offset">tnt_request.offset (C member)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request.space_id">tnt_request.space_id (C member)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_auth">tnt_request_auth (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_call">tnt_request_call (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_compile">tnt_request_compile (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_delete">tnt_request_delete (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_eval">tnt_request_eval (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_free">tnt_request_free (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_init">tnt_request_init (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_insert">tnt_request_insert (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_ping">tnt_request_ping (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_replace">tnt_request_replace (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_select">tnt_request_select (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_expr">tnt_request_set_expr (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_exprz">tnt_request_set_exprz (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_func">tnt_request_set_func (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_funcz">tnt_request_set_funcz (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_key">tnt_request_set_key (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_key_format">tnt_request_set_key_format (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_ops">tnt_request_set_ops (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_tuple">tnt_request_set_tuple (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_tuple_format">tnt_request_set_tuple_format (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_type">tnt_request_type (C type)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_update">tnt_request_update (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_upsert">tnt_request_upsert (C function)</a>
+  </dt>
+
+      
+  <dt>
+    TNT_SBO_PACKED
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="msgpackobject.html#containertype-TNT_SBO_PACKED">containertype</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt>
+    TNT_SBO_SIMPLE
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="msgpackobject.html#containertype-TNT_SBO_SIMPLE">containertype</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt>
+    TNT_SBO_SPARSE
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="msgpackobject.html#containertype-TNT_SBO_SPARSE">containertype</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="schema.html#c.tnt_schema_add_indexes">tnt_schema_add_indexes (C function)</a>
+  </dt>
+
+      
+  <dt><a href="schema.html#c.tnt_schema_add_spaces">tnt_schema_add_spaces (C function)</a>
+  </dt>
+
+      
+  <dt><a href="schema.html#c.tnt_schema_new">tnt_schema_new (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_select">tnt_select (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_set">tnt_set (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_stream_free">tnt_stream_free (C function)</a>
+  </dt>
+
+      
+  <dt><a href="connection.html#c.tnt_strerror">tnt_strerror (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update_arith_double">tnt_update_arith_double (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update_arith_float">tnt_update_arith_float (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update_arith_int">tnt_update_arith_int (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update_assign">tnt_update_assign (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update_bit">tnt_update_bit (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update_container">tnt_update_container (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update_container_close">tnt_update_container_close (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update_container_reset">tnt_update_container_reset (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update_delete">tnt_update_delete (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update_insert">tnt_update_insert (C function)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Tarantool Team.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
