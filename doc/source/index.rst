@@ -1,12 +1,47 @@
-.. tarantool-c documentation master file, created by
-   sphinx-quickstart on Wed Dec  9 16:03:08 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+-------------------------------------------------------------------------------
+                          tarantool-c documentation
+-------------------------------------------------------------------------------
 
-Welcome to tarantool-c's documentation!
-=======================================
+.. image:: https://travis-ci.org/tarantool/tarantool-c.svg?branch=master
+    :target: https://travis-ci.org/tarantool/tarantool-c
 
-Contents:
+===========================================================
+                        About
+===========================================================
+
+**Tarantool-c** is a client library written in C for Tarantool.
+
+Tarantool-c depends on `msgpuck <https://github.com/tarantool/msgpuck>`_.
+
+Documentation is avaliable in headers and examples are in tests.
+
+It consinsts of:
+
+* tnt - tarantool IProto/networking library
+
+===========================================================
+                 Compilation/Installation
+===========================================================
+
+This project using CMake for generating Makefiles:
+
+.. code-block:: console
+
+    $ cmake .
+    $ make
+    #### For testing against installed tarantool
+    $ make test
+    #### For building documentation using Doxygen
+    $ make doc
+    #### For installing into system (headers+libraries)
+    $ make install
+
+Or you can install it using yum/apt into your favorite linux distribution
+from `tarantool`'s repository
+
+===========================================================
+                        Contents
+===========================================================
 
 .. toctree::
    :maxdepth: 2
@@ -19,10 +54,10 @@ Contents:
    schema.rst
    buffering.rst
 
-Indices and tables
-==================
+===========================================================
+                  Indices and tables
+===========================================================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 

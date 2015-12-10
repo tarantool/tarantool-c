@@ -291,6 +291,10 @@ int msg_profile_put(struct tnt_stream *tnt, int id, const char *usr,
 			return -1;
 		}
 	}
+	if (msg_profile_create(req, id, usr, usr_len, likes, msg, msg_len) == -1) {
+		log_error("OOM");
+		return -1;
+	}
 	if (tnt_request_set_tuple_format(req, "[%d%.*s%d%.*s]", id, usr_len,
 					 usr, likes, msg_len, msg) == -1) {
 		log_error("OOM");
@@ -312,6 +316,29 @@ int msg_profile_put(struct tnt_stream *tnt, int id, const char *usr,
 	if (rpl->code) {
 		log_error("Query error %d: %.*s", (int )TNT_REPLY_ERR(rpl),
 			  (int )(rpl->error_end - rpl->error), rpl->error);
+		return -1;
+	}
+	return 0;
+}
+
+int msg_profile_create(struct tnt_request *req, int id, const char *usr,
+		       size_t usr_len, int likes, const char *msg, size_t msg_len) {
+	if (tnt_request_set_tuple_format(req, "[%d%.*s%d%.*s]", id, usr_len,
+					 usr, likes, msg_len, msg) == -1) {
+		return -1;
+	}
+	return 0;
+}
+
+int msg_profile_create_alt(struct tnt_stream *obj, int id, const char *usr,
+			   size_t usr_len, int likes, const char *msg,
+			   size_t msg_len) {
+	if (tnt_object_add_array(obj, 4) == -1 ||
+	    tnt_object_add_int(obj, id) == -1 ||
+	    tnt_object_add_string(obj, usr, usr_len) == -1 ||
+	    tnt_object_add_int(obj, likes) == -1 ||
+	    tnt_object_add_string(obj, msg, msg_len) == -1) {
+		log_error("OOM");
 		return -1;
 	}
 	return 0;

@@ -148,7 +148,7 @@ Functions to work with errors:
     This function is used to free every stream object in this library
 
 =====================================================================
-                            Example:
+                             Example
 =====================================================================
 
 .. code-block:: c

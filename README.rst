@@ -74,6 +74,8 @@ After you've installed tarantool-c build and execute this code:
         tnt_close(tnt); tnt_stream_free(tnt); // Close connection and free stream object
     }
 
-For more examples, please, visit `test/{tarantool-tcp.c,tarantool-unix.c}` files.
+For more examples, please, visit ``test/tarantool-tcp.c`` or ``test/tarantool-unix.c`` files.
+
+For documentation, please, visit `github pages <http://tarantool.github.com/tarantool>`_.
 
 For RPM/DEB packages - use instructions from http://tarantool.org/download.html to add repositories.
