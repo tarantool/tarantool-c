@@ -13,7 +13,7 @@
 
 Tarantool-c depends on `msgpuck <https://github.com/tarantool/msgpuck>`_.
 
-Documentation is avaliable in headers and examples are in tests.
+For documentation, please, visit `github pages <http://tarantool.github.com/tarantool-c>`_.
 
 It consinsts of:
 
@@ -75,7 +75,5 @@ After you've installed tarantool-c build and execute this code:
     }
 
 For more examples, please, visit ``test/tarantool-tcp.c`` or ``test/tarantool-unix.c`` files.
-
-For documentation, please, visit `github pages <http://tarantool.github.com/tarantool>`_.
 
 For RPM/DEB packages - use instructions from http://tarantool.org/download.html to add repositories.
