@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to tarantool-c’s documentation! &mdash; tarantool-c 0.2.0 documentation</title>
+  <title>tarantool-c documentation &mdash; tarantool-c 0.2.0 documentation</title>
   
 
   
@@ -76,7 +76,7 @@
 <li class="toctree-l2"><a class="reference internal" href="connection.html#error-handling">Error handling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="connection.html#manipulating-connection">Manipulating connection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="connection.html#freeing">Freeing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connection.html#example">Example:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#example">Example</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a><ul>
@@ -128,6 +128,10 @@
 <li class="toctree-l2"><a class="reference internal" href="buffering.html#parse-response">Parse response</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="stream.html">Basic stream</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stream.html#example">Example</a></li>
+</ul>
+</li>
 </ul>
 
           
@@ -152,7 +156,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="#">Docs</a> &raquo;</li>
       
-    <li>Welcome to tarantool-c&#8217;s documentation!</li>
+    <li>tarantool-c documentation</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -163,9 +167,37 @@
 </div>
           <div role="main" class="document">
             
-  <div class="section" id="welcome-to-tarantool-c-s-documentation">
-<h1>Welcome to tarantool-c&#8217;s documentation!<a class="headerlink" href="#welcome-to-tarantool-c-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
+  <div class="section" id="tarantool-c-documentation">
+<h1>tarantool-c documentation<a class="headerlink" href="#tarantool-c-documentation" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="https://travis-ci.org/tarantool/tarantool-c"><img alt="https://travis-ci.org/tarantool/tarantool-c.svg?branch=master" src="https://travis-ci.org/tarantool/tarantool-c.svg?branch=master" /></a>
+<div class="section" id="about">
+<h2>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h2>
+<p><strong>Tarantool-c</strong> is a client library written in C for Tarantool.</p>
+<p>Tarantool-c depends on <a class="reference external" href="https://github.com/tarantool/msgpuck">msgpuck</a>.</p>
+<p>Documentation is avaliable in headers and examples are in tests.</p>
+<p>It consinsts of:</p>
+<ul class="simple">
+<li>tnt - tarantool IProto/networking library</li>
+</ul>
+</div>
+<div class="section" id="compilation-installation">
+<h2>Compilation/Installation<a class="headerlink" href="#compilation-installation" title="Permalink to this headline">¶</a></h2>
+<p>This project using CMake for generating Makefiles:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> cmake .
+<span class="gp">$</span> make
+<span class="gp">#</span><span class="c">### For testing against installed tarantool</span>
+<span class="gp">$</span> make <span class="nb">test</span>
+<span class="gp">#</span><span class="c">### For building documentation using Doxygen</span>
+<span class="gp">$</span> make doc
+<span class="gp">#</span><span class="c">### For installing into system (headers+libraries)</span>
+<span class="gp">$</span> make install
+</pre></div>
+</div>
+<p>Or you can install it using yum/apt into your favorite linux distribution
+from <cite>tarantool</cite>&#8216;s repository</p>
+</div>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a><ul>
@@ -173,7 +205,7 @@
 <li class="toctree-l2"><a class="reference internal" href="connection.html#error-handling">Error handling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="connection.html#manipulating-connection">Manipulating connection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="connection.html#freeing">Freeing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connection.html#example">Example:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#example">Example</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a><ul>
@@ -213,16 +245,20 @@
 <li class="toctree-l2"><a class="reference internal" href="buffering.html#parse-response">Parse response</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="stream.html">Basic stream</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stream.html#example">Example</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
 <li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
 </ul>
+</div>
 </div>
 
 

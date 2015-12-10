@@ -76,7 +76,7 @@
 <li class="toctree-l2"><a class="reference internal" href="connection.html#error-handling">Error handling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="connection.html#manipulating-connection">Manipulating connection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="connection.html#freeing">Freeing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connection.html#example">Example:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#example">Example</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a><ul>
@@ -126,6 +126,10 @@
 <li class="toctree-l2"><a class="reference internal" href="buffering.html#create-buffer">Create buffer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="buffering.html#create-requests">Create requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="buffering.html#parse-response">Parse response</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="stream.html">Basic stream</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stream.html#example">Example</a></li>
 </ul>
 </li>
 </ul>
@@ -510,12 +514,12 @@
   <dt><a href="reply.html#c.TNT_REPLY_ERR">TNT_REPLY_ERR (C macro)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="reply.html#c.tnt_reply_free">tnt_reply_free (C function)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="reply.html#c.tnt_reply_init">tnt_reply_init (C function)</a>
   </dt>
@@ -706,7 +710,15 @@
   </dt>
 
       
-  <dt><a href="connection.html#c.tnt_stream_free">tnt_stream_free (C function)</a>
+  <dt><a href="stream.html#c.tnt_stream">tnt_stream (C type)</a>
+  </dt>
+
+      
+  <dt><a href="stream.html#c.tnt_stream_free">tnt_stream_free (C function)</a>
+  </dt>
+
+      
+  <dt><a href="stream.html#c.tnt_stream_reqid">tnt_stream_reqid (C function)</a>
   </dt>
 
       
