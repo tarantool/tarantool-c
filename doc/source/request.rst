@@ -109,3 +109,19 @@ query to server use :func:`tnt_flush` and then ``tnt->read_reply``, for example.
 =====================================================================
                               Example
 =====================================================================
+
+.. literalinclude:: example.c
+    :language: c
+    :lines: 157,171-174
+
+.. literalinclude:: example.c
+    :language: c
+    :lines: 187-202
+
+.. literalinclude:: example.c
+    :language: c
+    :lines: 225-226,230-250,255-259
+
+.. literalinclude:: example.c
+    :language: c
+    :lines: 279,281-293,298-306

@@ -27,3 +27,11 @@
 
     Change rquest id that'll be used to construct query and return the previous
     one.
+
+=====================================================================
+                              Example
+=====================================================================
+
+.. literalinclude:: example.c
+    :language: c
+    :lines: 350

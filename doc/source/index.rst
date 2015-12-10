@@ -53,6 +53,7 @@ from `tarantool`'s repository
    request_builder.rst
    schema.rst
    buffering.rst
+   stream.rst
 
 ===========================================================
                   Indices and tables

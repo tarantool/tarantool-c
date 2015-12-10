@@ -347,4 +347,5 @@ int msg_profile_create_alt(struct tnt_stream *obj, int id, const char *usr,
 int main() {
 	struct tnt_stream *tnt = tarantool_connection(TARANTOOL_URI);
 	profile_space_no = tnt_get_spaceno(tnt, "messages", strlen("messages"));
+	tnt_stream_free(tnt);
 }

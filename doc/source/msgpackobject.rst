@@ -219,4 +219,8 @@ with it:
                             Example
 =====================================================================
 
+.. literalinclude:: example.c
+    :language: c
+    :lines: 333-345
+
 .. _MessagePack specification: https://github.com/msgpack/msgpack/blob/master/spec.md

@@ -83,3 +83,11 @@
                             Example
 =====================================================================
 
+
+.. literalinclude:: example.c
+    :language: c
+    :lines: 159,164-167,179-183
+
+.. literalinclude:: example.c
+    :language: c
+    :lines: 209-220
