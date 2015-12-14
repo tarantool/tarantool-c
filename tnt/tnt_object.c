@@ -301,7 +301,7 @@ int tnt_object_verify(struct tnt_stream *obj, int8_t type)
 {
 	const char *pos = TNT_SBUF_DATA(obj);
 	const char *end = pos + TNT_SBUF_SIZE(obj);
-	if (type >= 0 && mp_typeof(*pos) != type) return -1;
+	if (type >= 0 && mp_typeof(*pos) != (uint8_t) type) return -1;
 	if (mp_check(&pos, end)) return -1;
 	if (pos < end) return -1;
 	return 0;
