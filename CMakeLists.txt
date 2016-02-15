@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(LIBTNT)
 
+include(FindPackageMessage)
+
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 set(CMAKE_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_INCLUDE_PATH})
 
@@ -22,12 +24,11 @@ else (NOT ENABLE_BUNDLED_MSGPUCK)
     set (MSGPUCK_FOUND TRUE)
 endif (NOT ENABLE_BUNDLED_MSGPUCK)
 
-include_directories("${PROJECT_SOURCE_DIR}/third_party")
-include_directories("${PROJECT_SOURCE_DIR}/include")
-include_directories("${PROJECT_SOURCE_DIR}/tnt")
-include_directories("${PROJECT_SOURCE_DIR}/tntnet")
+# include_directories("${PROJECT_SOURCE_DIR}/tnt")
+# include_directories("${PROJECT_SOURCE_DIR}/tntnet")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -std=gnu99 -D__USE_XOPEN")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -std=gnu99 -D__USE_XOPEN")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=gnu99 -D__USE_XOPEN")
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING
@@ -43,10 +44,23 @@ endif()
 add_custom_target (doc
     COMMAND doxygen ${PROJECT_SOURCE_DIR}/Doxyfile)
 
+option(ENABLE_BUNDLED_MSGPUCK "Enable building of the bundled MsgPuck" ON)
+if (ENABLE_BUNDLED_MSGPUCK)
+    set(MSGPUCK_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/msgpuck)
+    find_package_message(MsgPuck "Using bundled MsgPuck" "${MSGPUCK_INCLUDE_DIRS}")
+else()
+    set(MsgPuck_FIND_REQUIRED ON)
+    find_package(MsgPuck)
+endif()
+
+include_directories("${MSGPUCK_INCLUDE_DIRS}")
+include_directories("${PROJECT_SOURCE_DIR}/third_party")
+include_directories("${PROJECT_SOURCE_DIR}/include")
+
 add_subdirectory(doc)
 
 message(STATUS "------------------------------------------------")
-message(STATUS "        Tarantool library configuration:")
+message(STATUS "        Tarantool library configuration:        ")
 message(STATUS "------------------------------------------------")
 message(STATUS "  CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  PREFIX: ${CMAKE_INSTALL_PREFIX}")

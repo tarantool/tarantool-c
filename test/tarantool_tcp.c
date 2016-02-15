@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include <msgpuck.h>
+
 #include <tarantool/tarantool.h>
 
 #include <tarantool/tnt_net.h>

@@ -1,4 +1,3 @@
-
 /*
  * Redistribution and use in source and binary forms, with or
  * without modification, are permitted provided that the following
@@ -34,7 +33,7 @@
 
 #include <sys/types.h>
 
-#include <msgpuck/msgpuck.h>
+#include <msgpuck.h>
 
 #include <tarantool/tnt_mem.h>
 #include <tarantool/tnt_proto.h>

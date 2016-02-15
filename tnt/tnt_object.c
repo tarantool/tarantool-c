@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include <msgpuck/msgpuck.h>
+#include <msgpuck.h>
 
 #include <tarantool/tnt_reply.h>
 #include <tarantool/tnt_stream.h>

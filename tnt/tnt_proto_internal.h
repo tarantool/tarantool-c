@@ -1,4 +1,4 @@
-#include <msgpuck/msgpuck.h>
+#include <msgpuck.h>
 
 #include <tarantool/tnt_proto.h>
 

@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include <msgpuck/msgpuck.h>
+#include <msgpuck.h>
 #include <sys/types.h>
 
 #include <tarantool/tnt_reply.h>

@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
-#include <msgpuck/msgpuck.h>
+#include <msgpuck.h>
 
 #include <tarantool/tnt_reply.h>
 #include <tarantool/tnt_stream.h>

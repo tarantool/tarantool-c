@@ -1,17 +1,18 @@
-find_path(MSGPUCK_INCLUDE_DIR NAMES msgpuck/msgpuck.h)
+# - Find libmsgpuck header-only library
+# The module defines the following variables:
+#
+#  MSGPUCK_FOUND - true if MsgPuck was found
+#  MSGPUCK_INCLUDE_DIRS - the directory of the MsgPuck headers
+#  MSGPUCK_LIBRARIES - the MsgPuck static library needed for linking
+#
 
-set (MSGPUCK_FOUND FALSE)
+find_path(MSGPUCK_INCLUDE_DIR msgpuck.h PATH_SUFFIXES msgpuck)
+find_library(MSGPUCK_LIBRARY NAMES libmsgpuck.a)
 
-if (MSGPUCK_INCLUDE_DIR)
-    set (MSGPUCK_FOUND TRUE)
-endif (MSGPUCK_INCLUDE_DIR)
-
-if (MSGPUCK_INCLUDE_DIR)
-    if (NOT MSGPUCK_FIND_QUIETLY)
-        message(STATUS "Found msgpuck includes: ${MSGPUCK_INCLUDE_DIR}/msgpuck/msgpuck.h")
-    endif (NOT MSGPUCK_FIND_QUIETLY)
-else (MSGPUCK_INCLUDE_DIR)
-    if (MSGPUCK_REQUIRED)
-        message(FATAL_ERROR "Could not find msgpuck development files")
-    endif (MSGPUCK_REQUIRED)
-endif (MSGPUCK_INCLUDE_DIR)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(MsgPuck
+    REQUIRED_VARS MSGPUCK_INCLUDE_DIR MSGPUCK_LIBRARY)
+set(MSGPUCK_INCLUDE_DIRS ${MSGPUCK_INCLUDE_DIR})
+set(MSGPUCK_LIBRARIES ${MSGPUCK_LIBRARY})
+mark_as_advanced(MSGPUCK_INCLUDE_DIR MSGPUCK_INCLUDE_DIRS
+                 MSGPUCK_LIBRARY MSGPUCK_LIBRARIES)

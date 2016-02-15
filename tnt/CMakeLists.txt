@@ -18,32 +18,32 @@ endif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
 
 ## source files
 set (TNT_SOURCES
-     tnt_mem.c
-     tnt_reply.c
-     tnt_stream.c
-     tnt_buf.c
-     tnt_object.c
-     tnt_ping.c
-     tnt_auth.c
-     tnt_select.c
-     tnt_insert.c
-     tnt_call.c
-     tnt_delete.c
-     tnt_update.c
-     tnt_assoc.c
-     tnt_schema.c
-     tnt_iter.c
-     tnt_request.c
-     tnt_iob.c
-     tnt_io.c
-     tnt_opt.c
-     tnt_net.c
-     ../third_party/uri.c
-     ../third_party/msgpuck.c
-     ../third_party/sha1.c
-     ../third_party/base64.c
-     ../third_party/PMurHash.c
-     )
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_mem.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_reply.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_stream.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_buf.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_object.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_ping.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_auth.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_select.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_insert.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_call.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_delete.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_update.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_assoc.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_schema.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_iter.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_request.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_iob.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_io.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_opt.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_net.c
+     ${CMAKE_SOURCE_DIR}/third_party/uri.c
+     ${CMAKE_SOURCE_DIR}/third_party/sha1.c
+     ${CMAKE_SOURCE_DIR}/third_party/base64.c
+     ${CMAKE_SOURCE_DIR}/third_party/PMurHash.c
+     ${CMAKE_SOURCE_DIR}/third_party/msgpuck.c
+)
 
 #----------------------------------------------------------------------------#
 # Builds
