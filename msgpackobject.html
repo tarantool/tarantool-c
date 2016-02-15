@@ -45,17 +45,27 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
 
-        
-          <a href="index.html" class="icon icon-home"> tarantool-c
-        
+          
+            <a href="index.html" class="icon icon-home"> tarantool-c
+          
 
-        
-        </a>
+          
+          </a>
 
-        
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -64,22 +74,15 @@
   </form>
 </div>
 
-        
-      </div>
+          
+        </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-          
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="connection.html#create-connection">Create connection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connection.html#error-handling">Error handling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connection.html#manipulating-connection">Manipulating connection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connection.html#freeing">Freeing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="connection.html#example">Example</a></li>
-</ul>
-</li>
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">MessagePack layer</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#msgpack-introduction">MsgPack introduction</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#types">Types</a></li>
@@ -97,44 +100,18 @@
 <li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reply.html#example">Example</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="request.html#working-with-update">Working with Update</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="request.html#container-for-operations">Container for operations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="request.html#operations">Operations</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="request.html#example">Example</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building requests</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="request_builder.html#creation">Creation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="request_builder.html#set-get-request-fields">Set/get request fields</a></li>
-<li class="toctree-l2"><a class="reference internal" href="request_builder.html#manipulating-requests">Manipulating requests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="request_builder.html#example">Example</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with schema</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="schema.html#create-schema">Create schema</a></li>
-<li class="toctree-l2"><a class="reference internal" href="schema.html#creating-requests-for-schema-acquiring">Creating requests for schema acquiring</a></li>
-<li class="toctree-l2"><a class="reference internal" href="schema.html#adding-responses">Adding responses</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="buffering.html">Buffer for requests</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="buffering.html#create-buffer">Create buffer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="buffering.html#create-requests">Create requests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="buffering.html#parse-response">Parse response</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buffering.html">Buffer for requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream.html">Basic stream</a></li>
 </ul>
 
+            
           
-        
+        </div>
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -149,7 +126,13 @@
       
       <div class="wy-nav-content">
         <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
@@ -162,7 +145,8 @@
   </ul>
   <hr/>
 </div>
-          <div role="main" class="document">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="messagepack-layer">
 <h1>MessagePack layer<a class="headerlink" href="#messagepack-layer" title="Permalink to this headline">¶</a></h1>
@@ -219,10 +203,8 @@ allocated. Otherwise allocated object will be initialized.</p>
 </dd></dl>
 
 <dl class="function">
-<dt>
-<code class="descname">struct tnt_stream *tnt_object_as(struct tnt_stream *s, char *buf,</code></dt>
-<dt>
-<code class="descname">size_t buf_len)</code></dt>
+<dt id="c.tnt_object_as">
+struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<code class="descname">tnt_object_as</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, char<em>&nbsp;*buf</em>, size_t<em>&nbsp;buf_len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_as" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create read-only msgpack object from buffer. Source string isn&#8217;t copied.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -264,10 +246,8 @@ then length is calculated using <code class="docutils literal"><span class="pre"
 </dd></dl>
 
 <dl class="function">
-<dt>
-<code class="descname">ssize_t tnt_object_add_bin(struct tnt_stream *s, const char *bin,</code></dt>
-<dt>
-<code class="descname">uint32_t len)</code></dt>
+<dt id="c.tnt_object_add_bin">
+ssize_t <code class="descname">tnt_object_add_bin</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*bin</em>, uint32_t<em>&nbsp;len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_bin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Append byte array to a stream object.</p>
 </dd></dl>
 
@@ -281,15 +261,13 @@ ssize_t <code class="descname">tnt_object_add_bool</code><span class="sig-paren"
 <dl class="function">
 <dt id="c.tnt_object_add_float">
 ssize_t <code class="descname">tnt_object_add_float</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, float<em>&nbsp;val</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_float" title="Permalink to this definition">¶</a></dt>
-<dd><p>Append float value to a stream object. <code class="docutils literal"><span class="pre">float</span></code> means 4-byte floating point
-number.</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="c.tnt_object_add_double">
 ssize_t <code class="descname">tnt_object_add_double</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, double<em>&nbsp;val</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_double" title="Permalink to this definition">¶</a></dt>
-<dd><p>Append double value to a stream object. <code class="docutils literal"><span class="pre">double</span></code> means 8-byte floating
-point number.</p>
+<dd><p>Append float/double value to a stream object.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">float</span></code> means 4-byte floating point number.</li>
+<li><code class="docutils literal"><span class="pre">double</span></code> means 8-byte floating point number.</li>
+</ul>
 </dd></dl>
 
 </div>
@@ -436,6 +414,7 @@ int <code class="descname">tnt_object_reset</code><span class="sig-paren">(</spa
 </div>
 
 
+           </div>
           </div>
           <footer>
   
@@ -454,9 +433,10 @@ int <code class="descname">tnt_object_reset</code><span class="sig-paren">(</spa
   <div role="contentinfo">
     <p>
         &copy; Copyright 2015, Tarantool Team.
+
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
