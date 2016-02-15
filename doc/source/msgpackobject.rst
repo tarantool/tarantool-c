@@ -57,8 +57,7 @@ one extra byte in addition to the strings themselves.
     Create empty msgpack object. If ``s`` is passed as ``NULL``, then object is
     allocated. Otherwise allocated object will be initialized.
 
-.. c:function:: struct tnt_stream *tnt_object_as(struct tnt_stream *s, char *buf,
-                                                 size_t buf_len)
+.. c:function:: struct tnt_stream *tnt_object_as(struct tnt_stream *s, char *buf, size_t buf_len)
 
     Create read-only msgpack object from buffer. Source string isn't copied.
 
@@ -84,8 +83,7 @@ one extra byte in addition to the strings themselves.
     Append utf-8 string to a stream object. If using ``<...>_strz`` function,
     then length is calculated using ``strlen(str)``.
 
-.. c:function:: ssize_t tnt_object_add_bin(struct tnt_stream *s, const char *bin,
-                                           uint32_t len)
+.. c:function:: ssize_t tnt_object_add_bin(struct tnt_stream *s, const char *bin, uint32_t len)
 
     Append byte array to a stream object.
 
@@ -95,14 +93,12 @@ one extra byte in addition to the strings themselves.
     ``false``, otherwise ``true``.
 
 .. c:function:: ssize_t tnt_object_add_float(struct tnt_stream *s, float val)
+                ssize_t tnt_object_add_double(struct tnt_stream *s, double val)
 
-    Append float value to a stream object. ``float`` means 4-byte floating point
-    number.
+    Append float/double value to a stream object.
 
-.. c:function:: ssize_t tnt_object_add_double(struct tnt_stream *s, double val)
-
-    Append double value to a stream object. ``double`` means 8-byte floating
-    point number.
+    * ``float`` means 4-byte floating point number.
+    * ``double`` means 8-byte floating point number.
 
 =====================================================================
                         Array/Map manipulation
@@ -176,7 +172,6 @@ with it:
 
 .. c:function:: ssize_t tnt_object_format(struct tnt_stream *s, const char *fmt, ...)
                 ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl)
-
 
     Append msgpack values formatted to the stream object. ``<...>_vformat``
     function uses ``va_list`` as third argument.

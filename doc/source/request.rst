@@ -98,8 +98,7 @@ query to server use :func:`tnt_flush` and then ``tnt->read_reply``, for example.
 
     Add assign operation for update to stream object.
 
-.. c:function:: ssize_t tnt_update_splice(struct tnt_stream *ops, uint32_t fieldno, uint32_t position,
-                                          uint32_t offset, const char *buffer, size_t buffer_len)
+.. c:function:: ssize_t tnt_update_splice(struct tnt_stream *ops, uint32_t fieldno, uint32_t position, uint32_t offset, const char *buffer, size_t buffer_len)
 
     Add splice operation for update to stream object.
 

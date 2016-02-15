@@ -63,14 +63,12 @@
 
     Free reply request.
 
-.. c:function:: int tnt_reply(struct tnt_reply *r, char *buf, size_t size,
-                              size_t *off)
+.. c:function:: int tnt_reply(struct tnt_reply *r, char *buf, size_t size, size_t *off)
 
     Parse reply from buffer ``buf``, it must contain full reply. Otherwise
     return count of bytes needed to process in ``off`` variable.
 
-.. c:function:: int tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv,
-                                   void *ptr)
+.. c:function:: int tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr)
 
     Parse reply from data, get all needed data from ``rcv`` callback and with
     cb context ``ptr``.

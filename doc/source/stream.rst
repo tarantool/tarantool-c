@@ -4,7 +4,6 @@
 
 .. c:type:: struct tnt_stream
 
-
     .. code-block:: c
 
         struct tnt_stream {
