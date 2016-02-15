@@ -37,8 +37,6 @@
 
 #include <stdarg.h>
 
-#include <msgpuck/msgpuck.h>
-
 /**
  * \brief for internal use
  */
