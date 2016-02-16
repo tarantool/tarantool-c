@@ -28,8 +28,8 @@ C client development headers for Tarantool
 %setup -q -n %{name}-%{version}
 
 %build
-cmake . -DCMAKE_INSTALL_LIBDIR='%{_libdir}' -DCMAKE_INSTALL_INCLUDEDIR='%{_includedir}' -DCMAKE_BUILD_TYPE='Release'
-make
+cmake . -DCMAKE_INSTALL_LIBDIR='%{_libdir}' -DCMAKE_INSTALL_INCLUDEDIR='%{_includedir}' -DCMAKE_BUILD_TYPE='RelWithDebInfo'
+make %{?_smp_mflags}
 
 %install
 make DESTDIR=%{buildroot} install
