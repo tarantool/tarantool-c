@@ -51,7 +51,11 @@ struct tnt_reply *tnt_reply_init(struct tnt_reply *r) {
 }
 
 void tnt_reply_free(struct tnt_reply *r) {
-	tnt_mem_free((void *)r->buf);
+	if (r->buf) {
+		tnt_mem_free((void *)r->buf);
+		r->buf = NULL;
+	}
+	if (r->alloc) tnt_mem_free(r);
 }
 
 int tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr) {

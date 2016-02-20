@@ -38,6 +38,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 
+#include <tarantool/pmatomic.h>
 #include <tarantool/tnt_reply.h>
 
 /**

@@ -51,6 +51,8 @@
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_io.h>
 
+#include <tarantool/pmatomic.h>
+
 static void tnt_net_free(struct tnt_stream *s) {
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
 	tnt_io_close(sn);
@@ -76,7 +78,7 @@ tnt_net_write(struct tnt_stream *s, const char *buf, size_t size) {
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
 	ssize_t rc = tnt_io_send(sn, buf, size);
 	if (rc != -1)
-		s->wrcnt++;
+		pm_atomic_fetch_add(&s->wrcnt, 1);
 	return rc;
 }
 
@@ -85,7 +87,7 @@ tnt_net_writev(struct tnt_stream *s, struct iovec *iov, int count) {
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
 	ssize_t rc = tnt_io_sendv(sn, iov, count);
 	if (rc != -1)
-		s->wrcnt++;
+		pm_atomic_fetch_add(&s->wrcnt, 1);
 	return rc;
 }
 
@@ -99,7 +101,7 @@ static int
 tnt_net_reply(struct tnt_stream *s, struct tnt_reply *r) {
 	if (s->wrcnt == 0)
 		return 1;
-	s->wrcnt--;
+	pm_atomic_fetch_sub(&s->wrcnt, 1);
 	return tnt_reply_from(r, (tnt_reply_t)tnt_net_recv_cb, s);
 }
 
