@@ -67,7 +67,7 @@ struct tnt_reply {
 /*!
  * \brief Get error number
  */
-#define TNT_REPLY_ERR(R) (((R)->code << 15) - 1)
+#define TNT_REPLY_ERR(R) ((R)->code)
 
 /*!
  * \brief Allocate and init reply object

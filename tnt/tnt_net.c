@@ -52,7 +52,7 @@
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_io.h>
 
-#include <tarantool/pmatomic.h>
+#include "pmatomic.h"
 
 static void tnt_net_free(struct tnt_stream *s) {
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);

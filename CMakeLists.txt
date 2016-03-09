@@ -69,8 +69,8 @@ add_subdirectory (include)
 add_subdirectory (tnt)
 #add_subdirectory(tntrpl)
 
-if    (NOT DEFINED TARANTOOL_C_EMBEDDED)
+if   (NOT DEFINED TARANTOOL_C_EMBEDDED)
     add_subdirectory(test)
-elseif(NOT DEFINED TARANTOOL_C_EMBEDDED)
+endif(NOT DEFINED TARANTOOL_C_EMBEDDED)
 
 message(STATUS "------------------------------------------------")

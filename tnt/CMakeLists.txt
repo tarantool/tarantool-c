@@ -51,27 +51,30 @@ set (TNT_SOURCES
 
 ## Static library
 project(tnt)
-add_library(tnt STATIC ${TNT_SOURCES})
-set_target_properties(tnt PROPERTIES VERSION ${LIBTNT_VERSION} SOVERSION ${LIBTNT_SOVERSION})
-set_target_properties(tnt PROPERTIES OUTPUT_NAME "tarantool")
+add_library(${PROJECT_NAME} STATIC ${TNT_SOURCES})
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION   ${LIBTNT_VERSION})
+set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${LIBTNT_SOVERSION})
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "tarantool")
+
+install (TARGETS ${PROJECT_NAME}
+         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         COMPONENT library)
 
 ## Shared library
 project(tnt_shared)
-add_library(tnt_shared SHARED ${TNT_SOURCES})
-set_target_properties(tnt_shared PROPERTIES VERSION ${LIBTNT_VERSION} SOVERSION ${LIBTNT_SOVERSION})
-set_target_properties(tnt_shared PROPERTIES OUTPUT_NAME "tarantool")
+add_library(${PROJECT_NAME} SHARED ${TNT_SOURCES})
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION   ${LIBTNT_VERSION})
+set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${LIBTNT_SOVERSION})
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "tarantool")
+
+install (TARGETS ${PROJECT_NAME}
+         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         COMPONENT library)
 
 #----------------------------------------------------------------------------#
 # Install
 #----------------------------------------------------------------------------#
-
-install (TARGETS tnt
-         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install (TARGETS tnt_shared
-         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
 
 message(STATUS "  * lib${LIBTNT_NAME}.so.${LIBTNT_VERSION}      ")
