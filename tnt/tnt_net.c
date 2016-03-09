@@ -28,10 +28,11 @@
  * SUCH DAMAGE.
  */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 #include <sys/uio.h>
