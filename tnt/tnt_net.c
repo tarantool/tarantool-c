@@ -99,7 +99,7 @@ tnt_net_recv_cb(struct tnt_stream *s, char *buf, ssize_t size) {
 
 static int
 tnt_net_reply(struct tnt_stream *s, struct tnt_reply *r) {
-	if (s->wrcnt == 0)
+	if (pm_atomic_load(&s->wrcnt) == 0)
 		return 1;
 	pm_atomic_fetch_sub(&s->wrcnt, 1);
 	return tnt_reply_from(r, (tnt_reply_t)tnt_net_recv_cb, s);
@@ -174,7 +174,7 @@ int tnt_init(struct tnt_stream *s) {
 int tnt_reload_schema(struct tnt_stream *s)
 {
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
-	if (!sn->connected || s->wrcnt != 0)
+	if (!sn->connected || pm_atomic_load(&s->wrcnt) != 0)
 		return -1;
 	uint32_t oldsync = tnt_stream_reqid(s, 127);
 	tnt_get_space(s);
@@ -226,7 +226,7 @@ static int
 tnt_authenticate(struct tnt_stream *s)
 {
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
-	if (!sn->connected || s->wrcnt != 0)
+	if (!sn->connected || pm_atomic_load(&s->wrcnt) != 0)
 		return -1;
 	struct uri *uri = sn->opt.uri;
 	tnt_auth(s, uri->login, uri->login_len, uri->password,
