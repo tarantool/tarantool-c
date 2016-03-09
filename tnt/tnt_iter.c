@@ -86,7 +86,11 @@ tnt_iter_array_object(struct tnt_iter *i, struct tnt_stream *data)
 struct tnt_iter *
 tnt_iter_array(struct tnt_iter *i, const char *data, size_t size)
 {
-	if (!data || !size || mp_typeof(*data) != MP_ARRAY) return NULL;
+	const char *tmp_data = data;
+	if (mp_check(&tmp_data, data + size) != 0)
+		return NULL;
+	if (!data || !size || mp_typeof(*data) != MP_ARRAY)
+		return NULL;
 	i = tnt_iter_init(i);
 	if (i == NULL)
 		return NULL;
@@ -142,6 +146,9 @@ tnt_iter_map_object(struct tnt_iter *i, struct tnt_stream *data)
 struct tnt_iter *
 tnt_iter_map(struct tnt_iter *i, const char *data, size_t size)
 {
+	const char *tmp_data = data;
+	if (mp_check(&tmp_data, data + size) != 0)
+		return NULL;
 	if (!data || !size || mp_typeof(*data) != MP_MAP)
 		return NULL;
 	i = tnt_iter_init(i);
