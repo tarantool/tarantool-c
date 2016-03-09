@@ -115,7 +115,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -141,7 +141,7 @@
 <dt id="c.tnt_reply">
 struct <code class="descname">tnt_reply</code><a class="headerlink" href="#c.tnt_reply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base reply object.</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tnt_reply</span> <span class="p">{</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tnt_reply</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">alloc</span><span class="p">;</span>
     <span class="kt">uint64_t</span> <span class="n">bitmap</span><span class="p">;</span>
     <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">buf</span><span class="p">;</span>
@@ -165,7 +165,7 @@ Otherwise <code class="docutils literal"><span class="pre">data</span></code> an
 <dt id="c.tnt_reply.code">
 uint64_t <code class="descname">tnt_reply.code</code><a class="headerlink" href="#c.tnt_reply.code" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return code of query. If <code class="docutils literal"><span class="pre">code</span> <span class="pre">==</span> <span class="pre">0</span></code> then it&#8217;s ok, otherwise use
-<code class="xref c c-macro docutils literal"><span class="pre">TNT_REPLY_ERROR</span></code> to convert it to errorcode.</p>
+<a class="reference internal" href="#c.TNT_REPLY_ERR" title="TNT_REPLY_ERR"><code class="xref c c-macro docutils literal"><span class="pre">TNT_REPLY_ERR</span></code></a> to get error code.</p>
 </dd></dl>
 
 <dl class="member">
@@ -237,7 +237,7 @@ cb context <code class="docutils literal"><span class="pre">ptr</span></code>.</
 
 <div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-c"><div class="highlight"><pre>	<span class="k">static</span> <span class="k">struct</span> <span class="n">tnt_reply</span>  <span class="o">*</span><span class="n">rpl</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span>	<span class="k">static</span> <span class="k">struct</span> <span class="n">tnt_reply</span>  <span class="o">*</span><span class="n">rpl</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
 	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">rpl</span><span class="p">)</span> <span class="p">{</span>
 		<span class="n">rpl</span> <span class="o">=</span> <span class="n">tnt_reply_init</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
 		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">rpl</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
@@ -249,7 +249,7 @@ cb context <code class="docutils literal"><span class="pre">ptr</span></code>.</
 	<span class="p">}</span>
 </pre></div>
 </div>
-<div class="highlight-c"><div class="highlight"><pre>	<span class="k">struct</span> <span class="n">tnt_iter</span> <span class="n">it</span><span class="p">;</span> <span class="n">tnt_iter_reply</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">tnt</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span>	<span class="k">struct</span> <span class="n">tnt_iter</span> <span class="n">it</span><span class="p">;</span> <span class="n">tnt_iter_reply</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">tnt</span><span class="p">);</span>
 	<span class="k">while</span> <span class="p">(</span><span class="n">tnt_next</span><span class="p">(</span><span class="o">&amp;</span><span class="n">it</span><span class="p">))</span> <span class="p">{</span>
 		<span class="kt">int</span> <span class="n">rv</span> <span class="o">=</span> <span class="n">msg_profile_decode</span><span class="p">(</span><span class="n">TNT_IREPLY_PTR</span><span class="p">(</span><span class="o">&amp;</span><span class="n">it</span><span class="p">),</span> <span class="o">&amp;</span><span class="n">retval</span><span class="p">[</span><span class="n">rcvd</span><span class="p">]);</span>
 		<span class="k">if</span> <span class="p">(</span><span class="n">retval</span><span class="p">[</span><span class="n">rcvd</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="o">++</span><span class="n">rcvd</span><span class="p">;</span>
