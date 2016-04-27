@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basic stream &mdash; tarantool-c 0.2.0 documentation</title>
+  <title>Using the basic stream object &mdash; tarantool-c 0.2.0 documentation</title>
   
 
   
@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="tarantool-c 0.2.0 documentation" href="index.html"/>
-        <link rel="prev" title="Buffer for requests" href="buffering.html"/> 
+        <link rel="prev" title="Using a buffer for requests" href="buffering.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -81,15 +81,16 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building requests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with schema</a></li>
-<li class="toctree-l1"><a class="reference internal" href="buffering.html">Buffer for requests</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Basic stream</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reply.html">Parsing a reply</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with &#8220;tnt_stream&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with &#8220;tnt_request&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with a schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buffering.html">Using a buffer for requests</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Using the basic stream object</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-type">Basic type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-a-stream">Working with a stream</a></li>
 </ul>
 </li>
 </ul>
@@ -114,7 +115,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -122,7 +123,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Basic stream</li>
+    <li>Using the basic stream object</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -134,12 +135,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="basic-stream">
-<h1>Basic stream<a class="headerlink" href="#basic-stream" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="using-the-basic-stream-object">
+<h1>Using the basic stream object<a class="headerlink" href="#using-the-basic-stream-object" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="basic-type">
+<h2>Basic type<a class="headerlink" href="#basic-type" title="Permalink to this headline">¶</a></h2>
 <dl class="type">
 <dt id="c.tnt_stream">
 struct <code class="descname">tnt_stream</code><a class="headerlink" href="#c.tnt_stream" title="Permalink to this definition">¶</a></dt>
-<dd><div class="highlight-c"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="p">{</span>
+<dd><div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">alloc</span><span class="p">;</span>
     <span class="kt">ssize_t</span> <span class="p">(</span><span class="o">*</span> <span class="n">write</span><span class="p">)(</span><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">s</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">);</span>
     <span class="kt">ssize_t</span> <span class="p">(</span><span class="o">*</span> <span class="n">writev</span><span class="p">)(</span><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">s</span><span class="p">,</span> <span class="k">struct</span> <span class="n">iovec</span> <span class="o">*</span> <span class="n">iov</span><span class="p">,</span> <span class="kt">int</span> <span class="n">count</span><span class="p">);</span>
@@ -154,24 +157,68 @@ struct <code class="descname">tnt_stream</code><a class="headerlink" href="#c.tn
 </div>
 </dd></dl>
 
+<dl class="member">
+<dt id="c.tnt_stream.alloc">
+int <code class="descname">tnt_stream.alloc</code><a class="headerlink" href="#c.tnt_stream.alloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocation mark, equals zero if memory isn&#8217;t allocated for the stream
+object. Otherwise not zero.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.tnt_stream.data">
+void * <code class="descname">tnt_stream.data</code><a class="headerlink" href="#c.tnt_stream.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass data.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.tnt_stream.wrcnt">
+uint_32t <code class="descname">tnt_stream.wrcnt</code><a class="headerlink" href="#c.tnt_stream.wrcnt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counter of write operations.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.tnt_stream.reqid">
+uint_64t <code class="descname">tnt_stream.reqid</code><a class="headerlink" href="#c.tnt_stream.reqid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request ID number of a current operation.
+Incremented at every request compilation. Default is zero.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="working-with-a-stream">
+<h2>Working with a stream<a class="headerlink" href="#working-with-a-stream" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_stream_free">
 void <code class="descname">tnt_stream_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream_free" title="Permalink to this definition">¶</a></dt>
-<dd><p>Common free function to all stream objects.</p>
+<dd><p>Common free function for all stream objects.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.tnt_stream_reqid">
 uint32_t <code class="descname">tnt_stream_reqid</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, uint32_t<em>&nbsp;reqid</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream_reqid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change rquest id that&#8217;ll be used to construct query and return the previous
-one.</p>
+<dd><p>Increment and set the request ID that&#8217;ll be used to construct a query,
+and return the previous request ID.</p>
 </dd></dl>
 
-<div class="section" id="example">
-<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-c"><div class="highlight"><pre>	<span class="n">tnt_stream_free</span><span class="p">(</span><span class="n">tnt</span><span class="p">);</span>
-</pre></div>
-</div>
+<dl class="function">
+<dt id="c.tnt_stream.write">
+ssize_t <code class="descname">tnt_stream.write</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<em>&nbsp;s</em>, const char *<em>&nbsp;buf</em>, size_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream.write" title="Permalink to this definition">¶</a></dt>
+<dt id="c.tnt_stream.writev">
+ssize_t <code class="descname">tnt_stream.writev</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<em>&nbsp;s</em>, struct iovec *<em>&nbsp;iov</em>, int<em>&nbsp;count</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream.writev" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a string or a vector to a stream.
+Here <code class="docutils literal"><span class="pre">size</span></code> is the string&#8217;s size (in bytes), and <code class="docutils literal"><span class="pre">count</span></code> is the number
+of records in the <code class="docutils literal"><span class="pre">iov</span></code> vector.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_stream.read">
+ssize_t <code class="descname">tnt_stream.read</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<em>&nbsp;s</em>, char *<em>&nbsp;buf</em>, size_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream.read" title="Permalink to this definition">¶</a></dt>
+<dt id="c.tnt_stream.read_reply">
+int <code class="descname">tnt_stream.read_reply</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<em>&nbsp;s</em>, struct <a class="reference internal" href="reply.html#c.tnt_reply" title="tnt_reply">tnt_reply</a> *<em>&nbsp;r</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream.read_reply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a reply from server. The <code class="xref py py-func docutils literal"><span class="pre">read()</span></code> function simply writes the reply
+to a string buffer, while the <code class="xref py py-func docutils literal"><span class="pre">read_reply()</span></code> function parses it and
+writes to a <code class="docutils literal"><span class="pre">tnt_reply</span></code> data structure.</p>
+</dd></dl>
+
 </div>
 </div>
 
@@ -183,7 +230,7 @@ one.</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="buffering.html" class="btn btn-neutral" title="Buffer for requests" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="buffering.html" class="btn btn-neutral" title="Using a buffer for requests" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

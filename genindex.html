@@ -81,14 +81,14 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building requests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with schema</a></li>
-<li class="toctree-l1"><a class="reference internal" href="buffering.html">Buffer for requests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="stream.html">Basic stream</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reply.html">Parsing a reply</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with &#8220;tnt_stream&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with &#8220;tnt_request&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with a schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buffering.html">Using a buffer for requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream.html">Using the basic stream object</a></li>
 </ul>
 
             
@@ -175,11 +175,19 @@
 
       <dd><dl>
         
+  <dt><a href="connection.html#errtype-TNT_EBADVAL">TNT_EBADVAL</a>
+  </dt>
+
+        
   <dt><a href="connection.html#errtype-TNT_EBIG">TNT_EBIG</a>
   </dt>
 
         
   <dt><a href="connection.html#errtype-TNT_EFAIL">TNT_EFAIL</a>
+  </dt>
+
+        
+  <dt><a href="connection.html#errtype-TNT_ELOGIN">TNT_ELOGIN</a>
   </dt>
 
         
@@ -195,11 +203,19 @@
   </dt>
 
         
+  <dt><a href="connection.html#errtype-TNT_ESIZE">TNT_ESIZE</a>
+  </dt>
+
+        
   <dt><a href="connection.html#errtype-TNT_ESYSTEM">TNT_ESYSTEM</a>
   </dt>
 
         
   <dt><a href="connection.html#errtype-TNT_ETMOUT">TNT_ETMOUT</a>
+  </dt>
+
+        
+  <dt><a href="connection.html#errtype-TNT_LAST">TNT_LAST</a>
   </dt>
 
       </dl></dd>
@@ -243,6 +259,17 @@
 
       
   <dt>
+    TNT_EBADVAL
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_EBADVAL">error code value</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt>
     TNT_EBIG
   </dt>
 
@@ -260,6 +287,17 @@
       <dd><dl>
         
   <dt><a href="connection.html#errtype-TNT_EFAIL">error code value</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt>
+    TNT_ELOGIN
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_ELOGIN">error code value</a>
   </dt>
 
       </dl></dd>
@@ -306,6 +344,17 @@
 
       
   <dt>
+    TNT_ESIZE
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_ESIZE">error code value</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt>
     TNT_ESYSTEM
   </dt>
 
@@ -339,7 +388,7 @@
   </dt>
 
       
-  <dt><a href="schema.html#c.tnt_get_indexes">tnt_get_indexes (C function)</a>
+  <dt><a href="schema.html#c.tnt_get_index">tnt_get_index (C function)</a>
   </dt>
 
       
@@ -347,11 +396,11 @@
   </dt>
 
       
-  <dt><a href="connection.html#c.tnt_get_spaceno">tnt_get_spaceno (C function)</a>
+  <dt><a href="schema.html#c.tnt_get_space">tnt_get_space (C function)</a>
   </dt>
 
       
-  <dt><a href="schema.html#c.tnt_get_spaces">tnt_get_spaces (C function)</a>
+  <dt><a href="connection.html#c.tnt_get_spaceno">tnt_get_spaceno (C function)</a>
   </dt>
 
       
@@ -362,6 +411,17 @@
   <dt><a href="request_builder.html#c.tnt_iterator_t">tnt_iterator_t (C type)</a>
   </dt>
 
+      
+  <dt>
+    TNT_LAST
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="connection.html#errtype-TNT_LAST">error code value</a>
+  </dt>
+
+      </dl></dd>
       
   <dt><a href="connection.html#c.tnt_net">tnt_net (C function)</a>
   </dt>
@@ -461,6 +521,14 @@
 
       </dl></dd>
       
+  <dt><a href="reply.html#c.tnt_reply.buf">tnt_reply.buf (C member)</a>
+  </dt>
+
+      
+  <dt><a href="reply.html#c.tnt_reply.buf_size">tnt_reply.buf_size (C member)</a>
+  </dt>
+
+      
   <dt><a href="reply.html#c.tnt_reply.code">tnt_reply.code (C member)</a>
   </dt>
 
@@ -496,18 +564,14 @@
   <dt><a href="reply.html#c.tnt_reply_free">tnt_reply_free (C function)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="reply.html#c.tnt_reply_from">tnt_reply_from (C function)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="reply.html#c.tnt_reply_init">tnt_reply_init (C function)</a>
-  </dt>
-
-      
-  <dt><a href="reply.html#c.tnt_reply_t">tnt_reply_t (C type)</a>
   </dt>
 
       
@@ -523,15 +587,7 @@
   </dt>
 
       
-  <dt><a href="request_builder.html#c.tnt_request.index_base">tnt_request.index_base (C member)</a>
-  </dt>
-
-      
   <dt><a href="request_builder.html#c.tnt_request.index_id">tnt_request.index_id (C member)</a>
-  </dt>
-
-      
-  <dt><a href="request_builder.html#c.tnt_request.iterator">tnt_request.iterator (C member)</a>
   </dt>
 
       
@@ -604,6 +660,14 @@
 
       
   <dt><a href="request_builder.html#c.tnt_request_set_funcz">tnt_request_set_funcz (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_index_base">tnt_request_set_index_base (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request_builder.html#c.tnt_request_set_iterator">tnt_request_set_iterator (C function)</a>
   </dt>
 
       
@@ -696,6 +760,38 @@
   </dt>
 
       
+  <dt><a href="stream.html#c.tnt_stream.alloc">tnt_stream.alloc (C member)</a>
+  </dt>
+
+      
+  <dt><a href="stream.html#c.tnt_stream.data">tnt_stream.data (C member)</a>
+  </dt>
+
+      
+  <dt><a href="stream.html#c.tnt_stream.read">tnt_stream.read (C function)</a>
+  </dt>
+
+      
+  <dt><a href="stream.html#c.tnt_stream.read_reply">tnt_stream.read_reply (C function)</a>
+  </dt>
+
+      
+  <dt><a href="stream.html#c.tnt_stream.reqid">tnt_stream.reqid (C member)</a>
+  </dt>
+
+      
+  <dt><a href="stream.html#c.tnt_stream.wrcnt">tnt_stream.wrcnt (C member)</a>
+  </dt>
+
+      
+  <dt><a href="stream.html#c.tnt_stream.write">tnt_stream.write (C function)</a>
+  </dt>
+
+      
+  <dt><a href="stream.html#c.tnt_stream.writev">tnt_stream.writev (C function)</a>
+  </dt>
+
+      
   <dt><a href="stream.html#c.tnt_stream_free">tnt_stream_free (C function)</a>
   </dt>
 
@@ -705,6 +801,10 @@
 
       
   <dt><a href="connection.html#c.tnt_strerror">tnt_strerror (C function)</a>
+  </dt>
+
+      
+  <dt><a href="request.html#c.tnt_update">tnt_update (C function)</a>
   </dt>
 
       

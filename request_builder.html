@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Building requests &mdash; tarantool-c 0.2.0 documentation</title>
+  <title>Building a request with “tnt_request” &mdash; tarantool-c 0.2.0 documentation</title>
   
 
   
@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="tarantool-c 0.2.0 documentation" href="index.html"/>
-        <link rel="next" title="Working with schema" href="schema.html"/>
-        <link rel="prev" title="Simple request creation" href="request.html"/> 
+        <link rel="next" title="Working with a schema" href="schema.html"/>
+        <link rel="prev" title="Building a request with “tnt_stream”" href="request.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -82,20 +82,22 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Building requests</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#creation">Creation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#set-get-request-fields">Set/get request fields</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#manipulating-requests">Manipulating requests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reply.html">Parsing a reply</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with &#8220;tnt_stream&#8221;</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Building a request with &#8220;tnt_request&#8221;</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-types">Basic types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-request">Creating a request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#request-header">Request header</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user-defined-request-fields">User-defined request fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-get-request-fields-and-functions">Set/get request fields and functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#manipulating-a-request">Manipulating a request</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with schema</a></li>
-<li class="toctree-l1"><a class="reference internal" href="buffering.html">Buffer for requests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="stream.html">Basic stream</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with a schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buffering.html">Using a buffer for requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream.html">Using the basic stream object</a></li>
 </ul>
 
             
@@ -118,7 +120,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -126,7 +128,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Building requests</li>
+    <li>Building a request with &#8220;tnt_request&#8221;</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -138,32 +140,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="building-requests">
-<h1>Building requests<a class="headerlink" href="#building-requests" title="Permalink to this headline">¶</a></h1>
-<dl class="type">
+  <div class="section" id="building-a-request-with-tnt-request">
+<span id="working-with-tnt-request"></span><h1>Building a request with &#8220;tnt_request&#8221;<a class="headerlink" href="#building-a-request-with-tnt-request" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="basic-types">
+<h2>Basic types<a class="headerlink" href="#basic-types" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="tnt-iterator-types"></span><dl class="type">
 <dt id="c.tnt_iterator_t">
 enum <code class="descname">tnt_iterator_t</code><a class="headerlink" href="#c.tnt_iterator_t" title="Permalink to this definition">¶</a></dt>
-<dd><p>Custom iterator type</p>
+<dd><p>Custom iterator type. Possible values:</p>
 <ul class="simple">
-<li><strong>TNT_ITER_EQ</strong> - Equiality iterator</li>
-<li><strong>TNT_ITER_REQ</strong> - Revers equality iterator</li>
+<li><strong>TNT_ITER_EQ</strong> - Equality iterator</li>
+<li><strong>TNT_ITER_REQ</strong> - Reverse equality iterator</li>
 <li><strong>TNT_ITER_ALL</strong> - Receive all elements</li>
-<li><strong>TNT_ITER_LT</strong> - Less than iterator</li>
-<li><strong>TNT_ITER_LE</strong> - Less or equal</li>
-<li><strong>TNT_ITER_GE</strong> - Greater or equal</li>
-<li><strong>TNT_ITER_GT</strong> - Greater than</li>
-<li><strong>TNT_ITER_BITS_ALL_SET</strong> - all specified bits are set (bitset specific)</li>
-<li><strong>TNT_ITER_BITS_ANY_SET</strong> - any specified bits are set (bitset specific)</li>
-<li><strong>TNT_ITER_BITS_ALL_NOT_SET</strong> - all specified bits are not (bitset specific)</li>
-<li><strong>TNT_ITER_OVERLAP</strong> - Search for tuples with overlapping rectangles (r-tree specific)</li>
-<li><strong>TNT_ITER_NEIGHBOR</strong> - Search of nearest neighbour (r-tree specific)</li>
+<li><strong>TNT_ITER_LT</strong> - &#8220;Less than&#8221; iterator</li>
+<li><strong>TNT_ITER_LE</strong> - &#8220;Less or equal&#8221; iterator</li>
+<li><strong>TNT_ITER_GE</strong> - &#8220;Greater or equal&#8221; iterator</li>
+<li><strong>TNT_ITER_GT</strong> - &#8220;Greater than&#8221; iterator</li>
+<li><strong>TNT_ITER_BITS_ALL_SET</strong> - All specified bits are set (bitset specific)</li>
+<li><strong>TNT_ITER_BITS_ANY_SET</strong> - Any specified bits are set (bitset specific)</li>
+<li><strong>TNT_ITER_BITS_ALL_NOT_SET</strong> - All specified bits are not set (bitset
+specific)</li>
+<li><strong>TNT_ITER_OVERLAP</strong> - Search for tuples with overlapping rectangles
+(R-tree specific)</li>
+<li><strong>TNT_ITER_NEIGHBOR</strong> - Search for the nearest neighbour (R-tree specific)</li>
 </ul>
 </dd></dl>
 
 <dl class="type">
 <dt id="c.tnt_request_type">
 enum <code class="descname">tnt_request_type</code><a class="headerlink" href="#c.tnt_request_type" title="Permalink to this definition">¶</a></dt>
-<dd><ul class="simple">
+<dd><p>Request type. Possible values:</p>
+<ul class="simple">
 <li><strong>TNT_OP_SELECT</strong></li>
 <li><strong>TNT_OP_INSERT</strong></li>
 <li><strong>TNT_OP_REPLACE</strong></li>
@@ -179,8 +186,8 @@ enum <code class="descname">tnt_request_type</code><a class="headerlink" href="#
 <dl class="type">
 <dt id="c.tnt_request">
 struct <code class="descname">tnt_request</code><a class="headerlink" href="#c.tnt_request" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base request object. It contains every part of request.]</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tnt_request</span> <span class="p">{</span>
+<dd><p>Base request object. It contains all parts of a request.</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tnt_request</span> <span class="p">{</span>
     <span class="k">struct</span> <span class="p">{</span>
         <span class="kt">uint32_t</span> <span class="n">sync</span><span class="p">;</span>
         <span class="k">enum</span> <span class="n">tnt_request_type</span> <span class="n">type</span><span class="p">;</span>
@@ -198,18 +205,19 @@ struct <code class="descname">tnt_request</code><a class="headerlink" href="#c.t
     <span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">tuple_object</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">index_base</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">alloc</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">stream</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div>
 </div>
+<p>See field descriptions further in this section.</p>
 </dd></dl>
 
-<div class="section" id="creation">
-<h2>Creation<a class="headerlink" href="#creation" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="creating-a-request">
+<h2>Creating a request<a class="headerlink" href="#creating-a-request" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_request_init">
 struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a> *<code class="descname">tnt_request_init</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Allocate and initialize request</p>
+<dd><p>Allocate and initialize a request.</p>
 </dd></dl>
 
 <dl class="function">
@@ -233,24 +241,28 @@ struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">t
 struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a> *<code class="descname">tnt_request_upsert</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_upsert" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_ping">
 struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a> *<code class="descname">tnt_request_ping</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_ping" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shortcuts for initialization of requests</p>
+<dd><p>Shortcuts for allocating and initializing requests of specific types.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="set-get-request-fields">
-<h2>Set/get request fields<a class="headerlink" href="#set-get-request-fields" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="request-header">
+<h2>Request header<a class="headerlink" href="#request-header" title="Permalink to this headline">¶</a></h2>
 <dl class="member">
 <dt id="c.tnt_request.hdr.sync">
 uint32_t <code class="descname">tnt_request.hdr.sync</code><a class="headerlink" href="#c.tnt_request.hdr.sync" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of request. It&#8217;s set automatically when request is compiled.</p>
+<dd><p>Sync ID number of a request. Generated automatically when the request is
+compiled.</p>
 </dd></dl>
 
 <dl class="member">
 <dt id="c.tnt_request.hdr.type">
 enum <a class="reference internal" href="#c.tnt_request_type" title="tnt_request_type">tnt_request_type</a> <code class="descname">tnt_request.hdr.type</code><a class="headerlink" href="#c.tnt_request.hdr.type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Type of request.</p>
+<dd><p>Type of a request.</p>
 </dd></dl>
 
+</div>
+<div class="section" id="user-defined-request-fields">
+<h2>User-defined request fields<a class="headerlink" href="#user-defined-request-fields" title="Permalink to this headline">¶</a></h2>
 <dl class="member">
 <dt id="c.tnt_request.space_id">
 uint32_t <code class="descname">tnt_request.space_id</code><a class="headerlink" href="#c.tnt_request.space_id" title="Permalink to this definition">¶</a></dt>
@@ -260,24 +272,39 @@ uint32_t <code class="descname">tnt_request.index_id</code><a class="headerlink"
 uint32_t <code class="descname">tnt_request.offset</code><a class="headerlink" href="#c.tnt_request.offset" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request.limit">
 uint32_t <code class="descname">tnt_request.limit</code><a class="headerlink" href="#c.tnt_request.limit" title="Permalink to this definition">¶</a></dt>
-<dt id="c.tnt_request.index_base">
-int <code class="descname">tnt_request.index_base</code><a class="headerlink" href="#c.tnt_request.index_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Field with specified values.</p>
+<dd><p>Space and index ID numbers, offset and limit for SELECT (specified in
+records).</p>
 </dd></dl>
 
-<dl class="member">
-<dt id="c.tnt_request.iterator">
-enum <a class="reference internal" href="#c.tnt_iterator_t" title="tnt_iterator_t">tnt_iterator_t</a> <code class="descname">tnt_request.iterator</code><a class="headerlink" href="#c.tnt_request.iterator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set request iterator type.</p>
+</div>
+<div class="section" id="set-get-request-fields-and-functions">
+<h2>Set/get request fields and functions<a class="headerlink" href="#set-get-request-fields-and-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.tnt_request_set_iterator">
+int <code class="descname">tnt_request_set_iterator</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, enum <a class="reference internal" href="#c.tnt_iterator_t" title="tnt_iterator_t">tnt_iterator_t</a><em>&nbsp;iter</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set an iterator type for SELECT.</p>
+<p>Field that is set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">tnt_iterator_t</span> <span class="n">iterator</span><span class="p">;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.tnt_request_set_key">
-int <code class="descname">tnt_request_set_key</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*obj</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_key" title="Permalink to this definition">¶</a></dt>
+int <code class="descname">tnt_request_set_key</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_key" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_set_key_format">
 int <code class="descname">tnt_request_set_key_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*fmt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_key_format" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set key from stream object or make new key using <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code>.</p>
-<p>Returns <code class="docutils literal"><span class="pre">-1</span></code> if <code class="docutils literal"><span class="pre">tnt_object_vformat</span></code> fails.</p>
+<dd><p>Set a key (both key start and end) for SELECT/UPDATE/DELETE from a stream
+object.</p>
+<p>Or set a key using the print-like function <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code>.
+Take <code class="docutils literal"><span class="pre">fmt</span></code> format string followed by arguments for the format string.
+Return <code class="docutils literal"><span class="pre">-1</span></code> if the <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code> function fails.</p>
+<p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="cm">/* set by `tnt_request_set_key_format` */</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -285,12 +312,20 @@ int <code class="descname">tnt_request_set_key_format</code><span class="sig-par
 int <code class="descname">tnt_request_set_tuple</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*obj</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_tuple" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_set_tuple_format">
 int <code class="descname">tnt_request_set_tuple_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*fmt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_tuple_format" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set tuple from stream object or make new tuple using <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code>.</p>
+<dd><p>Set a tuple (both tuple start and end) for UPDATE/EVAL/CALL from a stream.</p>
+<p>Or set a tuple using the print-like function <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code>.
+Take <code class="docutils literal"><span class="pre">fmt</span></code> format string followed by arguments for the format string.
+Return <code class="docutils literal"><span class="pre">-1</span></code> if the <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code> function fails.</p>
 <ul class="simple">
-<li>If operation is <code class="docutils literal"><span class="pre">update</span></code>, then tuple is stream object with operations.</li>
-<li>If operation is <code class="docutils literal"><span class="pre">eval</span></code>/<code class="docutils literal"><span class="pre">call</span></code>, then tuple is stream object with arguments.</li>
+<li>For UPDATE, the tuple is a stream object with operations.</li>
+<li>For EVAL/CALL, the tuple is a stream object with arguments.</li>
 </ul>
-<p>Returns <code class="docutils literal"><span class="pre">-1</span></code> if <code class="docutils literal"><span class="pre">tnt_object_vformat</span></code> fails.</p>
+<p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">tuple</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">tuple_end</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">tuple_object</span><span class="p">;</span>  <span class="cm">/* set by `tnt_request_set_tuple_format` */</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -298,9 +333,17 @@ int <code class="descname">tnt_request_set_tuple_format</code><span class="sig-p
 int <code class="descname">tnt_request_set_expr</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*expr</em>, size_t<em>&nbsp;len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_expr" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_set_exprz">
 int <code class="descname">tnt_request_set_exprz</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_exprz" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set expression for <code class="docutils literal"><span class="pre">eval</span></code> from string. If function <code class="docutils literal"><span class="pre">&lt;...&gt;_exprz</span></code> is
-used, then length is calculated using <code class="docutils literal"><span class="pre">strlen(str)</span></code>.</p>
-<p>Returns <code class="docutils literal"><span class="pre">-1</span></code> if called not in <code class="docutils literal"><span class="pre">expr</span></code> command.</p>
+<dd><p>Set an expression (both expression start and end) for EVAL from a string.</p>
+<p>If the function <code class="docutils literal"><span class="pre">&lt;...&gt;_exprz</span></code> is used, then length is calculated using
+<code class="xref py py-func docutils literal"><span class="pre">strlen(str)()</span></code>. Otherwise, <code class="docutils literal"><span class="pre">len</span></code> is the expression&#8217;s length (in
+bytes).</p>
+<p>Return <code class="docutils literal"><span class="pre">-1</span></code> if <code class="docutils literal"><span class="pre">expr</span></code> is not <code class="xref py py-func docutils literal"><span class="pre">tnt_request_evaluate()</span></code>.</p>
+<p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="cm">/* set by `tnt_request_set_exprz` */</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -308,117 +351,56 @@ used, then length is calculated using <code class="docutils literal"><span class
 int <code class="descname">tnt_request_set_func</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*func</em>, size_t<em>&nbsp;len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_func" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_set_funcz">
 int <code class="descname">tnt_request_set_funcz</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*func</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_funcz" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set function for <code class="docutils literal"><span class="pre">call</span></code> from string. If function <code class="docutils literal"><span class="pre">&lt;...&gt;_funcz</span></code> is used,
-then length is calculated using <code class="docutils literal"><span class="pre">strlen(str)</span></code>.</p>
-<p>Returns <code class="docutils literal"><span class="pre">-1</span></code> if called not in <code class="docutils literal"><span class="pre">func</span></code> command.</p>
+<dd><p>Set a function (both function start and end) for CALL from a string.</p>
+<p>If the function <code class="docutils literal"><span class="pre">&lt;...&gt;_funcz</span></code> is used, then length is calculated using
+<code class="xref py py-func docutils literal"><span class="pre">strlen(str)()</span></code>. Otherwise, <code class="docutils literal"><span class="pre">len</span></code> is the function&#8217;s length (in bytes).</p>
+<p>Return <code class="docutils literal"><span class="pre">-1</span></code> if <code class="docutils literal"><span class="pre">func</span></code> is not <code class="xref py py-func docutils literal"><span class="pre">tnt_request_call()</span></code>.</p>
+<p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="cm">/* set by `tnt_request_set_funcz` */</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.tnt_request_set_ops">
 int <code class="descname">tnt_request_set_ops</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_ops" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set operations for <code class="docutils literal"><span class="pre">update</span></code> or <code class="docutils literal"><span class="pre">upsert</span></code> from stream object.</p>
+<dd><p>Set operations (both operations start and end) for UPDATE/UPSERT from a
+stream.</p>
+<p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.tnt_request_set_index_base">
+int <code class="descname">tnt_request_set_index_base</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, uint32_t<em>&nbsp;index_base</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_index_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set an index base (field offset) for UPDATE/UPSERT.</p>
+<p>Field that is set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">index_base</span><span class="p">;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
-<div class="section" id="manipulating-requests">
-<h2>Manipulating requests<a class="headerlink" href="#manipulating-requests" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="manipulating-a-request">
+<h2>Manipulating a request<a class="headerlink" href="#manipulating-a-request" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_request_compile">
 <code class="descname">tnt_request_compile</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_compile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compile request into stream. If <code class="docutils literal"><span class="pre">tnt_request_encode</span></code> is used, then request
-is compiled into stream, that&#8217;s pinned to it.</p>
-<p>Returns <code class="docutils literal"><span class="pre">-1</span></code> if bad command or can&#8217;t write to stream or stream is not pinned.</p>
+<dd><p>Compile a request into a stream.</p>
+<p>Return <code class="docutils literal"><span class="pre">-1</span></code> if bad command or can&#8217;t write to stream.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.tnt_request_free">
 <code class="descname">tnt_request_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_free" title="Permalink to this definition">¶</a></dt>
-<dd><p>Free request object.</p>
+<dd><p>Free a request object.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="example">
-<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">msg_profile_get</span><span class="p">(</span><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span><span class="n">tnt</span><span class="p">,</span> <span class="kt">int</span> <span class="n">id</span><span class="p">,</span> <span class="k">struct</span> <span class="n">msg_profile</span> <span class="o">**</span><span class="n">rv</span><span class="p">)</span> <span class="p">{</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">tnt_select</span><span class="p">(</span><span class="n">tnt</span><span class="p">,</span> <span class="n">profile_space_no</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">UINT32_MAX</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">log_error</span><span class="p">(</span><span class="s">&quot;Failed to append request&quot;</span><span class="p">);</span>
-		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-	<span class="p">}</span>
-</pre></div>
-</div>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">msg_profile_get_multi</span><span class="p">(</span><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span><span class="n">tnt</span><span class="p">,</span> <span class="kt">int</span> <span class="o">*</span><span class="n">id</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">cnt</span><span class="p">,</span>
-			  <span class="k">struct</span> <span class="n">msg_profile</span> <span class="o">***</span><span class="n">rv</span><span class="p">)</span> <span class="p">{</span>
-	<span class="k">static</span> <span class="k">struct</span> <span class="n">tnt_request</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">req</span> <span class="o">=</span> <span class="n">tnt_request_select</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">tnt</span><span class="p">);</span>
-		<span class="n">tnt_request_set_sspacez</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="s">&quot;messages&quot;</span><span class="p">);</span>
-		<span class="n">tnt_request_set_sindexz</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="s">&quot;primary&quot;</span><span class="p">);</span>
-		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">req</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-	<span class="p">}</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">cnt</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">tnt_request_set_key_format</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="s">&quot;[%d]&quot;</span><span class="p">,</span> <span class="n">id</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-		<span class="k">if</span> <span class="p">(</span><span class="n">tnt_request_encode</span><span class="p">(</span><span class="n">req</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-			<span class="n">log_error</span><span class="p">(</span><span class="s">&quot;OOM&quot;</span><span class="p">);</span>
-			<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-		<span class="p">}</span>
-	<span class="p">}</span>
-</pre></div>
-</div>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">msg_profile_like_add</span><span class="p">(</span><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span><span class="n">tnt</span><span class="p">,</span> <span class="kt">int</span> <span class="n">id</span><span class="p">)</span> <span class="p">{</span>
-	<span class="k">static</span> <span class="k">struct</span> <span class="n">tnt_request</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">obj</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">obj</span> <span class="o">=</span> <span class="n">tnt_update_container</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
-		<span class="k">if</span> <span class="p">(</span><span class="n">obj</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-			<span class="n">log_error</span><span class="p">(</span><span class="s">&quot;OOM&quot;</span><span class="p">);</span>
-			<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-		<span class="p">}</span>
-		<span class="cm">/* update like counter and prepend &#39;liked &#39; to msg */</span>
-		<span class="k">if</span> <span class="p">(</span><span class="n">tnt_update_arith_int</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="sc">&#39;+&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="o">||</span>
-		    <span class="n">tnt_update_splice</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;liked &quot;</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-			<span class="n">log_error</span><span class="p">(</span><span class="s">&quot;OOM&quot;</span><span class="p">);</span>
-			<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-		<span class="p">}</span>
-		<span class="n">tnt_update_container_close</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
-	<span class="p">}</span>
-	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">req</span> <span class="o">=</span> <span class="n">tnt_request_update</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">tnt</span><span class="p">);</span>
-		<span class="n">tnt_request_set_sspacez</span> <span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="s">&quot;messages&quot;</span><span class="p">);</span>
-		<span class="n">tnt_request_set_ssindexz</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="s">&quot;primary&quot;</span><span class="p">);</span>
-		<span class="n">tnt_request_set_tuple</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">obj</span><span class="p">);</span>
-		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">req</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-	<span class="p">}</span>
-	<span class="n">tnt_request_set_key_format</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="s">&quot;[%d]&quot;</span><span class="p">,</span> <span class="n">id</span><span class="p">);</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">tnt_request_encode</span><span class="p">(</span><span class="n">req</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">log_error</span><span class="p">(</span><span class="s">&quot;OOM&quot;</span><span class="p">);</span>
-		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-	<span class="p">}</span>
-</pre></div>
-</div>
-<div class="highlight-c"><div class="highlight"><pre>	<span class="k">static</span> <span class="k">struct</span> <span class="n">tnt_request</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">req</span> <span class="o">=</span> <span class="n">tnt_request_update</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="n">tnt</span><span class="p">);</span>
-		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">req</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-		<span class="k">if</span> <span class="p">(</span><span class="n">tnt_request_set_sspacez</span> <span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="s">&quot;messages&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-			<span class="n">log_error</span><span class="p">(</span><span class="s">&quot;failed to find space &#39;messages&#39;&quot;</span><span class="p">);</span>
-			<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-		<span class="p">}</span>
-		<span class="k">if</span> <span class="p">(</span><span class="n">tnt_request_set_ssindexz</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="s">&quot;primary&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-			<span class="n">log_error</span><span class="p">(</span><span class="s">&quot;failed to find index &#39;primary&#39; in space &quot;</span>
-				  <span class="s">&quot;&#39;message&#39;&quot;</span><span class="p">);</span>
-			<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-		<span class="p">}</span>
-	<span class="p">}</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">tnt_request_set_tuple_format</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="s">&quot;[%d%.*s%d%.*s]&quot;</span><span class="p">,</span> <span class="n">id</span><span class="p">,</span> <span class="n">usr_len</span><span class="p">,</span>
-					 <span class="n">usr</span><span class="p">,</span> <span class="n">likes</span><span class="p">,</span> <span class="n">msg_len</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">log_error</span><span class="p">(</span><span class="s">&quot;OOM&quot;</span><span class="p">);</span>
-		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-	<span class="p">}</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">tnt_request_encode</span><span class="p">(</span><span class="n">req</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">log_error</span><span class="p">(</span><span class="s">&quot;OOM&quot;</span><span class="p">);</span>
-		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-	<span class="p">}</span>
-</pre></div>
-</div>
 </div>
 </div>
 
@@ -429,10 +411,10 @@ is compiled into stream, that&#8217;s pinned to it.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="schema.html" class="btn btn-neutral float-right" title="Working with schema" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="schema.html" class="btn btn-neutral float-right" title="Working with a schema" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="request.html" class="btn btn-neutral" title="Simple request creation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="request.html" class="btn btn-neutral" title="Building a request with “tnt_stream”" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

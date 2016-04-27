@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Buffer for requests &mdash; tarantool-c 0.2.0 documentation</title>
+  <title>Using a buffer for requests &mdash; tarantool-c 0.2.0 documentation</title>
   
 
   
@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="tarantool-c 0.2.0 documentation" href="index.html"/>
-        <link rel="next" title="Basic stream" href="stream.html"/>
-        <link rel="prev" title="Working with schema" href="schema.html"/> 
+        <link rel="next" title="Using the basic stream object" href="stream.html"/>
+        <link rel="prev" title="Working with a schema" href="schema.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -82,19 +82,19 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building requests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with schema</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Buffer for requests</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#create-buffer">Create buffer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#create-requests">Create requests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#parse-response">Parse response</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reply.html">Parsing a reply</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with &#8220;tnt_stream&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with &#8220;tnt_request&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema.html">Working with a schema</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Using a buffer for requests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-buffer">Creating a buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-requests">Writing requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parsing-replies">Parsing replies</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="stream.html">Basic stream</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream.html">Using the basic stream object</a></li>
 </ul>
 
             
@@ -117,7 +117,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -125,7 +125,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Buffer for requests</li>
+    <li>Using a buffer for requests</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -137,38 +137,40 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="buffer-for-requests">
-<h1>Buffer for requests<a class="headerlink" href="#buffer-for-requests" title="Permalink to this headline">¶</a></h1>
-<p>In case you don&#8217;t need networking, but you need to be able to parse replies or
-write requests.</p>
-<div class="section" id="create-buffer">
-<h2>Create buffer<a class="headerlink" href="#create-buffer" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="using-a-buffer-for-requests">
+<h1>Using a buffer for requests<a class="headerlink" href="#using-a-buffer-for-requests" title="Permalink to this headline">¶</a></h1>
+<p>You may need a stream buffer (<code class="docutils literal"><span class="pre">tnt_buf</span></code>) if you don&#8217;t need the networking
+functionality of <code class="docutils literal"><span class="pre">tnt_net</span></code>, but you need to write requests or parse replies.</p>
+<div class="section" id="creating-a-buffer">
+<h2>Creating a buffer<a class="headerlink" href="#creating-a-buffer" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_buf">
 struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<code class="descname">tnt_buf</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_buf" title="Permalink to this definition">¶</a></dt>
-<dd><p>For creation of stream buffer.</p>
+<dd><p>Create a stream buffer.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.tnt_buf_as">
 struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<code class="descname">tnt_buf_as</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, char<em>&nbsp;*buf</em>, size_t<em>&nbsp;buf_len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_buf_as" title="Permalink to this definition">¶</a></dt>
-<dd><p>For creation of immutable stream buffer from buffer <code class="docutils literal"><span class="pre">buf</span></code>. It can be used
-for response parsing.</p>
+<dd><p>Create an immutable stream buffer from the buffer <code class="docutils literal"><span class="pre">buf</span></code>. It can be used
+for parsing responses.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="create-requests">
-<h2>Create requests<a class="headerlink" href="#create-requests" title="Permalink to this headline">¶</a></h2>
-<p>It&#8217;s done with basic functions:</p>
+<div class="section" id="writing-requests">
+<h2>Writing requests<a class="headerlink" href="#writing-requests" title="Permalink to this headline">¶</a></h2>
+<p>Use the basic functions for building requests:</p>
 <ul class="simple">
-<li><code class="xref c c-type docutils literal"><span class="pre">struct</span> <span class="pre">tnt_request</span></code>/<code class="xref py py-func docutils literal"><span class="pre">tnt_request_compile()</span></code></li>
-<li><code class="xref py py-func docutils literal"><span class="pre">tnt_select()</span></code>/<code class="xref py py-func docutils literal"><span class="pre">tnt_insert()</span></code> and e.t.c.</li>
+<li><code class="xref py py-func docutils literal"><span class="pre">tnt_select()</span></code> / <code class="xref py py-func docutils literal"><span class="pre">tnt_insert()</span></code> (see &#8220;<a class="reference internal" href="request.html#working-with-tnt-stream"><span>Building a request with &#8220;tnt_stream&#8221;</span></a>&#8221;)</li>
+<li><code class="xref c c-type docutils literal"><span class="pre">struct</span> <span class="pre">tnt_request</span></code> / <code class="xref py py-func docutils literal"><span class="pre">tnt_request_compile()</span></code> (see
+&#8220;<a class="reference internal" href="request_builder.html#working-with-tnt-request"><span>Building a request with &#8220;tnt_request&#8221;</span></a>&#8221;)</li>
 </ul>
 </div>
-<div class="section" id="parse-response">
-<h2>Parse response<a class="headerlink" href="#parse-response" title="Permalink to this headline">¶</a></h2>
-<p>Use iterator to iterate through responses or
-<code class="docutils literal"><span class="pre">stream-&gt;read_reply(struct</span> <span class="pre">tnt_stream</span> <span class="pre">*stream,</span> <span class="pre">struct</span> <span class="pre">tnt_reply</span> <span class="pre">*reply)</span></code>.</p>
+<div class="section" id="parsing-replies">
+<h2>Parsing replies<a class="headerlink" href="#parsing-replies" title="Permalink to this headline">¶</a></h2>
+<p>Use an iterator to iterate through replies in your stream buffer,
+or use the stream&#8217;s <code class="xref py py-func docutils literal"><span class="pre">read_reply()</span></code> method
+(<code class="docutils literal"><span class="pre">stream-&gt;read_reply(struct</span> <span class="pre">tnt_stream</span> <span class="pre">*stream,</span> <span class="pre">struct</span> <span class="pre">tnt_reply</span> <span class="pre">*reply)</span></code>).</p>
 </div>
 </div>
 
@@ -179,10 +181,10 @@ for response parsing.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="stream.html" class="btn btn-neutral float-right" title="Basic stream" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="stream.html" class="btn btn-neutral float-right" title="Using the basic stream object" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="schema.html" class="btn btn-neutral" title="Working with schema" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="schema.html" class="btn btn-neutral" title="Working with a schema" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

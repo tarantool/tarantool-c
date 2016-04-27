@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Working with schema &mdash; tarantool-c 0.2.0 documentation</title>
+  <title>Working with a schema &mdash; tarantool-c 0.2.0 documentation</title>
   
 
   
@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="tarantool-c 0.2.0 documentation" href="index.html"/>
-        <link rel="next" title="Buffer for requests" href="buffering.html"/>
-        <link rel="prev" title="Building requests" href="request_builder.html"/> 
+        <link rel="next" title="Using a buffer for requests" href="buffering.html"/>
+        <link rel="prev" title="Building a request with “tnt_request”" href="request_builder.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -82,19 +82,19 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer in tarantool-c</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reply.html">Reply parsing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request.html">Simple request creation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building requests</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Working with schema</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#create-schema">Create schema</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#creating-requests-for-schema-acquiring">Creating requests for schema acquiring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reply.html">Parsing a reply</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with &#8220;tnt_stream&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with &#8220;tnt_request&#8221;</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Working with a schema</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-schema">Creating a schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-requests-for-acquiring-a-schema">Creating requests for acquiring a schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#adding-responses">Adding responses</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="buffering.html">Buffer for requests</a></li>
-<li class="toctree-l1"><a class="reference internal" href="stream.html">Basic stream</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buffering.html">Using a buffer for requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream.html">Using the basic stream object</a></li>
 </ul>
 
             
@@ -117,7 +117,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -125,7 +125,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Working with schema</li>
+    <li>Working with a schema</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -137,28 +137,34 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="working-with-schema">
-<h1>Working with schema<a class="headerlink" href="#working-with-schema" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="working-with-a-schema">
+<span id="id1"></span><h1>Working with a schema<a class="headerlink" href="#working-with-a-schema" title="Permalink to this headline">¶</a></h1>
 <p>Schema is needed for mapping <code class="docutils literal"><span class="pre">&quot;space_name&quot;</span> <span class="pre">-&gt;</span> <span class="pre">&quot;space_id&quot;</span></code> and
 <code class="docutils literal"><span class="pre">(&quot;space_id&quot;,</span> <span class="pre">&quot;index_name&quot;)</span> <span class="pre">-&gt;</span> <span class="pre">&quot;index_id&quot;</span></code>.</p>
-<div class="section" id="create-schema">
-<h2>Create schema<a class="headerlink" href="#create-schema" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="creating-a-schema">
+<h2>Creating a schema<a class="headerlink" href="#creating-a-schema" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_schema_new">
 struct tnt_schema *<code class="descname">tnt_schema_new</code><span class="sig-paren">(</span>struct tnt_schema<em>&nbsp;*sch</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_schema_new" title="Permalink to this definition">¶</a></dt>
-<dd><p>Allocate and initialize schema object.</p>
+<dd><p>Allocate and initialize a schema object.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="creating-requests-for-schema-acquiring">
-<h2>Creating requests for schema acquiring<a class="headerlink" href="#creating-requests-for-schema-acquiring" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="creating-requests-for-acquiring-a-schema">
+<h2>Creating requests for acquiring a schema<a class="headerlink" href="#creating-requests-for-acquiring-a-schema" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="c.tnt_get_spaces">
-ssize_t <code class="descname">tnt_get_spaces</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_get_spaces" title="Permalink to this definition">¶</a></dt>
-<dt id="c.tnt_get_indexes">
-ssize_t <code class="descname">tnt_get_indexes</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_get_indexes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Construct a query for selecting values from schema. It&#8217;s shortcut for</p>
-<p>If <code class="docutils literal"><span class="pre">name</span> <span class="pre">==</span> <span class="pre">NULL</span></code> then ac</p>
+<dt id="c.tnt_get_space">
+ssize_t <code class="descname">tnt_get_space</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_get_space" title="Permalink to this definition">¶</a></dt>
+<dt id="c.tnt_get_index">
+ssize_t <code class="descname">tnt_get_index</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_get_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a query for selecting values from a schema.
+These are shortcuts for:</p>
+<ul class="simple">
+<li><code class="xref py py-func docutils literal"><span class="pre">tnt_select(s,</span> <span class="pre">281,</span> <span class="pre">0,</span> <span class="pre">UINT32_MAX,</span> <span class="pre">0,</span> <span class="pre">TNT_ITER_ALL,</span> <span class="pre">&quot;x90&quot;)()</span></code></li>
+<li><code class="xref py py-func docutils literal"><span class="pre">tnt_select(s,</span> <span class="pre">289,</span> <span class="pre">0,</span> <span class="pre">UINT32_MAX,</span> <span class="pre">0,</span> <span class="pre">TNT_ITER_ALL,</span> <span class="pre">&quot;x90&quot;)()</span></code></li>
+</ul>
+<p>where <code class="docutils literal"><span class="pre">281</span></code> and <code class="docutils literal"><span class="pre">289</span></code> are the IDs of the spaces listing all spaces
+(<code class="docutils literal"><span class="pre">281</span></code>) and all indexes (<code class="docutils literal"><span class="pre">289</span></code>) in the current Tarantool instance.</p>
 </dd></dl>
 
 </div>
@@ -166,10 +172,11 @@ ssize_t <code class="descname">tnt_get_indexes</code><span class="sig-paren">(</
 <h2>Adding responses<a class="headerlink" href="#adding-responses" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_schema_add_spaces">
-struct <code class="descname">tnt_schema_add_spaces</code><span class="sig-paren">(</span>struct tnt_schema<em>&nbsp;*s</em>, struct <a class="reference internal" href="reply.html#c.tnt_reply" title="tnt_reply">tnt_reply</a><em>&nbsp;*r</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_schema_add_spaces" title="Permalink to this definition">¶</a></dt>
+struct <code class="descname">tnt_schema_add_spaces</code><span class="sig-paren">(</span>struct tnt_schema<em>&nbsp;*sch</em>, struct <a class="reference internal" href="reply.html#c.tnt_reply" title="tnt_reply">tnt_reply</a><em>&nbsp;*r</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_schema_add_spaces" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_schema_add_indexes">
-struct <code class="descname">tnt_schema_add_indexes</code><span class="sig-paren">(</span>struct tnt_schema<em>&nbsp;*s</em>, struct <a class="reference internal" href="reply.html#c.tnt_reply" title="tnt_reply">tnt_reply</a><em>&nbsp;*r</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_schema_add_indexes" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+struct <code class="descname">tnt_schema_add_indexes</code><span class="sig-paren">(</span>struct tnt_schema<em>&nbsp;*sch</em>, struct <a class="reference internal" href="reply.html#c.tnt_reply" title="tnt_reply">tnt_reply</a><em>&nbsp;*r</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_schema_add_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add spaces or indices to a schema.</p>
+</dd></dl>
 
 </div>
 </div>
@@ -181,10 +188,10 @@ struct <code class="descname">tnt_schema_add_indexes</code><span class="sig-pare
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="buffering.html" class="btn btn-neutral float-right" title="Buffer for requests" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="buffering.html" class="btn btn-neutral float-right" title="Using a buffer for requests" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="request_builder.html" class="btn btn-neutral" title="Building requests" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="request_builder.html" class="btn btn-neutral" title="Building a request with “tnt_request”" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
