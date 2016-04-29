@@ -2,18 +2,19 @@
                              MessagePack layer
 -------------------------------------------------------------------------------
 
-Basic MsgPack object layer (msgpuck wrapper). It supports array/map traversal,
-dynamic size msgpack arrays and e.t.c. For detailed analyze read
-`MessagePack specification`_
+The basic MessagePack object layer is implemented as a wrapper for the
+``msgpuck`` library. This layer supports array/map traversal, dynamically
+sized msgpack arrays, etc. For details, see `MessagePack specification`_ and 
+`msgpuck readme file`_.
 
 =====================================================================
-                        MsgPack introduction
+                      Introduction to MessagePack
 =====================================================================
 
 MessagePack is an efficient binary serialization format. It lets you exchange
-data among multiple languages like JSON. But it's faster and smaller. Small
-integers are encoded into a single byte, and typical short strings require only
-one extra byte in addition to the strings themselves.
+data among multiple languages, like JSON does. But it's faster and smaller. 
+Small integers are encoded into a single byte, and typical short strings require
+only one extra byte in addition to the strings themselves.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                          Types
@@ -22,8 +23,7 @@ one extra byte in addition to the strings themselves.
 * ``integer`` (``int`` < 0 and ``uint`` >= 0) represents an integer
 * ``nil`` represents ``nil``
 * ``boolean`` represents ``true`` or ``false``
-* ``float`` - 4 bytes, ``double`` - 8 bytes) represents a floating
-  point number
+* ``float`` (4 bytes) and ``double`` (8 bytes) represent a floating-point number
 * ``string`` represents a UTF-8 string
 * ``binary`` represents a byte array
 * ``array`` represents a sequence of objects
@@ -35,37 +35,38 @@ one extra byte in addition to the strings themselves.
                       Limitations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* a value of an Integer object is limited from -(2^63) upto (2^64)-1
-* a value of a Float object is IEEE 754 single or double precision
+* a value of an Integer object is limited from ``-(2^63)`` up to ``(2^64)-1``
+* a value of a Float object is an IEEE 754 single or double precision
   floating-point number
-* maximum length of a Binary object is (2^32)-1
-* maximum byte size of a String object is (2^32)-1
-* String objects may contain invalid byte sequence and the behavior of a
-  deserializer depends on the actual implementation when it received invalid
+* maximum length of a Binary object is ``(2^32)-1``
+* maximum byte size of a String object is ``(2^32)-1``
+* a String object may contain invalid byte sequence, and the behavior of a
+  deserializer depends on the actual implementation when it receives an invalid
   byte sequence
-* Deserializers should provide functionality to get the original byte array so
-  that applications can decide how to handle the object
-* maximum number of elements of an Array object is (2^32)-1
-* maximum number of key-value associations of a Map object is (2^32)-1
+* deserializers should provide the functionality to get the original byte array,
+  so that applications can decide how to handle the object
+* maximum number of elements of an Array object is ``(2^32)-1``
+* maximum number of key-value associations of a Map object is ``(2^32)-1``
 
 =====================================================================
                           Object creation
 =====================================================================
 
+.. // See tnt/tnt_object.c
+
 .. c:function:: struct tnt_stream *tnt_object(struct tnt_stream *s)
 
-    Create empty msgpack object. If ``s`` is passed as ``NULL``, then object is
-    allocated. Otherwise allocated object will be initialized.
+    Create an empty MsgPack object. If ``s`` is passed as ``NULL``, then the 
+    object is allocated. Otherwise, the allocated object is initialized.
 
 .. c:function:: struct tnt_stream *tnt_object_as(struct tnt_stream *s, char *buf, size_t buf_len)
 
-    Create read-only msgpack object from buffer. Source string isn't copied.
-
-    :param char *     buf: input buffer
-    :param size_t buf_len: length of buffer
+    Create a read-only MsgPack object from buffer. 
+    The buffer's length is set in bytes. The source string isn't copied, so be
+    careful not to destroy it while this function is running.
 
 =====================================================================
-                        Scalar MsgPack types
+                        Scalar MessagePack types
 =====================================================================
 
 .. c:function:: ssize_t tnt_object_add_nil(struct tnt_stream *s)
@@ -74,97 +75,104 @@ one extra byte in addition to the strings themselves.
 
 .. c:function:: ssize_t tnt_object_add_int(struct tnt_stream *s, int64_t value)
 
-    Add integer to a stream object. If it's value is more or equal zero, then
-    it's packed in ``uint`` MsgPack type, otherwise it'll be ``int``
+    Append an integer to a stream object. If ``value >= 0``, then pack it in
+    ``uint`` MsgPack type, otherwise the type is ``int``.
 
 .. c:function:: ssize_t tnt_object_add_str (struct tnt_stream *s, const char *str, uint32_t len)
                 ssize_t tnt_object_add_strz(struct tnt_stream *s, const char *str)
 
-    Append utf-8 string to a stream object. If using ``<...>_strz`` function,
-    then length is calculated using ``strlen(str)``.
+    Append a UTF-8 string to a stream object. If you use the :func:`<...>_strz`
+    function, the string's length is calculated using ``strlen(str)``.
 
 .. c:function:: ssize_t tnt_object_add_bin(struct tnt_stream *s, const char *bin, uint32_t len)
 
-    Append byte array to a stream object.
+    Append a byte array to a stream object. The array's length is set in bytes.
 
 .. c:function:: ssize_t tnt_object_add_bool(struct tnt_stream *s, char value)
 
-    Append boolean value to a stream object. If ``value == 0``, then appending
+    Append a boolean value to a stream object. If ``value == 0``, then append
     ``false``, otherwise ``true``.
 
 .. c:function:: ssize_t tnt_object_add_float(struct tnt_stream *s, float val)
                 ssize_t tnt_object_add_double(struct tnt_stream *s, double val)
 
-    Append float/double value to a stream object.
+    Append a float/double value to a stream object.
 
-    * ``float`` means 4-byte floating point number.
-    * ``double`` means 8-byte floating point number.
+    * ``float`` means a 4-byte floating point number.
+    * ``double`` means a 8-byte floating point number.
 
 =====================================================================
                         Array/Map manipulation
 =====================================================================
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    Array/Map in MsgPack
+                    Array/Map in MessagePack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To understand why's there many problems when working with MsgPack map/arrays
-with dynamic size we need to understand how it's originally specified.
+To understand why there are many problems when working with MessagePack 
+arrays/maps with dynamic size, we need to understand how it's originally 
+specified.
 
-Arrays/Maps are a sequence of elements following the 'header'. Depending on
-the number of elements in the sequence length of header varies. (length of
-map is number of pairs of elements in it).
+Arrays/maps are a sequence of elements following the "header". The problem is 
+that the header's length varies depending on the number of elements in the 
+sequence.
 
 For example:
 
 * length(elements) < 16 => length(header) == 1 byte
-* length(elements) < (2^16) => length(header) == 3 byte
-* length(elements) < (2^32) => length(header) == 5 byte
+* length(elements) < (2^16) => length(header) == 3 bytes
+* length(elements) < (2^32) => length(header) == 5 bytes
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 Working with Array/Map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-So when you, dynamically, add 1 element and it's length becomes 16 - header
-grow by 2 bytes (the same applies to 2^32). There's three strategies to work
-with it:
+So when you, dynamically, add 1 element and the sequence's length becomes 16 - 
+the header grows from 1 to 2 bytes (the same applies to 2^32). There are 3 
+strategies to work with it (each strategy corresponds to one of the 3 container 
+types):
 
 .. containertype:: TNT_SBO_SIMPLE
 
-    Set size before adding elements into it. It's default option.
+    Set the sequence's size (stored in header) before adding elements into it. 
+    It's the default option.
 
 .. containertype:: TNT_SBO_SPARSE
 
-    Every container's header has length of 5 bytes. It's recommended if you have
-    very big tuples.
+    Every container's header has a length of 5 bytes. It's recommended if you
+    have very big tuples.
 
 .. containertype:: TNT_SBO_PACKED
 
-    When you're finished to work with container - it will be packed.
-
+    When you're finished working with the container - it will be packed.
+    
 .. c:function:: int tnt_object_type(struct tnt_stream *s, enum TNT_SBO_TYPE type)
 
-    Function for setting object type. You can set it only when container is
-    empty.
+    Function for setting an object type. You can set it only when the container
+    is empty.
 
     Returns -1 if it's not empty.
 
 .. c:function:: ssize_t tnt_object_add_array(struct tnt_stream *s, uint32_t size)
 
-    Append array header to stream object. If :containertype:`TNT_SBO_SPARSE` or
+    Append an array header to a stream object.
+    
+    The header's size is in bytes. If :containertype:`TNT_SBO_SPARSE` or
     :containertype:`TNT_SBO_PACKED` is set as container type, then size is
     ignored.
 
 .. c:function:: ssize_t tnt_object_add_map(struct tnt_stream *s, uint32_t size)
 
-    Append map header to stream object. If :containertype:`TNT_SBO_SPARSE` or
+    Append a map header to a stream object. 
+    
+    The header's size is in bytes. If :containertype:`TNT_SBO_SPARSE` or
     :containertype:`TNT_SBO_PACKED` is set as container type, then size is
     ignored.
 
 .. c:function:: ssize_t tnt_object_container_close(struct tnt_stream *s)
 
-    Close latest opened container. It's used when you set :func:`tnt_object_type`
-    with :containertype:`TNT_SBO_SPARSE` or :containertype:`TNT_SBO_PACKED` value.
+    Close the latest opened container. It's used when you set :func:`tnt_object_type`
+    to :containertype:`TNT_SBO_SPARSE` or :containertype:`TNT_SBO_PACKED` value.
 
 =====================================================================
                         Object manipulation
@@ -173,10 +181,10 @@ with it:
 .. c:function:: ssize_t tnt_object_format(struct tnt_stream *s, const char *fmt, ...)
                 ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl)
 
-    Append msgpack values formatted to the stream object. ``<...>_vformat``
-    function uses ``va_list`` as third argument.
+    Append formatted msgpack values to the stream object. The 
+    :func:`<...>_vformat` function uses ``va_list`` as the third argument.
 
-    Format string consists from:
+    Use the following symbols for formatting:
 
     * '[' and ']' pairs, defining arrays,
     * '{' and '}' pairs, defining maps
@@ -199,23 +207,27 @@ with it:
     * %'smth else' assert and undefined behaviour
     * NIL - a nil value
 
-    all other symbols are ignored.
+    Any other symbols are ignored.
 
 .. c:function:: int tnt_object_verify(struct tnt_stream *s, int8_t type)
 
-    Verify that object is valid msgpack structure. If ``type == -1``, then it
-    doesn't verify first type, otherwise it checks that first type is ``type``.
+    Verify that an object is a valid msgpack structure. If ``type == -1``, then
+    don't verify the first type, otherwise check that the first type is
+    ``type``.
 
 .. c:function:: int tnt_object_reset(struct tnt_stream *s)
 
-    Reset stream object to basic state.
+    Reset a stream object to the basic state. 
 
-=====================================================================
-                            Example
-=====================================================================
+..  // Examples are commented out for a while as we currently revise them. 
+..  =====================================================================
+..                             Example
+..  =====================================================================
 
-.. literalinclude:: example.c
-    :language: c
-    :lines: 333-345
+  .. literalinclude:: example.c
+      :language: c
+      :lines: 333-345
 
 .. _MessagePack specification: https://github.com/msgpack/msgpack/blob/master/spec.md
+
+.. _msgpuck readme file: https://github.com/tarantool/msgpuck/blob/master/README.md

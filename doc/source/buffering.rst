@@ -1,35 +1,37 @@
 -------------------------------------------------------------------------------
-                            Buffer for requests
+                    Using a buffer for requests
 -------------------------------------------------------------------------------
 
-In case you don't need networking, but you need to be able to parse replies or
-write requests.
+You may need a stream buffer (``tnt_buf``) if you don't need the networking 
+functionality of ``tnt_net``, but you need to write requests or parse replies.
 
 =====================================================================
-                        Create buffer
+                        Creating a buffer
 =====================================================================
 
 .. c:function:: struct tnt_stream *tnt_buf(struct tnt_stream *s)
 
-    For creation of stream buffer.
+    Create a stream buffer.
 
 .. c:function:: struct tnt_stream *tnt_buf_as(struct tnt_stream *s, char *buf, size_t buf_len)
 
-    For creation of immutable stream buffer from buffer ``buf``. It can be used
-    for response parsing.
+    Create an immutable stream buffer from the buffer ``buf``. It can be used
+    for parsing responses.
 
 =====================================================================
-                        Create requests
+                        Writing requests
 =====================================================================
 
-It's done with basic functions:
+Use the basic functions for building requests:
 
-* :c:type:`struct tnt_request`/:func:`tnt_request_compile`
-* :func:`tnt_select`/:func:`tnt_insert` and e.t.c.
+* :func:`tnt_select` / :func:`tnt_insert` (see ":ref:`working_with_tnt_stream`")
+* :c:type:`struct tnt_request` / :func:`tnt_request_compile` (see 
+  ":ref:`working_with_tnt_request`")
 
 =====================================================================
-                          Parse response
+                        Parsing replies
 =====================================================================
 
-Use iterator to iterate through responses or
-``stream->read_reply(struct tnt_stream *stream, struct tnt_reply *reply)``.
+Use an iterator to iterate through replies in your stream buffer, 
+or use the stream's :func:`read_reply` method
+(``stream->read_reply(struct tnt_stream *stream, struct tnt_reply *reply)``).

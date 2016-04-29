@@ -1,6 +1,10 @@
 -------------------------------------------------------------------------------
-                             Reply parsing
+                            Parsing a reply
 -------------------------------------------------------------------------------
+
+=====================================================================
+                          Basic type
+=====================================================================
 
 .. c:type:: struct tnt_reply
 
@@ -9,8 +13,6 @@
     .. code-block:: c
 
         struct tnt_reply {
-            int alloc;
-            uint64_t bitmap;
             const char * buf;
             size_t buf_size;
             uint64_t code;
@@ -22,70 +24,89 @@
             const char * data_end;
         };
 
-    If ``code > 0``, then ``error`` and ``error_end`` must be set.
-    Otherwise ``data`` and ``data_end`` is set. ``schema_id`` is number of
-    :ref:`schema` revision.
+.. c:member:: const char *tnt_reply.buf
 
+    Pointer to a buffer with reply data.
+    It's needed for the function :func:`tnt_reply`.
+    
+.. c:member:: size_t tnt_reply.buf_size
+
+    Size of the buffer with reply data, in bytes.
+    It's needed for the function :func:`tnt_reply`.
+            
 .. c:member:: uint64_t tnt_reply.code
 
-    Return code of query. If ``code == 0`` then it's ok, otherwise use
-    :c:macro:`TNT_REPLY_ERR` to get error code.
+    The return code of a query. 
+    
+    If ``code == 0`` then it's ok, otherwise use the macro
+    :c:macro:`TNT_REPLY_ERROR` to convert it to an error code.
+    
+    If ``code > 0``, then ``error`` and ``error_end`` must be set.
+    Otherwise ``data`` and ``data_end`` is set. 
 
 .. c:member:: uint64_t tnt_reply.sync
 
-    Sync of query.
+    Sync of a query. Generated automatically when the query is sent, and so it
+    comes back with the reply.
 
 .. c:member:: uint64_t tnt_reply.schema_id
 
-    Schema id of query.
-
-.. c:member:: const char *tnt_reply.data
-              const char *tnt_reply.data_end
-
-    Query data. Msgpack object.
-
-    Parse it with any msgpack library (e.g. msgpuck).
+    Schema ID of a query. This is the number of the
+    :ref:`schema <working_with_a_schema>` revision.
 
 .. c:member:: const char *tnt_reply.error
               const char *tnt_reply.error_end
 
-    Pointer to error string in case of ``code != 0``
+    Pointers to an error string in case of ``code != 0``.
+    See all error codes in the file 
+    `/src/box/errcode.h <https://github.com/tarantool/tarantool/blob/1.6/src/box/errcode.h>`_)
+    in the main Tarantool project.
+    
+.. c:member:: const char *tnt_reply.data
+              const char *tnt_reply.data_end
 
-.. c:type:: ssize_t (* tnt_reply_t)(void * ptr, char * dst, ssize_t size)
+    Query data. This is a MessagePack object. Parse it with any msgpack library, 
+    e.g. ``msgpuck``.
 
-    It's needed for function :func:`tnt_reply_from`.'
+=====================================================================
+                     Manipulating a reply
+=====================================================================
 
 .. c:function:: struct tnt_reply *tnt_reply_init(struct tnt_reply *r)
 
-    Initialize reply request.
+    Initialize a reply request.
 
 .. c:function:: void tnt_reply_free(struct tnt_reply *r)
 
-    Free reply request.
+    Free a reply request.
 
 .. c:function:: int tnt_reply(struct tnt_reply *r, char *buf, size_t size, size_t *off)
 
-    Parse reply from buffer ``buf``, it must contain full reply. Otherwise
-    return count of bytes needed to process in ``off`` variable.
+    Parse ``size`` bytes of an iproto reply from the buffer ``buf`` (it must
+    contain a full reply). 
+    In ``off``, return the number of bytes remaining in the reply (if processed
+    all ``size`` bytes), or the number of processed bytes (if processing
+    failed).
 
 .. c:function:: int tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr)
 
-    Parse reply from data, get all needed data from ``rcv`` callback and with
-    cb context ``ptr``.
+    Parse an iproto reply from the ``rcv`` callback and with the context
+    ``ptr``.
 
 .. c:macro:: TNT_REPLY_ERR(reply)
 
-    Return error number, shifted right.
+    Return an error code (number, shifted right) converted from
+    ``tnt_reply.code``.
 
-=====================================================================
-                            Example
-=====================================================================
+..  // Examples are commented out for a while as we currently revise them. 
+..  =====================================================================
+..                             Example
+..  =====================================================================
 
+  .. literalinclude:: example.c
+      :language: c
+      :lines: 159,164-167,179-183
 
-.. literalinclude:: example.c
-    :language: c
-    :lines: 159,164-167,179-183
-
-.. literalinclude:: example.c
-    :language: c
-    :lines: 209-220
+  .. literalinclude:: example.c
+      :language: c
+      :lines: 209-220
