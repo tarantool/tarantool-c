@@ -206,4 +206,21 @@ int tnt_update_container_close(struct tnt_stream *ops);
 
 int tnt_update_container_reset(struct tnt_stream *ops);
 
+/**
+ * \brief Generate and write upsert operation with predefined
+ *
+ * \param s     stream pointer
+ * \param space space no
+ * \param tuple (tnt_object instance) msgpack array with tuple to insert to
+ * \param ops   ops to update (tnt_object)
+ *
+ * \returns count of bytes written
+ * \retval  -1 oom
+ * \sa tnt_update_cointainer
+ * \sa tnt_update_cointainer_close
+ */
+ssize_t
+tnt_upsert(struct tnt_stream *s, uint32_t space,
+	   struct tnt_stream *tuple, struct tnt_stream *ops);
+
 #endif /* TNT_UPDATE_H_INCLUDED */
