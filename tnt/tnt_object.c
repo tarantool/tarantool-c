@@ -180,7 +180,7 @@ tnt_object_add_double (struct tnt_stream *s, double value)
 	struct tnt_sbuf_object *sbo = TNT_SOBJ_CAST(s);
 	if (sbo->stack_size > 0)
 		sbo->stack[sbo->stack_size - 1].size += 1;
-	char data[6], *end;
+	char data[10], *end;
 	end = mp_encode_double(data, value);
 	return s->write(s, data, end - data);
 }
