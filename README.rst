@@ -10,6 +10,7 @@
 ===========================================================
 
 **Tarantool-c** is a client library written in C for Tarantool.
+The current version is 1.0
 
 Tarantool-c depends on `msgpuck <https://github.com/tarantool/msgpuck>`_.
 
