@@ -9,6 +9,7 @@ install_manifest.txt
 *.dylib
 .*.swp
 
+output
 test/tarantool-*
 test/test
 *.xlog
@@ -22,3 +23,6 @@ valgrind.out
 doxygen
 html
 latex
+
+id_rsa-keygen
+id_rsa-keygen.pub

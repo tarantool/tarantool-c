@@ -8,6 +8,8 @@ compiler:
     - gcc
 
 env:
+    global:
+      - ENCRYPTION_LABEL="27298b445e90"
     matrix:
       - OS=el DIST=6 PACK=rpm
       - OS=el DIST=7 PACK=rpm
@@ -23,6 +25,7 @@ env:
       - OS=debian DIST=stretch PACK=deb
       - OS=debian DIST=sid PACK=deb
       - PACK=none
+      - PACK=documentation.sh
 
 matrix:
     fast_finish: true
@@ -67,9 +70,11 @@ matrix:
         compiler: clang
       - env: OS=debian DIST=sid PACK=deb
         compiler: clang
+      - env: PACK=documentation.sh
+        compiler: gcc
 
 script:
-  - git clone https://github.com/tarantool/build.git
+  - git clone https://github.com/tarantool/build.git -b extended-pack
   - bash build/pack/travis.sh
 
 notifications:

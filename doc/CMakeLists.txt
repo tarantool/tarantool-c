@@ -1,7 +1,7 @@
 find_package(Sphinx)
 
 set(SPHINX_BUILD_HTML_DIR "${PROJECT_BINARY_DIR}/doc/_build/html")
-set(SPHINX_HTML_DIR       "${PROJECT_BINARY_DIR}/doc/output/")
+set(SPHINX_HTML_DIR       "${PROJECT_BINARY_DIR}/output/")
 
 if    (NOT Sphinx-NOTFOUND)
     add_custom_target(sphinx-html
