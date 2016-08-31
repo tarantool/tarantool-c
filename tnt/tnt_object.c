@@ -284,6 +284,7 @@ tnt_object_container_close (struct tnt_stream *s)
 		if (sz > 1) {
 			if (!sb->resize(s, sz - 1))
 				return -1;
+			lenp = sb->data + offset;
 			memmove(lenp + sz, lenp + 1, sb->size - offset - 1);
 		}
 		if (type == MP_MAP) {
