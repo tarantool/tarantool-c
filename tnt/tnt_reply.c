@@ -41,7 +41,7 @@
 
 struct tnt_reply *tnt_reply_init(struct tnt_reply *r) {
 	int alloc = (r == NULL);
-	if (r == NULL) {
+	if (alloc) {
 		r = tnt_mem_alloc(sizeof(struct tnt_reply));
 		if (!r) return NULL;
 	}
@@ -59,8 +59,11 @@ void tnt_reply_free(struct tnt_reply *r) {
 }
 
 int tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr) {
-	/* reading iproto header */
+	/* cleanup, before processing response */
+	int alloc = r->alloc;
 	memset(r, 0 , sizeof(struct tnt_reply));
+	r->alloc = alloc;
+	/* reading iproto header */
 	char length[9]; const char *data = (const char *)length;
 	if (rcv(ptr, length, 5) == -1)
 		goto rollback;
@@ -144,7 +147,9 @@ int tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr) {
 	return 0;
 rollback:
 	if (r->buf) tnt_mem_free((void *)r->buf);
+	alloc = r->alloc;
 	memset(r, 0, sizeof(struct tnt_reply));
+	r->alloc = alloc;
 	return -1;
 }
 
