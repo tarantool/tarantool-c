@@ -298,7 +298,7 @@ test_request_01(char *uri) {
 	isnt(tnt_connect(tnt), -1, "Connecting");
 //	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
-	struct tnt_stream *arg; arg = tnt_object(NULL);
+	struct tnt_stream *arg = tnt_object(NULL);
 	isnt(arg, NULL, "Check object creation");
 	is  (tnt_object_add_array(arg, 0), 1, "Append elem");
 
@@ -306,11 +306,13 @@ test_request_01(char *uri) {
 	tnt_request_set_funcz(req1, "test_4");
 	tnt_request_set_tuple(req1, arg);
 	uint64_t sync1 = tnt_request_compile(tnt, req1);
+	tnt_request_free(req1);
 
 	struct tnt_request *req2 = tnt_request_eval(NULL);
 	tnt_request_set_exprz(req2, "return test_4()");
 	tnt_request_set_tuple(req2, arg);
 	uint64_t sync2 = tnt_request_compile(tnt, req2);
+	tnt_request_free(req2);
 
 	const char bb1[] = "\xce\x00\x00\x00\x10\x82\x00\x06\x01\x01\x82\x22\xa6\x74"
 			   "\x65\x73\x74\x5f\x34\x21\x90\xce\x00\x00\x00\x19\x82\x00"
@@ -342,6 +344,9 @@ test_request_01(char *uri) {
 			assert(0);
 		}
 	}
+
+	tnt_stream_free(tnt);
+	tnt_stream_free(arg);
 
 	footer();
 	return check_plan();
@@ -379,7 +384,7 @@ test_request_02(char *uri) {
 	isnt(tnt_connect(tnt), -1, "Connecting");
 //	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
-	struct tnt_stream *key = NULL; key = tnt_object(NULL);
+	struct tnt_stream *key = tnt_object(NULL);
 	isnt(key, NULL, "Check object creation");
 	is  (tnt_object_add_array(key, 1), 1, "Create key");
 	is  (tnt_object_add_strz(key, "_vspace"), 8, "Create key");
@@ -395,12 +400,15 @@ test_request_02(char *uri) {
 	is  (check_nbytes(tnt, bb2, bb2_len), 0, "Check request");
 	isnt(tnt_flush(tnt), -1, "Send package to server");
 	tnt_request_free(req);
+	tnt_stream_free(key);
 
 	struct tnt_reply reply;
 	isnt(tnt_reply_init(&reply), NULL, "Init reply");
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply");
 	is  (check_rbytes(&reply, bb1, bb1_len), 0, "Check reply");
 	tnt_reply_free(&reply);
+
+	tnt_stream_free(tnt);
 
 	footer();
 	return check_plan();
@@ -439,7 +447,7 @@ test_request_03(char *uri) {
 	isnt(tnt_connect(tnt), -1, "Connecting");
 //	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
-	struct tnt_stream *key = NULL; key = tnt_object(NULL);
+	struct tnt_stream *key = tnt_object(NULL);
 	isnt(key, NULL, "Check object creation");
 	is  (tnt_object_add_array(key, 1), 1, "Create key");
 	is  (tnt_object_add_strz(key, "_vspace"), 8, "Create key");
@@ -454,12 +462,15 @@ test_request_03(char *uri) {
 	is  (check_nbytes(tnt, bb2, bb2_len), 0, "Check request");
 	isnt(tnt_flush(tnt), -1, "Send package to server");
 	tnt_request_free(req);
+	tnt_stream_free(key);
 
 	struct tnt_reply reply;
 	isnt(tnt_reply_init(&reply), NULL, "Init reply");
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply");
 	is  (check_rbytes(&reply, bb1, bb1_len), 0, "Check reply");
 	tnt_reply_free(&reply);
+
+	tnt_stream_free(tnt);
 
 	footer();
 	return check_plan();
@@ -512,6 +523,8 @@ test_request_04(char *uri) {
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply");
 	is  (check_rbytes(&reply, bb2, bb2_len), 0, "Check reply");
 	tnt_reply_free(&reply);
+
+	tnt_stream_free(tnt);
 
 	footer();
 	return check_plan();
@@ -651,6 +664,7 @@ test_request_05(char *uri) {
 
 	tnt_request_free(req);
 	tnt_stream_free(key);
+	tnt_reply_free(&reply);
 
 	tnt_stream_reqid(tnt, 0);
 
@@ -708,11 +722,9 @@ test_msgpack_array_iter() {
 
 	/* simple array and array of arrays */
 	struct tnt_stream *sa, *aofa;
-	sa = tnt_object(NULL); aofa = tnt_object(NULL);
+	sa = tnt_object(NULL);
 	isnt(tnt_object_format(sa, "[%s%d%s%d]", "hello", 11, "world", 12),
 			       -1, "Pack with format sa");
-	isnt(tnt_object_format(aofa, "[[%d%d] [%d%d] [%d%d]]", 1, 2, 3,
-			       4, 5, 6), -1, "Pack with format aofa");
 	size_t sz = 0;
 	struct tnt_iter *it = tnt_iter_array_object(NULL, sa);
 	isnt(it, NULL, "check allocation");
@@ -746,6 +758,11 @@ test_msgpack_array_iter() {
 		sz += 1;
 	}
 	tnt_iter_free(it);
+	tnt_stream_free(sa);
+
+	aofa = tnt_object(NULL);
+	isnt(tnt_object_format(aofa, "[[%d%d] [%d%d] [%d%d]]", 1, 2, 3,
+			       4, 5, 6), -1, "Pack with format aofa");
 	it = tnt_iter_array_object(NULL, aofa);
 	isnt(it, NULL, "check allocation");
 	sz = 1;
@@ -763,6 +780,8 @@ test_msgpack_array_iter() {
 		}
 		tnt_iter_free(wit);
 	}
+	tnt_iter_free(it);
+	tnt_stream_free(aofa);
 
 	footer();
 	return check_plan();
@@ -776,12 +795,8 @@ test_msgpack_mapa_iter() {
 	/* simple map and map with arrays */
 	struct tnt_stream *sm, *mofa;
 	isnt(sm = tnt_object(NULL), NULL, "check allocation");
-	isnt(mofa = tnt_object(NULL), NULL, "check allocation");
 	isnt(tnt_object_format(sm, "{%s%d%s%d}", "hello", 11, "world", 12),
 			       -1, "Pack with format s,");
-	isnt(tnt_object_format(mofa, "{%s [%d%d] %s [%d%d]}",
-			       "hello", 0, 1,
-			       "world", 2, 3), -1, "Pack with format aofa");
 
 	size_t sz = 0;
 	struct tnt_iter *it = tnt_iter_map_object(NULL, sm);
@@ -813,6 +828,12 @@ test_msgpack_mapa_iter() {
 		sz += 1;
 	}
 	tnt_iter_free(it);
+	tnt_stream_free(sm);
+
+	isnt(mofa = tnt_object(NULL), NULL, "check allocation");
+	isnt(tnt_object_format(mofa, "{%s [%d%d] %s [%d%d]}",
+			       "hello", 0, 1,
+			       "world", 2, 3), -1, "Pack with format aofa");
 	it = tnt_iter_map_object(NULL, mofa);
 	isnt(it, NULL, "check allocation");
 	sz = 0;
@@ -843,6 +864,8 @@ test_msgpack_mapa_iter() {
 		}
 		tnt_iter_free(wit);
 	}
+	tnt_iter_free(it);
+	tnt_stream_free(mofa);
 
 	footer();
 	return check_plan();

@@ -17,12 +17,12 @@ test/test
 *.pid
 
 .temp
-valgrind.out
+valgrind*.out
 *.pyc
 
 doxygen
 html
 latex
 
-id_rsa-keygen
-id_rsa-keygen.pub
+deploy_key
+deploy_key.pub

@@ -26,6 +26,8 @@ test_connect_unix(char *uri) {
 	isnt(tnt_connect(tnt), -1, "Connecting");
 //	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
+	tnt_stream_free(tnt);
+
 	footer();
 	return check_plan();
 }
@@ -44,9 +46,13 @@ test_ping(char *uri) {
 	isnt(tnt_ping(tnt), -1, "Create ping");
 	isnt(tnt_flush(tnt), -1, "Send to server");
 
-	struct tnt_reply reply; tnt_reply_init(&reply);
+	struct tnt_reply reply;
+	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
 	is  (reply.error, NULL, "Check error absence");
+
+	tnt_reply_free(&reply);
+	tnt_stream_free(tnt);
 
 	footer();
 	return check_plan();
@@ -83,6 +89,7 @@ test_auth_call(char *uri) {
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
 	is  (reply.error, NULL, "Check error absence");
+	tnt_reply_free(&reply);
 
 	isnt(tnt_call(tnt, "test_4", 6, args), -1, "Create call request");
 	isnt(tnt_flush(tnt), -1, "Send to server");
@@ -91,6 +98,7 @@ test_auth_call(char *uri) {
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
 	is  (reply.error, NULL, "Check error absence");
 	is  (check_rbytes(&reply, bb1, bb1_len), 0, "Check response");
+	tnt_reply_free(&reply);
 
 	isnt(tnt_auth(tnt, "test", 4, "test", 4), -1, "Create auth");
 	isnt(tnt_flush(tnt), -1, "Send to server");
@@ -98,6 +106,7 @@ test_auth_call(char *uri) {
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
 	is  (reply.error, NULL, "Check error absence");
+	tnt_reply_free(&reply);
 
 	isnt(tnt_eval(tnt, "return test_4()", 15, args), -1, "Create eval "
 							     "request");
@@ -107,6 +116,10 @@ test_auth_call(char *uri) {
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
 	is  (reply.error, NULL, "Check error absence");
 	is  (check_rbytes(&reply, bb2, bb2_len), 0, "Check response");
+
+	tnt_stream_free(args);
+	tnt_reply_free(&reply);
+	tnt_stream_free(tnt);
 
 	footer();
 	return check_plan();
@@ -198,6 +211,7 @@ test_insert_replace_delete(char *uri) {
 	isnt(key, NULL, "Check object creation");
 	is  (tnt_object_add_array(key, 0), 1, "Create key");
 	tnt_select(tnt, 512, 0, UINT32_MAX, 0, 0, key);
+	tnt_stream_free(key);
 
 	tnt_flush(tnt);
 
@@ -232,6 +246,7 @@ test_insert_replace_delete(char *uri) {
 		     "Check str");
 	}
 
+	tnt_reply_free(&reply);
 	tnt_stream_reqid(tnt, 0);
 
 	for (int i = 0; i < 10; ++i) {

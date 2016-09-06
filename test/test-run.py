@@ -16,7 +16,7 @@ def compile_cmd(name):
     cmd = ''
     name = os.path.abspath(name)
     if '--valgrind' in sys.argv:
-        cmd = cmd + 'valgrind --leak-check=full --log-file=valgrind.out '
+        cmd = cmd + 'valgrind --leak-check=full --log-file=valgrind-%s.out ' % os.path.basename(name)
         cmd = cmd + '--suppressions=shared/valgrind.sup '
         cmd = cmd + '--keep-stacktraces=alloc-and-free --freelist-vol=2000000000 '
         cmd = cmd + '--malloc-fill=0 --free-fill=0 '

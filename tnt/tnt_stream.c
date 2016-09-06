@@ -50,14 +50,14 @@ tnt_stream_reqid(struct tnt_stream *s, uint32_t reqid)
 struct tnt_stream*
 tnt_stream_init(struct tnt_stream *s)
 {
-	int allocated = s == NULL;
-	if (!s) {
+	int alloc = (s == NULL);
+	if (alloc) {
 		s = tnt_mem_alloc(sizeof(struct tnt_stream));
 		if (s == NULL)
 			return NULL;
 	}
 	memset(s, 0, sizeof(struct tnt_stream));
-	s->alloc = allocated;
+	s->alloc = alloc;
 	return s;
 }
 

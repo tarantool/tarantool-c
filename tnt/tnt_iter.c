@@ -42,14 +42,15 @@
 #include <tarantool/tnt_iter.h>
 
 static struct tnt_iter *tnt_iter_init(struct tnt_iter *i) {
-	if (!i) {
+	int alloc = (i == NULL);
+	if (alloc) {
 		i = tnt_mem_alloc(sizeof(struct tnt_iter));
 		if (i == NULL)
 			return NULL;
-		i->alloc = 1;
 	}
 	memset(i, 0, sizeof(struct tnt_iter));
 	i->status = TNT_ITER_OK;
+	i->alloc = alloc;
 	return i;
 }
 
