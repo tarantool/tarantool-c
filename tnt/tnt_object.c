@@ -62,19 +62,17 @@ tnt_sbuf_object_resize(struct tnt_stream *s, size_t size) {
 struct tnt_stream *
 tnt_object(struct tnt_stream *s)
 {
-	int allocated = s == NULL;
-	s = tnt_buf(s);
-	struct tnt_stream_buf *sb = NULL;
-	struct tnt_sbuf_object *sbo = NULL;
-	if (s == NULL)
+	if ((s = tnt_buf(s)) == NULL)
 		goto error;
-	sb = TNT_SBUF_CAST(s);
-	sb->subdata = tnt_mem_alloc(sizeof(struct tnt_sbuf_object));
+
+	struct tnt_stream_buf *sb = TNT_SBUF_CAST(s);
 	sb->resize = tnt_sbuf_object_resize;
 	sb->free = tnt_sbuf_object_free;
-	if (sb->subdata == NULL)
+
+	struct tnt_sbuf_object *sbo = tnt_mem_alloc(sizeof(struct tnt_sbuf_object));
+	if (sbo == NULL)
 		goto error;
-	sbo = TNT_OBJ_CAST(sb);
+	sb->subdata = sbo;
 	sbo->stack_size = 0;
 	sbo->stack_alloc = 8;
 	sbo->stack = tnt_mem_alloc(sbo->stack_alloc *
@@ -82,10 +80,10 @@ tnt_object(struct tnt_stream *s)
 	if (sbo->stack == NULL)
 		goto error;
 	tnt_object_type(s, TNT_SBO_SIMPLE);
+
 	return s;
 error:
-	if (s && allocated)
-		tnt_stream_free(s);
+	tnt_stream_free(s);
 	return NULL;
 }
 
@@ -278,7 +276,7 @@ tnt_object_container_close (struct tnt_stream *s)
 	} else if (sbo->type == TNT_SBO_PACKED) {
 		size_t sz = 0;
 		if (type == MP_MAP)
-			sz = mp_sizeof_map(size);
+			sz = mp_sizeof_map(size/2);
 		else
 			sz = mp_sizeof_array(size);
 		if (sz > 1) {

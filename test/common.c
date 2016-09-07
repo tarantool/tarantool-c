@@ -70,8 +70,8 @@ mp_dump (const char *addr, size_t len) {
 		if (begin) {
 			begin = 0;
 		} else {
-			if (stack_size) {
-				while (stack_size && stack[stack_size - 1].lft == 0) {
+			if (stack_size > 0) {
+				while (stack_size > 0 && stack[stack_size - 1].lft == 0) {
 					switch (stack[stack_size - 1].type) {
 					case (MP_ARRAY):
 						printf("]");
@@ -84,8 +84,8 @@ mp_dump (const char *addr, size_t len) {
 					}
 					stack_size -= 1;
 				}
-				if (stack_size && stack[stack_size - 1].type == MP_MAP &&
-					    stack[stack_size - 1].lft % 2) {
+				if (stack_size > 0 && stack[stack_size - 1].type == MP_MAP) {
+					if (stack[stack_size - 1].lft % 2) {
 						printf(":");
 					} else if (!stack[stack_size - 1].start_flag) {
 						printf(",");
@@ -94,6 +94,7 @@ mp_dump (const char *addr, size_t len) {
 						printf(" ");
 					stack[stack_size - 1].start_flag = 0;
 					stack[stack_size - 1].lft -= 1;
+				}
 			}
 			if (!stack_size) {
 				printf("\n  ");
@@ -160,7 +161,7 @@ mp_dump (const char *addr, size_t len) {
 			mp_next(&addr);
 		}
 	}
-	while (stack_size && stack[stack_size - 1].lft == 0) {
+	while (stack_size > 0 && stack[stack_size - 1].lft == 0) {
 		switch (stack[stack_size - 1].type) {
 		case (MP_ARRAY):
 			printf("]");

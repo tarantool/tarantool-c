@@ -18,10 +18,17 @@ target_link_libraries(tarantool-test-unix tnt)
 
 project(tarantool-test-disconnect)
 add_executable(tarantool-test-disconnect
-    disconnect_test.c
+    tarantool_disconnect.c
     ${common_files})
 set_target_properties(tarantool-test-disconnect PROPERTIES OUTPUT_NAME "tarantool-disconnect")
 target_link_libraries(tarantool-test-disconnect tnt)
+
+project(tarantool-test-call)
+add_executable(tarantool-test-call
+    tarantool_call.c
+    ${common_files})
+set_target_properties(tarantool-test-call PROPERTIES OUTPUT_NAME "tarantool-call")
+target_link_libraries(tarantool-test-call tnt)
 
 add_custom_target(test
     COMMAND ${PROJECT_SOURCE_DIR}/test-run.py --builddir=${PROJECT_BINARY_DIR}

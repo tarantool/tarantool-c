@@ -62,6 +62,8 @@ tnt_stream_init(struct tnt_stream *s)
 }
 
 void tnt_stream_free(struct tnt_stream *s) {
+	if (s == NULL)
+		return;
 	if (s->free)
 		s->free(s);
 	if (s->alloc)

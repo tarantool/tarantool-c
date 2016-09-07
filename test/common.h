@@ -1,6 +1,8 @@
 #ifndef _TEST_COMMON_H_
 #define _TEST_COMMON_H_
 
+#include <msgpuck.h>
+
 struct mp_dump_stack {
 	enum mp_type type;
 	char start_flag;
