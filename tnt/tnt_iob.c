@@ -61,6 +61,13 @@ tnt_iob_init(struct tnt_iob *iob, size_t size,
 }
 
 void
+tnt_iob_clear(struct tnt_iob *iob)
+{
+	iob->top = 0;
+	iob->off = 0;
+}
+
+void
 tnt_iob_free(struct tnt_iob *iob)
 {
 	if (iob->buf)

@@ -260,7 +260,11 @@ int tnt_connect(struct tnt_stream *s)
 
 void tnt_close(struct tnt_stream *s) {
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
+	tnt_iob_clear(&sn->sbuf);
+	tnt_iob_clear(&sn->rbuf);
 	tnt_io_close(sn);
+	s->wrcnt = 0;
+	s->reqid = 0;
 }
 
 ssize_t tnt_flush(struct tnt_stream *s) {
