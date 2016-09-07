@@ -209,18 +209,24 @@ check_nbytes(struct tnt_stream *s, const char *bb, size_t bb_size) {
 	return check_bbytes(sn->sbuf.buf, sn->sbuf.off, bb, bb_size);
 }
 
+int dump_schema_index(struct tnt_schema_sval *sval) {
+	mh_int_t ipos = 0;
+	mh_foreach(sval->index, ipos) {
+		struct tnt_schema_ival *ival = NULL;
+		ival = (*mh_assoc_node(sval->index, ipos))->data;
+		printf("    %d: %s\n", ival->number, ival->name);
+	}
+	return 0;
+}
+
 int dump_schema(struct tnt_stream *s) {
 	struct mh_assoc_t *schema = (TNT_SNET_CAST(s)->schema)->space_hash;
-	mh_int_t spos = 0, ipos = 0;
+	mh_int_t spos = 0;
 	mh_foreach(schema, spos) {
 		struct tnt_schema_sval *sval = NULL;
 		sval = (*mh_assoc_node(schema, spos))->data;
 		printf("  %d: %s\n", sval->number, sval->name);
-		mh_foreach(sval->index, ipos) {
-			struct tnt_schema_ival *ival = NULL;
-			ival = (*mh_assoc_node(sval->index, ipos))->data;
-			printf("    %d: %s\n", ival->number, ival->name);
-		}
+		(void )dump_schema_index(sval);
 	}
 	return 0;
 }
