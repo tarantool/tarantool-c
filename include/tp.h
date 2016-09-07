@@ -193,7 +193,7 @@ struct tpresponse {
 	uint64_t bitmap;               /* bitmap of field IDs that was read from response */
 	const char *buf;               /* points to beginning of buffer */
 	uint32_t code;                 /* response code (0 is success, or errno if not) */
-	uint32_t sync;                 /* synchronization id */
+	uint64_t sync;                 /* synchronization id */
 	const char *error;             /* error message (NULL if not present) */
 	const char *error_end;         /* end of error message (NULL if not present) */
 	const char *data;              /* tuple data (NULL if not present) */

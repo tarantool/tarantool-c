@@ -24,7 +24,7 @@ tnt_rpc_base(struct tnt_stream *s, const char *proc, size_t proc_len,
 		return -1;
 	if (tnt_object_verify(args, MP_ARRAY))
 		return -1;
-	uint32_t fld = (op == TNT_OP_CALL ? TNT_FUNCTION : TNT_EXPRESSION);
+	uint32_t fld = (is_call(op) ? TNT_FUNCTION : TNT_EXPRESSION);
 	struct tnt_iheader hdr;
 	struct iovec v[6]; int v_sz = 6;
 	char *data = NULL, *body_start = NULL;
@@ -62,6 +62,13 @@ tnt_call(struct tnt_stream *s, const char *proc, size_t proc_len,
 	 struct tnt_stream *args)
 {
 	return tnt_rpc_base(s, proc, proc_len, args, TNT_OP_CALL);
+}
+
+ssize_t
+tnt_call_16(struct tnt_stream *s, const char *proc, size_t proc_len,
+	    struct tnt_stream *args)
+{
+	return tnt_rpc_base(s, proc, proc_len, args, TNT_OP_CALL_16);
 }
 
 ssize_t

@@ -37,7 +37,7 @@
 
 struct tnt_request {
 	struct {
-		uint32_t sync; /*!< Request sync id. Generated when encoded */
+		uint64_t sync; /*!< Request sync id. Generated when encoded */
 		enum tnt_request_t type; /*!< Request type */
 	} hdr; /*!< fields for header */
 	uint32_t space_id; /*!< Space number */
@@ -323,6 +323,13 @@ tnt_request_delete(struct tnt_request *req);
  */
 struct tnt_request *
 tnt_request_call(struct tnt_request *req);
+
+/**
+ * \brief create call request object
+ * \sa tnt_request_init
+ */
+struct tnt_request *
+tnt_request_call_16(struct tnt_request *req);
 
 /**
  * \brief create auth request object

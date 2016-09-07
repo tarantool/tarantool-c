@@ -7,6 +7,11 @@ struct tnt_iheader {
 	char *end;
 };
 
+static inline bool
+is_call(enum tnt_request_t op) {
+	return (op == TNT_OP_CALL || op == TNT_OP_CALL_16);
+}
+
 static inline int
 encode_header(struct tnt_iheader *hdr, uint32_t code, uint64_t sync)
 {

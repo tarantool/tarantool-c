@@ -48,7 +48,7 @@ int main() {
 	struct tnt_stream *empty = tnt_object(NULL);
 	tnt_object_add_array(empty, 0);
 
-	int rc = tnt_call(s, "fiber.time", 10, empty);
+	int rc = tnt_call_16(s, "fiber.time", 10, empty);
 	rc += tnt_eval(s, "fiber.time", 10, empty);
 	hexDump("fiber_time (call+eval)", TNT_SNET_CAST(s)->sbuf.buf, rc);
 	rc = tnt_flush(s);

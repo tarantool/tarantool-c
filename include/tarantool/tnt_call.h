@@ -51,6 +51,21 @@ tnt_call(struct tnt_stream *s, const char *proc, size_t plen,
 	 struct tnt_stream *args);
 
 /**
+ * \brief Construct call request and write it into stream
+ *        Version for Tarantool 1.6
+ *
+ * \param s    stream object to write request to
+ * \param proc procedure to call
+ * \param plen procedure length
+ * \param args tnt_object instance with messagepack array with args to call
+ *             procedure with
+ *
+ * \retval number of bytes written to stream
+ */
+ssize_t
+tnt_call_16(struct tnt_stream *s, const char *proc, size_t proc_len,
+	    struct tnt_stream *args);
+/**
  * \brief Construct eval request and write it into stream
  *
  * \param s    stream object to write request to

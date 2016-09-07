@@ -170,7 +170,7 @@ int tnt_reload_schema(struct tnt_stream *s)
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
 	if (!sn->connected || pm_atomic_load(&s->wrcnt) != 0)
 		return -1;
-	uint32_t oldsync = tnt_stream_reqid(s, 127);
+	uint64_t oldsync = tnt_stream_reqid(s, 127);
 	tnt_get_space(s);
 	tnt_get_index(s);
 	tnt_stream_reqid(s, oldsync);

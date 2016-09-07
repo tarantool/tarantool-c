@@ -52,6 +52,12 @@ tnt_auth(struct tnt_stream *s, const char *user, int ulen, const char *pass,
 	 int plen);
 
 /**
+ * \brief tnt_auth version with providing base64 encoded salt from tarantool
+ */
+ssize_t
+tnt_auth_raw(struct tnt_stream *s, const char *user, int ulen,
+	     const char *pass, int plen, const char *base64_salt);
+/**
  * \brief Write deauth request to stream
  *
  * shortcut for tnt_auth(s, NULL, 0, NULL, 0)

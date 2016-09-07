@@ -64,15 +64,15 @@ Possible error codes:
 .. errtype:: TNT_ETMOUT
 
     Timeout was reached during connect/read/write operations.
-    
+
 .. errtype:: TNT_EBADVAL
 
     Currently unused.
-    
+
 .. errtype:: TNT_ELOGIN
 
     Authentication error.
-    
+
 .. errtype:: TNT_LAST
 
     Pointer to the final element of an enumerated data structure (enum).
@@ -85,7 +85,7 @@ Functions to work with errors:
 
 .. c:function:: char *tnt_strerror(struct tnt_stream *s)
 
-    Format the error as a string message. In case the error code is 
+    Format the error as a string message. In case the error code is
     :errtype:`TNT_ESYSTEM`, then the driver uses the system function
     :func:`strerror()` to format the message.
 
@@ -104,21 +104,21 @@ Functions to work with errors:
 
     You can set the following options for a connection:
 
-    * TNT_OPT_URI (``const char *``) - URI for connecting to 
+    * TNT_OPT_URI (``const char *``) - URI for connecting to
       :program:`tarantool`.
     * TNT_OPT_TMOUT_CONNECT (``struct timeval *``) - timeout on connecting.
     * TNT_OPT_TMOUT_SEND (``struct timeval *``) - timeout on sending.
-    * TNT_OPT_SEND_CB (``ssize_t (*send_cb_t)(struct tnt_iob *b, void *buf, 
+    * TNT_OPT_SEND_CB (``ssize_t (*send_cb_t)(struct tnt_iob *b, void *buf,
       size_t len)``) - a function to be called instead of writing into a socket;
       uses the buffer ``buf`` which is ``len`` bytes long.
-    * TNT_OPT_SEND_CBV (``ssize_t (*sendv_cb_t)(struct tnt_iob *b, 
+    * TNT_OPT_SEND_CBV (``ssize_t (*sendv_cb_t)(struct tnt_iob *b,
       const struct iovec *iov, int iov_count)``) - a function to be called
       instead of writing into a socket;
       uses multiple (``iov_count``) buffers passed in ``iov``.
     * TNT_OPT_SEND_BUF (``int``) - the maximum size (in bytes) of the buffer for
       outgoing messages.
     * TNT_OPT_SEND_CB_ARG (``void *``) - context for "send" callbacks.
-    * TNT_OPT_RECV_CB (``ssize_t (*recv_cb_t)(struct tnt_iob *b, void *buf, 
+    * TNT_OPT_RECV_CB (``ssize_t (*recv_cb_t)(struct tnt_iob *b, void *buf,
       size_t len)``) - a function to be called instead of reading from a socket;
       uses the buffer ``buf`` which is ``len`` bytes long.
     * TNT_OPT_RECV_BUF (``int``) - the maximum size (in bytes) of the buffer for
@@ -166,10 +166,10 @@ Functions to work with errors:
 .. c:function:: int32_t tnt_get_spaceno(struct tnt_stream *s, const char *space, size_t space_len)
                 int32_t tnt_get_indexno(struct tnt_stream *s, int space, const char *index, size_t index_len)
 
-    Get space/index number from their names. 
+    Get space/index number from their names.
     For :func:`tnt_get_indexno`, specify the length of the space name (in bytes)
-    in ``space_len``. 
-    For :func:`tnt_get_indexno`, specify the space ID number in ``space`` and 
+    in ``space_len``.
+    For :func:`tnt_get_indexno`, specify the space ID number in ``space`` and
     the length of the index name (in bytes) in ``index_len``.
 
 =====================================================================
@@ -178,7 +178,7 @@ Functions to work with errors:
 
 Use the :func:`tnt_stream_free` function to free a connection object.
 
-..  // Examples are commented out for a while as we currently revise them. 
+..  // Examples are commented out for a while as we currently revise them.
 ..  =====================================================================
 ..                             Example
 ..  =====================================================================
@@ -186,7 +186,7 @@ Use the :func:`tnt_stream_free` function to free a connection object.
   .. literalinclude:: example.c
       :language: c
       :lines: 61-76,347-351
-  
+
   .. literalinclude:: example.c
       :language: c
       :lines: 16-25,34-42

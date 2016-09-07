@@ -58,6 +58,7 @@ TNT_REQUEST_CUSTOM(replace, REPLACE);
 TNT_REQUEST_CUSTOM(update, UPDATE);
 TNT_REQUEST_CUSTOM(delete, DELETE);
 TNT_REQUEST_CUSTOM(call, CALL);
+TNT_REQUEST_CUSTOM(call_16, CALL_16);
 TNT_REQUEST_CUSTOM(auth, AUTH);
 TNT_REQUEST_CUSTOM(eval, EVAL);
 TNT_REQUEST_CUSTOM(upsert, UPSERT);
@@ -130,7 +131,7 @@ int
 tnt_request_set_func(struct tnt_request *req, const char *func,
 		     uint32_t flen)
 {
-	if (req->hdr.type != TNT_OP_CALL)
+	if (!is_call(req->hdr.type))
 		return -1;
 	if (!func)
 		return -1;
@@ -141,7 +142,7 @@ tnt_request_set_func(struct tnt_request *req, const char *func,
 int
 tnt_request_set_funcz(struct tnt_request *req, const char *func)
 {
-	if (req->hdr.type != TNT_OP_CALL)
+	if (!is_call(req->hdr.type))
 		return -1;
 	if (!func)
 		return -1;
@@ -231,7 +232,7 @@ tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
 	pos = mp_encode_uint(pos, req->hdr.sync); /* 9 */
 	char *map = pos++;                        /* 1 */
 	size_t nd = 0;
-	if (tp < TNT_OP_CALL) {
+	if (tp < TNT_OP_CALL_16) {
 		pos = mp_encode_uint(pos, TNT_SPACE);     /* 1 */
 		pos = mp_encode_uint(pos, req->space_id); /* 5 */
 		nd += 1;
@@ -264,6 +265,7 @@ tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
 			pos = mp_encode_uint(pos, TNT_EXPRESSION);          /* 1 */
 			pos = mp_encode_strl(pos, req->key_end - req->key); /* 5 */
 			break;
+		case TNT_OP_CALL_16:
 		case TNT_OP_CALL:
 			pos = mp_encode_uint(pos, TNT_FUNCTION);            /* 1 */
 			pos = mp_encode_strl(pos, req->key_end - req->key); /* 5 */

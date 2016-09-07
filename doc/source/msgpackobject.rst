@@ -4,7 +4,7 @@
 
 The basic MessagePack object layer is implemented as a wrapper for the
 ``msgpuck`` library. This layer supports array/map traversal, dynamically
-sized msgpack arrays, etc. For details, see `MessagePack specification`_ and 
+sized msgpack arrays, etc. For details, see `MessagePack specification`_ and
 `msgpuck readme file`_.
 
 =====================================================================
@@ -12,7 +12,7 @@ sized msgpack arrays, etc. For details, see `MessagePack specification`_ and
 =====================================================================
 
 MessagePack is an efficient binary serialization format. It lets you exchange
-data among multiple languages, like JSON does. But it's faster and smaller. 
+data among multiple languages, like JSON does. But it's faster and smaller.
 Small integers are encoded into a single byte, and typical short strings require
 only one extra byte in addition to the strings themselves.
 
@@ -56,12 +56,12 @@ only one extra byte in addition to the strings themselves.
 
 .. c:function:: struct tnt_stream *tnt_object(struct tnt_stream *s)
 
-    Create an empty MsgPack object. If ``s`` is passed as ``NULL``, then the 
+    Create an empty MsgPack object. If ``s`` is passed as ``NULL``, then the
     object is allocated. Otherwise, the allocated object is initialized.
 
 .. c:function:: struct tnt_stream *tnt_object_as(struct tnt_stream *s, char *buf, size_t buf_len)
 
-    Create a read-only MsgPack object from buffer. 
+    Create a read-only MsgPack object from buffer.
     The buffer's length is set in bytes. The source string isn't copied, so be
     careful not to destroy it while this function is running.
 
@@ -109,12 +109,12 @@ only one extra byte in addition to the strings themselves.
                     Array/Map in MessagePack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To understand why there are many problems when working with MessagePack 
-arrays/maps with dynamic size, we need to understand how it's originally 
+To understand why there are many problems when working with MessagePack
+arrays/maps with dynamic size, we need to understand how it's originally
 specified.
 
-Arrays/maps are a sequence of elements following the "header". The problem is 
-that the header's length varies depending on the number of elements in the 
+Arrays/maps are a sequence of elements following the "header". The problem is
+that the header's length varies depending on the number of elements in the
 sequence.
 
 For example:
@@ -127,14 +127,14 @@ For example:
                 Working with Array/Map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-So when you, dynamically, add 1 element and the sequence's length becomes 16 - 
-the header grows from 1 to 2 bytes (the same applies to 2^32). There are 3 
-strategies to work with it (each strategy corresponds to one of the 3 container 
+So when you, dynamically, add 1 element and the sequence's length becomes 16 -
+the header grows from 1 to 2 bytes (the same applies to 2^32). There are 3
+strategies to work with it (each strategy corresponds to one of the 3 container
 types):
 
 .. containertype:: TNT_SBO_SIMPLE
 
-    Set the sequence's size (stored in header) before adding elements into it. 
+    Set the sequence's size (stored in header) before adding elements into it.
     It's the default option.
 
 .. containertype:: TNT_SBO_SPARSE
@@ -145,7 +145,7 @@ types):
 .. containertype:: TNT_SBO_PACKED
 
     When you're finished working with the container - it will be packed.
-    
+
 .. c:function:: int tnt_object_type(struct tnt_stream *s, enum TNT_SBO_TYPE type)
 
     Function for setting an object type. You can set it only when the container
@@ -156,15 +156,15 @@ types):
 .. c:function:: ssize_t tnt_object_add_array(struct tnt_stream *s, uint32_t size)
 
     Append an array header to a stream object.
-    
+
     The header's size is in bytes. If :containertype:`TNT_SBO_SPARSE` or
     :containertype:`TNT_SBO_PACKED` is set as container type, then size is
     ignored.
 
 .. c:function:: ssize_t tnt_object_add_map(struct tnt_stream *s, uint32_t size)
 
-    Append a map header to a stream object. 
-    
+    Append a map header to a stream object.
+
     The header's size is in bytes. If :containertype:`TNT_SBO_SPARSE` or
     :containertype:`TNT_SBO_PACKED` is set as container type, then size is
     ignored.
@@ -181,7 +181,7 @@ types):
 .. c:function:: ssize_t tnt_object_format(struct tnt_stream *s, const char *fmt, ...)
                 ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl)
 
-    Append formatted msgpack values to the stream object. The 
+    Append formatted msgpack values to the stream object. The
     :func:`<...>_vformat` function uses ``va_list`` as the third argument.
 
     Use the following symbols for formatting:
@@ -217,9 +217,9 @@ types):
 
 .. c:function:: int tnt_object_reset(struct tnt_stream *s)
 
-    Reset a stream object to the basic state. 
+    Reset a stream object to the basic state.
 
-..  // Examples are commented out for a while as we currently revise them. 
+..  // Examples are commented out for a while as we currently revise them.
 ..  =====================================================================
 ..                             Example
 ..  =====================================================================

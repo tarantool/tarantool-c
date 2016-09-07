@@ -51,14 +51,6 @@ tnt_scramble_prepare(void *out, const void *salt, const void *pass, int plen)
 
 
 ssize_t
-tnt_auth(struct tnt_stream *s, const char *user, int ulen,
-	 const char *pass, int plen)
-{
-	return tnt_auth_raw(s, user, ulen, pass, plen,
-			    TNT_SNET_CAST(s)->greeting + TNT_VERSION_SIZE);
-}
-
-ssize_t
 tnt_auth_raw(struct tnt_stream *s, const char *user, int ulen,
 	     const char *pass, int plen, const char *base64_salt)
 {
@@ -109,6 +101,14 @@ tnt_auth_raw(struct tnt_stream *s, const char *user, int ulen,
 	v[0].iov_base = len_prefix;
 	v[0].iov_len = len_end - len_prefix;
 	return s->writev(s, v, v_sz);
+}
+
+ssize_t
+tnt_auth(struct tnt_stream *s, const char *user, int ulen,
+	 const char *pass, int plen)
+{
+	return tnt_auth_raw(s, user, ulen, pass, plen,
+			    TNT_SNET_CAST(s)->greeting + TNT_VERSION_SIZE);
 }
 
 ssize_t

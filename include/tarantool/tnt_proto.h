@@ -81,17 +81,18 @@ enum tnt_response_key_t {
  * \brief Request types
  */
 enum tnt_request_t {
-	TNT_OP_SELECT = 1,
-	TNT_OP_INSERT = 2,
-	TNT_OP_REPLACE = 3,
-	TNT_OP_UPDATE = 4,
-	TNT_OP_DELETE = 5,
-	TNT_OP_CALL = 6,
-	TNT_OP_AUTH = 7,
-	TNT_OP_EVAL = 8,
-	TNT_OP_UPSERT = 9,
-	TNT_OP_PING = 64,
-	TNT_OP_JOIN = 65,
+	TNT_OP_SELECT    = 1,
+	TNT_OP_INSERT    = 2,
+	TNT_OP_REPLACE   = 3,
+	TNT_OP_UPDATE    = 4,
+	TNT_OP_DELETE    = 5,
+	TNT_OP_CALL_16   = 6,
+	TNT_OP_AUTH      = 7,
+	TNT_OP_EVAL      = 8,
+	TNT_OP_UPSERT    = 9,
+	TNT_OP_CALL      = 10,
+	TNT_OP_PING      = 64,
+	TNT_OP_JOIN      = 65,
 	TNT_OP_SUBSCRIBE = 66
 };
 

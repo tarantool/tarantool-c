@@ -302,7 +302,7 @@ test_request_01(char *uri) {
 	isnt(arg, NULL, "Check object creation");
 	is  (tnt_object_add_array(arg, 0), 1, "Append elem");
 
-	struct tnt_request *req1 = tnt_request_call(NULL);
+	struct tnt_request *req1 = tnt_request_call_16(NULL);
 	tnt_request_set_funcz(req1, "test_4");
 	tnt_request_set_tuple(req1, arg);
 	uint64_t sync1 = tnt_request_compile(tnt, req1);
