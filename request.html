@@ -148,6 +148,8 @@ buffer. To send the buffered query to the server, you can use the
 <div class="section" id="adding-requests-except-update">
 <h2>Adding requests (except UPDATE)<a class="headerlink" href="#adding-requests-except-update" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
+<dt id="c.tnt_auth_raw">
+ssize_t <code class="descname">tnt_auth_raw</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*user</em>, int<em>&nbsp;ulen</em>, const char<em>&nbsp;*pass</em>, int<em>&nbsp;plen</em>, const char<em>&nbsp;*base64_salt</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_auth_raw" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_auth">
 ssize_t <code class="descname">tnt_auth</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*user</em>, int<em>&nbsp;ulen</em>, const char<em>&nbsp;*pass</em>, int<em>&nbsp;plen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_auth" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_deauth">
@@ -161,6 +163,8 @@ password <code class="docutils literal"><span class="pre">pass</span></code>.</p
 <dl class="function">
 <dt id="c.tnt_call">
 ssize_t <code class="descname">tnt_call</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*proc</em>, size_t<em>&nbsp;plen</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_call" title="Permalink to this definition">¶</a></dt>
+<dt id="c.tnt_call_16">
+ssize_t <code class="descname">tnt_call_16</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*proc</em>, size_t<em>&nbsp;plen</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_call_16" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_eval">
 ssize_t <code class="descname">tnt_eval</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*expr</em>, size_t<em>&nbsp;elen</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_eval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a call/eval request.</p>

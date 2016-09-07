@@ -177,6 +177,7 @@ enum <code class="descname">tnt_request_type</code><a class="headerlink" href="#
 <li><strong>TNT_OP_UPDATE</strong></li>
 <li><strong>TNT_OP_DELETE</strong></li>
 <li><strong>TNT_OP_CALL</strong></li>
+<li><strong>TNT_OP_CALL_16</strong></li>
 <li><strong>TNT_OP_AUTH</strong></li>
 <li><strong>TNT_OP_EVAL</strong></li>
 <li><strong>TNT_OP_PING</strong></li>
@@ -189,7 +190,7 @@ struct <code class="descname">tnt_request</code><a class="headerlink" href="#c.t
 <dd><p>Base request object. It contains all parts of a request.</p>
 <div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tnt_request</span> <span class="p">{</span>
     <span class="k">struct</span> <span class="p">{</span>
-        <span class="kt">uint32_t</span> <span class="n">sync</span><span class="p">;</span>
+        <span class="kt">uint64_t</span> <span class="n">sync</span><span class="p">;</span>
         <span class="k">enum</span> <span class="n">tnt_request_type</span> <span class="n">type</span><span class="p">;</span>
     <span class="p">}</span> <span class="n">hdr</span><span class="p">;</span>
     <span class="kt">uint32_t</span> <span class="n">space_id</span><span class="p">;</span>
@@ -233,6 +234,8 @@ struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">t
 struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a> *<code class="descname">tnt_request_delete</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_delete" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_call">
 struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a> *<code class="descname">tnt_request_call</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_call" title="Permalink to this definition">¶</a></dt>
+<dt id="c.tnt_request_call_16">
+struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a> *<code class="descname">tnt_request_call_16</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_call_16" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_auth">
 struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a> *<code class="descname">tnt_request_auth</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_auth" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_eval">
@@ -249,7 +252,7 @@ struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">t
 <h2>Request header<a class="headerlink" href="#request-header" title="Permalink to this headline">¶</a></h2>
 <dl class="member">
 <dt id="c.tnt_request.hdr.sync">
-uint32_t <code class="descname">tnt_request.hdr.sync</code><a class="headerlink" href="#c.tnt_request.hdr.sync" title="Permalink to this definition">¶</a></dt>
+uint64_t <code class="descname">tnt_request.hdr.sync</code><a class="headerlink" href="#c.tnt_request.hdr.sync" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sync ID number of a request. Generated automatically when the request is
 compiled.</p>
 </dd></dl>
@@ -302,7 +305,7 @@ Return <code class="docutils literal"><span class="pre">-1</span></code> if the 
 <p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
 <div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
-<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="cm">/* set by `tnt_request_set_key_format` */</span>
+<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="c1">// set by `tnt_request_set_key_format`</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -323,7 +326,7 @@ Return <code class="docutils literal"><span class="pre">-1</span></code> if the 
 <p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
 <div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">tuple</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">tuple_end</span><span class="p">;</span>
-<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">tuple_object</span><span class="p">;</span>  <span class="cm">/* set by `tnt_request_set_tuple_format` */</span>
+<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">tuple_object</span><span class="p">;</span>  <span class="c1">// set by `tnt_request_set_tuple_format`</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -341,7 +344,7 @@ bytes).</p>
 <p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
 <div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
-<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="cm">/* set by `tnt_request_set_exprz` */</span>
+<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="c1">// set by `tnt_request_set_exprz`</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -358,7 +361,7 @@ int <code class="descname">tnt_request_set_funcz</code><span class="sig-paren">(
 <p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
 <div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
-<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="cm">/* set by `tnt_request_set_funcz` */</span>
+<span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="c1">// set by `tnt_request_set_funcz`</span>
 </pre></div>
 </div>
 </dd></dl>
