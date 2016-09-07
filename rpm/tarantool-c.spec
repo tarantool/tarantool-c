@@ -1,5 +1,5 @@
 Name: tarantool-c
-Version: 1.0.0.0
+Version: 1.0.1
 Release: 1%{?dist}
 Summary: Tarantool C connector
 Group: Development/Languages
@@ -44,5 +44,7 @@ make DESTDIR=%{buildroot} install
 "%{_includedir}/tarantool/*.h"
 
 %changelog
+* Tue Jun 9 2015 Eugine Blikh <bigbes@gmail.com> 1.0.1-1
+- Couple of fixes for tarantool-c library
 * Tue Jun 9 2015 Eugine Blikh <bigbes@gmail.com> 1.0.0-1
 - Initial version of the RPM spec
