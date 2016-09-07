@@ -54,6 +54,14 @@ ssize_t
 tnt_auth(struct tnt_stream *s, const char *user, int ulen,
 	 const char *pass, int plen)
 {
+	return tnt_auth_raw(s, user, ulen, pass, plen,
+			    TNT_SNET_CAST(s)->greeting + TNT_VERSION_SIZE);
+}
+
+ssize_t
+tnt_auth_raw(struct tnt_stream *s, const char *user, int ulen,
+	     const char *pass, int plen, const char *base64_salt)
+{
 	struct tnt_iheader hdr;
 	struct iovec v[6]; int v_sz = 5;
 	char *data = NULL, *body_start = NULL;
@@ -81,8 +89,7 @@ tnt_auth(struct tnt_stream *s, const char *user, int ulen,
 		data = mp_encode_str(data, "chap-sha1", strlen("chap-sha1"));
 		data = mp_encode_strl(data, TNT_SCRAMBLE_SIZE);
 		char salt[64], scramble[TNT_SCRAMBLE_SIZE];
-		base64_decode(TNT_SNET_CAST(s)->greeting + TNT_VERSION_SIZE,
-			      TNT_SALT_SIZE, salt, 64);
+		base64_decode(base64_salt, TNT_SALT_SIZE, salt, 64);
 		tnt_scramble_prepare(scramble, salt, pass, plen);
 		v[5].iov_base = scramble;
 		v[5].iov_len  = TNT_SCRAMBLE_SIZE;
