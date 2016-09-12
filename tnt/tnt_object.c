@@ -94,7 +94,7 @@ tnt_object_add_nil (struct tnt_stream *s)
 	if (sbo->stack_size > 0)
 		sbo->stack[sbo->stack_size - 1].size += 1;
 	char data[2]; char *end = mp_encode_nil(data);
-	eturn s->write(s, data, end - data);
+	return s->write(s, data, end - data);
 }
 
 ssize_t
@@ -340,7 +340,6 @@ ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl)
 			f++;
 			assert(f[0]);
 			int64_t int_value = 0;
-			int64_t count = 1;
 			int int_status = 0; /* 1 - signed, 2 - unsigned */
 
 			if (f[0] == 'd' || f[0] == 'i') {

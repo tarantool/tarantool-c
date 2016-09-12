@@ -212,10 +212,14 @@ int tnt_request_set_tuple_format(struct tnt_request *req, const char *fmt, ...)
 	return tnt_request_set_tuple(req, req->tuple_object);
 }
 
-uint64_t
-tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
-{
+int
+tnt_request_writeout(struct tnt_stream *s, struct tnt_request *req,
+		     uint64_t *sync) {
 	enum tnt_request_t tp = req->hdr.type;
+	if (sync != NULL && *sync == INT64_MAX &&
+	    (s->reqid & INT64_MAX) == INT64_MAX) {
+		s->reqid = 0;
+	}
 	req->hdr.sync = s->reqid++;
 	/* header */
 	/* int (9) + 1 + sync + 1 + op */
@@ -317,5 +321,15 @@ tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
 	ssize_t rv = s->writev(s, v, v_sz);
 	if (rv == -1)
 		return -1;
-	return req->hdr.sync;
+	if (sync != NULL)
+		*sync = req->hdr.sync;
+	return 0;
+}
+
+int64_t
+tnt_request_compile(struct tnt_stream *s, struct tnt_request *req) {
+	uint64_t sync = INT64_MAX;
+	if (tnt_request_writeout(s, req, &sync) == -1)
+		return -1;
+	return sync;
 }

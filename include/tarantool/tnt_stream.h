@@ -39,6 +39,7 @@
 #include <sys/uio.h>
 
 #include <tarantool/tnt_reply.h>
+#include <tarantool/tnt_request.h>
 
 /**
  * \brief Basic stream object
@@ -48,9 +49,13 @@ struct tnt_stream {
 	int alloc; /*!< Allocation mark */
 	ssize_t (*write)(struct tnt_stream *s, const char *buf, size_t size); /*!< write to buffer function */
 	ssize_t (*writev)(struct tnt_stream *s, struct iovec *iov, int count); /*!< writev function */
+	ssize_t (*write_request)(struct tnt_stream *s, struct tnt_request *r, uint64_t *sync); /*!< write request function */
+
 	ssize_t (*read)(struct tnt_stream *s, char *buf, size_t size); /*!< read from buffer function */
 	int (*read_reply)(struct tnt_stream *s, struct tnt_reply *r); /*!< read reply from buffer */
+
 	void (*free)(struct tnt_stream *s); /*!< free custom buffer types (destructor) */
+
 	void *data; /*!< subclass data */
 	uint32_t wrcnt; /*!< count of write operations */
 	uint64_t reqid; /*!< request id of current operation */

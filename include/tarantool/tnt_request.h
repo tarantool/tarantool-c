@@ -35,6 +35,8 @@
  * \brief Request creation using connection schema
  */
 
+#include <tarantool/tnt_proto.h>
+
 struct tnt_request {
 	struct {
 		uint64_t sync; /*!< Request sync id. Generated when encoded */
@@ -276,12 +278,25 @@ tnt_request_set_ops(struct tnt_request *req, struct tnt_stream *s);
  * \param s   stream pointer
  * \param req request pointer
  *
+ * \retval >0 ok, sync is returned
+ * \retval -1 out of memory
+ */
+int64_t
+tnt_request_compile(struct tnt_stream *s, struct tnt_request *req);
+
+/**
+ * \brief Encode request to stream object.
+ *
+ * \param[in]  s    stream pointer
+ * \param[in]  req  request pointer
+ * \param[out] sync pointer to compiled request
+ *
  * \retval 0  ok
  * \retval -1 out of memory
  */
-uint64_t
-tnt_request_compile(struct tnt_stream *s, struct tnt_request *req);
-
+int
+tnt_request_writeout(struct tnt_stream *s, struct tnt_request *req,
+		     uint64_t *sync);
 /**
  * \brief create select request object
  * \sa tnt_request_init
