@@ -221,8 +221,13 @@ ssize_t <code class="descname">tnt_object_add_nil</code><span class="sig-paren">
 <dl class="function">
 <dt id="c.tnt_object_add_int">
 ssize_t <code class="descname">tnt_object_add_int</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, int64_t<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_int" title="Permalink to this definition">¶</a></dt>
-<dd><p>Append an integer to a stream object. If <code class="docutils literal"><span class="pre">value</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code>, then pack it in
-<code class="docutils literal"><span class="pre">uint</span></code> MsgPack type, otherwise the type is <code class="docutils literal"><span class="pre">int</span></code>.</p>
+<dt id="c.tnt_object_add_uint">
+ssize_t <code class="descname">tnt_object_add_uint</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, uint64_t<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_uint" title="Permalink to this definition">¶</a></dt>
+<dd><p>For <code class="docutils literal"><span class="pre">int64_t</span></code> version: Append an integer to a stream object. If
+<code class="docutils literal"><span class="pre">value</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code>, then pack it in <code class="docutils literal"><span class="pre">uint</span></code> MsgPack type, otherwise the type
+is <code class="docutils literal"><span class="pre">int</span></code>.</p>
+<p>For <code class="docutils literal"><span class="pre">uint64_t</span></code> version: Append unsigned integer (that&#8217;s <code class="docutils literal"><span class="pre">uint</span></code> MsgPack
+type)</p>
 </dd></dl>
 
 <dl class="function">

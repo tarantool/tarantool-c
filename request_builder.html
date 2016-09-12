@@ -393,14 +393,14 @@ int <code class="descname">tnt_request_set_index_base</code><span class="sig-par
 <h2>Manipulating a request<a class="headerlink" href="#manipulating-a-request" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_request_compile">
-<code class="descname">tnt_request_compile</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_compile" title="Permalink to this definition">¶</a></dt>
+uint64_t <code class="descname">tnt_request_compile</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_compile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compile a request into a stream.</p>
 <p>Return <code class="docutils literal"><span class="pre">-1</span></code> if bad command or can&#8217;t write to stream.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.tnt_request_free">
-<code class="descname">tnt_request_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_free" title="Permalink to this definition">¶</a></dt>
+void <code class="descname">tnt_request_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_free" title="Permalink to this definition">¶</a></dt>
 <dd><p>Free a request object.</p>
 </dd></dl>
 
