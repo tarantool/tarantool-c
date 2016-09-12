@@ -102,49 +102,55 @@ struct tnt_stream *
 tnt_object(struct tnt_stream *s);
 
 /**
- * \brief Add nil to an stream object
+ * \brief Add nil to a stream object
  */
 ssize_t
 tnt_object_add_nil(struct tnt_stream *s);
 
 /**
- * \brief Add integer to an stream object
+ * \brief Add integer to a stream object
  */
 ssize_t
 tnt_object_add_int(struct tnt_stream *s, int64_t value);
 
 /**
- * \brief Add string to an stream object
+ * \brief Add unsigned integer to a stream object
+ */
+ssize_t
+tnt_object_add_uint(struct tnt_stream *s, uint64_t value);
+
+/**
+ * \brief Add string to a stream object
  */
 ssize_t
 tnt_object_add_str(struct tnt_stream *s, const char *str, uint32_t len);
 
 /**
- * \brief Add null terminated string to an stream object
+ * \brief Add null terminated string to a stream object
  */
 ssize_t
 tnt_object_add_strz(struct tnt_stream *s, const char *strz);
 
 /**
- * \brief Add binary object to an stream object
+ * \brief Add binary object to a stream object
  */
 ssize_t
 tnt_object_add_bin(struct tnt_stream *s, const void *bin, uint32_t len);
 
 /**
- * \brief Add boolean to an stream object
+ * \brief Add boolean to a stream object
  */
 ssize_t
 tnt_object_add_bool(struct tnt_stream *s, char value);
 
 /**
- * \brief Add floating value to an stream object
+ * \brief Add floating value to a stream object
  */
 ssize_t
 tnt_object_add_float(struct tnt_stream *s, float value);
 
 /**
- * \brief Add double precision floating value to an stream object
+ * \brief Add double precision floating value to a stream object
  */
 ssize_t
 tnt_object_add_double(struct tnt_stream *s, double value);

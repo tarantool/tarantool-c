@@ -94,6 +94,17 @@ tnt_object_add_nil (struct tnt_stream *s)
 	if (sbo->stack_size > 0)
 		sbo->stack[sbo->stack_size - 1].size += 1;
 	char data[2]; char *end = mp_encode_nil(data);
+	eturn s->write(s, data, end - data);
+}
+
+ssize_t
+tnt_object_add_uint(struct tnt_stream *s, uint64_t value)
+{
+	struct tnt_sbuf_object *sbo = TNT_SOBJ_CAST(s);
+	if (sbo->stack_size > 0)
+		sbo->stack[sbo->stack_size - 1].size += 1;
+	char data[10], *end;
+	end = mp_encode_uint(data, value);
 	return s->write(s, data, end - data);
 }
 
@@ -329,6 +340,7 @@ ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl)
 			f++;
 			assert(f[0]);
 			int64_t int_value = 0;
+			int64_t count = 1;
 			int int_status = 0; /* 1 - signed, 2 - unsigned */
 
 			if (f[0] == 'd' || f[0] == 'i') {
@@ -350,18 +362,18 @@ ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl)
 					return -1;
 				result += rv;
 				f += 2;
-			} else if(f[0] == 'f') {
+			} else if (f[0] == 'f') {
 				float v = (float)va_arg(vl, double);
 				if ((rv = tnt_object_add_float(s, v)) == -1)
 					return -1;
 				result += rv;
-			} else if(f[0] == 'l' && f[1] == 'f') {
+			} else if (f[0] == 'l' && f[1] == 'f') {
 				double v = va_arg(vl, double);
 				if ((rv = tnt_object_add_double(s, v)) == -1)
 					return -1;
 				result += rv;
 				f++;
-			} else if(f[0] == 'b') {
+			} else if (f[0] == 'b') {
 				bool v = (bool)va_arg(vl, int);
 				if ((rv = tnt_object_add_bool(s, v)) == -1)
 					return -1;

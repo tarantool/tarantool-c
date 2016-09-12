@@ -74,9 +74,14 @@ only one extra byte in addition to the strings themselves.
     Append ``nil`` to a stream object.
 
 .. c:function:: ssize_t tnt_object_add_int(struct tnt_stream *s, int64_t value)
+                ssize_t tnt_object_add_uint(struct tnt_stream *s, uint64_t value)
 
-    Append an integer to a stream object. If ``value >= 0``, then pack it in
-    ``uint`` MsgPack type, otherwise the type is ``int``.
+    For ``int64_t`` version: Append an integer to a stream object. If
+    ``value >= 0``, then pack it in ``uint`` MsgPack type, otherwise the type
+    is ``int``.
+
+    For ``uint64_t`` version: Append unsigned integer (that's ``uint`` MsgPack
+    type)
 
 .. c:function:: ssize_t tnt_object_add_str (struct tnt_stream *s, const char *str, uint32_t len)
                 ssize_t tnt_object_add_strz(struct tnt_stream *s, const char *str)
