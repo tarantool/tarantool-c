@@ -279,7 +279,7 @@ tnt_request_set_ops(struct tnt_request *req, struct tnt_stream *s);
  * \retval 0  ok
  * \retval -1 out of memory
  */
-int64_t
+uint64_t
 tnt_request_compile(struct tnt_stream *s, struct tnt_request *req);
 
 /**

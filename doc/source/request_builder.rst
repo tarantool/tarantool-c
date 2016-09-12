@@ -234,13 +234,13 @@
                        Manipulating a request
 =====================================================================
 
-.. c:function:: tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
+.. c:function:: uint64_t tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
 
     Compile a request into a stream.
 
     Return ``-1`` if bad command or can't write to stream.
 
-.. c:function:: tnt_request_free(struct tnt_request *req)
+.. c:function:: void tnt_request_free(struct tnt_request *req)
 
     Free a request object.
 

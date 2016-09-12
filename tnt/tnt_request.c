@@ -212,7 +212,7 @@ int tnt_request_set_tuple_format(struct tnt_request *req, const char *fmt, ...)
 	return tnt_request_set_tuple(req, req->tuple_object);
 }
 
-int64_t
+uint64_t
 tnt_request_compile(struct tnt_stream *s, struct tnt_request *req)
 {
 	enum tnt_request_t tp = req->hdr.type;
