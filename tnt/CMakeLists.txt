@@ -38,11 +38,11 @@ set (TNT_SOURCES
      ${CMAKE_CURRENT_SOURCE_DIR}/tnt_io.c
      ${CMAKE_CURRENT_SOURCE_DIR}/tnt_opt.c
      ${CMAKE_CURRENT_SOURCE_DIR}/tnt_net.c
-     ${CMAKE_SOURCE_DIR}/third_party/uri.c
-     ${CMAKE_SOURCE_DIR}/third_party/sha1.c
-     ${CMAKE_SOURCE_DIR}/third_party/base64.c
-     ${CMAKE_SOURCE_DIR}/third_party/PMurHash.c
-     ${CMAKE_SOURCE_DIR}/third_party/msgpuck.c
+     ${PROJECT_SOURCE_DIR}/third_party/uri.c
+     ${PROJECT_SOURCE_DIR}/third_party/sha1.c
+     ${PROJECT_SOURCE_DIR}/third_party/base64.c
+     ${PROJECT_SOURCE_DIR}/third_party/PMurHash.c
+     ${PROJECT_SOURCE_DIR}/third_party/msgpuck.c
 )
 
 #----------------------------------------------------------------------------#
