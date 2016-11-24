@@ -120,7 +120,7 @@ static ssize_t tnt_update_op_len(char op) {
 }
 
 struct tnt_stream *tnt_update_container(struct tnt_stream *ops) {
-	ops = tnt_object(NULL);
+	ops = tnt_object(ops);
 	if (!ops) return NULL;
 	tnt_object_type(ops, TNT_SBO_SPARSE);
 	if (tnt_object_add_array(ops, 0) == -1) {
