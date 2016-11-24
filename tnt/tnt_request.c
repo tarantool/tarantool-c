@@ -236,7 +236,7 @@ tnt_request_writeout(struct tnt_stream *s, struct tnt_request *req,
 	pos = mp_encode_uint(pos, req->hdr.sync); /* 9 */
 	char *map = pos++;                        /* 1 */
 	size_t nd = 0;
-	if (tp < TNT_OP_CALL_16) {
+	if (tp < TNT_OP_CALL_16 || tp == TNT_OP_UPSERT) {
 		pos = mp_encode_uint(pos, TNT_SPACE);     /* 1 */
 		pos = mp_encode_uint(pos, req->space_id); /* 5 */
 		nd += 1;
