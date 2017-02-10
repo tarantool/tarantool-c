@@ -67,7 +67,7 @@ static char* tnt_buf_resize(struct tnt_stream *s, size_t size) {
 	struct tnt_stream_buf *sb = TNT_SBUF_CAST(s);
 	size_t off = sb->size;
 	size_t nsize = off + size;
-	char *nd = realloc(sb->data, nsize);
+	char *nd = tnt_mem_realloc(sb->data, nsize);
 	if (nd == NULL) {
 		tnt_mem_free(sb->data);
 		return NULL;
