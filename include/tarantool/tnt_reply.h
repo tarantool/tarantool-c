@@ -36,6 +36,11 @@
  */
 
 /**
+ * \brief Size of iproto header
+ */
+#define TNT_REPLY_IPROTO_HDR_SIZE	5
+
+/**
  * \brief Callback for recv reply from buffer
  *
  * \param ptr  pointer to buffer and offset
@@ -127,5 +132,69 @@ tnt_reply(struct tnt_reply *r, char *buf, size_t size, size_t *off);
  */
 int
 tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr);
+
+/*!
+ * \brief Process buffer as reply header without copying processed bytes
+ *
+ * \param[in]  r    reply object pointer
+ * \param[in]  buf  buffer data pointer
+ * \param[in]  size buffer data size
+ * \param[out] off  returned offset, may be NULL
+ *
+ * if buffer contains valid reply header, then zero is returned and offset set to the
+ * end of reply header in buffer.
+ *
+ * if there were error while parsing buffer, -1 is returned.
+ *
+ * \returns status of processing reply
+ * \retval 0  process reply header
+ * \retval -1 error while parsing buffer
+ */
+int
+tnt_reply_hdr0(struct tnt_reply *r, const char *buf, size_t size, size_t *off);
+
+/*!
+ * \brief Process buffer as reply body without copying processed bytes
+ *
+ * \param[in]  r    reply object pointer
+ * \param[in]  buf  buffer data pointer
+ * \param[in]  size buffer data size
+ * \param[out] off  returned offset, may be NULL
+ *
+ * if buffer contains valid reply body, then zero is returned and offset set to the
+ * end of reply body in buffer.
+ *
+ * if there were error while parsing buffer, -1 is returned.
+ *
+ * \returns status of processing reply
+ * \retval 0  process reply body
+ * \retval -1 error while parsing buffer
+ */
+int
+tnt_reply_body0(struct tnt_reply *r, const char *buf, size_t size, size_t *off);
+
+/*!
+ * \brief Process buffer as reply without copying processed bytes
+ *
+ * \param[in]  r    reply object pointer
+ * \param[in]  buf  buffer data pointer
+ * \param[in]  size buffer data size
+ * \param[out] off  returned offset, may be NULL
+ *
+ * if buffer contains full and valid reply, then zero is returned and offset set to the
+ * end of reply in buffer.
+ *
+ * if buffer doesn't contain full reply, then 1 is returned and offset set to the
+ * size needed to read.
+ *
+ * if there were error while parsing buffer, -1 is returned.
+ *
+ * \returns status of processing reply
+ * \retval 0  process reply
+ * \retval 1  need 'offset' bytes more
+ * \retval -1 error while parsing buffer
+ */
+int
+tnt_reply0(struct tnt_reply *r, const char *buf, size_t size, size_t *off);
 
 #endif /* TNT_REPLY_H_INCLUDED */
