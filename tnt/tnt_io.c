@@ -68,7 +68,8 @@ tnt_io_resolve(struct sockaddr_in *addr,
 	addr->sin_family = AF_INET;
 	addr->sin_port = htons(port);
 	struct addrinfo *addr_info = NULL;
-	if (getaddrinfo(hostname, NULL, NULL, &addr_info) == 0) {
+	if (getaddrinfo(hostname, NULL, NULL, &addr_info) == 0 &&
+	    addr_info != NULL) {
 		memcpy(&addr->sin_addr,
 		       (void*)&((struct sockaddr_in *)addr_info->ai_addr)->sin_addr,
 		       sizeof(addr->sin_addr));

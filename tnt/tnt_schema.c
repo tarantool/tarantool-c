@@ -300,7 +300,7 @@ void tnt_schema_flush(struct tnt_schema *obj) {
 
 void tnt_schema_free(struct tnt_schema *obj) {
 	if (obj == NULL)
-		return NULL;
+		return;
 	tnt_schema_space_free(obj->space_hash);
 	mh_assoc_delete(obj->space_hash);
 }

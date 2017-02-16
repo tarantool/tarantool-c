@@ -332,7 +332,7 @@ ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl)
 			if ((rv = tnt_object_add_map(s, 0)) == -1)
 				return -1;
 			result += rv;
-		} if (f[0] == ']' || f[0] == '}') {
+		} else if (f[0] == ']' || f[0] == '}') {
 			if ((rv = tnt_object_container_close(s)) == -1)
 				return -1;
 			result += rv;

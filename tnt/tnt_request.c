@@ -312,11 +312,12 @@ tnt_request_writeout(struct tnt_stream *s, struct tnt_request *req,
 		v[v_sz++].iov_len = pos - begin;
 	}
 	mp_encode_map(map, nd);
-	size_t plen = 0; nd = 0;
+
+	size_t plen = 0;
 	for (int i = 1; i < v_sz; ++i) plen += v[i].iov_len;
-	nd = mp_sizeof_luint32(plen);
-	v[0].iov_base -= nd;
-	v[0].iov_len  += nd;
+	size_t hlen = mp_sizeof_luint32(plen);
+	v[0].iov_base -= hlen;
+	v[0].iov_len  += hlen;
 	mp_encode_luint32(v[0].iov_base, plen);
 	ssize_t rv = s->writev(s, v, v_sz);
 	if (rv == -1)
