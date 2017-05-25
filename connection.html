@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -44,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -84,7 +87,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Networking layer</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-connection">Creating a connection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#handling-errors">Handling errors</a></li>
@@ -94,8 +100,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reply.html">Parsing a reply</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with &#8220;tnt_stream&#8221;</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with &#8220;tnt_request&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with “tnt_stream”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with “tnt_request”</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">Working with a schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="buffering.html">Using a buffer for requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stream.html">Using the basic stream object</a></li>
@@ -111,8 +117,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">tarantool-c</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tarantool-c</a>
+        
       </nav>
 
 
@@ -121,21 +129,38 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Networking layer</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Networking layer</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -158,7 +183,7 @@ parts:</p>
 struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<code class="descname">tnt_net</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_net" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a tarantool connection object. If <code class="docutils literal"><span class="pre">s</span></code> is NULL, then allocate memory
 for it.</p>
-<p>Return NULL if can&#8217;t allocate memory.</p>
+<p>Return NULL if can’t allocate memory.</p>
 </dd></dl>
 
 </div>
@@ -195,7 +220,7 @@ function.</p>
 <dt id="errtype-TNT_EBIG">
 <code class="descname">TNT_EBIG</code><a class="headerlink" href="#errtype-TNT_EBIG" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read/write fragment is too big (in case the send/read buffer is smaller than
-the fragment you&#8217;re trying to write into/read from).</p>
+the fragment you’re trying to write into/read from).</p>
 </dd></dl>
 
 <dl class="errtype">
@@ -262,7 +287,7 @@ is <a class="reference internal" href="#errtype-TNT_ESYSTEM"><code class="xref s
 <h2>Manipulating a connection<a class="headerlink" href="#manipulating-a-connection" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_set">
-int <code class="descname">tnt_set</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, int<em>&nbsp;opt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_set" title="Permalink to this definition">¶</a></dt>
+int <code class="descname">tnt_set</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, int<em>&nbsp;opt</em>, …<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_set" title="Permalink to this definition">¶</a></dt>
 <dd><p>You can set the following options for a connection:</p>
 <ul class="simple">
 <li>TNT_OPT_URI (<code class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code>) - URI for connecting to
@@ -278,16 +303,16 @@ instead of writing into a socket;
 uses multiple (<code class="docutils literal"><span class="pre">iov_count</span></code>) buffers passed in <code class="docutils literal"><span class="pre">iov</span></code>.</li>
 <li>TNT_OPT_SEND_BUF (<code class="docutils literal"><span class="pre">int</span></code>) - the maximum size (in bytes) of the buffer for
 outgoing messages.</li>
-<li>TNT_OPT_SEND_CB_ARG (<code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>) - context for &#8220;send&#8221; callbacks.</li>
+<li>TNT_OPT_SEND_CB_ARG (<code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>) - context for “send” callbacks.</li>
 <li>TNT_OPT_RECV_CB (<code class="docutils literal"><span class="pre">ssize_t</span> <span class="pre">(*recv_cb_t)(struct</span> <span class="pre">tnt_iob</span> <span class="pre">*b,</span> <span class="pre">void</span> <span class="pre">*buf,</span>
 <span class="pre">size_t</span> <span class="pre">len)</span></code>) - a function to be called instead of reading from a socket;
 uses the buffer <code class="docutils literal"><span class="pre">buf</span></code> which is <code class="docutils literal"><span class="pre">len</span></code> bytes long.</li>
 <li>TNT_OPT_RECV_BUF (<code class="docutils literal"><span class="pre">int</span></code>) - the maximum size (in bytes) of the buffer for
 incoming messages.</li>
-<li>TNT_OPT_RECV_CB_ARG (<code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>) - context for &#8220;receive&#8221; callbacks.</li>
+<li>TNT_OPT_RECV_CB_ARG (<code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>) - context for “receive” callbacks.</li>
 </ul>
 <p>Return -1 and store the error in the stream.
-The error code can be either <a class="reference internal" href="#errtype-TNT_EFAIL"><code class="xref std std-errtype docutils literal"><span class="pre">TNT_EFAIL</span></code></a> if can&#8217;t parse the URI or
+The error code can be either <a class="reference internal" href="#errtype-TNT_EFAIL"><code class="xref std std-errtype docutils literal"><span class="pre">TNT_EFAIL</span></code></a> if can’t parse the URI or
 <code class="docutils literal"><span class="pre">opt</span></code> is not defined, or <a class="reference internal" href="#errtype-TNT_EMEMORY"><code class="xref std std-errtype docutils literal"><span class="pre">TNT_EMEMORY</span></code></a> if failed to allocate
 memory for the URI.</p>
 </dd></dl>
@@ -298,11 +323,11 @@ int <code class="descname">tnt_connect</code><span class="sig-paren">(</span>str
 <dd><p>Connect to <strong class="program">tarantool</strong> with preconfigured and allocated settings.</p>
 <p>Return -1 in the following cases:</p>
 <ul class="simple">
-<li>Can&#8217;t connect</li>
-<li>Can&#8217;t read greeting</li>
-<li>Can&#8217;t authenticate (if login/password was provided with the URI)</li>
+<li>Can’t connect</li>
+<li>Can’t read greeting</li>
+<li>Can’t authenticate (if login/password was provided with the URI)</li>
 <li>OOM while authenticating and getting schema</li>
-<li>Can&#8217;t parse schema</li>
+<li>Can’t parse schema</li>
 </ul>
 </dd></dl>
 
@@ -330,7 +355,7 @@ int <code class="descname">tnt_fd</code><span class="sig-paren">(</span>struct <
 int <code class="descname">tnt_reload_schema</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_reload_schema" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reload the schema from server. Delete the old schema and download/parse
 a new schema from server.</p>
-<p>See also &#8220;<a class="reference internal" href="schema.html#working-with-a-schema"><span class="std std-ref">Working with a schema</span></a>&#8221;.</p>
+<p>See also “<a class="reference internal" href="schema.html#working-with-a-schema"><span class="std std-ref">Working with a schema</span></a>”.</p>
 </dd></dl>
 
 <dl class="function">
@@ -354,15 +379,18 @@ the length of the index name (in bytes) in <code class="docutils literal"><span 
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="msgpackobject.html" class="btn btn-neutral float-right" title="MessagePack layer" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="msgpackobject.html" class="btn btn-neutral float-right" title="MessagePack layer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="Documentation for tarantool-c" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="Documentation for tarantool-c" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -396,7 +424,8 @@ the length of the index name (in bytes) in <code class="docutils literal"><span 
             VERSION:'1.0.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  false
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

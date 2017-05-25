@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -44,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -84,11 +87,14 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reply.html">Parsing a reply</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Building a request with &#8220;tnt_stream&#8221;</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Building a request with “tnt_stream”</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#adding-requests-except-update">Adding requests (except UPDATE)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#adding-an-update-request">Adding an UPDATE request</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#container-for-operations">Container for operations</a></li>
@@ -97,7 +103,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with &#8220;tnt_request&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with “tnt_request”</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">Working with a schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="buffering.html">Using a buffer for requests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stream.html">Using the basic stream object</a></li>
@@ -113,8 +119,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">tarantool-c</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tarantool-c</a>
+        
       </nav>
 
 
@@ -123,28 +131,45 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Building a request with &#8220;tnt_stream&#8221;</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Building a request with “tnt_stream”</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
   <div class="section" id="building-a-request-with-tnt-stream">
-<span id="working-with-tnt-stream"></span><h1>Building a request with &#8220;tnt_stream&#8221;<a class="headerlink" href="#building-a-request-with-tnt-stream" title="Permalink to this headline">¶</a></h1>
+<span id="working-with-tnt-stream"></span><h1>Building a request with “tnt_stream”<a class="headerlink" href="#building-a-request-with-tnt-stream" title="Permalink to this headline">¶</a></h1>
 <p>Functions in this section add commands by appending them to a <code class="docutils literal"><span class="pre">tnt_stream</span></code>
 buffer. To send the buffered query to the server, you can use the
 <code class="xref py py-func docutils literal"><span class="pre">tnt_flush()</span></code> function and then call <code class="xref py py-func docutils literal"><span class="pre">tnt-&gt;read_reply()</span></code>, for example.</p>
@@ -158,7 +183,7 @@ ssize_t <code class="descname">tnt_auth</code><span class="sig-paren">(</span>st
 <dt id="c.tnt_deauth">
 ssize_t <code class="descname">tnt_deauth</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_deauth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Two functions for adding an authentication request.
-<code class="docutils literal"><span class="pre">ulen</span></code> and <code class="docutils literal"><span class="pre">plen</span></code> are the lengths (in bytes) of user&#8217;s name <code class="docutils literal"><span class="pre">user</span></code> and
+<code class="docutils literal"><span class="pre">ulen</span></code> and <code class="docutils literal"><span class="pre">plen</span></code> are the lengths (in bytes) of user’s name <code class="docutils literal"><span class="pre">user</span></code> and
 password <code class="docutils literal"><span class="pre">pass</span></code>.</p>
 <p><code class="docutils literal"><span class="pre">tnt_deauth</span></code> is a shortcut for <code class="docutils literal"><span class="pre">tnt_auth(s,</span> <span class="pre">NULL,</span> <span class="pre">0,</span> <span class="pre">NULL,</span> <span class="pre">0)</span></code>.</p>
 </dd></dl>
@@ -231,7 +256,7 @@ int <code class="descname">tnt_update_container_close</code><span class="sig-par
 <dl class="function">
 <dt id="c.tnt_update_container_reset">
 int <code class="descname">tnt_update_container_reset</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*ops</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_update_container_reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset the container&#8217;s state.</p>
+<dd><p>Reset the container’s state.</p>
 </dd></dl>
 
 </div>
@@ -258,7 +283,7 @@ ssize_t <code class="descname">tnt_update_arith_float</code><span class="sig-par
 ssize_t <code class="descname">tnt_update_arith_double</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*ops</em>, uint32_t<em>&nbsp;fieldno</em>, char<em>&nbsp;op</em>, double<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_update_arith_double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Three functions for adding an arithmetic operation for a specific data type
 (integer, float or double).</p>
-<p>Possible <code class="docutils literal"><span class="pre">op</span></code>&#8216;s are:</p>
+<p>Possible <code class="docutils literal"><span class="pre">op</span></code>’s are:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">+</span></code> - for addition</li>
 <li><code class="docutils literal"><span class="pre">-</span></code> - for subtraction</li>
@@ -288,7 +313,7 @@ ssize_t <code class="descname">tnt_update_assign</code><span class="sig-paren">(
 <dt id="c.tnt_update_splice">
 ssize_t <code class="descname">tnt_update_splice</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*ops</em>, uint32_t<em>&nbsp;fieldno</em>, uint32_t<em>&nbsp;position</em>, uint32_t<em>&nbsp;offset</em>, const char<em>&nbsp;*buffer</em>, size_t<em>&nbsp;buffer_len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_update_splice" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a splice operation for the update request.</p>
-<p>&#8220;Splice&#8221; means to remove <code class="docutils literal"><span class="pre">offset</span></code> bytes from position <code class="docutils literal"><span class="pre">position</span></code> in
+<p>“Splice” means to remove <code class="docutils literal"><span class="pre">offset</span></code> bytes from position <code class="docutils literal"><span class="pre">position</span></code> in
 field <code class="docutils literal"><span class="pre">fieldno</span></code> and paste <code class="docutils literal"><span class="pre">buffer</span></code> in the room of this fragment.</p>
 </dd></dl>
 
@@ -298,15 +323,18 @@ field <code class="docutils literal"><span class="pre">fieldno</span></code> and
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="request_builder.html" class="btn btn-neutral float-right" title="Building a request with “tnt_request”" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="request_builder.html" class="btn btn-neutral float-right" title="Building a request with “tnt_request”" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="reply.html" class="btn btn-neutral" title="Parsing a reply" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="reply.html" class="btn btn-neutral" title="Parsing a reply" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -340,7 +368,8 @@ field <code class="docutils literal"><span class="pre">fieldno</span></code> and
             VERSION:'1.0.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  false
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

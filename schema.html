@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -44,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -84,12 +87,15 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reply.html">Parsing a reply</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with &#8220;tnt_stream&#8221;</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with &#8220;tnt_request&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with “tnt_stream”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with “tnt_request”</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Working with a schema</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-schema">Creating a schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-requests-for-acquiring-a-schema">Creating requests for acquiring a schema</a></li>
@@ -110,8 +116,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">tarantool-c</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tarantool-c</a>
+        
       </nav>
 
 
@@ -120,21 +128,38 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Working with a schema</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Working with a schema</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -186,15 +211,18 @@ struct <code class="descname">tnt_schema_add_indexes</code><span class="sig-pare
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="buffering.html" class="btn btn-neutral float-right" title="Using a buffer for requests" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="buffering.html" class="btn btn-neutral float-right" title="Using a buffer for requests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="request_builder.html" class="btn btn-neutral" title="Building a request with “tnt_request”" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="request_builder.html" class="btn btn-neutral" title="Building a request with “tnt_request”" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -228,7 +256,8 @@ struct <code class="descname">tnt_schema_add_indexes</code><span class="sig-pare
             VERSION:'1.0.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  false
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

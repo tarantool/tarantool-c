@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -44,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -84,12 +87,15 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reply.html">Parsing a reply</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with &#8220;tnt_stream&#8221;</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Building a request with &#8220;tnt_request&#8221;</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with “tnt_stream”</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Building a request with “tnt_request”</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#basic-types">Basic types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-request">Creating a request</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#request-header">Request header</a></li>
@@ -113,8 +119,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">tarantool-c</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tarantool-c</a>
+        
       </nav>
 
 
@@ -123,28 +131,45 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Building a request with &#8220;tnt_request&#8221;</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Building a request with “tnt_request”</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
   <div class="section" id="building-a-request-with-tnt-request">
-<span id="working-with-tnt-request"></span><h1>Building a request with &#8220;tnt_request&#8221;<a class="headerlink" href="#building-a-request-with-tnt-request" title="Permalink to this headline">¶</a></h1>
+<span id="working-with-tnt-request"></span><h1>Building a request with “tnt_request”<a class="headerlink" href="#building-a-request-with-tnt-request" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="basic-types">
 <h2>Basic types<a class="headerlink" href="#basic-types" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="tnt-iterator-types"></span><dl class="type">
@@ -155,10 +180,10 @@ enum <code class="descname">tnt_iterator_t</code><a class="headerlink" href="#c.
 <li><strong>TNT_ITER_EQ</strong> - Equality iterator</li>
 <li><strong>TNT_ITER_REQ</strong> - Reverse equality iterator</li>
 <li><strong>TNT_ITER_ALL</strong> - Receive all elements</li>
-<li><strong>TNT_ITER_LT</strong> - &#8220;Less than&#8221; iterator</li>
-<li><strong>TNT_ITER_LE</strong> - &#8220;Less or equal&#8221; iterator</li>
-<li><strong>TNT_ITER_GE</strong> - &#8220;Greater or equal&#8221; iterator</li>
-<li><strong>TNT_ITER_GT</strong> - &#8220;Greater than&#8221; iterator</li>
+<li><strong>TNT_ITER_LT</strong> - “Less than” iterator</li>
+<li><strong>TNT_ITER_LE</strong> - “Less or equal” iterator</li>
+<li><strong>TNT_ITER_GE</strong> - “Greater or equal” iterator</li>
+<li><strong>TNT_ITER_GT</strong> - “Greater than” iterator</li>
 <li><strong>TNT_ITER_BITS_ALL_SET</strong> - All specified bits are set (bitset specific)</li>
 <li><strong>TNT_ITER_BITS_ANY_SET</strong> - Any specified bits are set (bitset specific)</li>
 <li><strong>TNT_ITER_BITS_ALL_NOT_SET</strong> - All specified bits are not set (bitset
@@ -299,7 +324,7 @@ int <code class="descname">tnt_request_set_iterator</code><span class="sig-paren
 <dt id="c.tnt_request_set_key">
 int <code class="descname">tnt_request_set_key</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_key" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_set_key_format">
-int <code class="descname">tnt_request_set_key_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*fmt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_key_format" title="Permalink to this definition">¶</a></dt>
+int <code class="descname">tnt_request_set_key_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*fmt</em>, …<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_key_format" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a key (both key start and end) for SELECT/UPDATE/DELETE from a stream
 object.</p>
 <p>Or set a key using the print-like function <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code>.
@@ -317,7 +342,7 @@ Return <code class="docutils literal"><span class="pre">-1</span></code> if the 
 <dt id="c.tnt_request_set_tuple">
 int <code class="descname">tnt_request_set_tuple</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*obj</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_tuple" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_set_tuple_format">
-int <code class="descname">tnt_request_set_tuple_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*fmt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_tuple_format" title="Permalink to this definition">¶</a></dt>
+int <code class="descname">tnt_request_set_tuple_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*fmt</em>, …<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_tuple_format" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a tuple (both tuple start and end) for UPDATE/EVAL/CALL from a stream.</p>
 <p>Or set a tuple using the print-like function <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code>.
 Take <code class="docutils literal"><span class="pre">fmt</span></code> format string followed by arguments for the format string.
@@ -341,7 +366,7 @@ int <code class="descname">tnt_request_set_expr</code><span class="sig-paren">(<
 int <code class="descname">tnt_request_set_exprz</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_exprz" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set an expression (both expression start and end) for EVAL from a string.</p>
 <p>If the function <code class="docutils literal"><span class="pre">&lt;...&gt;_exprz</span></code> is used, then length is calculated using
-<code class="xref py py-func docutils literal"><span class="pre">strlen(str)()</span></code>. Otherwise, <code class="docutils literal"><span class="pre">len</span></code> is the expression&#8217;s length (in
+<code class="xref py py-func docutils literal"><span class="pre">strlen(str)()</span></code>. Otherwise, <code class="docutils literal"><span class="pre">len</span></code> is the expression’s length (in
 bytes).</p>
 <p>Return <code class="docutils literal"><span class="pre">-1</span></code> if <code class="docutils literal"><span class="pre">expr</span></code> is not <code class="xref py py-func docutils literal"><span class="pre">tnt_request_evaluate()</span></code>.</p>
 <p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
@@ -359,7 +384,7 @@ int <code class="descname">tnt_request_set_func</code><span class="sig-paren">(<
 int <code class="descname">tnt_request_set_funcz</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*func</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_funcz" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a function (both function start and end) for CALL from a string.</p>
 <p>If the function <code class="docutils literal"><span class="pre">&lt;...&gt;_funcz</span></code> is used, then length is calculated using
-<code class="xref py py-func docutils literal"><span class="pre">strlen(str)()</span></code>. Otherwise, <code class="docutils literal"><span class="pre">len</span></code> is the function&#8217;s length (in bytes).</p>
+<code class="xref py py-func docutils literal"><span class="pre">strlen(str)()</span></code>. Otherwise, <code class="docutils literal"><span class="pre">len</span></code> is the function’s length (in bytes).</p>
 <p>Return <code class="docutils literal"><span class="pre">-1</span></code> if <code class="docutils literal"><span class="pre">func</span></code> is not <code class="xref py py-func docutils literal"><span class="pre">tnt_request_call()</span></code>.</p>
 <p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
 <div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
@@ -398,7 +423,7 @@ int <code class="descname">tnt_request_set_index_base</code><span class="sig-par
 <dt id="c.tnt_request_compile">
 uint64_t <code class="descname">tnt_request_compile</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_compile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compile a request into a stream.</p>
-<p>Return <code class="docutils literal"><span class="pre">-1</span></code> if bad command or can&#8217;t write to stream.</p>
+<p>Return <code class="docutils literal"><span class="pre">-1</span></code> if bad command or can’t write to stream.</p>
 </dd></dl>
 
 <dl class="function">
@@ -412,15 +437,18 @@ void <code class="descname">tnt_request_free</code><span class="sig-paren">(</sp
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="schema.html" class="btn btn-neutral float-right" title="Working with a schema" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="schema.html" class="btn btn-neutral float-right" title="Working with a schema" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="request.html" class="btn btn-neutral" title="Building a request with “tnt_stream”" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="request.html" class="btn btn-neutral" title="Building a request with “tnt_stream”" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -454,7 +482,8 @@ void <code class="descname">tnt_request_free</code><span class="sig-paren">(</sp
             VERSION:'1.0.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  false
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

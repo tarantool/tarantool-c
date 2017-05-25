@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -43,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -83,12 +86,15 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="connection.html">Networking layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="msgpackobject.html">MessagePack layer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reply.html">Parsing a reply</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with &#8220;tnt_stream&#8221;</a></li>
-<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with &#8220;tnt_request&#8221;</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request.html">Building a request with “tnt_stream”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="request_builder.html">Building a request with “tnt_request”</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema.html">Working with a schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="buffering.html">Using a buffer for requests</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Using the basic stream object</a><ul>
@@ -108,8 +114,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">tarantool-c</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tarantool-c</a>
+        
       </nav>
 
 
@@ -118,21 +126,38 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Using the basic stream object</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Using the basic stream object</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -163,7 +188,7 @@ struct <code class="descname">tnt_stream</code><a class="headerlink" href="#c.tn
 <dl class="member">
 <dt id="c.tnt_stream.alloc">
 int <code class="descname">tnt_stream.alloc</code><a class="headerlink" href="#c.tnt_stream.alloc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Allocation mark, equals zero if memory isn&#8217;t allocated for the stream
+<dd><p>Allocation mark, equals zero if memory isn’t allocated for the stream
 object. Otherwise not zero.</p>
 </dd></dl>
 
@@ -198,7 +223,7 @@ void <code class="descname">tnt_stream_free</code><span class="sig-paren">(</spa
 <dl class="function">
 <dt id="c.tnt_stream_reqid">
 uint32_t <code class="descname">tnt_stream_reqid</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, uint32_t<em>&nbsp;reqid</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream_reqid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Increment and set the request ID that&#8217;ll be used to construct a query,
+<dd><p>Increment and set the request ID that’ll be used to construct a query,
 and return the previous request ID.</p>
 </dd></dl>
 
@@ -208,7 +233,7 @@ ssize_t <code class="descname">tnt_stream.write</code><span class="sig-paren">(<
 <dt id="c.tnt_stream.writev">
 ssize_t <code class="descname">tnt_stream.writev</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<em>&nbsp;s</em>, struct iovec *<em>&nbsp;iov</em>, int<em>&nbsp;count</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream.writev" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a string or a vector to a stream.
-Here <code class="docutils literal"><span class="pre">size</span></code> is the string&#8217;s size (in bytes), and <code class="docutils literal"><span class="pre">count</span></code> is the number
+Here <code class="docutils literal"><span class="pre">size</span></code> is the string’s size (in bytes), and <code class="docutils literal"><span class="pre">count</span></code> is the number
 of records in the <code class="docutils literal"><span class="pre">iov</span></code> vector.</p>
 </dd></dl>
 
@@ -227,13 +252,16 @@ writes to a <code class="docutils literal"><span class="pre">tnt_reply</span></c
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="buffering.html" class="btn btn-neutral" title="Using a buffer for requests" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="buffering.html" class="btn btn-neutral" title="Using a buffer for requests" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -267,7 +295,8 @@ writes to a <code class="docutils literal"><span class="pre">tnt_reply</span></c
             VERSION:'1.0.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  false
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
