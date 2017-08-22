@@ -287,8 +287,121 @@ test_insert_replace_delete(char *uri) {
 	return check_plan();
 }
 
+static int
+test_execute(char *uri) {
+	plan(43);
+	header();
+
+	const char bb1[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
+			 "\x00\x00\x01\x05\xce\x00\x00\x00\x3f\x81\x43\xdf\x00\x00"
+			 "\x00\x01\x44\x01";
+	size_t bb1_len = sizeof(bb1) - 1;
+
+	const char bb2[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
+			 "\x00\x00\x02\x05\xce\x00\x00\x00\x3f\x81\x43\xdf\x00\x00"
+			 "\x00\x01\x44\x01";
+	size_t bb2_len = sizeof(bb2) - 1;
+
+	const char bb3[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
+			 "\x00\x00\x03\x05\xce\x00\x00\x00\x3f\x82\x32\xdd\x00\x00"
+			 "\x00\x01\x81\x29\xa2\x69\x64\x30\xdd\x00\x00\x00\x01\x91"
+			 "\x00";
+	size_t bb3_len = sizeof(bb3) - 1;
+
+	const char bb4[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
+			 "\x00\x00\x04\x05\xce\x00\x00\x00\x41\x81\x43\xdf\x00\x00"
+			 "\x00\x01\x44\x01";
+	size_t bb4_len = sizeof(bb4) - 1;
+
+	struct tnt_reply reply;
+	char *query;
+	struct tnt_stream *args = NULL;
+
+	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
+	isnt(tnt, NULL, "Check connection creation");
+	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
+	isnt(tnt_connect(tnt), -1, "Connecting");
+
+	args = tnt_object(NULL);
+	isnt(args, NULL, "Check object creation");
+	isnt(tnt_object_format(args, "[]"), -1, "check object filling");
+	query = "CREATE TABLE test_table(id INTEGER, PRIMARY KEY (id))";
+	isnt(tnt_execute(tnt, query, strlen(query), args), -1,
+	     "Create execute sql request: create table");
+	isnt(tnt_flush(tnt), -1, "Send to server");
+	tnt_stream_free(args);
+
+	tnt_reply_init(&reply);
+	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
+	is  (check_rbytes(&reply, bb1, bb1_len), 0, "Check response");
+	is  (reply.error, NULL, "Check error absence");
+	isnt(reply.sqlinfo, NULL, "Check sqlinfo presence");
+	is  (reply.metadata, NULL, "Check metadata absence");
+	is  (reply.data, NULL, "Check data absence");
+	tnt_reply_free(&reply);
+
+	args = tnt_object(NULL);
+	isnt(args, NULL, "Check object creation");
+	isnt(tnt_object_format(args, "[%d]", 0), -1, "check object filling");
+	query = "INSERT INTO test_table(id) VALUES (?)";
+	isnt(tnt_execute(tnt, query, strlen(query), args), -1,
+	     "Create execute sql request: insert row");
+	isnt(tnt_flush(tnt), -1, "Send to server");
+	tnt_stream_free(args);
+
+	tnt_reply_init(&reply);
+	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
+	is  (check_rbytes(&reply, bb2, bb2_len), 0, "Check response");
+	is  (reply.error, NULL, "Check error absence");
+	isnt(reply.sqlinfo, NULL, "Check sqlinfo presence");
+	is  (reply.metadata, NULL, "Check metadata absence");
+	is  (reply.data, NULL, "Check data absence");
+	tnt_reply_free(&reply);
+
+	args = tnt_object(NULL);
+	isnt(args, NULL, "Check object creation");
+	isnt(tnt_object_format(args, "[]"), -1, "check object filling");
+	query = "select * from test_table";
+	isnt(tnt_execute(tnt, query, strlen(query), args), -1,
+	     "Create execute sql request: select");
+	isnt(tnt_flush(tnt), -1, "Send to server");
+	tnt_stream_free(args);
+
+	tnt_reply_init(&reply);
+	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
+	is  (check_rbytes(&reply, bb3, bb3_len), 0, "Check response");
+	is  (reply.error, NULL, "Check error absence");
+	is  (reply.sqlinfo, NULL, "Check sqlinfo absence");
+	isnt(reply.metadata, NULL, "Check metadata presence");
+	isnt(reply.data, NULL, "Check data presence");
+	tnt_reply_free(&reply);
+
+	args = tnt_object(NULL);
+	isnt(args, NULL, "Check object creation");
+	isnt(tnt_object_format(args, "[]"), -1, "check object filling");
+	query = "drop table test_table";
+	isnt(tnt_execute(tnt, query, strlen(query), args), -1,
+	     "Create execute sql request: drop table");
+	isnt(tnt_flush(tnt), -1, "Send to server");
+	tnt_stream_free(args);
+
+	tnt_reply_init(&reply);
+	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
+	is  (check_rbytes(&reply, bb4, bb4_len), 0, "Check response");
+	is  (reply.error, NULL, "Check error absence");
+	isnt(reply.sqlinfo, NULL, "Check sqlinfo presence");
+	is  (reply.metadata, NULL, "Check metadata absence");
+	is  (reply.data, NULL, "Check data absence");
+	tnt_reply_free(&reply);
+
+	tnt_stream_free(tnt);
+
+	footer();
+	return check_plan();
+}
+
 int main() {
-	plan(4);
+	plan(5);
 
 	char uri[128] = {0};
 	snprintf(uri, 128, "%s%s", "test:test@", getenv("PRIMARY_PORT"));
@@ -297,6 +410,7 @@ int main() {
 	test_ping(uri);
 	test_auth_call(uri);
 	test_insert_replace_delete(uri);
+	test_execute(uri);
 
 	return check_plan();
 }

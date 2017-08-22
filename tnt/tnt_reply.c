@@ -171,7 +171,10 @@ tnt_reply_body0(struct tnt_reply *r, const char *buf, size_t size, size_t *off) 
 		return -1;
 	if (mp_typeof(*p) != MP_MAP)
 		return -1;
-	const char *error = NULL, *error_end = NULL, *data = NULL, *data_end = NULL;
+	const char *error = NULL, *error_end = NULL,
+		   *data = NULL, *data_end = NULL,
+		   *metadata = NULL, *metadata_end = NULL,
+		   *sqlinfo = NULL, *sqlinfo_end = NULL;
 	uint64_t bitmap = 0;
 	uint32_t n = mp_decode_map(&p);
 	while (n-- > 0) {
@@ -193,6 +196,26 @@ tnt_reply_body0(struct tnt_reply *r, const char *buf, size_t size, size_t *off) 
 			data_end = p;
 			break;
 		}
+		case TNT_METADATA: {
+			if (mp_typeof(*p) != MP_ARRAY)
+				return -1;
+			metadata = p;
+			mp_next(&p);
+			metadata_end = p;
+			break;
+		}
+		case TNT_SQL_INFO: {
+			if (mp_typeof(*p) != MP_MAP)
+				return -1;
+			sqlinfo = p;
+			mp_next(&p);
+			sqlinfo_end = p;
+			break;
+		}
+		default: {
+			mp_next(&p);
+			break;
+		}
 		}
 		bitmap |= (1ULL << key);
 	}
@@ -201,6 +224,10 @@ tnt_reply_body0(struct tnt_reply *r, const char *buf, size_t size, size_t *off) 
 		r->error_end = error_end;
 		r->data = data;
 		r->data_end = data_end;
+		r->metadata = metadata;
+		r->metadata_end = metadata_end;
+		r->sqlinfo = sqlinfo;
+		r->sqlinfo_end = sqlinfo_end;
 		r->bitmap |= bitmap;
 	}
 	if (off)

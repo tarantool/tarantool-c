@@ -67,6 +67,10 @@ struct tnt_reply {
 	const char *error_end;	/*!< end of error message (NULL if not present) */
 	const char *data;	/*!< tuple data (NULL if not present) */
 	const char *data_end;	/*!< end if tuple data (NULL if not present) */
+	const char *metadata;	/*!< tuple metadata (NULL if not present) */
+	const char *metadata_end; /*!< end if tuple metadata (NULL if not present) */
+	const char *sqlinfo;	/*!< map sqlinfo (NULL if not present) */
+	const char *sqlinfo_end;/*!< end if map sqlinfo (NULL if not present) */
 };
 
 /*!

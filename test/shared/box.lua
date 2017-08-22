@@ -40,7 +40,9 @@ for k, v in pairs(lp) do
       if k == 'test' then
          box.schema.user.grant('test', 'read', 'space', '_space')
          box.schema.user.grant('test', 'read', 'space', '_index')
+         box.schema.user.grant('test', 'read', 'space', '_truncate')
          box.schema.user.grant('test', 'execute', 'universe')
+         box.schema.user.grant('test', 'write', 'universe')
       end
    end
 end

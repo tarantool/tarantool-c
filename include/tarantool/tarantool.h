@@ -50,6 +50,7 @@ extern "C" {
 #include <tarantool/tnt_object.h>
 #include <tarantool/tnt_iter.h>
 #include <tarantool/tnt_call.h>
+#include <tarantool/tnt_execute.h>
 #include <tarantool/tnt_ping.h>
 #include <tarantool/tnt_insert.h>
 #include <tarantool/tnt_delete.h>

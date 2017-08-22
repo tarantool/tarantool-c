@@ -28,6 +28,7 @@ set (TNT_SOURCES
      ${CMAKE_CURRENT_SOURCE_DIR}/tnt_select.c
      ${CMAKE_CURRENT_SOURCE_DIR}/tnt_insert.c
      ${CMAKE_CURRENT_SOURCE_DIR}/tnt_call.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/tnt_execute.c
      ${CMAKE_CURRENT_SOURCE_DIR}/tnt_delete.c
      ${CMAKE_CURRENT_SOURCE_DIR}/tnt_update.c
      ${CMAKE_CURRENT_SOURCE_DIR}/tnt_assoc.c

@@ -66,7 +66,8 @@ enum tnt_body_key_t {
 	TNT_VCLOCK = 0x26,
 	TNT_EXPRESSION = 0x27,
 	TNT_OPS = 0x28,
-
+	TNT_SQL_TEXT = 0x40,
+	TNT_SQL_BIND = 0x41,
 };
 
 /**
@@ -74,7 +75,9 @@ enum tnt_body_key_t {
  */
 enum tnt_response_key_t {
 	TNT_DATA = 0x30,
-	TNT_ERROR = 0x31
+	TNT_ERROR = 0x31,
+	TNT_METADATA = 0x32,
+	TNT_SQL_INFO = 0x43,
 };
 
 /**
@@ -91,6 +94,7 @@ enum tnt_request_t {
 	TNT_OP_EVAL      = 8,
 	TNT_OP_UPSERT    = 9,
 	TNT_OP_CALL      = 10,
+	TNT_OP_EXECUTE   = 11,
 	TNT_OP_PING      = 64,
 	TNT_OP_JOIN      = 65,
 	TNT_OP_SUBSCRIBE = 66
