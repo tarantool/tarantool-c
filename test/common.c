@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include <msgpuck/msgpuck.h>
+#include <msgpuck.h>
 
 #include <tarantool/tarantool.h>
 #include <tarantool/tnt_net.h>

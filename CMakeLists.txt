@@ -11,7 +11,12 @@ if(POLICY CMP0037)
     cmake_policy(SET CMP0037 OLD) # don't blame custom target names
 endif(POLICY CMP0037)
 
-option(ENABLE_BUNDLED_MSGPUCK "Enable building with the bundled msgpuck" ON)
+set(ENABLE_BUNDLED_MSGPUCK_DEFAULT OFF)
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/msgpuck/CMakeLists)
+    set(ENABLE_BUNDLED_MSGPUCK_DEFAULT ON)
+endif ()
+option(ENABLE_BUNDLED_MSGPUCK "Enable building with the bundled msgpuck"
+       ${ENABLE_BUNDLED_MSGPUCK_DEFAULT})
 
 if (NOT ENABLE_BUNDLED_MSGPUCK)
     set (MSGPUCK_REQUIRED ON)
