@@ -12,7 +12,7 @@ if(POLICY CMP0037)
 endif(POLICY CMP0037)
 
 set(ENABLE_BUNDLED_MSGPUCK_DEFAULT OFF)
-if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/msgpuck/CMakeLists)
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/msgpuck/CMakeLists.txt)
     set(ENABLE_BUNDLED_MSGPUCK_DEFAULT ON)
 endif ()
 option(ENABLE_BUNDLED_MSGPUCK "Enable building with the bundled msgpuck"
