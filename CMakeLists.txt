@@ -18,6 +18,10 @@ endif ()
 option(ENABLE_BUNDLED_MSGPUCK "Enable building with the bundled msgpuck"
        ${ENABLE_BUNDLED_MSGPUCK_DEFAULT})
 
+set(ENABLE_BUNDLED_DOCS_DEFAULT ON)
+option(ENABLE_BUNDLED_DOCS "Enable building bundled docs with doxygen"
+       ${ENABLE_BUNDLED_DOCS_DEFAULT})
+
 if (NOT ENABLE_BUNDLED_MSGPUCK)
     set (MSGPUCK_REQUIRED ON)
     include (cmake/FindMsgPuck.cmake)
@@ -44,7 +48,9 @@ if(NOT CMAKE_BUILD_TYPE)
         "Choose the type of build, options are: Debug Release" FORCE)
 endif()
 
-add_custom_target (doc COMMAND doxygen ${PROJECT_SOURCE_DIR}/Doxyfile)
+if (ENABLE_BUNDLED_DOCS)
+    add_custom_target (doc COMMAND doxygen ${PROJECT_SOURCE_DIR}/Doxyfile)
+endif(ENABLE_BUNDLED_DOCS)
 
 option(ENABLE_BUNDLED_MSGPUCK "Enable building of the bundled MsgPuck" ON)
 if (ENABLE_BUNDLED_MSGPUCK)
@@ -59,7 +65,9 @@ include_directories("${MSGPUCK_INCLUDE_DIRS}")
 include_directories("${PROJECT_SOURCE_DIR}/third_party")
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
-add_subdirectory(doc)
+if (ENABLE_BUNDLED_DOCS)
+    add_subdirectory(doc)
+endif(ENABLE_BUNDLED_DOCS)
 
 message(STATUS "------------------------------------------------")
 message(STATUS "        Tarantool library configuration:        ")
