@@ -56,6 +56,10 @@
 
 #include <uri.h>
 
+#if !defined(IOV_MAX)
+# define IOV_MAX UIO_MAXIOV
+#endif /* !defined(IOV_MAX) */
+
 #if !defined(MIN)
 #	define MIN(a, b) (a) < (b) ? (a) : (b)
 #endif /* !defined(MIN) */
