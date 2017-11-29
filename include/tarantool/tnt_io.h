@@ -63,4 +63,5 @@ tnt_io_sendv(struct tnt_stream_net *s, struct iovec *iov, int count);
 ssize_t
 tnt_io_recv(struct tnt_stream_net *s, char *buf, size_t size);
 
+int getiovmax();
 #endif /* TNT_IO_H_INCLUDED */
