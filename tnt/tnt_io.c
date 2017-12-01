@@ -348,7 +348,7 @@ tnt_io_sendv_raw(struct tnt_stream_net *s, struct iovec *iov, int count, int all
 	while (count > 0) {
 		ssize_t r;
 		if (s->sbuf.txv) {
-			r = s->sbuf.txv(&s->sbuf, iov, MIN(count, IOV_MAX));
+			r = s->sbuf.txv(&s->sbuf, iov, MIN(count, getiovmax()));
 		} else {
 			do {
 				r = writev(s->fd, iov, count);
@@ -495,4 +495,26 @@ tnt_io_recv(struct tnt_stream_net *s, char *buf, size_t size)
 		left -= lv;
 	}
 	return -1;
+}
+
+int getiovmax()
+{
+	#if defined(IOV_MAX)
+		return IOV_MAX;
+	#elif defined(_SC_IOV_MAX)
+		static int iovmax = -1;
+		if (iovmax == -1) {
+			iovmax = sysconf(_SC_IOV_MAX);
+			/* On some embedded devices (arm-linux-uclibc based ip camera),
+			* sysconf(_SC_IOV_MAX) can not get the correct value. The return
+			* value is -1 and the errno is EINPROGRESS. Degrade the value to 1.
+			*/
+			if (iovmax == -1) iovmax = 1;
+		}
+		return iovmax;
+	#elif defined(UIO_MAXIOV)
+		return UIO_MAXIOV;
+	#else
+		return 1024;
+	#endif
 }
