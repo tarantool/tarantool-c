@@ -3,6 +3,7 @@
 
 #define log_error(fmt, ...)  fprintf(stderr, "%s:%d E>" fmt, __func__, __LINE__, ##__VA_ARGS__)
 
+#include <assert.h>
 #include <stddef.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -11,43 +12,29 @@
 #include <tarantool/tarantool.h>
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_opt.h>
-#include <msgpuck/msgpuck.h>
+#include <msgpuck.h>
 
 int
-tnt_request_set_sspace(struct tnt_request *req, const char *space,
-		       uint32_t slen)
+tnt_request_set_sspace(struct tnt_stream *tnt, struct tnt_request *req,
+		       const char *space)
 {
-	if (!req->stream || !space) return -1;
-	int32_t sno = tnt_get_spaceno(req->stream, space, slen);
-	if (sno == -1) return -1;
+	assert(tnt && space);
+	int32_t sno = tnt_get_spaceno(tnt, space, strlen(space));
+	if (sno == -1)
+		return -1;
 	return tnt_request_set_space(req, sno);
 }
 
 int
-tnt_request_set_sspacez(struct tnt_request *req, const char *space)
+tnt_request_set_sindex(struct tnt_stream *tnt, struct tnt_request *req,
+		       const char *index)
 {
-	if (!req->stream || !space) return -1;
-	return tnt_request_set_sspace(req, space, strlen(space));
-}
-
-
-int
-tnt_request_set_sindex(struct tnt_request *req, const char *index,
-		       uint32_t ilen)
-{
-	if (!req->stream || !index || !req->space_id) return -1;
-	int32_t ino = tnt_get_indexno(req->stream, req->space_id, index, ilen);
-	if (ino == -1) return -1;
+	assert(tnt && index && req->space_id);
+	int32_t ino = tnt_get_indexno(tnt, req->space_id, index, strlen(index));
+	if (ino == -1)
+		return -1;
 	return tnt_request_set_index(req, ino);
 }
-
-int
-tnt_request_set_sindexz(struct tnt_request *req, const char *index)
-{
-	if (!req->stream || !index) return -1;
-	return tnt_request_set_sindex(req, index, strlen(index));
-}
-
 
 int profile_space_no;
 
@@ -188,14 +175,14 @@ int msg_profile_get_multi(struct tnt_stream *tnt, int *id, size_t cnt,
 			  struct msg_profile ***rv) {
 	static struct tnt_request *req = NULL;
 	if (!req) {
-		req = tnt_request_select(NULL, tnt);
-		tnt_request_set_sspacez(req, "messages");
-		tnt_request_set_sindexz(req, "primary");
+		req = tnt_request_select(req);
+		tnt_request_set_sspace(tnt, req, "messages");
+		tnt_request_set_sindex(tnt, req, "primary");
 		if (!req) return -1;
 	}
 	for (int i = 0; i < cnt; ++i) {
 		tnt_request_set_key_format(req, "[%d]", id[i]);
-		if (tnt_request_encode(req) == -1) {
+		if (tnt_request_compile(tnt, req) == -1) {
 			log_error("OOM");
 			return -1;
 		}
@@ -212,7 +199,7 @@ int msg_profile_get_multi(struct tnt_stream *tnt, int *id, size_t cnt,
 		if (retval[rcvd] != NULL) ++rcvd;
 		if (rv == -1) {
 			for (int i = 0; i < rcvd; i++)
-				msg_profile_free(i);
+				msg_profile_free(retval[rcvd]);
 			free(retval);
 			while (tnt_next(&it));
 			return -1;
@@ -242,9 +229,9 @@ int msg_profile_like_add(struct tnt_stream *tnt, int id) {
 		tnt_update_container_close(obj);
 	}
 	if (!req) {
-		req = tnt_request_update(NULL, tnt);
-		tnt_request_set_sspacez (req, "messages");
-		tnt_request_set_ssindexz(req, "primary");
+		req = tnt_request_update(req);
+		tnt_request_set_sspace(tnt, req, "messages");
+		tnt_request_set_sindex(tnt, req, "primary");
 		tnt_request_set_tuple(req, obj);
 		if (!req) return -1;
 	}
@@ -253,54 +240,7 @@ int msg_profile_like_add(struct tnt_stream *tnt, int id) {
 		if (!rpl) return -1;
 	}
 	tnt_request_set_key_format(req, "[%d]", id);
-	if (tnt_request_encode(req) == -1) {
-		log_error("OOM");
-		return -1;
-	}
-	if (tnt_flush(tnt) == -1) {
-		log_error("Failed to send request (%s)", tnt_strerror(tnt));
-		return -1;
-	}
-	if (tnt->read_reply(tnt, rpl) == -1) {
-		log_error("Failed to recv/parse result");
-		if (tnt_error(tnt)) log_error("%s", tnt_strerror(tnt));
-		return -1;
-	}
-	if (rpl->code) {
-		log_error("Query error %d: %.*s", (int )TNT_REPLY_ERR(rpl),
-			  (int )(rpl->error_end - rpl->error), rpl->error);
-		return -1;
-	}
-	return 0;
-}
-
-int msg_profile_put(struct tnt_stream *tnt, int id, const char *usr,
-		    size_t usr_len, int likes, const char *msg, size_t msg_len) {
-	static struct tnt_request *req = NULL;
-	static struct tnt_reply   *rpl = NULL;
-	if (!req) {
-		req = tnt_request_update(NULL, tnt);
-		if (!req) return -1;
-		if (tnt_request_set_sspacez (req, "messages") == -1) {
-			log_error("failed to find space 'messages'");
-			return -1;
-		}
-		if (tnt_request_set_ssindexz(req, "primary") == -1) {
-			log_error("failed to find index 'primary' in space "
-				  "'message'");
-			return -1;
-		}
-	}
-	if (msg_profile_create(req, id, usr, usr_len, likes, msg, msg_len) == -1) {
-		log_error("OOM");
-		return -1;
-	}
-	if (tnt_request_set_tuple_format(req, "[%d%.*s%d%.*s]", id, usr_len,
-					 usr, likes, msg_len, msg) == -1) {
-		log_error("OOM");
-		return -1;
-	}
-	if (tnt_request_encode(req) == -1) {
+	if (tnt_request_compile(tnt, req) == -1) {
 		log_error("OOM");
 		return -1;
 	}
@@ -335,15 +275,64 @@ int msg_profile_create_alt(struct tnt_stream *obj, int id, const char *usr,
 			   size_t msg_len) {
 	if (tnt_object_add_array(obj, 4) == -1 ||
 	    tnt_object_add_int(obj, id) == -1 ||
-	    tnt_object_add_string(obj, usr, usr_len) == -1 ||
+	    tnt_object_add_str(obj, usr, usr_len) == -1 ||
 	    tnt_object_add_int(obj, likes) == -1 ||
-	    tnt_object_add_string(obj, msg, msg_len) == -1) {
+	    tnt_object_add_str(obj, msg, msg_len) == -1) {
 		log_error("OOM");
 		return -1;
 	}
 	return 0;
 }
 
+int msg_profile_put(struct tnt_stream *tnt, int id, const char *usr,
+		    size_t usr_len, int likes, const char *msg, size_t msg_len) {
+	static struct tnt_request *req = NULL;
+	static struct tnt_reply   *rpl = NULL;
+	if (!req) {
+		req = tnt_request_update(req);
+		if (!req) return -1;
+		if (tnt_request_set_sspace(tnt, req, "messages") == -1) {
+			log_error("failed to find space 'messages'");
+			return -1;
+		}
+		if (tnt_request_set_sindex(tnt, req, "primary") == -1) {
+			log_error("failed to find index 'primary' in space "
+				  "'message'");
+			return -1;
+		}
+	}
+	if (msg_profile_create(req, id, usr, usr_len, likes, msg, msg_len) == -1) {
+		log_error("OOM");
+		return -1;
+	}
+	if (tnt_request_set_tuple_format(req, "[%d%.*s%d%.*s]", id, usr_len,
+					 usr, likes, msg_len, msg) == -1) {
+		log_error("OOM");
+		return -1;
+	}
+	if (tnt_request_compile(tnt, req) == -1) {
+		log_error("OOM");
+		return -1;
+	}
+	if (tnt_flush(tnt) == -1) {
+		log_error("Failed to send request (%s)", tnt_strerror(tnt));
+		return -1;
+	}
+	if (tnt->read_reply(tnt, rpl) == -1) {
+		log_error("Failed to recv/parse result");
+		if (tnt_error(tnt)) log_error("%s", tnt_strerror(tnt));
+		return -1;
+	}
+	if (rpl->code) {
+		log_error("Query error %d: %.*s", (int )TNT_REPLY_ERR(rpl),
+			  (int )(rpl->error_end - rpl->error), rpl->error);
+		return -1;
+	}
+	return 0;
+}
+
+/* To build this example use next command:
+ * gcc example.c -I ../../include/ -L ../../tnt/ -ltarantool */
 int main() {
 	struct tnt_stream *tnt = tarantool_connection(TARANTOOL_URI);
 	profile_space_no = tnt_get_spaceno(tnt, "messages", strlen("messages"));
