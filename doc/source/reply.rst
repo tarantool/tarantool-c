@@ -26,7 +26,7 @@
 
 .. c:member:: const char *tnt_reply.buf
 
-    Pointer to a buffer with reply data.
+    Pointer to a buffer with the reply data.
     It's needed for the function :func:`tnt_reply`.
 
 .. c:member:: size_t tnt_reply.buf_size
@@ -38,11 +38,14 @@
 
     The return code of a query.
 
-    If ``code == 0`` then it's ok, otherwise use the macro
-    :c:macro:`TNT_REPLY_ERROR` to convert it to an error code.
+    If ``code == 1``, then it's ok, but the read buffer was not big enough
+    for the reply data, so ``data`` and ``data_end`` are set.
 
-    If ``code > 0``, then ``error`` and ``error_end`` must be set.
-    Otherwise ``data`` and ``data_end`` is set.
+    If ``code == 0`` then it's ok.
+
+    If ``code < 0``, then it's not ok, so ``error`` and ``error_end`` may be
+    set. If they are not set, then it's a network error. Use the macro
+    :c:macro:`TNT_REPLY_ERROR` to convert it to an error code.
 
 .. c:member:: uint64_t tnt_reply.sync
 
@@ -65,8 +68,14 @@
 .. c:member:: const char *tnt_reply.data
               const char *tnt_reply.data_end
 
-    Query data. This is a MessagePack object. Parse it with any msgpack library,
+    ``data`` is the processed reply data.
+    This is a MessagePack object. Parse it with any msgpack library,
     e.g. ``msgpuck``.
+
+    ``data_end`` is the offset for further reading in case the read buffer
+    was not big enough for the reply data.
+    Corresponds to the value returned in the ``off`` argument of the
+    ``tnt_reply()`` function.
 
 =====================================================================
                      Manipulating a reply
@@ -84,6 +93,7 @@
 
     Parse ``size`` bytes of an iproto reply from the buffer ``buf`` (it must
     contain a full reply).
+
     In ``off``, return the number of bytes remaining in the reply (if processed
     all ``size`` bytes), or the number of processed bytes (if processing
     failed).

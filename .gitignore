@@ -8,6 +8,7 @@ install_manifest.txt
 *.so*
 *.dylib
 .*.swp
+.DS_Store
 
 output
 test/tarantool-*
