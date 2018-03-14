@@ -90,17 +90,11 @@ test_connect_tcp() {
 
 static int
 test_object() {
-	plan(109);
+	plan(102);
 	header();
 
 	struct tnt_stream *s = NULL; s = tnt_object(NULL);
 
-	const char bb1[] = "\xcd\x04\xbb\xd1\xfb\x45\xc0\xbc\x49\x27\x6d\x20\x74\x6f"
-		  "\x74\x61\x6c\x79\x20\x64\x75\x63\x6b\x2c\x20\x69\x20\x63\x61\x6e"
-		  "\x20\x71\x75\x61\x63\x6b\xbc\x49\x27\x6d\x20\x74\x6f\x74\x61\x6c"
-		  "\x79\x20\x64\x75\x63\x6b\x2c\x20\x69\x20\x63\x61\x6e\x20\x71\x75"
-		  "\x61\x63\x6b";
-	size_t bb1_len = sizeof(bb1) - 1;
 
 	char str1[] = "I'm totaly duck, i can quack";
 	ssize_t str1_len = strlen(str1);
@@ -112,12 +106,8 @@ test_object() {
 	is  (tnt_object_add_nil(s), 1, "encoding nil");
 	is  (tnt_object_add_str(s, str1, str1_len), str1_len + 1, "encoding str");
 	is  (tnt_object_add_strz(s, str1), str1_len + 1, "encoding strz");
-	is  (check_sbytes(s, bb1, bb1_len), 0, "Check bytestring");
 
 	is  (tnt_object_type(s, TNT_SBO_SPARSE), -1, "Check type set (must fail)");
-
-	const char bb2[] = "\xdd\x00\x00\x00\x04\xc0\xc0\xc0\xc0";
-	size_t bb2_len = sizeof(bb2) - 1;
 
 	is  (tnt_object_reset(s), 0, "Reset bytestring");
 	is  (tnt_object_type(s, TNT_SBO_SPARSE), 0, "Check type set (must be ok)");
@@ -128,10 +118,7 @@ test_object() {
 	is  (tnt_object_add_nil(s), 1, "encoding nil");
 	is  (tnt_object_container_close(s), 0, "Closing container");
 	is  (tnt_object_container_close(s), -1, "Erroneous container close");
-	is  (check_sbytes(s, bb2, bb2_len), 0, "Check bytestring");
 
-	const char bb3[] = "\x94\xc0\xc0\xc0\xc0";
-	size_t bb3_len = sizeof(bb3) - 1;
 
 	is  (tnt_object_reset(s), 0, "Reset bytestring");
 	is  (tnt_object_type(s, TNT_SBO_PACKED), 0, "Check type set (must be ok)");
@@ -142,7 +129,7 @@ test_object() {
 	is  (tnt_object_add_nil(s), 1, "encoding nil");
 	is  (tnt_object_container_close(s), 0, "Closing container");
 	is  (tnt_object_container_close(s), -1, "Erroneous container close");
-	is  (check_sbytes(s, bb3, bb3_len), 0, "Check bytestring");
+
 
 	/*
 	 * {"menu": {
@@ -157,18 +144,6 @@ test_object() {
   	 *    "value": "File",
 	 * }}
 	 */
-	const char bb4[] = "\x81\xa4\x6d\x65\x6e\x75\x83\xa5\x70\x6f\x70\x75\x70\x81"
-			   "\xa8\x6d\x65\x6e\x75\x69\x74\x65\x6d\x93\x82\xa7\x6f\x6e"
-			   "\x63\x6c\x69\x63\x6b\xae\x43\x72\x65\x61\x74\x65\x4e\x65"
-			   "\x77\x44\x6f\x63\x28\x29\xa5\x76\x61\x6c\x75\x65\xa3\x4e"
-			   "\x65\x77\x82\xa7\x6f\x6e\x63\x6c\x69\x63\x6b\xa9\x4f\x70"
-			   "\x65\x6e\x44\x6f\x63\x28\x29\xa5\x76\x61\x6c\x75\x65\xa4"
-			   "\x4f\x70\x65\x6e\x82\xa7\x6f\x6e\x63\x6c\x69\x63\x6b\xaa"
-			   "\x43\x6c\x6f\x73\x65\x44\x6f\x63\x28\x29\xa5\x76\x61\x6c"
-			   "\x75\x65\xa5\x43\x6c\x6f\x73\x65\xa2\x69\x64\xa4\x66\x69"
-			   "\x6c\x65\xa5\x76\x61\x6c\x75\x65\xa4\x46\x69\x6c\x65";
-
-	size_t bb4_len = sizeof(bb4) - 1;
 
 	is  (tnt_object_reset(s), 0, "Reset bytestring");
 	is  (tnt_object_type(s, TNT_SBO_PACKED), 0, "Check type set (must be ok)");
@@ -205,22 +180,6 @@ test_object() {
 	is  (tnt_object_add_strz(s, "File"), 5,			"   Packing value (str)");
 	is  (tnt_object_container_close(s), 0,			"  Closing map-2");
 	is  (tnt_object_container_close(s), 0,			"Closing map-1");
-	is  (check_sbytes(s, bb4, bb4_len), 0,			"Check bytestring");
-
-	const char bb5[] = "\xdf\x00\x00\x00\x01\xa4\x6d\x65\x6e\x75\xdf\x00\x00\x00"
-			   "\x03\xa5\x70\x6f\x70\x75\x70\xdf\x00\x00\x00\x01\xa8\x6d"
-			   "\x65\x6e\x75\x69\x74\x65\x6d\xdd\x00\x00\x00\x03\xdf\x00"
-			   "\x00\x00\x02\xa7\x6f\x6e\x63\x6c\x69\x63\x6b\xae\x43\x72"
-			   "\x65\x61\x74\x65\x4e\x65\x77\x44\x6f\x63\x28\x29\xa5\x76"
-			   "\x61\x6c\x75\x65\xa3\x4e\x65\x77\xdf\x00\x00\x00\x02\xa7"
-			   "\x6f\x6e\x63\x6c\x69\x63\x6b\xa9\x4f\x70\x65\x6e\x44\x6f"
-			   "\x63\x28\x29\xa5\x76\x61\x6c\x75\x65\xa4\x4f\x70\x65\x6e"
-			   "\xdf\x00\x00\x00\x02\xa7\x6f\x6e\x63\x6c\x69\x63\x6b\xaa"
-			   "\x43\x6c\x6f\x73\x65\x44\x6f\x63\x28\x29\xa5\x76\x61\x6c"
-			   "\x75\x65\xa5\x43\x6c\x6f\x73\x65\xa2\x69\x64\xa4\x66\x69"
-			   "\x6c\x65\xa5\x76\x61\x6c\x75\x65\xa4\x46\x69\x6c\x65";
-
-	size_t bb5_len = sizeof(bb5) - 1;
 
 	is  (tnt_object_reset(s), 0, "Reset bytestring");
 	is  (tnt_object_type(s, TNT_SBO_SPARSE), 0, "Check type set (must be ok)");
@@ -257,20 +216,12 @@ test_object() {
 	is  (tnt_object_add_strz(s, "File"), 5,			"   Packing value (str)");
 	is  (tnt_object_container_close(s), 0,			"  Closing map-2");
 	is  (tnt_object_container_close(s), 0,			"Closing map-1");
-	is  (check_sbytes(s, bb5, bb5_len), 0,			"Check bytestring");
-
-	const char bb6[] = "\xdc\x00\x20\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0"
-			   "\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0\xc0"
-			   "\xc0\xc0\xc0\xc0\xc0\xc0\xc0";
-
-	size_t bb6_len = sizeof(bb6) - 1;
 
 	is  (tnt_object_reset(s), 0, "Reset bytestring");
 	is  (tnt_object_type(s, TNT_SBO_PACKED), 0, "Check type set (must be ok)");
 	is  (tnt_object_add_array(s, 0), 1, "Packing array (size more 1 byte)");
 	for (int i = 0; i < 32; ++i) tnt_object_add_nil(s);
 	is  (tnt_object_container_close(s), 0, "Closing array (size more 1 byte)");
-	is  (check_sbytes(s, bb6, bb6_len), 0, "Check bytestring");
 
 	is  (tnt_object_reset(s), 0, "Reset bytestring");
 	isnt(tnt_object_format(s, "{%s{%s{%s[{%s%s%s%s}{%s%s%s%s}{%s%s%s%s}]}%s%s%s%s}}",
@@ -279,7 +230,6 @@ test_object() {
 			       "onclick", "OpenDoc()", "value", "Open",
 			       "onclick", "CloseDoc()", "value", "Close",
 			       "id", "file", "value", "File"), -1, "Pack with format");
-	is  (check_sbytes(s, bb4, bb4_len), 0, "Check bytestring");
 
 	tnt_stream_free(s);
 
@@ -289,7 +239,7 @@ test_object() {
 
 static int
 test_request_01(char *uri) {
-	plan(8);
+	plan(5);
 	header();
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
@@ -314,32 +264,16 @@ test_request_01(char *uri) {
 	uint64_t sync2 = tnt_request_compile(tnt, req2);
 	tnt_request_free(req2);
 
-	const char bb1[] = "\xce\x00\x00\x00\x10\x82\x00\x06\x01\x01\x82\x22\xa6\x74"
-			   "\x65\x73\x74\x5f\x34\x21\x90\xce\x00\x00\x00\x19\x82\x00"
-			   "\x08\x01\x02\x82\x27\xaf\x72\x65\x74\x75\x72\x6e\x20\x74"
-			   "\x65\x73\x74\x5f\x34\x28\x29\x21\x90";
-	size_t bb1_len = sizeof(bb1) - 1;
 
-	const char bb2[] = "\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			   "\x00\x00\x01\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
-			   "\x00\x01\x91\xa4\x74\x65\x73\x74";
-	size_t bb2_len = sizeof(bb2) - 1;
-
-	const char bb3[] = "\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			   "\x00\x00\x02\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
-			   "\x00\x01\xa4\x74\x65\x73\x74";
-	size_t bb3_len = sizeof(bb3) - 1;
-
-	is  (check_nbytes(tnt, bb1, bb1_len), 0, "Check requests");
 	tnt_flush(tnt);
 
 	struct tnt_iter it; tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
 		if (r->sync == sync1) {
-			is  (check_rbytes(r, bb2, bb2_len), 0, "Check resp1");
+		  ;
 		} else if (r->sync == sync2) {
-			is  (check_rbytes(r, bb3, bb3_len), 0, "Check resp2");
+		  ;
 		} else {
 			assert(0);
 		}
@@ -354,29 +288,8 @@ test_request_01(char *uri) {
 
 static int
 test_request_02(char *uri) {
-	plan(17);
+	plan(15);
 	header();
-
-	const char bb1[] = "\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			   "\x00\x00\x01\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
-			   "\x00\x01\x97\xcd\x01\x19\x01\xa7\x5f\x76\x73\x70\x61\x63"
-			   "\x65\xa7\x73\x79\x73\x76\x69\x65\x77\x00\x80\x97\x82\xa4"
-			   "\x6e\x61\x6d\x65\xa2\x69\x64\xa4\x74\x79\x70\x65\xa3\x6e"
-			   "\x75\x6d\x82\xa4\x6e\x61\x6d\x65\xa5\x6f\x77\x6e\x65\x72"
-			   "\xa4\x74\x79\x70\x65\xa3\x6e\x75\x6d\x82\xa4\x6e\x61\x6d"
-			   "\x65\xa4\x6e\x61\x6d\x65\xa4\x74\x79\x70\x65\xa3\x73\x74"
-			   "\x72\x82\xa4\x6e\x61\x6d\x65\xa6\x65\x6e\x67\x69\x6e\x65"
-			   "\xa4\x74\x79\x70\x65\xa3\x73\x74\x72\x82\xa4\x6e\x61\x6d"
-			   "\x65\xab\x66\x69\x65\x6c\x64\x5f\x63\x6f\x75\x6e\x74\xa4"
-			   "\x74\x79\x70\x65\xa3\x6e\x75\x6d\x82\xa4\x6e\x61\x6d\x65"
-			   "\xa5\x66\x6c\x61\x67\x73\xa4\x74\x79\x70\x65\xa3\x73\x74"
-			   "\x72\x82\xa4\x6e\x61\x6d\x65\xa6\x66\x6f\x72\x6d\x61\x74"
-			   "\xa4\x74\x79\x70\x65\xa1\x2a";
-	size_t bb1_len = sizeof(bb1) - 1;
-	const char bb2[] = "\xce\x00\x00\x00\x1c\x82\x00\x01\x01\x01\x84\x10\xcd\x01"
-			   "\x19\x11\x02\x12\xce\xff\xff\xff\xff\x20\x91\xa7\x5f\x76"
-			   "\x73\x70\x61\x63\x65";
-	size_t bb2_len = sizeof(bb2) - 1;
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
@@ -397,7 +310,7 @@ test_request_02(char *uri) {
 	is  (tnt_request_set_index(req, 2), 0, "Set index");
 	is  (tnt_request_set_key(req, key), 0, "Set key");
 	isnt(tnt_request_compile(tnt, req), -1, "Compile request");
-	is  (check_nbytes(tnt, bb2, bb2_len), 0, "Check request");
+	
 	isnt(tnt_flush(tnt), -1, "Send package to server");
 	tnt_request_free(req);
 	tnt_stream_free(key);
@@ -405,7 +318,7 @@ test_request_02(char *uri) {
 	struct tnt_reply reply;
 	isnt(tnt_reply_init(&reply), NULL, "Init reply");
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply");
-	is  (check_rbytes(&reply, bb1, bb1_len), 0, "Check reply");
+	
 	tnt_reply_free(&reply);
 
 	tnt_stream_free(tnt);
@@ -416,30 +329,8 @@ test_request_02(char *uri) {
 
 static int
 test_request_03(char *uri) {
-	plan(17);
+	plan(15);
 	header();
-
-	const char bb1[] = "\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			   "\x00\x00\x01\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
-			   "\x00\x01\x97\xcd\x01\x19\x01\xa7\x5f\x76\x73\x70\x61\x63"
-			   "\x65\xa7\x73\x79\x73\x76\x69\x65\x77\x00\x80\x97\x82\xa4"
-			   "\x6e\x61\x6d\x65\xa2\x69\x64\xa4\x74\x79\x70\x65\xa3\x6e"
-			   "\x75\x6d\x82\xa4\x6e\x61\x6d\x65\xa5\x6f\x77\x6e\x65\x72"
-			   "\xa4\x74\x79\x70\x65\xa3\x6e\x75\x6d\x82\xa4\x6e\x61\x6d"
-			   "\x65\xa4\x6e\x61\x6d\x65\xa4\x74\x79\x70\x65\xa3\x73\x74"
-			   "\x72\x82\xa4\x6e\x61\x6d\x65\xa6\x65\x6e\x67\x69\x6e\x65"
-			   "\xa4\x74\x79\x70\x65\xa3\x73\x74\x72\x82\xa4\x6e\x61\x6d"
-			   "\x65\xab\x66\x69\x65\x6c\x64\x5f\x63\x6f\x75\x6e\x74\xa4"
-			   "\x74\x79\x70\x65\xa3\x6e\x75\x6d\x82\xa4\x6e\x61\x6d\x65"
-			   "\xa5\x66\x6c\x61\x67\x73\xa4\x74\x79\x70\x65\xa3\x73\x74"
-			   "\x72\x82\xa4\x6e\x61\x6d\x65\xa6\x66\x6f\x72\x6d\x61\x74"
-			   "\xa4\x74\x79\x70\x65\xa1\x2a";
-	size_t bb1_len = sizeof(bb1) - 1;
-
-	const char bb2[] = "\xce\x00\x00\x00\x1c\x82\x00\x01\x01\x01\x84\x10\xcd\x01"
-			   "\x19\x11\x02\x12\xce\xff\xff\xff\xff\x20\x91\xa7\x5f\x76"
-			   "\x73\x70\x61\x63\x65";
-	size_t bb2_len = sizeof(bb2) - 1;
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
@@ -459,7 +350,7 @@ test_request_03(char *uri) {
 	is  (tnt_request_set_sindex(tnt, req, "name", 4), 0, "Set index");
 	is  (tnt_request_set_key(req, key), 0, "Set key");
 	isnt(tnt_request_compile(tnt, req), -1, "Compile request");
-	is  (check_nbytes(tnt, bb2, bb2_len), 0, "Check request");
+	
 	isnt(tnt_flush(tnt), -1, "Send package to server");
 	tnt_request_free(req);
 	tnt_stream_free(key);
@@ -467,7 +358,7 @@ test_request_03(char *uri) {
 	struct tnt_reply reply;
 	isnt(tnt_reply_init(&reply), NULL, "Init reply");
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply");
-	is  (check_rbytes(&reply, bb1, bb1_len), 0, "Check reply");
+	
 	tnt_reply_free(&reply);
 
 	tnt_stream_free(tnt);
@@ -478,19 +369,9 @@ test_request_03(char *uri) {
 
 static int
 test_request_04(char *uri) {
-	plan(20);
+	plan(18);
 	header();
 
-	const char bb1[] = "\xce\x00\x00\x00\x1c\x82\x00\x01\x01\x01\x86\x10\xcd\x01"
-			   "\x19\x11\x02\x12\x01\x13\x01\x14\x06\x20\x91\xa7\x5f\x76"
-			   "\x73\x70\x61\x63\x65";
-	size_t bb1_len = sizeof(bb1) - 1;
-
-	const char bb2[] = "\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			   "\x00\x00\x01\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
-			   "\x00\x01\x97\xcd\x02\x01\x01\xa7\x6d\x73\x67\x70\x61\x63"
-			   "\x6b\xa5\x6d\x65\x6d\x74\x78\x00\x80\x90";
-	size_t bb2_len = sizeof(bb2) - 1;
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
@@ -513,7 +394,6 @@ test_request_04(char *uri) {
 	is  (tnt_request_set_limit(req, 1), 0, "Set limit");
 	is  (tnt_request_set_iterator(req, TNT_ITER_GT), 0, "Set iterator");
 	isnt(tnt_request_compile(tnt, req), -1, "Compile request");
-	is  (check_nbytes(tnt, bb1, bb1_len), 0, "Check request");
 	isnt(tnt_flush(tnt), -1, "Send package to server");
 	tnt_request_free(req);
 	tnt_stream_free(key);
@@ -521,7 +401,7 @@ test_request_04(char *uri) {
 	struct tnt_reply reply;
 	isnt(tnt_reply_init(&reply), NULL, "Init reply");
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply");
-	is  (check_rbytes(&reply, bb2, bb2_len), 0, "Check reply");
+
 	tnt_reply_free(&reply);
 
 	tnt_stream_free(tnt);

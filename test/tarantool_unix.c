@@ -58,17 +58,8 @@ test_ping(char *uri) {
 
 static int
 test_auth_call(char *uri) {
-	plan(23);
+	plan(21);
 	header();
-
-	const char bb1[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			 "\x00\x00\x02\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
-			 "\x00\x01\x91\xa5\x67\x75\x65\x73\x74";
-	size_t bb1_len = sizeof(bb1) - 1;
-	const char bb2[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			 "\x00\x00\x04\x05\xce\x00\x00\x00\x37\x81\x30\xdd\x00\x00"
-			 "\x00\x01\xa4\x74\x65\x73\x74";
-	size_t bb2_len = sizeof(bb2) - 1;
 
 	struct tnt_stream *args = NULL; args = tnt_object(NULL);
 	isnt(args, NULL, "Check object creation");
@@ -95,7 +86,7 @@ test_auth_call(char *uri) {
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
 	is  (reply.error, NULL, "Check error absence");
-	is  (check_rbytes(&reply, bb1, bb1_len), 0, "Check response");
+
 	tnt_reply_free(&reply);
 
 	isnt(tnt_auth(tnt, "test", 4, "test", 4), -1, "Create auth");
@@ -113,8 +104,7 @@ test_auth_call(char *uri) {
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
 	is  (reply.error, NULL, "Check error absence");
-	is  (check_rbytes(&reply, bb2, bb2_len), 0, "Check response");
-
+	
 	tnt_stream_free(args);
 	tnt_reply_free(&reply);
 	tnt_stream_free(tnt);
@@ -289,24 +279,10 @@ test_insert_replace_delete(char *uri) {
 
 static int
 test_execute(char *uri) {
-	plan(43);
+	plan(39);
 	header();
 
-	const char bb1[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			 "\x00\x00\x01\x05\xce\x00\x00\x00\x3f\x81\x43\xdf\x00\x00"
-			 "\x00\x01\x44\x01";
-	size_t bb1_len = sizeof(bb1) - 1;
 
-	const char bb2[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			 "\x00\x00\x02\x05\xce\x00\x00\x00\x3f\x81\x43\xdf\x00\x00"
-			 "\x00\x01\x44\x01";
-	size_t bb2_len = sizeof(bb2) - 1;
-
-	const char bb3[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			 "\x00\x00\x03\x05\xce\x00\x00\x00\x3f\x82\x32\xdd\x00\x00"
-			 "\x00\x01\x81\x29\xa2\x69\x64\x30\xdd\x00\x00\x00\x01\x91"
-			 "\x00";
-	size_t bb3_len = sizeof(bb3) - 1;
 
 
 	struct tnt_reply reply;
@@ -329,7 +305,6 @@ test_execute(char *uri) {
 
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
-	is  (check_rbytes(&reply, bb1, bb1_len), 0, "Check response");
 	is  (reply.error, NULL, "Check error absence");
 	isnt(reply.sqlinfo, NULL, "Check sqlinfo presence");
 	is  (reply.metadata, NULL, "Check metadata absence");
@@ -347,7 +322,6 @@ test_execute(char *uri) {
 
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
-	is  (check_rbytes(&reply, bb2, bb2_len), 0, "Check response");
 	is  (reply.error, NULL, "Check error absence");
 	isnt(reply.sqlinfo, NULL, "Check sqlinfo presence");
 	is  (reply.metadata, NULL, "Check metadata absence");
@@ -365,7 +339,6 @@ test_execute(char *uri) {
 
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
-	is  (check_rbytes(&reply, bb3, bb3_len), 0, "Check response");
 	is  (reply.error, NULL, "Check error absence");
 	is  (reply.sqlinfo, NULL, "Check sqlinfo absence");
 	isnt(reply.metadata, NULL, "Check metadata presence");
