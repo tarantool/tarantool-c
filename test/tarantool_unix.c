@@ -308,10 +308,6 @@ test_execute(char *uri) {
 			 "\x00";
 	size_t bb3_len = sizeof(bb3) - 1;
 
-	const char bb4[]="\x83\x00\xce\x00\x00\x00\x00\x01\xcf\x00\x00\x00\x00\x00"
-			 "\x00\x00\x04\x05\xce\x00\x00\x00\x41\x81\x43\xdf\x00\x00"
-			 "\x00\x01\x44\x01";
-	size_t bb4_len = sizeof(bb4) - 1;
 
 	struct tnt_reply reply;
 	char *query;
@@ -387,7 +383,6 @@ test_execute(char *uri) {
 
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
-	is  (check_rbytes(&reply, bb4, bb4_len), 0, "Check response");
 	is  (reply.error, NULL, "Check error absence");
 	isnt(reply.sqlinfo, NULL, "Check sqlinfo presence");
 	is  (reply.metadata, NULL, "Check metadata absence");
