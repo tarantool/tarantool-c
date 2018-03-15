@@ -31,5 +31,6 @@ set_target_properties(tarantool-test-call PROPERTIES OUTPUT_NAME "tarantool-call
 target_link_libraries(tarantool-test-call tnt)
 
 add_custom_target(test
-    COMMAND ${PROJECT_SOURCE_DIR}/test-run.py --builddir=${PROJECT_BINARY_DIR}
-            --vardir=${PROJECT_BINARY_DIR}/test/var)
+    COMMAND ${PROJECT_SOURCE_DIR}/test-run.py -j -1
+        --builddir=${PROJECT_BINARY_DIR}
+        --vardir=${PROJECT_BINARY_DIR}/test/var)

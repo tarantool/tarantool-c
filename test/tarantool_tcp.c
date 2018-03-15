@@ -410,9 +410,11 @@ test_request_04(char *uri) {
 	return check_plan();
 }
 
+
+
 static int
 test_request_05(char *uri) {
-	plan(261);
+	plan(351);
 	header();
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
@@ -430,7 +432,7 @@ test_request_05(char *uri) {
 
 		struct tnt_request *req = tnt_request_insert(NULL);
 		isnt(req, NULL, "Check request creation");
-		is  (req->hdr.type, TNT_OP_INSERT, "Check that we inited delete");
+		is  (req->hdr.type, TNT_OP_INSERT, "Check that we inited insert");
 		is  (tnt_request_set_sspacez(tnt, req, "test"), 0, "Set space");
 		is  (tnt_request_set_tuple(req, val), 0, "Set tuple");
 		isnt(tnt_request_compile(tnt, req), -1, "Compile request");
@@ -448,6 +450,14 @@ test_request_05(char *uri) {
 		char ex[128] = {0};
 		size_t ex_len = snprintf(ex, 128, "examplestr %d %d", i, i*i);
 		isnt(r->data, NULL, "check that we get answer");
+		if (r->code!=0) {
+			fprintf(stderr,"# tnt_next error %s\n",r->error);
+			break;
+		}
+		if (!r->data) {
+			fprintf(stderr,"# tnt_next returns no data.\n");
+			break;
+		}
 		const char *data = r->data;
 		is  (mp_typeof(*data), MP_ARRAY, "Check array");
 		is  (mp_decode_array(&data), 1, "Check array, again");
@@ -482,7 +492,7 @@ test_request_05(char *uri) {
 	}
 
 	isnt(tnt_flush(tnt), -1, "Send package to server");
-
+	tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
 		uint32_t i = r->sync, str_len = 0;
@@ -491,6 +501,14 @@ test_request_05(char *uri) {
 		ex_len = snprintf(ex, 128, "anotherexamplestr %d %d", i, i*i);
 		isnt(r->data, NULL, "check that we get answer");
 		const char *data = r->data;
+		if (r->code!=0) {
+			fprintf(stderr,"# tnt_next error %s\n",r->error);
+			break;
+		}
+		if (!r->data) {
+			fprintf(stderr,"# tnt_next returns no data.\n");
+			break;
+		}
 		is  (mp_typeof(*data), MP_ARRAY, "Check array");
 		is  (mp_decode_array(&data), 1, "Check array, again");
 		is  (mp_decode_array(&data), 3, "And again (another)");
@@ -554,9 +572,9 @@ test_request_05(char *uri) {
 
 		struct tnt_request *req = tnt_request_delete(NULL);
 		isnt(req, NULL, "Check request creation");
-		is  (req->hdr.type, TNT_OP_DELETE, "Check that we inited replace");
+		is  (req->hdr.type, TNT_OP_DELETE, "Check that we inited delete");
 		is  (tnt_request_set_sspacez(tnt, req, "test"), 0, "Set space");
-		is  (tnt_request_set_tuple(req, key), 0, "Set tuple");
+		is  (tnt_request_set_key(req, key), 0, "Set key");
 		isnt(tnt_request_compile(tnt, req), -1, "Compile request");
 
 		tnt_request_free(req);
@@ -564,7 +582,9 @@ test_request_05(char *uri) {
 	}
 
 	isnt(tnt_flush(tnt), -1, "Send package to server");
-
+	
+	int j=0;
+	tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
 		uint32_t i = r->sync, str_len = 0;
@@ -577,16 +597,32 @@ test_request_05(char *uri) {
 			ex_len = snprintf(ex, 128, "examplestr %d %d", i, i*i);
 		isnt(r->data, NULL, "check that we get answer");
 		const char *data = r->data;
+		if (r->code!=0) {
+			fprintf(stderr,"# tnt_next (%d) error %s\n",j,r->error);
+			break;
+		}
+		if (!r->data) {
+			fprintf(stderr,"# tnt_next return no data.\n");
+			break;
+		}
+		j++;
 		is  (mp_typeof(*data), MP_ARRAY, "Check array");
 		is  (mp_decode_array(&data), 1, "Check array, again");
 		is  (mp_decode_array(&data), 3, "And again (another)");
-		ok  (mp_typeof(*data) == MP_UINT &&
-		     mp_decode_uint(&data) == i &&
-		     mp_typeof(*data) == MP_UINT &&
-		     mp_decode_uint(&data) == i + 5 &&
-		     mp_typeof(*data) == MP_STR &&
+
+		is  (mp_typeof(*data), MP_UINT, "Check int");
+		uint32_t v=mp_decode_uint(&data);
+		is  (v,i,"Check int val");
+
+		uint32_t sz_z = v + 10; if (v < 5) sz_z -= 5;
+
+		is  (mp_typeof(*data), MP_UINT, "Check int");
+		v=mp_decode_uint(&data);
+		is  (v,sz_z,"Check int val +5");
+
+		ok  (mp_typeof(*data) == MP_STR &&
 		     strncmp(mp_decode_str(&data, &str_len), ex, ex_len) == 0,
-		     "Check fields");
+		     "Check str");
 	}
 
 	tnt_stream_free(tnt);
