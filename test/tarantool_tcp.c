@@ -9,7 +9,7 @@
 
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_opt.h>
-
+#include <tarantool/tnt_fetch.h>
 #include "common.h"
 
 #define header() note("*** %s: prep ***", __func__)
@@ -285,6 +285,139 @@ test_request_01(char *uri) {
 	footer();
 	return check_plan();
 }
+
+static int
+test_execute(char *uri) {
+	plan(47);
+	header();
+
+	struct tnt_reply reply;
+	char *query;
+	struct tnt_stream *args = NULL;
+
+	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
+	isnt(tnt, NULL, "Check connection creation");
+	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
+	isnt(tnt_connect(tnt), -1, "Connecting");
+
+	args = tnt_object(NULL);
+	isnt(args, NULL, "Check object creation");
+	isnt(tnt_object_format(args, "[]"), -1, "check object filling");
+	query = "CREATE TABLE test_table(id INTEGER, PRIMARY KEY (id))";
+	isnt(tnt_execute(tnt, query, strlen(query), args), -1,
+	     "Create execute sql request: create table");
+	isnt(tnt_flush(tnt), -1, "Send to server");
+	tnt_stream_free(args);
+
+	tnt_reply_init(&reply);
+	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
+	is  (reply.error, NULL, "Check error absence");
+	isnt(reply.sqlinfo, NULL, "Check sqlinfo presence");
+	is  (reply.metadata, NULL, "Check metadata absence");
+	is  (reply.data, NULL, "Check data absence");
+	tnt_reply_free(&reply);
+
+	args = tnt_object(NULL);
+	isnt(args, NULL, "Check object creation");
+	isnt(tnt_object_format(args, "[%d]", 0), -1, "check object filling");
+	query = "INSERT INTO test_table(id) VALUES (?)";
+	isnt(tnt_execute(tnt, query, strlen(query), args), -1,
+	     "Create execute sql request: insert row");
+	isnt(tnt_flush(tnt), -1, "Send to server");
+	tnt_stream_free(args);
+
+	tnt_reply_init(&reply);
+	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
+	is  (reply.error, NULL, "Check error absence");
+	isnt(reply.sqlinfo, NULL, "Check sqlinfo presence");
+	is  (reply.metadata, NULL, "Check metadata absence");
+	is  (reply.data, NULL, "Check data absence");
+	tnt_reply_free(&reply);
+
+	args = tnt_object(NULL);
+	isnt(args, NULL, "Check object creation");
+	isnt(tnt_object_format(args, "[]"), -1, "check object filling");
+	query = "select * from test_table";
+	isnt(tnt_execute(tnt, query, strlen(query), args), -1,
+	     "Create execute sql request: select");
+	isnt(tnt_flush(tnt), -1, "Send to server");
+	tnt_stream_free(args);
+
+	
+
+	tnt_reply_init(&reply);
+	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
+	is  (reply.error, NULL, "Check error absence");
+	is  (reply.sqlinfo, NULL, "Check sqlinfo absence");
+	isnt(reply.metadata, NULL, "Check metadata presence");
+	isnt(reply.data, NULL, "Check data presence");
+	tnt_reply_free(&reply);
+
+
+
+	query = "select * from test_table";
+	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
+	     "Create execute sql request: select no args");
+	/* isnt(tnt_flush(tnt), -1, "Send to server"); */
+       
+	tnt_stmt_t* result = tnt_fetch_result(tnt);
+	isnt(result, NULL, "Check tnt_stmt_t presence");
+
+	if (result) {
+	  int r = tnt_next_row(result);
+	  is(r,OK,"Check tnt_next_row return ok");
+	  isnt(result->reply->metadata,NULL,"checking metadata ok");
+	  is(tnt_number_of_cols(result),1,"Checking number of columns");
+	  is(tnt_col_type(result,0),MP_INT,"Checking result column type 0");
+	  is(tnt_col_int(result,0),0,"Checking result column value 0");
+	  isnt(tnt_next_row(result),OK,"Check for fail of next row");
+	}
+	tnt_stmt_free(result);
+
+	query = "CREATE TABLE str_table(id STRING, PRIMARY KEY (id))";	
+	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
+	     "Create execute sql request: create table");
+
+	result = tnt_fetch_result(tnt);
+	isnt(result, NULL, "Check tnt_stmt_t presence after create table");
+	if (result) {
+	  is(tnt_stmt_code(result),0,"checking code after table creation");
+	  is(tnt_affected_rows(result),1,"checking affected rows after table creation");
+	}
+
+	query = "DROP TABLE str_table";	
+	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
+	     "Create execute sql request: drop table");
+
+	result = tnt_fetch_result(tnt);
+	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
+	if (result) {
+	  is(tnt_stmt_code(result),0,"checking code after table creation");
+	  is(tnt_affected_rows(result),1,"checking affected rows after drop table");
+	}
+
+	args = tnt_object(NULL);
+	isnt(args, NULL, "Check object creation");
+	isnt(tnt_object_format(args, "[]"), -1, "check object filling");
+	query = "drop table test_table";
+	isnt(tnt_execute(tnt, query, strlen(query), args), -1,
+	     "Create execute sql request: drop table");
+	isnt(tnt_flush(tnt), -1, "Send to server");
+	tnt_stream_free(args);
+
+	tnt_reply_init(&reply);
+	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
+	is  (reply.error, NULL, "Check error absence");
+	isnt(reply.sqlinfo, NULL, "Check sqlinfo presence");
+	is  (reply.metadata, NULL, "Check metadata absence");
+	is  (reply.data, NULL, "Check data absence");
+	tnt_reply_free(&reply);
+
+	tnt_stream_free(tnt);
+	footer();
+	return check_plan();
+}
+
 
 static int
 test_request_02(char *uri) {
@@ -834,6 +967,7 @@ int main() {
 	test_request_05(uri);
 	test_msgpack_array_iter();
 	test_msgpack_mapa_iter();
+	test_execute(uri);
 
 	return check_plan();
 }

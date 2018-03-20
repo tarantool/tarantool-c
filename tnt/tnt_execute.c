@@ -16,8 +16,34 @@
 
 #include "tnt_proto_internal.h"
 
+static ssize_t
+tnt_execute_int(struct tnt_stream *s, const char *expr, size_t elen,
+		struct tnt_stream *params);
+
+/*
+ * Todo: check for acceptance of empty args and maybe eliminate this function.
+ **/
+
 ssize_t
 tnt_execute(struct tnt_stream *s, const char *expr, size_t elen,
+	    struct tnt_stream *params) 
+{
+  if (params)
+    return tnt_execute_int(s,expr,elen,params);
+  else {
+    params = tnt_object(NULL);
+    if (!params)
+      return -1;
+    tnt_object_format(params,"[]");
+    ssize_t ret = tnt_execute_int(s,expr,elen,params);
+    tnt_stream_free(params);
+    return ret;
+  }
+}
+
+
+static ssize_t
+tnt_execute_int(struct tnt_stream *s, const char *expr, size_t elen,
 	    struct tnt_stream *params)
 {
 	if (!expr || elen == 0)
