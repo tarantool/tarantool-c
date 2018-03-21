@@ -258,6 +258,52 @@ int tnt_connect(struct tnt_stream *s)
 	return 0;
 }
 
+struct tnt_stream*
+tnt_open(const char* host, const char* user, const char* password, int port)
+{
+  struct tnt_stream* tnt = tnt_net(NULL);
+  if (!tnt)
+    return NULL;
+  if (!tnt_reopen(tnt,host,user,password,port)) {
+    tnt_net_free(tnt);
+    return NULL;
+  }
+  return tnt;
+}
+
+#define BUFSZ 512
+
+struct tnt_stream *
+tnt_reopen(struct tnt_stream* tnt, const char* host, const char* user, const char* password, int port)
+{
+  if (!tnt)
+    return tnt_open(host,user,password,port);
+
+  struct tnt_stream_net *sn = TNT_SNET_CAST(tnt);
+  char* bufz = tnt_mem_alloc(BUFSZ);
+  if (!bufz) {
+    sn->error = TNT_EMEMORY;
+    return NULL;
+  }
+  int ret=0;
+
+  if (user && user[0]!='\0') 
+    ret +=snprintf(bufz,BUFSZ-ret,"%s:%s@",user,password?password:"");
+  if (port==0)
+    snprintf(bufz+ret,BUFSZ-ret,"%s",host);
+  else
+    snprintf(bufz+ret,BUFSZ-ret,"%s:%d",host,port);
+  ret=tnt_set(tnt, TNT_OPT_URI, bufz);
+
+  tnt_mem_free(bufz);
+  if (ret==-1)
+    return NULL;
+
+  return tnt_connect(tnt)==-1?NULL:tnt;  
+}
+
+
+
 void tnt_close(struct tnt_stream *s) {
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
 	tnt_iob_clear(&sn->sbuf);

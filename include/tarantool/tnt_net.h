@@ -164,6 +164,58 @@ tnt_init(struct tnt_stream *s);
 int
 tnt_connect(struct tnt_stream *s);
 
+
+
+/**
+ * \brief Create tnt_stream instance and make a tarantool connection
+ *
+ * \param host hostname to connect
+ * \param username for authentification, maybe NULL
+ * \param password username password for auth, maybe NULL
+ * \param port port, maybe 0. If port is 0 then services ":service" uri part is not generated
+ *
+ * If stream pointer is NULL, then new stream will be created.
+ *
+ * \returns stream pointer
+ * \retval NULL error
+ *
+ * \code{.c}
+ * struct tnt_stream *tnt = tnt_open(const char* host, const char* user, const char* password, int port) 
+ * assert(tnt);
+ * assert(tnt_set(s, TNT_OPT_URI, "login:passw@localhost:3302") != -1);
+ * ...
+ * tnt_close(s);
+ * \endcode
+ */
+struct tnt_stream *
+tnt_open(const char* host, const char* user, const char* password, int port);
+
+/**
+ * \brief make a tarantool connection using existing stream
+ *
+ * \param s stream pointer, maybe NULL
+ * \param host hostname to connect
+ * \param username for authentification, maybe NULL
+ * \param password username password for auth, maybe NULL
+ * \param port port, maybe 0. If port is 0 then services ":service" uri part is not generated
+ * 
+ * If stream pointer is NULL, then new stream will be created.
+ *
+ * \returns stream pointer
+ * \retval NULL error
+ *
+ * \code{.c}
+ * struct tnt_stream *tnt = tnt_open(const char* host, const char* user, const char* password, int port) 
+ * assert(tnt);
+ * assert(tnt_set(s, TNT_OPT_URI, "login:passw@localhost:3302") != -1);
+ * ...
+ * tnt_close(s);
+ * \endcode
+ */
+struct tnt_stream *
+tnt_reopen(struct tnt_stream* strm,const char* host, const char* user, const char* password, int port);
+
+
 /**
  * \brief Close connection
  * \param s stream pointer
