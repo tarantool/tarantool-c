@@ -5,7 +5,60 @@
 
 
 static int 
-tnt_decode_col(tnt_stmt_t* stmt, struct tnt_coldata* col);
+tnt_decode_col(tnt_stmt_t* stmt, struct tnt_coldata* col, tnt_bind_t* bnd);
+
+static tnt_stmt_t* 
+tnt_stmt_new(struct tnt_stream* s)
+{
+  tnt_stmt_t* stmt = (tnt_stmt_t*)tnt_mem_alloc(sizeof(tnt_stmt_t));
+  if (!stmt)
+    return NULL;
+  memset(stmt,0,sizeof(tnt_stmt_t));
+  stmt->stream=s;
+  return stmt;
+}
+
+
+/*
+ * Creates statement structure with prepared SQL statement. 
+ * One can bind parameters and execute it multiple times.
+ **/
+tnt_stmt_t* 
+tnt_prepare_statement(struct tnt_stream* s, const char* text, int32_t len)
+{
+  tnt_stmt_t* stmt = tnt_stmt_new(s);
+  if (!stmt)
+    return NULL;
+  if (text && len>0) {
+    stmt->query = (char*)tnt_mem_alloc(len);
+    if (!stmt->query)
+      return NULL;
+    memcpy(stmt->query,text,len);
+    stmt->query_len = len;
+  }
+  return stmt;
+}
+
+/*
+ * Associates input bind parameters array with statements.
+ **/
+int 
+tnt_bind_query(tnt_stmt_t* stmt,tnt_bind_t* bnd, int ncols)
+{
+  (void)(ncols); /* Stop unused warning */
+  stmt->ibind=bnd;
+  return OK;
+}
+
+/*
+ * Associates output bind parameters array with statements.
+ **/
+int tnt_bind_result(tnt_stmt_t* stmt, tnt_bind_t* bnd,int ncols)
+{
+  (void)(ncols); /* Stop unused warning */
+  stmt->obind=bnd;
+  return OK;
+}
 
 
 static void 
@@ -115,6 +168,107 @@ tnt_fetch_result(struct tnt_stream* stream)
   return stmt;
 }
 
+/*
+ * Copyes result into bind variables. One can call it many times as soon as 
+ * fetched row available.
+ **/
+int 
+tnt_fetch_bind_result(tnt_stmt_t* stmt)
+{
+  if (!stmt || !stmt->row || !stmt->obind)
+    return FAIL;
+  for(int i = 0;i<stmt->ncols;++i) {
+    if (stmt->obind[i].error)
+      *(stmt->obind[i].error)=0;
+    if (stmt->obind[i].is_null)
+      *stmt->obind[i].is_null=0;
+    if (stmt->obind[i].out_len)
+      *stmt->obind[i].out_len=stmt->col[i].size;
+
+    switch (stmt->col[i].type) {
+    case MP_NIL:
+      if (stmt->obind[i].is_null)
+	*stmt->obind[i].is_null=1;
+      break;
+
+    case MP_INT:
+    case MP_UINT:
+      if (stmt->obind[i].buffer) {
+	/* don't check for input buffer size for intergral types */
+	if (stmt->obind[i].type==MP_INT || stmt->obind[i].type==MP_UINT) {
+	  int64_t* v = stmt->obind[i].buffer;
+	  *v = stmt->col[i].v.i;
+	} else if (stmt->obind[i].type==MP_DOUBLE) { 
+	  double* v = stmt->obind[i].buffer;
+	  *v = stmt->col[i].v.i;	  
+	} else if (stmt->obind[i].type==MP_FLOAT) {
+	  float* v = stmt->obind[i].buffer;
+	  *v = stmt->col[i].v.i;	  
+	} else {
+	  if (stmt->obind[i].error)
+	    *(stmt->obind[i].error)=1;
+	}
+      }
+      break;
+
+    case MP_DOUBLE:
+      if (stmt->obind[i].buffer) {
+	/* don't check for input buffer size for intergral types */
+	if (stmt->obind[i].type==MP_INT || stmt->obind[i].type==MP_UINT) {
+	  int64_t* v = stmt->obind[i].buffer;
+	  *v = stmt->col[i].v.d;
+	} else if (stmt->obind[i].type==MP_DOUBLE) { 
+	  double* v = stmt->obind[i].buffer;
+	  *v = stmt->col[i].v.d;	  
+	} else if (stmt->obind[i].type==MP_FLOAT) {
+	  float* v = stmt->obind[i].buffer;
+	  *v = stmt->col[i].v.d;	  
+	} else {
+	  if (stmt->obind[i].error)
+	    *(stmt->obind[i].error)=1;
+	}
+      }
+      break;
+    case MP_FLOAT:
+      if (stmt->obind[i].buffer) {
+	/* don't check for input buffer size for intergral types */
+	if (stmt->obind[i].type==MP_INT || stmt->obind[i].type==MP_UINT) {
+	  int64_t* v = stmt->obind[i].buffer;
+	  *v = stmt->col[i].v.f;
+	} else if (stmt->obind[i].type==MP_DOUBLE) { 
+	  double* v = stmt->obind[i].buffer;
+	  *v = stmt->col[i].v.f;	  
+	} else if (stmt->obind[i].type==MP_FLOAT) {
+	  float* v = stmt->obind[i].buffer;
+	  *v = stmt->col[i].v.f;	  
+	} else {
+	  if (stmt->obind[i].error)
+	    *(stmt->obind[i].error)=1;
+	}
+      }
+      break;
+
+    case MP_STR:
+    case MP_BIN:
+      if (stmt->obind[i].type!=MP_STR && stmt->obind[i].type!=MP_BIN) {
+	if (stmt->obind[i].error)
+	  *(stmt->obind[i].error)=1;
+	break;
+      }
+      if (stmt->obind[i].buffer && stmt->obind[i].in_len>0) {
+	/* XXX if the input buffer length is less then column string size, last available character will be 0. */
+	int32_t len = (stmt->obind[i].in_len<stmt->col[i].size)?stmt->obind[i].in_len:stmt->col[i].size;
+	memcpy(stmt->obind[i].buffer,stmt->col[i].v.p,len);
+	if (stmt->col[i].type==MP_STR) {
+	  if (len == stmt->obind[i].in_len) len--;
+	  (char*)(stmt->obind[i].buffer)[len]='\0';
+	}
+      }
+      break;  
+    }
+  }
+  return OK;
+}
 
 
 /**
@@ -142,16 +296,18 @@ tnt_next_row(tnt_stmt_t* stmt)
   if (!stmt->row) {
     /* set error */
     return FAIL;
+    
   }
-  
   if (stmt->nrows>0) {
     stmt->nrows--;
     for(int i=0;i<stmt->ncols;i++) {
-      if (tnt_decode_col(stmt,&stmt->row[i])!=OK) {
+      if (tnt_decode_col(stmt,&stmt->row[i])) {
 	/* set invalid stream data error */
 	return FAIL;
       }
     }
+    if (stmt->obind)
+      tnt_fetch_bind_result(stmt);
     return OK;
   } else
     return FAIL;   
@@ -175,17 +331,15 @@ tnt_store_desc(tnt_stmt_t* stmt)
 static int 
 tnt_decode_col(tnt_stmt_t *stmt, struct tnt_coldata* col)
 {
-  switch (mp_typeof(*stmt->data)) {
+  
+  int tp = mp_typeof(*stmt->data);
+  switch (tp) {
   case MP_UINT:
-    col->type=MP_INT;
-    col->v.i=mp_decode_uint(&stmt->data);
-    break;
-
   case MP_INT:
-    col->type=MP_INT;
-    col->v.i=mp_decode_int(&stmt->data);
+      col->type=MP_INT;
+      col->v.i=(tp==MP_UINT)?mp_decode_uint(&stmt->data):
+	mp_decode_int(&stmt->data);
     break;
-
   case MP_DOUBLE:
     col->type=MP_DOUBLE;
     col->v.d=mp_decode_double(&stmt->data);
@@ -210,6 +364,7 @@ tnt_decode_col(tnt_stmt_t *stmt, struct tnt_coldata* col)
     col->type=MP_NIL;
     col->v.p=NULL;
     mp_decode_nil(&stmt->data);
+  }
     break;
   default:
     return FAIL;
