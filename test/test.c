@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-enum { MAX_LEVELS = 10 };
+enum { MAX_LEVELS = 20 };
 static int tests_done[MAX_LEVELS];
 static int tests_failed[MAX_LEVELS];
 static int plan_test[MAX_LEVELS];
@@ -36,7 +36,7 @@ check_plan(void)
 	if (tests_done[level] != plan_test[level]) {
 		__space(stderr);
 		fprintf(stderr,
-			"# Looks like you planned %d tests but ran %d.\n",
+			"# (%d) Looks like you planned %d tests but ran %d.\n", level,
 			plan_test[level], tests_done[level]);
 		r = -1;
 	}
@@ -44,7 +44,7 @@ check_plan(void)
 	if (tests_failed[level]) {
 		__space(stderr);
 		fprintf(stderr,
-			"# Looks like you failed %d test of %d run.\n",
+			"# (%d) Looks like you failed %d test of %d run.\n", level,
 			tests_failed[level], tests_done[level]);
 		r = tests_failed[level];
 	}

@@ -286,9 +286,55 @@ test_request_01(char *uri) {
 	return check_plan();
 }
 
+static int test_connection()
+{
+  plan(8);
+  header();
+
+  //snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:", getenv("PRIMARY_PORT"));
+  int port = atoi(getenv("PRIMARY_PORT"));
+
+  struct tnt_stream* s = tnt_open("localhost","test","test",port);
+  isnt(s,NULL,"test connection to localhost");
+  if (s) tnt_stream_free(s);
+  
+  s=tnt_open("invalid_host","test","test",port);
+  is(s,NULL,"test connection to wrong host");
+  if (s) tnt_stream_free(s);
+
+  s=tnt_open("localhost","test","test",7980);
+  is(s,NULL,"test connection to wrong port");
+  if (s) tnt_stream_free(s);
+
+  s=tnt_open("localhost","","test",port);
+  isnt(s,NULL,"test connection without auth");
+  if (s) tnt_stream_free(s);
+
+  s=tnt_open("localhost",NULL,"test",port);
+  isnt(s,NULL,"test connection without auth");
+  if (s) tnt_stream_free(s);
+
+  s=tnt_reopen(NULL,"localhost","test","test",port);
+  isnt(s,NULL,"test reopen with first NULL");
+  if (s) tnt_stream_free(s);
+
+  s = tnt_net(NULL);
+  struct tnt_stream* s2 =tnt_reopen(s,"localhost","test","test",port);
+  is(s,s2,"test tnt_reopen using existing stream");
+  if (s) tnt_stream_free(s);
+
+  s = tnt_open(NULL,"test","test",0);
+  is(s,NULL,"test unix socket connection is not working");
+  if (s) tnt_stream_free(s);
+
+
+  footer();
+  return check_plan();
+}
+
 static int
 test_execute(char *uri) {
-	plan(47);
+	plan(55);
 	header();
 
 	struct tnt_reply reply;
@@ -806,6 +852,8 @@ test_msgpack_array_iter() {
 		}
 		sz += 1;
 	}
+
+ 
 	tnt_iter_free(it);
 	tnt_stream_free(sa);
 
@@ -953,13 +1001,15 @@ test_msgpack_mapa_iter() {
 }
 */
 int main() {
-	plan(9);
+	plan(11);
 
 	char uri[128] = {0};
 	snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:", getenv("PRIMARY_PORT"));
 
+
 	test_connect_tcp();
 	test_object();
+
 	test_request_01(uri);
 	test_request_02(uri);
 	test_request_03(uri);
@@ -968,7 +1018,7 @@ int main() {
 	test_msgpack_array_iter();
 	test_msgpack_mapa_iter();
 	test_execute(uri);
-
+	test_connection();
 	return check_plan();
 }
 
