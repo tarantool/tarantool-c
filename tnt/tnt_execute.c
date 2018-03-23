@@ -20,31 +20,30 @@ static ssize_t
 tnt_execute_int(struct tnt_stream *s, const char *expr, size_t elen,
 		struct tnt_stream *params);
 
-/*
+/**
  * Todo: check for acceptance of empty args and maybe eliminate this function.
- **/
+ */
 
 ssize_t
 tnt_execute(struct tnt_stream *s, const char *expr, size_t elen,
 	    struct tnt_stream *params) 
 {
-  if (params)
-    return tnt_execute_int(s,expr,elen,params);
-  else {
-    params = tnt_object(NULL);
-    if (!params)
-      return -1;
-    tnt_object_format(params,"[]");
-    ssize_t ret = tnt_execute_int(s,expr,elen,params);
-    tnt_stream_free(params);
-    return ret;
-  }
+	if (params)
+		return tnt_execute_int(s,expr,elen,params);
+	else {
+		params = tnt_object(NULL);
+		if (!params)
+			return -1;
+		tnt_object_format(params,"[]");
+		ssize_t ret = tnt_execute_int(s,expr,elen,params);
+		tnt_stream_free(params);
+		return ret;
+	}
 }
 
 
 static ssize_t
-tnt_execute_int(struct tnt_stream *s, const char *expr, size_t elen,
-	    struct tnt_stream *params)
+tnt_execute_int(struct tnt_stream *s, const char *expr, size_t elen, struct tnt_stream *params)
 {
 	if (!expr || elen == 0)
 		return -1;
@@ -60,7 +59,7 @@ tnt_execute_int(struct tnt_stream *s, const char *expr, size_t elen,
 	char body[64];
 	body_start = body;
 	data = body;
-
+	
 	data = mp_encode_map(data, 2);
 	data = mp_encode_uint(data, TNT_SQL_TEXT);
 	data = mp_encode_strl(data, elen);
