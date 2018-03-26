@@ -24,7 +24,7 @@ tnt_stmt_new(struct tnt_stream *s)
  * One can bind parameters and execute it multiple times.
  **/
 tnt_stmt_t *
-tnt_prepare_statement(struct tnt_stream *s, const char *text, int32_t len)
+tnt_prepare(struct tnt_stream *s, const char *text, int32_t len)
 {
 	tnt_stmt_t *stmt = tnt_stmt_new(s);
 	if (!stmt)
@@ -154,7 +154,7 @@ enum sql_state {
 	COMMENT2
 };
 
-int
+static int
 get_query_num(const char *s,size_t len)
 {
 	const char *ptr=s;
@@ -211,6 +211,46 @@ get_query_num(const char *s,size_t len)
 	}
 	return num;
 }
+
+
+#define UTEST
+#ifndef UTEST
+int
+call_utest(void)
+{ return 0;}
+
+#else
+#define utest(a,b) do { \
+	if ((a)==(b))   \
+		fprintf (stderr,"ok "); \
+	else \
+		fprintf (stderr,"fail "); \
+	fprintf(stderr,"(%s) == (%s)\n",#a,#b); \
+	} while (0)
+
+#define utestn(a ,b ) do { \
+	if ((a)!=(b)) \
+		fprintf (stderr,"ok "); \
+	else \
+		fprintf (stderr,"fail "); \
+	fprintf(stderr,"(%s) != (%s)\n",#a,#b); \
+	} while (0)
+
+
+int
+call_utest(void)
+{
+	utest(get_query_num("?", strlen("?")),1);
+	utest(get_query_num("? ?", strlen("? ?")),2);
+	utest(get_query_num("? ? ?", strlen("? ? ?")),3);
+	utest(get_query_num("/* ? */", strlen("/* ? */")),0);
+	utest(get_query_num("\\? ? ?", strlen("\\? ? ?")),2);
+	utest(get_query_num("\\? ? -- ?", strlen("\\? ? -- ?")),1);
+	utest(get_query_num("\\? '? ?'", strlen("\\? '? ?'")),0);
+	utest(get_query_num("\\? \"? ?\"", strlen("\\? \"? ?\"")),0);
+	return 0;
+}
+#endif
 
 struct tnt_stream *
 bind2object(tnt_stmt_t* stmt)
@@ -271,22 +311,26 @@ error:
 }
 
 static tnt_stmt_t* 
-tnt_fetch_result_stmt(struct tnt_stream *,tnt_stmt_t *);
+tnt_fetch_result_stmt(tnt_stmt_t *);
 
 int
 tnt_execute_stmt(tnt_stmt_t* stmt)
 {
+	int result=FAIL;
 	if (!stmt->ibind) {
-		return tnt_execute(stmt->stream,stmt->query,stmt->query_len, NULL);
+		result = tnt_execute(stmt->stream,stmt->query,stmt->query_len, NULL);
+		/* reqid Overflow ? */
+		stmt->reqid = stmt->stream->reqid - 1;
 	} else {
 		struct tnt_stream *args = bind2object(stmt);
-		int result = 0;
 		if (args) {
 			result = tnt_execute(stmt->stream,stmt->query,stmt->query_len,args);
+			stmt->reqid = stmt->stream->reqid - 1;
 			tnt_stream_free(args);
-			return result;
 		}
 	}
+	if (result == OK && tnt_fetch_result_stmt(stmt)!=NULL)
+		return OK;
 	return FAIL;
 }
 
@@ -299,7 +343,7 @@ tnt_fetch_result(struct tnt_stream *stream)
 	stmt->stream = stream;
 	stmt->row = NULL;
 	stmt->a_rows = 0;
-	if (!tnt_fetch_result_stmt(stream,stmt)) {
+	if (!tnt_fetch_result_stmt(stmt)) {
 		tnt_stmt_free(stmt);
 		return NULL;
 	}
@@ -307,8 +351,9 @@ tnt_fetch_result(struct tnt_stream *stream)
 }
 
 static tnt_stmt_t *
-tnt_fetch_result_stmt(struct tnt_stream *stream, tnt_stmt_t *stmt)
+tnt_fetch_result_stmt(tnt_stmt_t *stmt)
 {
+	struct tnt_stream *stream = stmt->stream;
 	if (tnt_flush(stream) == -1)
 		return NULL;
 	stmt->reply = (struct tnt_reply *)tnt_mem_alloc(sizeof(struct tnt_reply));
@@ -489,6 +534,7 @@ tnt_store_desc(tnt_stmt_t* stmt)
 static int
 tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col)
 {
+	uint32_t sz;
 	int tp = mp_typeof(*stmt->data);
 	switch (tp) {
 	case MP_UINT:
@@ -509,12 +555,15 @@ tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col)
 
 	case MP_STR:
 		col->type = MP_STR;
-		col->v.p = (void *)mp_decode_str(&stmt->data, &col->size);
+		col->v.p = (void *)mp_decode_str(&stmt->data, &sz);
+		/* Does he need to check for overflow? */ 
+		col->size=sz;
 		break;
 
 	case MP_BIN:
 		col->type = MP_BIN;
-		col->v.p = (void *)mp_decode_bin(&stmt->data, &col->size);
+		col->v.p = (void *)mp_decode_bin(&stmt->data, &sz);
+		col->size=sz;
 		break;
 
 	case MP_NIL:

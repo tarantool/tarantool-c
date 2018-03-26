@@ -334,7 +334,7 @@ static int test_connection()
 
 static int
 test_execute(char *uri) {
-	plan(55);
+	plan(60);
 	header();
 
 	struct tnt_reply reply;
@@ -429,8 +429,27 @@ test_execute(char *uri) {
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
 	  is(tnt_affected_rows(result),1,"checking affected rows after table creation");
+	  tnt_stmt_free(result);
 	}
-
+	
+	
+	char * ins_q="INSERT INTO str_table(id) VALUES (?)";
+	result = tnt_prepare(tnt,ins_q,strlen(ins_q));
+	isnt(result,NULL,"statement prepare");
+	if (result) {
+		const char* in="Hello";
+		tnt_bind_t param[1];
+		memset(&param[0],0,sizeof(param));
+		param[0].type=MP_STR;
+		param[0].buffer = (void*)in;
+		param[0].in_len = strlen(in);
+		is(tnt_bind_query(result,&param[0],1),OK,"Input bind array test");
+		is(tnt_execute_stmt(result),OK,"tnt_execute_stmt test");
+		is(tnt_stmt_code(result),0,"checking code after table creation");
+		is(tnt_affected_rows(result),1,"checking affected rows after table creation");
+		tnt_stmt_free(result);
+	}
+	
 	query = "DROP TABLE str_table";	
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
@@ -1017,8 +1036,8 @@ int main() {
 	test_request_05(uri);
 	test_msgpack_array_iter();
 	test_msgpack_mapa_iter();
-	test_execute(uri);
 	test_connection();
+	test_execute(uri);
 	return check_plan();
 }
 

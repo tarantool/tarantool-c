@@ -18,7 +18,7 @@
 
 struct tnt_coldata {
 	int32_t type;
-	uint32_t size;
+	int32_t size;
 	union {
 		int64_t i;
 		float f;
@@ -57,6 +57,7 @@ typedef struct tnt_stmt {
 	tnt_bind_t *ibind;
 	/* int32_t obind_len */
 	tnt_bind_t *obind;
+	int64_t reqid;
 } tnt_stmt_t;
 
 
@@ -101,7 +102,7 @@ tnt_stmt_t *tnt_prepare(struct tnt_stream *s, const char *text, int32_t len);
 tnt_stmt_t *tnt_query(struct tnt_stream *s, const char *text, int32_t len);
 
 /**
- * Sends prepared statement to server.
+ * Sends prepared statement to server. No need to call to tnt_fetch_result().
  */
 int tnt_execute_stmt(tnt_stmt_t *);
 
