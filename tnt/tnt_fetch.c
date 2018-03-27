@@ -133,7 +133,7 @@ tnt_stmt_free(tnt_stmt_t * stmt)
 tnt_stmt_t*
 tnt_query(struct tnt_stream *s, const char *text, int32_t len)
 {
-	if (s && (tnt_execute(s,text,len,NULL)==OK))
+	if (s && (tnt_execute(s,text,len,NULL)!=FAIL))
 		return tnt_fetch_result(s);
 	return NULL;
 }
@@ -257,7 +257,7 @@ bind2object(tnt_stmt_t* stmt)
 {
 	int npar = get_query_num(stmt->query,stmt->query_len);
 	struct tnt_stream *obj = tnt_object(NULL);
-	if (tnt_object_add_array(obj, 0)==FAIL)
+	if ((tnt_object_type(obj, TNT_SBO_PACKED) == FAIL) || (tnt_object_add_array(obj, 0) == FAIL))
 		goto error;
 	int i=npar;
 	while(i-- > 0) {
@@ -329,7 +329,7 @@ tnt_execute_stmt(tnt_stmt_t* stmt)
 			tnt_stream_free(args);
 		}
 	}
-	if (result == OK && tnt_fetch_result_stmt(stmt)!=NULL)
+	if (result !=FAIL && (tnt_fetch_result_stmt(stmt)!=NULL))
 		return OK;
 	return FAIL;
 }
@@ -357,7 +357,9 @@ tnt_fetch_result_stmt(tnt_stmt_t *stmt)
 	if (tnt_flush(stream) == -1)
 		return NULL;
 	stmt->reply = (struct tnt_reply *)tnt_mem_alloc(sizeof(struct tnt_reply));
-	if (!stmt->reply && !tnt_reply_init(stmt->reply) && stmt->stream->read_reply(stmt->stream, stmt->reply) != 0) 
+	if (!stmt->reply && !tnt_reply_init(stmt->reply))
+		return NULL;
+	if (stmt->stream->read_reply(stmt->stream, stmt->reply) != 0) 
 		return NULL;
 	if (tnt_stmt_code(stmt) != 0)
 		return stmt;

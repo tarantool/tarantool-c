@@ -334,7 +334,7 @@ static int test_connection()
 
 static int
 test_execute(char *uri) {
-	plan(60);
+	plan(72);
 	header();
 
 	struct tnt_reply reply;
@@ -447,6 +447,54 @@ test_execute(char *uri) {
 		is(tnt_execute_stmt(result),OK,"tnt_execute_stmt test");
 		is(tnt_stmt_code(result),0,"checking code after table creation");
 		is(tnt_affected_rows(result),1,"checking affected rows after table creation");
+		tnt_stmt_free(result);
+	}
+	
+	query = "DROP TABLE str_table";	
+	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
+	     "Create execute sql request: drop table");
+
+	result = tnt_fetch_result(tnt);
+	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
+	if (result) {
+	  is(tnt_stmt_code(result),0,"checking code after table creation");
+	  is(tnt_affected_rows(result),1,"checking affected rows after drop table");
+	}
+
+	query = "CREATE TABLE str_table(id STRING, val INTEGER,PRIMARY KEY (val))";
+	result = tnt_query(tnt,query,strlen(query));
+	isnt(result, NULL,
+	     "create table with tnt_query");
+
+	if (result) {
+	  is(tnt_stmt_code(result),0,"checking code after table creation");
+	  is(tnt_affected_rows(result),1,"checking affected rows after table creation");
+	  tnt_stmt_free(result);
+	}
+	
+	
+	ins_q="INSERT INTO str_table(id,val) VALUES (?,?)";
+	result = tnt_prepare(tnt,ins_q,strlen(ins_q));
+	isnt(result,NULL,"2 vals statement prepare");
+	if (result) {
+		const char* in="Hello";
+		tnt_bind_t param[2];
+		memset(&param[0],0,sizeof(param));
+		param[0].type=MP_STR;
+		param[0].buffer = (void*)in;
+		param[0].in_len = strlen(in);
+		int val=666;
+		param[0].type=MP_INT;
+		param[0].buffer = (void*)&val;
+		param[0].in_len = sizeof(int);
+
+		is(tnt_bind_query(result,&param[0],2),OK,"Input bind array test");
+		for(int i=0;i<10;++i) {
+			val +=i;
+			is(tnt_execute_stmt(result),OK,"tnt_execute_stmt test");
+			is(tnt_stmt_code(result),0,"checking code after table creation");
+			is(tnt_affected_rows(result),1,"checking affected rows after table creation");
+		}
 		tnt_stmt_free(result);
 	}
 	
