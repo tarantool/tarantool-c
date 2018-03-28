@@ -96,7 +96,7 @@ const char **tnt_cols_names(tnt_stmt_t *);
 tnt_stmt_t *tnt_prepare(struct tnt_stream *s, const char *text, int32_t len);
 
 /**
- * Shortcut for tnt_execute -> tnt_fetch_result 
+ * Shortcut for tnt_execute -> tnt_fetch_result. Input bind variables free version. 
  */
 
 tnt_stmt_t *tnt_query(struct tnt_stream *s, const char *text, int32_t len);
@@ -104,7 +104,7 @@ tnt_stmt_t *tnt_query(struct tnt_stream *s, const char *text, int32_t len);
 /**
  * Sends prepared statement to server. No need to call to tnt_fetch_result().
  */
-int tnt_execute_stmt(tnt_stmt_t *);
+int tnt_stmt_execute(tnt_stmt_t *);
 
 /**
  * Associates input bind parameters array with statements.
@@ -116,16 +116,11 @@ int tnt_bind_query(tnt_stmt_t *, tnt_bind_t *, int ncols);
  */
 int tnt_bind_result(tnt_stmt_t *, tnt_bind_t *, int ncols);
 
-/**
- * Copyes result into bind variables. One can call it many times as soon as
- * fetched row available.
- */
-int tnt_fetch_bind_result(tnt_stmt_t *);
 
 /**
  * Creates tnt_stmt_t structure after tnt_execute query.
  */
-tnt_stmt_t *tnt_fetch_result(struct tnt_stream *);
+tnt_stmt_t *tnt_stmt_fetch(struct tnt_stream *);
 
 
 

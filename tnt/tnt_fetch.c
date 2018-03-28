@@ -6,6 +6,8 @@
 
 static int
 tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col);
+static int
+tnt_fetch_bind_result(tnt_stmt_t * stmt);
 
 static tnt_stmt_t *
 tnt_stmt_new(struct tnt_stream *s)
@@ -134,7 +136,7 @@ tnt_stmt_t*
 tnt_query(struct tnt_stream *s, const char *text, int32_t len)
 {
 	if (s && (tnt_execute(s,text,len,NULL)!=FAIL))
-		return tnt_fetch_result(s);
+		return tnt_stmt_fetch(s);
 	return NULL;
 }
 
@@ -314,7 +316,7 @@ static tnt_stmt_t*
 tnt_fetch_result_stmt(tnt_stmt_t *);
 
 int
-tnt_execute_stmt(tnt_stmt_t* stmt)
+tnt_stmt_execute(tnt_stmt_t* stmt)
 {
 	int result=FAIL;
 	if (!stmt->ibind) {
@@ -335,7 +337,7 @@ tnt_execute_stmt(tnt_stmt_t* stmt)
 }
 
 tnt_stmt_t *
-tnt_fetch_result(struct tnt_stream *stream)
+tnt_stmt_fetch(struct tnt_stream *stream)
 {
 	tnt_stmt_t *stmt = (tnt_stmt_t *) tnt_mem_alloc(sizeof(tnt_stmt_t));
 	if (!stmt)
@@ -379,7 +381,7 @@ tnt_fetch_result_stmt(tnt_stmt_t *stmt)
  * Copyes result into bind variables. One can call it many times as soon as
  * fetched row available.
  */
-int
+static int
 tnt_fetch_bind_result(tnt_stmt_t * stmt)
 {
 	if (!stmt || !stmt->row || !stmt->obind)

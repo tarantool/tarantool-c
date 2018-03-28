@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-
+#include <math.h>
 #include <msgpuck.h>
 
 #include <tarantool/tarantool.h>
@@ -334,7 +334,7 @@ static int test_connection()
 
 static int
 test_execute(char *uri) {
-	plan(72);
+	plan(220);
 	header();
 
 	struct tnt_reply reply;
@@ -406,7 +406,7 @@ test_execute(char *uri) {
 	     "Create execute sql request: select no args");
 	/* isnt(tnt_flush(tnt), -1, "Send to server"); */
        
-	tnt_stmt_t* result = tnt_fetch_result(tnt);
+	tnt_stmt_t* result = tnt_stmt_fetch(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence");
 
 	if (result) {
@@ -424,7 +424,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: create table");
 
-	result = tnt_fetch_result(tnt);
+	result = tnt_stmt_fetch(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after create table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
@@ -444,7 +444,7 @@ test_execute(char *uri) {
 		param[0].buffer = (void*)in;
 		param[0].in_len = strlen(in);
 		is(tnt_bind_query(result,&param[0],1),OK,"Input bind array test");
-		is(tnt_execute_stmt(result),OK,"tnt_execute_stmt test");
+		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute test");
 		is(tnt_stmt_code(result),0,"checking code after table creation");
 		is(tnt_affected_rows(result),1,"checking affected rows after table creation");
 		tnt_stmt_free(result);
@@ -454,7 +454,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
-	result = tnt_fetch_result(tnt);
+	result = tnt_stmt_fetch(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
@@ -463,8 +463,7 @@ test_execute(char *uri) {
 
 	query = "CREATE TABLE str_table(id STRING, val INTEGER,PRIMARY KEY (val))";
 	result = tnt_query(tnt,query,strlen(query));
-	isnt(result, NULL,
-	     "create table with tnt_query");
+	isnt(result, NULL, "create table with tnt_query");
 
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
@@ -484,30 +483,197 @@ test_execute(char *uri) {
 		param[0].buffer = (void*)in;
 		param[0].in_len = strlen(in);
 		int val=666;
-		param[0].type=MP_INT;
-		param[0].buffer = (void*)&val;
-		param[0].in_len = sizeof(int);
+		param[1].type=MP_INT;
+		param[1].buffer = (void*)&val;
+		param[1].in_len = sizeof(int);
 
-		is(tnt_bind_query(result,&param[0],2),OK,"Input bind array test");
+		is(tnt_bind_query(result,&param[0],2),OK,"Input bind 2 val array test");
 		for(int i=0;i<10;++i) {
 			val +=i;
-			is(tnt_execute_stmt(result),OK,"tnt_execute_stmt test");
-			is(tnt_stmt_code(result),0,"checking code after table creation");
-			is(tnt_affected_rows(result),1,"checking affected rows after table creation");
+			is(tnt_stmt_execute(result),OK,"tnt_stmt_execute 2 val bind  test");
+			is(tnt_stmt_code(result),0,"checking code after 2 val bind insert");
+			is(tnt_affected_rows(result),1,"checking affected rows after table 2 val bind insert ");
 		}
+		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute bind dublicate value test");
+		isnt(tnt_stmt_code(result),0,"checking code after 2 val bind dublicate insert");
 		tnt_stmt_free(result);
 	}
+
+
+
+
+	ins_q="select id,val from str_table";
+	result = tnt_prepare(tnt,ins_q,strlen(ins_q));
+	isnt(result,NULL,"select vals statement prepare");
+	if (result) {
+		char out[10]="xxHerxllo";
+		tnt_bind_t param[2];
+		int32_t len;
+		int8_t nil=1;
+		memset(&param[0],0,sizeof(param));
+		param[0].type=MP_STR;
+		param[0].buffer = (void*)out;
+		param[0].in_len = sizeof(out);
+		param[0].out_len=&len;
+		param[0].is_null=&nil;
+		
+		int64_t val;
+		param[1].type=MP_INT;
+		param[1].buffer = (void*)&val;
+		param[1].in_len = sizeof(int64_t);
+		
+		is(tnt_bind_result(result,&param[0],2),OK,"Output bind array test");
+		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute 2 val bind  select test");
+		is(tnt_stmt_code(result),0,"checking code after 2 val bind select");
+		int i=0;
+		while(tnt_next_row(result)==OK) {
+			is(strncmp(out,"Hello",len),0,"Checking result of first bind var");
+			ok(val>=666,"Cheking result of second int bind var");
+			ok(!nil,"Cheking for not null");
+			i++;
+		}
+		is(i,10,"Checking number of resulted rows"); 
+		tnt_stmt_free(result);
+	}
+
+
+	query = "insert into str_table(val) values(700)";
+	result = tnt_query(tnt,query,strlen(query));
+	isnt(result, NULL,"insert row with null");
+
+	if (result) {
+	  is(tnt_stmt_code(result),0,"checking code insert row with null");
+	  is(tnt_affected_rows(result),1,"checking affected rows after insert row with null");
+	  tnt_stmt_free(result);
+	}
+
+	query = "select id from str_table where val=700";
+	result = tnt_query(tnt,query,strlen(query));
+	isnt(result, NULL,"select null value");
+
+	if (result) {
+		char out[10]="xxHerxllo";
+		tnt_bind_t param[1];
+		int32_t len;
+		int8_t nil=0;
+		memset(&param[0],0,sizeof(param));
+		param[0].type=MP_STR;
+		param[0].buffer = (void*)out;
+		param[0].in_len = sizeof(out);
+		param[0].out_len=&len;
+		param[0].is_null=&nil;
+		
 	
+		is(tnt_stmt_code(result),0,"checking code after tnt_query with select for null");
+		is(tnt_bind_result(result,&param[0],1),OK,"output bind result for null");
+
+		int i=0;
+		while(tnt_next_row(result)==OK) {
+			ok(nil,"Cheking result for null");
+			i++;
+		}
+		is(i,1,"Checking number of resulted rows"); 
+		tnt_stmt_free(result);
+	}
+
 	query = "DROP TABLE str_table";	
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
-	result = tnt_fetch_result(tnt);
+	result = tnt_stmt_fetch(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
 	  is(tnt_affected_rows(result),1,"checking affected rows after drop table");
 	}
+
+
+	query = "CREATE TABLE double_table(id DOUBLE, val INTEGER,PRIMARY KEY (val))";
+	result = tnt_query(tnt,query,strlen(query));
+	isnt(result, NULL, "create table with tnt_query for double");
+
+	if (result) {
+	  is(tnt_stmt_code(result),0,"checking code after table creation");
+	  is(tnt_affected_rows(result),1,"checking affected rows after table creation");
+	  tnt_stmt_free(result);
+	}
+	
+	
+	ins_q="INSERT INTO double_table(id,val) VALUES (?,?)";
+	result = tnt_prepare(tnt,ins_q,strlen(ins_q));
+	isnt(result,NULL,"2 vals statement prepare");
+	if (result) {
+		double in = 2.456;
+		tnt_bind_t param[2];
+		memset(&param[0],0,sizeof(param));
+		param[0].type=MP_DOUBLE;
+		param[0].buffer = (void*)&in;
+ 
+		int val=666;
+		param[1].type=MP_INT;
+		param[1].buffer = (void*)&val;
+		param[1].in_len = sizeof(int);
+
+		is(tnt_bind_query(result,&param[0],2),OK,"Input bind 2 val array test");
+		for(int i=0;i<10;++i) {
+			val +=i;
+			is(tnt_stmt_execute(result),OK,"tnt_stmt_execute 2 val bind  test");
+			is(tnt_stmt_code(result),0,"checking code after 2 val bind insert");
+			is(tnt_affected_rows(result),1,"checking affected rows after table 2 val bind insert ");
+		}
+		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute bind dublicate value test");
+		isnt(tnt_stmt_code(result),0,"checking code after 2 val bind dublicate insert");
+		tnt_stmt_free(result);
+	}
+
+
+
+
+	ins_q="select id,val from double_table";
+	result = tnt_prepare(tnt,ins_q,strlen(ins_q));
+	isnt(result,NULL,"select double vals statement prepare");
+	if (result) {
+		double ref=2.456;
+		double out;
+		tnt_bind_t param[2];
+		int32_t len;
+		int8_t nil=1;
+		memset(&param[0],0,sizeof(param));
+		param[0].type=MP_DOUBLE;
+		param[0].buffer = (void*)&out;
+       		param[0].out_len=&len;
+		param[0].is_null=&nil;
+		
+		int64_t val;
+		param[1].type=MP_INT;
+		param[1].buffer = (void*)&val;
+		param[1].in_len = sizeof(int64_t);
+		
+		is(tnt_bind_result(result,&param[0],2),OK,"Output double bind array test");
+		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute double 2 val bind  select test");
+		is(tnt_stmt_code(result),0,"checking code after double 2 val bind select");
+		int i=0;
+		while(tnt_next_row(result)==OK) {
+			ok(fabsl(ref-out)<0.01,"Checking result of first double bind var");
+			ok(val>=666,"Checking result of second int bind var");
+			ok(!nil,"Checking for not null");
+			i++;
+		}
+		is(i,10,"Checking number of resulted rows"); 
+		tnt_stmt_free(result);
+	}
+
+	query = "DROP TABLE double_table";	
+	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
+	     "Create execute sql request: drop table");
+
+	result = tnt_stmt_fetch(tnt);
+	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
+	if (result) {
+	  is(tnt_stmt_code(result),0,"checking code after table creation");
+	  is(tnt_affected_rows(result),1,"checking affected rows after drop table");
+	}
+
 
 	args = tnt_object(NULL);
 	isnt(args, NULL, "Check object creation");
