@@ -216,7 +216,7 @@ enum <code class="descname">tnt_request_type</code><a class="headerlink" href="#
 <dt id="c.tnt_request">
 struct <code class="descname">tnt_request</code><a class="headerlink" href="#c.tnt_request" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base request object. It contains all parts of a request.</p>
-<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tnt_request</span> <span class="p">{</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tnt_request</span> <span class="p">{</span>
     <span class="k">struct</span> <span class="p">{</span>
         <span class="kt">uint64_t</span> <span class="n">sync</span><span class="p">;</span>
         <span class="k">enum</span> <span class="n">tnt_request_type</span> <span class="n">type</span><span class="p">;</span>
@@ -314,8 +314,8 @@ records).</p>
 <dt id="c.tnt_request_set_iterator">
 int <code class="descname">tnt_request_set_iterator</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, enum <a class="reference internal" href="#c.tnt_iterator_t" title="tnt_iterator_t">tnt_iterator_t</a><em>&nbsp;iter</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_iterator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set an iterator type for SELECT.</p>
-<p>Field that is set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
-<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">tnt_iterator_t</span> <span class="n">iterator</span><span class="p">;</span>
+<p>Field that is set in <code class="docutils literal notranslate"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">tnt_iterator_t</span> <span class="n">iterator</span><span class="p">;</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -324,14 +324,14 @@ int <code class="descname">tnt_request_set_iterator</code><span class="sig-paren
 <dt id="c.tnt_request_set_key">
 int <code class="descname">tnt_request_set_key</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_key" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_set_key_format">
-int <code class="descname">tnt_request_set_key_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*fmt</em>, …<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_key_format" title="Permalink to this definition">¶</a></dt>
+int <code class="descname">tnt_request_set_key_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*fmt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_key_format" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a key (both key start and end) for SELECT/UPDATE/DELETE from a stream
 object.</p>
-<p>Or set a key using the print-like function <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code>.
-Take <code class="docutils literal"><span class="pre">fmt</span></code> format string followed by arguments for the format string.
-Return <code class="docutils literal"><span class="pre">-1</span></code> if the <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code> function fails.</p>
-<p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
-<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
+<p>Or set a key using the print-like function <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_object_vformat()</span></code>.
+Take <code class="docutils literal notranslate"><span class="pre">fmt</span></code> format string followed by arguments for the format string.
+Return <code class="docutils literal notranslate"><span class="pre">-1</span></code> if the <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_object_vformat()</span></code> function fails.</p>
+<p>Fields that are set in <code class="docutils literal notranslate"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
 <span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="c1">// set by `tnt_request_set_key_format`</span>
 </pre></div>
@@ -342,17 +342,17 @@ Return <code class="docutils literal"><span class="pre">-1</span></code> if the 
 <dt id="c.tnt_request_set_tuple">
 int <code class="descname">tnt_request_set_tuple</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*obj</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_tuple" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_request_set_tuple_format">
-int <code class="descname">tnt_request_set_tuple_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*fmt</em>, …<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_tuple_format" title="Permalink to this definition">¶</a></dt>
+int <code class="descname">tnt_request_set_tuple_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*fmt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_tuple_format" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a tuple (both tuple start and end) for UPDATE/EVAL/CALL from a stream.</p>
-<p>Or set a tuple using the print-like function <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code>.
-Take <code class="docutils literal"><span class="pre">fmt</span></code> format string followed by arguments for the format string.
-Return <code class="docutils literal"><span class="pre">-1</span></code> if the <code class="xref py py-func docutils literal"><span class="pre">tnt_object_vformat()</span></code> function fails.</p>
+<p>Or set a tuple using the print-like function <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_object_vformat()</span></code>.
+Take <code class="docutils literal notranslate"><span class="pre">fmt</span></code> format string followed by arguments for the format string.
+Return <code class="docutils literal notranslate"><span class="pre">-1</span></code> if the <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_object_vformat()</span></code> function fails.</p>
 <ul class="simple">
 <li>For UPDATE, the tuple is a stream object with operations.</li>
 <li>For EVAL/CALL, the tuple is a stream object with arguments.</li>
 </ul>
-<p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
-<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">tuple</span><span class="p">;</span>
+<p>Fields that are set in <code class="docutils literal notranslate"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">tuple</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">tuple_end</span><span class="p">;</span>
 <span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">tuple_object</span><span class="p">;</span>  <span class="c1">// set by `tnt_request_set_tuple_format`</span>
 </pre></div>
@@ -365,12 +365,12 @@ int <code class="descname">tnt_request_set_expr</code><span class="sig-paren">(<
 <dt id="c.tnt_request_set_exprz">
 int <code class="descname">tnt_request_set_exprz</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*expr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_exprz" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set an expression (both expression start and end) for EVAL from a string.</p>
-<p>If the function <code class="docutils literal"><span class="pre">&lt;...&gt;_exprz</span></code> is used, then length is calculated using
-<code class="xref py py-func docutils literal"><span class="pre">strlen(str)()</span></code>. Otherwise, <code class="docutils literal"><span class="pre">len</span></code> is the expression’s length (in
+<p>If the function <code class="docutils literal notranslate"><span class="pre">&lt;...&gt;_exprz</span></code> is used, then length is calculated using
+<code class="xref py py-func docutils literal notranslate"><span class="pre">strlen(str)()</span></code>. Otherwise, <code class="docutils literal notranslate"><span class="pre">len</span></code> is the expression’s length (in
 bytes).</p>
-<p>Return <code class="docutils literal"><span class="pre">-1</span></code> if <code class="docutils literal"><span class="pre">expr</span></code> is not <code class="xref py py-func docutils literal"><span class="pre">tnt_request_evaluate()</span></code>.</p>
-<p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
-<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
+<p>Return <code class="docutils literal notranslate"><span class="pre">-1</span></code> if <code class="docutils literal notranslate"><span class="pre">expr</span></code> is not <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_request_evaluate()</span></code>.</p>
+<p>Fields that are set in <code class="docutils literal notranslate"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
 <span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="c1">// set by `tnt_request_set_exprz`</span>
 </pre></div>
@@ -383,11 +383,11 @@ int <code class="descname">tnt_request_set_func</code><span class="sig-paren">(<
 <dt id="c.tnt_request_set_funcz">
 int <code class="descname">tnt_request_set_funcz</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, const char<em>&nbsp;*func</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_funcz" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a function (both function start and end) for CALL from a string.</p>
-<p>If the function <code class="docutils literal"><span class="pre">&lt;...&gt;_funcz</span></code> is used, then length is calculated using
-<code class="xref py py-func docutils literal"><span class="pre">strlen(str)()</span></code>. Otherwise, <code class="docutils literal"><span class="pre">len</span></code> is the function’s length (in bytes).</p>
-<p>Return <code class="docutils literal"><span class="pre">-1</span></code> if <code class="docutils literal"><span class="pre">func</span></code> is not <code class="xref py py-func docutils literal"><span class="pre">tnt_request_call()</span></code>.</p>
-<p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
-<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
+<p>If the function <code class="docutils literal notranslate"><span class="pre">&lt;...&gt;_funcz</span></code> is used, then length is calculated using
+<code class="xref py py-func docutils literal notranslate"><span class="pre">strlen(str)()</span></code>. Otherwise, <code class="docutils literal notranslate"><span class="pre">len</span></code> is the function’s length (in bytes).</p>
+<p>Return <code class="docutils literal notranslate"><span class="pre">-1</span></code> if <code class="docutils literal notranslate"><span class="pre">func</span></code> is not <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_request_call()</span></code>.</p>
+<p>Fields that are set in <code class="docutils literal notranslate"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
 <span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">key_object</span><span class="p">;</span> <span class="c1">// set by `tnt_request_set_funcz`</span>
 </pre></div>
@@ -399,8 +399,8 @@ int <code class="descname">tnt_request_set_funcz</code><span class="sig-paren">(
 int <code class="descname">tnt_request_set_ops</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_ops" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set operations (both operations start and end) for UPDATE/UPSERT from a
 stream.</p>
-<p>Fields that are set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
-<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
+<p>Fields that are set in <code class="docutils literal notranslate"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">key_end</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -410,8 +410,8 @@ stream.</p>
 <dt id="c.tnt_request_set_index_base">
 int <code class="descname">tnt_request_set_index_base</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em>, uint32_t<em>&nbsp;index_base</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_set_index_base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set an index base (field offset) for UPDATE/UPSERT.</p>
-<p>Field that is set in <code class="docutils literal"><span class="pre">tnt_request</span></code>:</p>
-<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">index_base</span><span class="p">;</span>
+<p>Field that is set in <code class="docutils literal notranslate"><span class="pre">tnt_request</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">index_base</span><span class="p">;</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -423,7 +423,7 @@ int <code class="descname">tnt_request_set_index_base</code><span class="sig-par
 <dt id="c.tnt_request_compile">
 uint64_t <code class="descname">tnt_request_compile</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, struct <a class="reference internal" href="#c.tnt_request" title="tnt_request">tnt_request</a><em>&nbsp;*req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_request_compile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compile a request into a stream.</p>
-<p>Return <code class="docutils literal"><span class="pre">-1</span></code> if bad command or can’t write to stream.</p>
+<p>Return <code class="docutils literal notranslate"><span class="pre">-1</span></code> if bad command or can’t write to stream.</p>
 </dd></dl>
 
 <dl class="function">

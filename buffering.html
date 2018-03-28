@@ -167,8 +167,8 @@
             
   <div class="section" id="using-a-buffer-for-requests">
 <h1>Using a buffer for requests<a class="headerlink" href="#using-a-buffer-for-requests" title="Permalink to this headline">¶</a></h1>
-<p>You may need a stream buffer (<code class="docutils literal"><span class="pre">tnt_buf</span></code>) if you don’t need the networking
-functionality of <code class="docutils literal"><span class="pre">tnt_net</span></code>, but you need to write requests or parse replies.</p>
+<p>You may need a stream buffer (<code class="docutils literal notranslate"><span class="pre">tnt_buf</span></code>) if you don’t need the networking
+functionality of <code class="docutils literal notranslate"><span class="pre">tnt_net</span></code>, but you need to write requests or parse replies.</p>
 <div class="section" id="creating-a-buffer">
 <h2>Creating a buffer<a class="headerlink" href="#creating-a-buffer" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -180,7 +180,7 @@ struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_
 <dl class="function">
 <dt id="c.tnt_buf_as">
 struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<code class="descname">tnt_buf_as</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, char<em>&nbsp;*buf</em>, size_t<em>&nbsp;buf_len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_buf_as" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create an immutable stream buffer from the buffer <code class="docutils literal"><span class="pre">buf</span></code>. It can be used
+<dd><p>Create an immutable stream buffer from the buffer <code class="docutils literal notranslate"><span class="pre">buf</span></code>. It can be used
 for parsing responses.</p>
 </dd></dl>
 
@@ -189,16 +189,16 @@ for parsing responses.</p>
 <h2>Writing requests<a class="headerlink" href="#writing-requests" title="Permalink to this headline">¶</a></h2>
 <p>Use the basic functions for building requests:</p>
 <ul class="simple">
-<li><code class="xref py py-func docutils literal"><span class="pre">tnt_select()</span></code> / <code class="xref py py-func docutils literal"><span class="pre">tnt_insert()</span></code> (see “<a class="reference internal" href="request.html#working-with-tnt-stream"><span class="std std-ref">Building a request with “tnt_stream”</span></a>”)</li>
-<li><code class="xref c c-type docutils literal"><span class="pre">struct</span> <span class="pre">tnt_request</span></code> / <code class="xref py py-func docutils literal"><span class="pre">tnt_request_compile()</span></code> (see
+<li><code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_select()</span></code> / <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_insert()</span></code> (see “<a class="reference internal" href="request.html#working-with-tnt-stream"><span class="std std-ref">Building a request with “tnt_stream”</span></a>”)</li>
+<li><code class="xref c c-type docutils literal notranslate"><span class="pre">struct</span> <span class="pre">tnt_request</span></code> / <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_request_compile()</span></code> (see
 “<a class="reference internal" href="request_builder.html#working-with-tnt-request"><span class="std std-ref">Building a request with “tnt_request”</span></a>”)</li>
 </ul>
 </div>
 <div class="section" id="parsing-replies">
 <h2>Parsing replies<a class="headerlink" href="#parsing-replies" title="Permalink to this headline">¶</a></h2>
 <p>Use an iterator to iterate through replies in your stream buffer,
-or use the stream’s <code class="xref py py-func docutils literal"><span class="pre">read_reply()</span></code> method
-(<code class="docutils literal"><span class="pre">stream-&gt;read_reply(struct</span> <span class="pre">tnt_stream</span> <span class="pre">*stream,</span> <span class="pre">struct</span> <span class="pre">tnt_reply</span> <span class="pre">*reply)</span></code>).</p>
+or use the stream’s <code class="xref py py-func docutils literal notranslate"><span class="pre">read_reply()</span></code> method
+(<code class="docutils literal notranslate"><span class="pre">stream-&gt;read_reply(struct</span> <span class="pre">tnt_stream</span> <span class="pre">*stream,</span> <span class="pre">struct</span> <span class="pre">tnt_reply</span> <span class="pre">*reply)</span></code>).</p>
 </div>
 </div>
 

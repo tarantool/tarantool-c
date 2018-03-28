@@ -171,17 +171,17 @@
 <p>The basic networking layer with batching support is implemented in multiple
 parts:</p>
 <ul class="simple">
-<li><code class="file docutils literal"><span class="pre">tnt_net.c</span></code> - client-side layer</li>
-<li><code class="file docutils literal"><span class="pre">tnt_io.c</span></code>  - network abstraction layer</li>
-<li><code class="file docutils literal"><span class="pre">tnt_iob.c</span></code> - network buffer layer</li>
-<li><code class="file docutils literal"><span class="pre">tnt_opt.c</span></code> - network options layer</li>
+<li><code class="file docutils literal notranslate"><span class="pre">tnt_net.c</span></code> - client-side layer</li>
+<li><code class="file docutils literal notranslate"><span class="pre">tnt_io.c</span></code>  - network abstraction layer</li>
+<li><code class="file docutils literal notranslate"><span class="pre">tnt_iob.c</span></code> - network buffer layer</li>
+<li><code class="file docutils literal notranslate"><span class="pre">tnt_opt.c</span></code> - network options layer</li>
 </ul>
 <div class="section" id="creating-a-connection">
 <h2>Creating a connection<a class="headerlink" href="#creating-a-connection" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_net">
 struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<code class="descname">tnt_net</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_net" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a tarantool connection object. If <code class="docutils literal"><span class="pre">s</span></code> is NULL, then allocate memory
+<dd><p>Create a tarantool connection object. If <code class="docutils literal notranslate"><span class="pre">s</span></code> is NULL, then allocate memory
 for it.</p>
 <p>Return NULL if can’t allocate memory.</p>
 </dd></dl>
@@ -200,7 +200,7 @@ for it.</p>
 <dt id="errtype-TNT_EFAIL">
 <code class="descname">TNT_EFAIL</code><a class="headerlink" href="#errtype-TNT_EFAIL" title="Permalink to this definition">¶</a></dt>
 <dd><p>Failed to parse URI, bad protocol for sockets, or bad configuration option
-for the <code class="xref py py-func docutils literal"><span class="pre">tnt_set()</span></code> function.</p>
+for the <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_set()</span></code> function.</p>
 </dd></dl>
 
 <dl class="errtype">
@@ -212,7 +212,7 @@ for the <code class="xref py py-func docutils literal"><span class="pre">tnt_set
 <dl class="errtype">
 <dt id="errtype-TNT_ESYSTEM">
 <code class="descname">TNT_ESYSTEM</code><a class="headerlink" href="#errtype-TNT_ESYSTEM" title="Permalink to this definition">¶</a></dt>
-<dd><p>System error, <code class="docutils literal"><span class="pre">_errno</span></code> will be set. Acquire it with the <code class="xref py py-func docutils literal"><span class="pre">tnt_errno()</span></code>
+<dd><p>System error, <code class="docutils literal notranslate"><span class="pre">_errno</span></code> will be set. Acquire it with the <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_errno()</span></code>
 function.</p>
 </dd></dl>
 
@@ -232,7 +232,7 @@ the fragment you’re trying to write into/read from).</p>
 <dl class="errtype">
 <dt id="errtype-TNT_ERESOLVE">
 <code class="descname">TNT_ERESOLVE</code><a class="headerlink" href="#errtype-TNT_ERESOLVE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Failed to resolve the hostname (the function <code class="xref py py-func docutils literal"><span class="pre">gethostbyname(2)()</span></code>
+<dd><p>Failed to resolve the hostname (the function <code class="xref py py-func docutils literal notranslate"><span class="pre">gethostbyname(2)()</span></code>
 failed).</p>
 </dd></dl>
 
@@ -271,15 +271,15 @@ enum <a class="reference internal" href="#c.tnt_error" title="tnt_error">tnt_err
 <dt id="c.tnt_strerror">
 char *<code class="descname">tnt_strerror</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_strerror" title="Permalink to this definition">¶</a></dt>
 <dd><p>Format the error as a string message. In case the error code is
-<a class="reference internal" href="#errtype-TNT_ESYSTEM"><code class="xref std std-errtype docutils literal"><span class="pre">TNT_ESYSTEM</span></code></a>, then the driver uses the system function
-<code class="xref py py-func docutils literal"><span class="pre">strerror()</span></code> to format the message.</p>
+<a class="reference internal" href="#errtype-TNT_ESYSTEM"><code class="xref std std-errtype docutils literal notranslate"><span class="pre">TNT_ESYSTEM</span></code></a>, then the driver uses the system function
+<code class="xref py py-func docutils literal notranslate"><span class="pre">strerror()</span></code> to format the message.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.tnt_errno">
 int <code class="descname">tnt_errno</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_errno" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the <code class="docutils literal"><span class="pre">errno_</span></code> of the last stream operation (in case the error code
-is <a class="reference internal" href="#errtype-TNT_ESYSTEM"><code class="xref std std-errtype docutils literal"><span class="pre">TNT_ESYSTEM</span></code></a>).</p>
+<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">errno_</span></code> of the last stream operation (in case the error code
+is <a class="reference internal" href="#errtype-TNT_ESYSTEM"><code class="xref std std-errtype docutils literal notranslate"><span class="pre">TNT_ESYSTEM</span></code></a>).</p>
 </dd></dl>
 
 </div>
@@ -287,33 +287,33 @@ is <a class="reference internal" href="#errtype-TNT_ESYSTEM"><code class="xref s
 <h2>Manipulating a connection<a class="headerlink" href="#manipulating-a-connection" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_set">
-int <code class="descname">tnt_set</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, int<em>&nbsp;opt</em>, …<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_set" title="Permalink to this definition">¶</a></dt>
+int <code class="descname">tnt_set</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, int<em>&nbsp;opt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_set" title="Permalink to this definition">¶</a></dt>
 <dd><p>You can set the following options for a connection:</p>
 <ul class="simple">
-<li>TNT_OPT_URI (<code class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code>) - URI for connecting to
+<li>TNT_OPT_URI (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code>) - URI for connecting to
 <strong class="program">tarantool</strong>.</li>
-<li>TNT_OPT_TMOUT_CONNECT (<code class="docutils literal"><span class="pre">struct</span> <span class="pre">timeval</span> <span class="pre">*</span></code>) - timeout on connecting.</li>
-<li>TNT_OPT_TMOUT_SEND (<code class="docutils literal"><span class="pre">struct</span> <span class="pre">timeval</span> <span class="pre">*</span></code>) - timeout on sending.</li>
-<li>TNT_OPT_SEND_CB (<code class="docutils literal"><span class="pre">ssize_t</span> <span class="pre">(*send_cb_t)(struct</span> <span class="pre">tnt_iob</span> <span class="pre">*b,</span> <span class="pre">void</span> <span class="pre">*buf,</span>
+<li>TNT_OPT_TMOUT_CONNECT (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">timeval</span> <span class="pre">*</span></code>) - timeout on connecting.</li>
+<li>TNT_OPT_TMOUT_SEND (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">timeval</span> <span class="pre">*</span></code>) - timeout on sending.</li>
+<li>TNT_OPT_SEND_CB (<code class="docutils literal notranslate"><span class="pre">ssize_t</span> <span class="pre">(*send_cb_t)(struct</span> <span class="pre">tnt_iob</span> <span class="pre">*b,</span> <span class="pre">void</span> <span class="pre">*buf,</span>
 <span class="pre">size_t</span> <span class="pre">len)</span></code>) - a function to be called instead of writing into a socket;
-uses the buffer <code class="docutils literal"><span class="pre">buf</span></code> which is <code class="docutils literal"><span class="pre">len</span></code> bytes long.</li>
-<li>TNT_OPT_SEND_CBV (<code class="docutils literal"><span class="pre">ssize_t</span> <span class="pre">(*sendv_cb_t)(struct</span> <span class="pre">tnt_iob</span> <span class="pre">*b,</span>
+uses the buffer <code class="docutils literal notranslate"><span class="pre">buf</span></code> which is <code class="docutils literal notranslate"><span class="pre">len</span></code> bytes long.</li>
+<li>TNT_OPT_SEND_CBV (<code class="docutils literal notranslate"><span class="pre">ssize_t</span> <span class="pre">(*sendv_cb_t)(struct</span> <span class="pre">tnt_iob</span> <span class="pre">*b,</span>
 <span class="pre">const</span> <span class="pre">struct</span> <span class="pre">iovec</span> <span class="pre">*iov,</span> <span class="pre">int</span> <span class="pre">iov_count)</span></code>) - a function to be called
 instead of writing into a socket;
-uses multiple (<code class="docutils literal"><span class="pre">iov_count</span></code>) buffers passed in <code class="docutils literal"><span class="pre">iov</span></code>.</li>
-<li>TNT_OPT_SEND_BUF (<code class="docutils literal"><span class="pre">int</span></code>) - the maximum size (in bytes) of the buffer for
+uses multiple (<code class="docutils literal notranslate"><span class="pre">iov_count</span></code>) buffers passed in <code class="docutils literal notranslate"><span class="pre">iov</span></code>.</li>
+<li>TNT_OPT_SEND_BUF (<code class="docutils literal notranslate"><span class="pre">int</span></code>) - the maximum size (in bytes) of the buffer for
 outgoing messages.</li>
-<li>TNT_OPT_SEND_CB_ARG (<code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>) - context for “send” callbacks.</li>
-<li>TNT_OPT_RECV_CB (<code class="docutils literal"><span class="pre">ssize_t</span> <span class="pre">(*recv_cb_t)(struct</span> <span class="pre">tnt_iob</span> <span class="pre">*b,</span> <span class="pre">void</span> <span class="pre">*buf,</span>
+<li>TNT_OPT_SEND_CB_ARG (<code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">*</span></code>) - context for “send” callbacks.</li>
+<li>TNT_OPT_RECV_CB (<code class="docutils literal notranslate"><span class="pre">ssize_t</span> <span class="pre">(*recv_cb_t)(struct</span> <span class="pre">tnt_iob</span> <span class="pre">*b,</span> <span class="pre">void</span> <span class="pre">*buf,</span>
 <span class="pre">size_t</span> <span class="pre">len)</span></code>) - a function to be called instead of reading from a socket;
-uses the buffer <code class="docutils literal"><span class="pre">buf</span></code> which is <code class="docutils literal"><span class="pre">len</span></code> bytes long.</li>
-<li>TNT_OPT_RECV_BUF (<code class="docutils literal"><span class="pre">int</span></code>) - the maximum size (in bytes) of the buffer for
+uses the buffer <code class="docutils literal notranslate"><span class="pre">buf</span></code> which is <code class="docutils literal notranslate"><span class="pre">len</span></code> bytes long.</li>
+<li>TNT_OPT_RECV_BUF (<code class="docutils literal notranslate"><span class="pre">int</span></code>) - the maximum size (in bytes) of the buffer for
 incoming messages.</li>
-<li>TNT_OPT_RECV_CB_ARG (<code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>) - context for “receive” callbacks.</li>
+<li>TNT_OPT_RECV_CB_ARG (<code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">*</span></code>) - context for “receive” callbacks.</li>
 </ul>
 <p>Return -1 and store the error in the stream.
-The error code can be either <a class="reference internal" href="#errtype-TNT_EFAIL"><code class="xref std std-errtype docutils literal"><span class="pre">TNT_EFAIL</span></code></a> if can’t parse the URI or
-<code class="docutils literal"><span class="pre">opt</span></code> is not defined, or <a class="reference internal" href="#errtype-TNT_EMEMORY"><code class="xref std std-errtype docutils literal"><span class="pre">TNT_EMEMORY</span></code></a> if failed to allocate
+The error code can be either <a class="reference internal" href="#errtype-TNT_EFAIL"><code class="xref std std-errtype docutils literal notranslate"><span class="pre">TNT_EFAIL</span></code></a> if can’t parse the URI or
+<code class="docutils literal notranslate"><span class="pre">opt</span></code> is not defined, or <a class="reference internal" href="#errtype-TNT_EMEMORY"><code class="xref std std-errtype docutils literal notranslate"><span class="pre">TNT_EMEMORY</span></code></a> if failed to allocate
 memory for the URI.</p>
 </dd></dl>
 
@@ -364,16 +364,16 @@ int32_t <code class="descname">tnt_get_spaceno</code><span class="sig-paren">(</
 <dt id="c.tnt_get_indexno">
 int32_t <code class="descname">tnt_get_indexno</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, int<em>&nbsp;space</em>, const char<em>&nbsp;*index</em>, size_t<em>&nbsp;index_len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_get_indexno" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get space/index number from their names.
-For <code class="xref py py-func docutils literal"><span class="pre">tnt_get_indexno()</span></code>, specify the length of the space name (in bytes)
-in <code class="docutils literal"><span class="pre">space_len</span></code>.
-For <code class="xref py py-func docutils literal"><span class="pre">tnt_get_indexno()</span></code>, specify the space ID number in <code class="docutils literal"><span class="pre">space</span></code> and
-the length of the index name (in bytes) in <code class="docutils literal"><span class="pre">index_len</span></code>.</p>
+For <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_get_indexno()</span></code>, specify the length of the space name (in bytes)
+in <code class="docutils literal notranslate"><span class="pre">space_len</span></code>.
+For <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_get_indexno()</span></code>, specify the space ID number in <code class="docutils literal notranslate"><span class="pre">space</span></code> and
+the length of the index name (in bytes) in <code class="docutils literal notranslate"><span class="pre">index_len</span></code>.</p>
 </dd></dl>
 
 </div>
 <div class="section" id="freeing-a-connection">
 <h2>Freeing a connection<a class="headerlink" href="#freeing-a-connection" title="Permalink to this headline">¶</a></h2>
-<p>Use the <code class="xref py py-func docutils literal"><span class="pre">tnt_stream_free()</span></code> function to free a connection object.</p>
+<p>Use the <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_stream_free()</span></code> function to free a connection object.</p>
 </div>
 </div>
 

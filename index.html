@@ -164,17 +164,17 @@
 <a class="reference external image-reference" href="https://travis-ci.org/tarantool/tarantool-c"><img alt="https://travis-ci.org/tarantool/tarantool-c.svg?branch=master" src="https://travis-ci.org/tarantool/tarantool-c.svg?branch=master" /></a>
 <div class="section" id="about">
 <h2>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">tarantool-c</span></code> is a client library that implements a C connector for Tarantool
+<p><code class="docutils literal notranslate"><span class="pre">tarantool-c</span></code> is a client library that implements a C connector for Tarantool
 (see <a class="reference external" href="https://github.com/tarantool/tarantool">https://github.com/tarantool/tarantool</a>).</p>
-<p>The <code class="docutils literal"><span class="pre">tarantool-c</span></code> library depends on the <code class="docutils literal"><span class="pre">msgpuck</span></code> library
+<p>The <code class="docutils literal notranslate"><span class="pre">tarantool-c</span></code> library depends on the <code class="docutils literal notranslate"><span class="pre">msgpuck</span></code> library
 (see <a class="reference external" href="https://github.com/tarantool/msgpuck">https://github.com/tarantool/msgpuck</a>).</p>
-<p>The <code class="docutils literal"><span class="pre">tarantool-c</span></code> library consists of two parts:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">tarantool-c</span></code> library consists of two parts:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">tnt</span></code>,
+<li><code class="docutils literal notranslate"><span class="pre">tnt</span></code>,
 an <a class="reference external" href="http://tarantool.org/doc/dev_guide/box-protocol.html">IProto</a>/networking
 library</li>
-<li><code class="docutils literal"><span class="pre">tntrpl</span></code>,
+<li><code class="docutils literal notranslate"><span class="pre">tntrpl</span></code>,
 a library for working with snapshots, xlogs and a replication client
 (this library is not ported to Tarantool 1.6 yet, so it isn’t covered in
 this documentation set)</li>
@@ -185,8 +185,8 @@ this documentation set)</li>
 <h2>Compilation/Installation<a class="headerlink" href="#compilation-installation" title="Permalink to this headline">¶</a></h2>
 <p>You can clone source code from the “tarantool-c” repository at GitHub
 and use <strong class="program">cmake</strong>/<strong class="program">make</strong> to compile and install
-the <code class="docutils literal"><span class="pre">tarantool-c</span></code> library:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone git://github.com/tarantool/tarantool-c.git ~/tarantool-c --recursive
+the <code class="docutils literal notranslate"><span class="pre">tarantool-c</span></code> library:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone git://github.com/tarantool/tarantool-c.git ~/tarantool-c --recursive
 <span class="gp">$</span> <span class="nb">cd</span> ~/tarantool-c
 <span class="gp">$</span> cmake .
 <span class="gp">$</span> make
@@ -203,7 +203,7 @@ the <code class="docutils literal"><span class="pre">tarantool-c</span></code> l
 </pre></div>
 </div>
 <p>Or you can install it as a package:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">#</span><span class="c1">### In Fedora/RHEL/CentOS/Amazon Linux:</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span><span class="c1">### In Fedora/RHEL/CentOS/Amazon Linux:</span>
 <span class="gp">$</span> yum install tarantool-c tarantool-c-devel
 
 <span class="gp">#</span><span class="c1">### In Ubuntu/Debian:</span>

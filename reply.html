@@ -172,7 +172,7 @@
 <dt id="c.tnt_reply">
 struct <code class="descname">tnt_reply</code><a class="headerlink" href="#c.tnt_reply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base reply object.</p>
-<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tnt_reply</span> <span class="p">{</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tnt_reply</span> <span class="p">{</span>
     <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">buf</span><span class="p">;</span>
     <span class="kt">size_t</span> <span class="n">buf_size</span><span class="p">;</span>
     <span class="kt">uint64_t</span> <span class="n">code</span><span class="p">;</span>
@@ -190,25 +190,27 @@ struct <code class="descname">tnt_reply</code><a class="headerlink" href="#c.tnt
 <dl class="member">
 <dt id="c.tnt_reply.buf">
 const char *<code class="descname">tnt_reply.buf</code><a class="headerlink" href="#c.tnt_reply.buf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Pointer to a buffer with reply data.
-It’s needed for the function <code class="xref py py-func docutils literal"><span class="pre">tnt_reply()</span></code>.</p>
+<dd><p>Pointer to a buffer with the reply data.
+It’s needed for the function <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_reply()</span></code>.</p>
 </dd></dl>
 
 <dl class="member">
 <dt id="c.tnt_reply.buf_size">
 size_t <code class="descname">tnt_reply.buf_size</code><a class="headerlink" href="#c.tnt_reply.buf_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Size of the buffer with reply data, in bytes.
-It’s needed for the function <code class="xref py py-func docutils literal"><span class="pre">tnt_reply()</span></code>.</p>
+It’s needed for the function <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_reply()</span></code>.</p>
 </dd></dl>
 
 <dl class="member">
 <dt id="c.tnt_reply.code">
 uint64_t <code class="descname">tnt_reply.code</code><a class="headerlink" href="#c.tnt_reply.code" title="Permalink to this definition">¶</a></dt>
 <dd><p>The return code of a query.</p>
-<p>If <code class="docutils literal"><span class="pre">code</span> <span class="pre">==</span> <span class="pre">0</span></code> then it’s ok, otherwise use the macro
-<code class="xref c c-macro docutils literal"><span class="pre">TNT_REPLY_ERROR</span></code> to convert it to an error code.</p>
-<p>If <code class="docutils literal"><span class="pre">code</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, then <code class="docutils literal"><span class="pre">error</span></code> and <code class="docutils literal"><span class="pre">error_end</span></code> must be set.
-Otherwise <code class="docutils literal"><span class="pre">data</span></code> and <code class="docutils literal"><span class="pre">data_end</span></code> is set.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">==</span> <span class="pre">1</span></code>, then it’s ok, but the read buffer was not big enough
+for the reply data, so <code class="docutils literal notranslate"><span class="pre">data</span></code> and <code class="docutils literal notranslate"><span class="pre">data_end</span></code> are set.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">==</span> <span class="pre">0</span></code> then it’s ok.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">&lt;</span> <span class="pre">0</span></code>, then it’s not ok, so <code class="docutils literal notranslate"><span class="pre">error</span></code> and <code class="docutils literal notranslate"><span class="pre">error_end</span></code> may be
+set. If they are not set, then it’s a network error. Use the macro
+<code class="xref c c-macro docutils literal notranslate"><span class="pre">TNT_REPLY_ERROR</span></code> to convert it to an error code.</p>
 </dd></dl>
 
 <dl class="member">
@@ -230,7 +232,7 @@ uint64_t <code class="descname">tnt_reply.schema_id</code><a class="headerlink" 
 const char *<code class="descname">tnt_reply.error</code><a class="headerlink" href="#c.tnt_reply.error" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_reply.error_end">
 const char *<code class="descname">tnt_reply.error_end</code><a class="headerlink" href="#c.tnt_reply.error_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Pointers to an error string in case of <code class="docutils literal"><span class="pre">code</span> <span class="pre">!=</span> <span class="pre">0</span></code>.
+<dd><p>Pointers to an error string in case of <code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">!=</span> <span class="pre">0</span></code>.
 See all error codes in the file
 <a class="reference external" href="https://github.com/tarantool/tarantool/blob/1.6/src/box/errcode.h">/src/box/errcode.h</a>)
 in the main Tarantool project.</p>
@@ -241,8 +243,13 @@ in the main Tarantool project.</p>
 const char *<code class="descname">tnt_reply.data</code><a class="headerlink" href="#c.tnt_reply.data" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_reply.data_end">
 const char *<code class="descname">tnt_reply.data_end</code><a class="headerlink" href="#c.tnt_reply.data_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query data. This is a MessagePack object. Parse it with any msgpack library,
-e.g. <code class="docutils literal"><span class="pre">msgpuck</span></code>.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">data</span></code> is the processed reply data.
+This is a MessagePack object. Parse it with any msgpack library,
+e.g. <code class="docutils literal notranslate"><span class="pre">msgpuck</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">data_end</span></code> is the offset for further reading in case the read buffer
+was not big enough for the reply data.
+Corresponds to the value returned in the <code class="docutils literal notranslate"><span class="pre">off</span></code> argument of the
+<code class="docutils literal notranslate"><span class="pre">tnt_reply()</span></code> function.</p>
 </dd></dl>
 
 </div>
@@ -263,25 +270,25 @@ void <code class="descname">tnt_reply_free</code><span class="sig-paren">(</span
 <dl class="function">
 <dt>
 int <code class="descname">tnt_reply</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_reply" title="tnt_reply">tnt_reply</a><em>&nbsp;*r</em>, char<em>&nbsp;*buf</em>, size_t<em>&nbsp;size</em>, size_t<em>&nbsp;*off</em><span class="sig-paren">)</span></dt>
-<dd><p>Parse <code class="docutils literal"><span class="pre">size</span></code> bytes of an iproto reply from the buffer <code class="docutils literal"><span class="pre">buf</span></code> (it must
-contain a full reply).
-In <code class="docutils literal"><span class="pre">off</span></code>, return the number of bytes remaining in the reply (if processed
-all <code class="docutils literal"><span class="pre">size</span></code> bytes), or the number of processed bytes (if processing
+<dd><p>Parse <code class="docutils literal notranslate"><span class="pre">size</span></code> bytes of an iproto reply from the buffer <code class="docutils literal notranslate"><span class="pre">buf</span></code> (it must
+contain a full reply).</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">off</span></code>, return the number of bytes remaining in the reply (if processed
+all <code class="docutils literal notranslate"><span class="pre">size</span></code> bytes), or the number of processed bytes (if processing
 failed).</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.tnt_reply_from">
 int <code class="descname">tnt_reply_from</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_reply" title="tnt_reply">tnt_reply</a><em>&nbsp;*r</em>, tnt_reply_t<em>&nbsp;rcv</em>, void<em>&nbsp;*ptr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_reply_from" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parse an iproto reply from the <code class="docutils literal"><span class="pre">rcv</span></code> callback and with the context
-<code class="docutils literal"><span class="pre">ptr</span></code>.</p>
+<dd><p>Parse an iproto reply from the <code class="docutils literal notranslate"><span class="pre">rcv</span></code> callback and with the context
+<code class="docutils literal notranslate"><span class="pre">ptr</span></code>.</p>
 </dd></dl>
 
 <dl class="macro">
 <dt id="c.TNT_REPLY_ERR">
 <code class="descname">TNT_REPLY_ERR</code><span class="sig-paren">(</span>reply<span class="sig-paren">)</span><a class="headerlink" href="#c.TNT_REPLY_ERR" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an error code (number, shifted right) converted from
-<code class="docutils literal"><span class="pre">tnt_reply.code</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">tnt_reply.code</span></code>.</p>
 </dd></dl>
 
 </div>

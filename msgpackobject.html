@@ -178,7 +178,7 @@
   <div class="section" id="messagepack-layer">
 <h1>MessagePack layer<a class="headerlink" href="#messagepack-layer" title="Permalink to this headline">¶</a></h1>
 <p>The basic MessagePack object layer is implemented as a wrapper for the
-<code class="docutils literal"><span class="pre">msgpuck</span></code> library. This layer supports array/map traversal, dynamically
+<code class="docutils literal notranslate"><span class="pre">msgpuck</span></code> library. This layer supports array/map traversal, dynamically
 sized msgpack arrays, etc. For details, see <a class="reference external" href="https://github.com/msgpack/msgpack/blob/master/spec.md">MessagePack specification</a> and
 <a class="reference external" href="https://github.com/tarantool/msgpuck/blob/master/README.md">msgpuck readme file</a>.</p>
 <div class="section" id="introduction-to-messagepack">
@@ -190,33 +190,33 @@ only one extra byte in addition to the strings themselves.</p>
 <div class="section" id="types">
 <h3>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">integer</span></code> (<code class="docutils literal"><span class="pre">int</span></code> &lt; 0 and <code class="docutils literal"><span class="pre">uint</span></code> &gt;= 0) represents an integer</li>
-<li><code class="docutils literal"><span class="pre">nil</span></code> represents <code class="docutils literal"><span class="pre">nil</span></code></li>
-<li><code class="docutils literal"><span class="pre">boolean</span></code> represents <code class="docutils literal"><span class="pre">true</span></code> or <code class="docutils literal"><span class="pre">false</span></code></li>
-<li><code class="docutils literal"><span class="pre">float</span></code> (4 bytes) and <code class="docutils literal"><span class="pre">double</span></code> (8 bytes) represent a floating-point number</li>
-<li><code class="docutils literal"><span class="pre">string</span></code> represents a UTF-8 string</li>
-<li><code class="docutils literal"><span class="pre">binary</span></code> represents a byte array</li>
-<li><code class="docutils literal"><span class="pre">array</span></code> represents a sequence of objects</li>
-<li><code class="docutils literal"><span class="pre">map</span></code> represents key-value pairs of objects</li>
-<li><code class="docutils literal"><span class="pre">extension</span></code> represents a tuple of type information and a byte array where
+<li><code class="docutils literal notranslate"><span class="pre">integer</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code> &lt; 0 and <code class="docutils literal notranslate"><span class="pre">uint</span></code> &gt;= 0) represents an integer</li>
+<li><code class="docutils literal notranslate"><span class="pre">nil</span></code> represents <code class="docutils literal notranslate"><span class="pre">nil</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">boolean</span></code> represents <code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">false</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">float</span></code> (4 bytes) and <code class="docutils literal notranslate"><span class="pre">double</span></code> (8 bytes) represent a floating-point number</li>
+<li><code class="docutils literal notranslate"><span class="pre">string</span></code> represents a UTF-8 string</li>
+<li><code class="docutils literal notranslate"><span class="pre">binary</span></code> represents a byte array</li>
+<li><code class="docutils literal notranslate"><span class="pre">array</span></code> represents a sequence of objects</li>
+<li><code class="docutils literal notranslate"><span class="pre">map</span></code> represents key-value pairs of objects</li>
+<li><code class="docutils literal notranslate"><span class="pre">extension</span></code> represents a tuple of type information and a byte array where
 type information is an integer whose meaning is defined by applications</li>
 </ul>
 </div>
 <div class="section" id="limitations">
 <h3>Limitations<a class="headerlink" href="#limitations" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>a value of an Integer object is limited from <code class="docutils literal"><span class="pre">-(2^63)</span></code> up to <code class="docutils literal"><span class="pre">(2^64)-1</span></code></li>
+<li>a value of an Integer object is limited from <code class="docutils literal notranslate"><span class="pre">-(2^63)</span></code> up to <code class="docutils literal notranslate"><span class="pre">(2^64)-1</span></code></li>
 <li>a value of a Float object is an IEEE 754 single or double precision
 floating-point number</li>
-<li>maximum length of a Binary object is <code class="docutils literal"><span class="pre">(2^32)-1</span></code></li>
-<li>maximum byte size of a String object is <code class="docutils literal"><span class="pre">(2^32)-1</span></code></li>
+<li>maximum length of a Binary object is <code class="docutils literal notranslate"><span class="pre">(2^32)-1</span></code></li>
+<li>maximum byte size of a String object is <code class="docutils literal notranslate"><span class="pre">(2^32)-1</span></code></li>
 <li>a String object may contain invalid byte sequence, and the behavior of a
 deserializer depends on the actual implementation when it receives an invalid
 byte sequence</li>
 <li>deserializers should provide the functionality to get the original byte array,
 so that applications can decide how to handle the object</li>
-<li>maximum number of elements of an Array object is <code class="docutils literal"><span class="pre">(2^32)-1</span></code></li>
-<li>maximum number of key-value associations of a Map object is <code class="docutils literal"><span class="pre">(2^32)-1</span></code></li>
+<li>maximum number of elements of an Array object is <code class="docutils literal notranslate"><span class="pre">(2^32)-1</span></code></li>
+<li>maximum number of key-value associations of a Map object is <code class="docutils literal notranslate"><span class="pre">(2^32)-1</span></code></li>
 </ul>
 </div>
 </div>
@@ -225,7 +225,7 @@ so that applications can decide how to handle the object</li>
 <dl class="function">
 <dt id="c.tnt_object">
 struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<code class="descname">tnt_object</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create an empty MsgPack object. If <code class="docutils literal"><span class="pre">s</span></code> is passed as <code class="docutils literal"><span class="pre">NULL</span></code>, then the
+<dd><p>Create an empty MsgPack object. If <code class="docutils literal notranslate"><span class="pre">s</span></code> is passed as <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, then the
 object is allocated. Otherwise, the allocated object is initialized.</p>
 </dd></dl>
 
@@ -243,7 +243,7 @@ careful not to destroy it while this function is running.</p>
 <dl class="function">
 <dt id="c.tnt_object_add_nil">
 ssize_t <code class="descname">tnt_object_add_nil</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_nil" title="Permalink to this definition">¶</a></dt>
-<dd><p>Append <code class="docutils literal"><span class="pre">nil</span></code> to a stream object.</p>
+<dd><p>Append <code class="docutils literal notranslate"><span class="pre">nil</span></code> to a stream object.</p>
 </dd></dl>
 
 <dl class="function">
@@ -251,10 +251,10 @@ ssize_t <code class="descname">tnt_object_add_nil</code><span class="sig-paren">
 ssize_t <code class="descname">tnt_object_add_int</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, int64_t<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_int" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_object_add_uint">
 ssize_t <code class="descname">tnt_object_add_uint</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, uint64_t<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_uint" title="Permalink to this definition">¶</a></dt>
-<dd><p>For <code class="docutils literal"><span class="pre">int64_t</span></code> version: Append an integer to a stream object. If
-<code class="docutils literal"><span class="pre">value</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code>, then pack it in <code class="docutils literal"><span class="pre">uint</span></code> MsgPack type, otherwise the type
-is <code class="docutils literal"><span class="pre">int</span></code>.</p>
-<p>For <code class="docutils literal"><span class="pre">uint64_t</span></code> version: Append unsigned integer (that’s <code class="docutils literal"><span class="pre">uint</span></code> MsgPack
+<dd><p>For <code class="docutils literal notranslate"><span class="pre">int64_t</span></code> version: Append an integer to a stream object. If
+<code class="docutils literal notranslate"><span class="pre">value</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code>, then pack it in <code class="docutils literal notranslate"><span class="pre">uint</span></code> MsgPack type, otherwise the type
+is <code class="docutils literal notranslate"><span class="pre">int</span></code>.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code> version: Append unsigned integer (that’s <code class="docutils literal notranslate"><span class="pre">uint</span></code> MsgPack
 type)</p>
 </dd></dl>
 
@@ -263,8 +263,8 @@ type)</p>
 ssize_t <code class="descname">tnt_object_add_str</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*str</em>, uint32_t<em>&nbsp;len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_str" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_object_add_strz">
 ssize_t <code class="descname">tnt_object_add_strz</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*str</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_strz" title="Permalink to this definition">¶</a></dt>
-<dd><p>Append a UTF-8 string to a stream object. If you use the <code class="xref py py-func docutils literal"><span class="pre">&lt;...&gt;_strz()</span></code>
-function, the string’s length is calculated using <code class="docutils literal"><span class="pre">strlen(str)</span></code>.</p>
+<dd><p>Append a UTF-8 string to a stream object. If you use the <code class="xref py py-func docutils literal notranslate"><span class="pre">&lt;...&gt;_strz()</span></code>
+function, the string’s length is calculated using <code class="docutils literal notranslate"><span class="pre">strlen(str)</span></code>.</p>
 </dd></dl>
 
 <dl class="function">
@@ -276,8 +276,8 @@ ssize_t <code class="descname">tnt_object_add_bin</code><span class="sig-paren">
 <dl class="function">
 <dt id="c.tnt_object_add_bool">
 ssize_t <code class="descname">tnt_object_add_bool</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, char<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_bool" title="Permalink to this definition">¶</a></dt>
-<dd><p>Append a boolean value to a stream object. If <code class="docutils literal"><span class="pre">value</span> <span class="pre">==</span> <span class="pre">0</span></code>, then append
-<code class="docutils literal"><span class="pre">false</span></code>, otherwise <code class="docutils literal"><span class="pre">true</span></code>.</p>
+<dd><p>Append a boolean value to a stream object. If <code class="docutils literal notranslate"><span class="pre">value</span> <span class="pre">==</span> <span class="pre">0</span></code>, then append
+<code class="docutils literal notranslate"><span class="pre">false</span></code>, otherwise <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 </dd></dl>
 
 <dl class="function">
@@ -287,8 +287,8 @@ ssize_t <code class="descname">tnt_object_add_float</code><span class="sig-paren
 ssize_t <code class="descname">tnt_object_add_double</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, double<em>&nbsp;val</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Append a float/double value to a stream object.</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">float</span></code> means a 4-byte floating point number.</li>
-<li><code class="docutils literal"><span class="pre">double</span></code> means a 8-byte floating point number.</li>
+<li><code class="docutils literal notranslate"><span class="pre">float</span></code> means a 4-byte floating point number.</li>
+<li><code class="docutils literal notranslate"><span class="pre">double</span></code> means a 8-byte floating point number.</li>
 </ul>
 </dd></dl>
 
@@ -348,8 +348,8 @@ is empty.</p>
 <dt id="c.tnt_object_add_array">
 ssize_t <code class="descname">tnt_object_add_array</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, uint32_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Append an array header to a stream object.</p>
-<p>The header’s size is in bytes. If <a class="reference internal" href="#containertype-TNT_SBO_SPARSE"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_SPARSE</span></code></a> or
-<a class="reference internal" href="#containertype-TNT_SBO_PACKED"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_PACKED</span></code></a> is set as container type, then size is
+<p>The header’s size is in bytes. If <a class="reference internal" href="#containertype-TNT_SBO_SPARSE"><code class="xref std std-containertype docutils literal notranslate"><span class="pre">TNT_SBO_SPARSE</span></code></a> or
+<a class="reference internal" href="#containertype-TNT_SBO_PACKED"><code class="xref std std-containertype docutils literal notranslate"><span class="pre">TNT_SBO_PACKED</span></code></a> is set as container type, then size is
 ignored.</p>
 </dd></dl>
 
@@ -357,16 +357,16 @@ ignored.</p>
 <dt id="c.tnt_object_add_map">
 ssize_t <code class="descname">tnt_object_add_map</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, uint32_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_add_map" title="Permalink to this definition">¶</a></dt>
 <dd><p>Append a map header to a stream object.</p>
-<p>The header’s size is in bytes. If <a class="reference internal" href="#containertype-TNT_SBO_SPARSE"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_SPARSE</span></code></a> or
-<a class="reference internal" href="#containertype-TNT_SBO_PACKED"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_PACKED</span></code></a> is set as container type, then size is
+<p>The header’s size is in bytes. If <a class="reference internal" href="#containertype-TNT_SBO_SPARSE"><code class="xref std std-containertype docutils literal notranslate"><span class="pre">TNT_SBO_SPARSE</span></code></a> or
+<a class="reference internal" href="#containertype-TNT_SBO_PACKED"><code class="xref std std-containertype docutils literal notranslate"><span class="pre">TNT_SBO_PACKED</span></code></a> is set as container type, then size is
 ignored.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="c.tnt_object_container_close">
 ssize_t <code class="descname">tnt_object_container_close</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_container_close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close the latest opened container. It’s used when you set <code class="xref py py-func docutils literal"><span class="pre">tnt_object_type()</span></code>
-to <a class="reference internal" href="#containertype-TNT_SBO_SPARSE"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_SPARSE</span></code></a> or <a class="reference internal" href="#containertype-TNT_SBO_PACKED"><code class="xref std std-containertype docutils literal"><span class="pre">TNT_SBO_PACKED</span></code></a> value.</p>
+<dd><p>Close the latest opened container. It’s used when you set <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_object_type()</span></code>
+to <a class="reference internal" href="#containertype-TNT_SBO_SPARSE"><code class="xref std std-containertype docutils literal notranslate"><span class="pre">TNT_SBO_SPARSE</span></code></a> or <a class="reference internal" href="#containertype-TNT_SBO_PACKED"><code class="xref std std-containertype docutils literal notranslate"><span class="pre">TNT_SBO_PACKED</span></code></a> value.</p>
 </dd></dl>
 
 </div>
@@ -375,11 +375,11 @@ to <a class="reference internal" href="#containertype-TNT_SBO_SPARSE"><code clas
 <h2>Object manipulation<a class="headerlink" href="#object-manipulation" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="c.tnt_object_format">
-ssize_t <code class="descname">tnt_object_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*fmt</em>, …<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_format" title="Permalink to this definition">¶</a></dt>
+ssize_t <code class="descname">tnt_object_format</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*fmt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_format" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_object_vformat">
 ssize_t <code class="descname">tnt_object_vformat</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, const char<em>&nbsp;*fmt</em>, va_list<em>&nbsp;vl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_vformat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Append formatted msgpack values to the stream object. The
-<code class="xref py py-func docutils literal"><span class="pre">&lt;...&gt;_vformat()</span></code> function uses <code class="docutils literal"><span class="pre">va_list</span></code> as the third argument.</p>
+<code class="xref py py-func docutils literal notranslate"><span class="pre">&lt;...&gt;_vformat()</span></code> function uses <code class="docutils literal notranslate"><span class="pre">va_list</span></code> as the third argument.</p>
 <p>Use the following symbols for formatting:</p>
 <ul class="simple">
 <li>‘[‘ and ‘]’ pairs, defining arrays,</li>
@@ -409,9 +409,9 @@ ssize_t <code class="descname">tnt_object_vformat</code><span class="sig-paren">
 <dl class="function">
 <dt id="c.tnt_object_verify">
 int <code class="descname">tnt_object_verify</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, int8_t<em>&nbsp;type</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_object_verify" title="Permalink to this definition">¶</a></dt>
-<dd><p>Verify that an object is a valid msgpack structure. If <code class="docutils literal"><span class="pre">type</span> <span class="pre">==</span> <span class="pre">-1</span></code>, then
+<dd><p>Verify that an object is a valid msgpack structure. If <code class="docutils literal notranslate"><span class="pre">type</span> <span class="pre">==</span> <span class="pre">-1</span></code>, then
 don’t verify the first type, otherwise check that the first type is
-<code class="docutils literal"><span class="pre">type</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">type</span></code>.</p>
 </dd></dl>
 
 <dl class="function">

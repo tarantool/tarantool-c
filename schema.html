@@ -167,8 +167,8 @@
             
   <div class="section" id="working-with-a-schema">
 <span id="id1"></span><h1>Working with a schema<a class="headerlink" href="#working-with-a-schema" title="Permalink to this headline">¶</a></h1>
-<p>Schema is needed for mapping <code class="docutils literal"><span class="pre">&quot;space_name&quot;</span> <span class="pre">-&gt;</span> <span class="pre">&quot;space_id&quot;</span></code> and
-<code class="docutils literal"><span class="pre">(&quot;space_id&quot;,</span> <span class="pre">&quot;index_name&quot;)</span> <span class="pre">-&gt;</span> <span class="pre">&quot;index_id&quot;</span></code>.</p>
+<p>Schema is needed for mapping <code class="docutils literal notranslate"><span class="pre">&quot;space_name&quot;</span> <span class="pre">-&gt;</span> <span class="pre">&quot;space_id&quot;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">(&quot;space_id&quot;,</span> <span class="pre">&quot;index_name&quot;)</span> <span class="pre">-&gt;</span> <span class="pre">&quot;index_id&quot;</span></code>.</p>
 <div class="section" id="creating-a-schema">
 <h2>Creating a schema<a class="headerlink" href="#creating-a-schema" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -188,11 +188,11 @@ ssize_t <code class="descname">tnt_get_index</code><span class="sig-paren">(</sp
 <dd><p>Construct a query for selecting values from a schema.
 These are shortcuts for:</p>
 <ul class="simple">
-<li><code class="xref py py-func docutils literal"><span class="pre">tnt_select(s,</span> <span class="pre">281,</span> <span class="pre">0,</span> <span class="pre">UINT32_MAX,</span> <span class="pre">0,</span> <span class="pre">TNT_ITER_ALL,</span> <span class="pre">&quot;x90&quot;)()</span></code></li>
-<li><code class="xref py py-func docutils literal"><span class="pre">tnt_select(s,</span> <span class="pre">289,</span> <span class="pre">0,</span> <span class="pre">UINT32_MAX,</span> <span class="pre">0,</span> <span class="pre">TNT_ITER_ALL,</span> <span class="pre">&quot;x90&quot;)()</span></code></li>
+<li><code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_select(s,</span> <span class="pre">281,</span> <span class="pre">0,</span> <span class="pre">UINT32_MAX,</span> <span class="pre">0,</span> <span class="pre">TNT_ITER_ALL,</span> <span class="pre">&quot;x90&quot;)()</span></code></li>
+<li><code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_select(s,</span> <span class="pre">289,</span> <span class="pre">0,</span> <span class="pre">UINT32_MAX,</span> <span class="pre">0,</span> <span class="pre">TNT_ITER_ALL,</span> <span class="pre">&quot;x90&quot;)()</span></code></li>
 </ul>
-<p>where <code class="docutils literal"><span class="pre">281</span></code> and <code class="docutils literal"><span class="pre">289</span></code> are the IDs of the spaces listing all spaces
-(<code class="docutils literal"><span class="pre">281</span></code>) and all indexes (<code class="docutils literal"><span class="pre">289</span></code>) in the current Tarantool instance.</p>
+<p>where <code class="docutils literal notranslate"><span class="pre">281</span></code> and <code class="docutils literal notranslate"><span class="pre">289</span></code> are the IDs of the spaces listing all spaces
+(<code class="docutils literal notranslate"><span class="pre">281</span></code>) and all indexes (<code class="docutils literal notranslate"><span class="pre">289</span></code>) in the current Tarantool instance.</p>
 </dd></dl>
 
 </div>

@@ -170,9 +170,9 @@
             
   <div class="section" id="building-a-request-with-tnt-stream">
 <span id="working-with-tnt-stream"></span><h1>Building a request with “tnt_stream”<a class="headerlink" href="#building-a-request-with-tnt-stream" title="Permalink to this headline">¶</a></h1>
-<p>Functions in this section add commands by appending them to a <code class="docutils literal"><span class="pre">tnt_stream</span></code>
+<p>Functions in this section add commands by appending them to a <code class="docutils literal notranslate"><span class="pre">tnt_stream</span></code>
 buffer. To send the buffered query to the server, you can use the
-<code class="xref py py-func docutils literal"><span class="pre">tnt_flush()</span></code> function and then call <code class="xref py py-func docutils literal"><span class="pre">tnt-&gt;read_reply()</span></code>, for example.</p>
+<code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_flush()</span></code> function and then call <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt-&gt;read_reply()</span></code>, for example.</p>
 <div class="section" id="adding-requests-except-update">
 <h2>Adding requests (except UPDATE)<a class="headerlink" href="#adding-requests-except-update" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -183,9 +183,9 @@ ssize_t <code class="descname">tnt_auth</code><span class="sig-paren">(</span>st
 <dt id="c.tnt_deauth">
 ssize_t <code class="descname">tnt_deauth</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_deauth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Two functions for adding an authentication request.
-<code class="docutils literal"><span class="pre">ulen</span></code> and <code class="docutils literal"><span class="pre">plen</span></code> are the lengths (in bytes) of user’s name <code class="docutils literal"><span class="pre">user</span></code> and
-password <code class="docutils literal"><span class="pre">pass</span></code>.</p>
-<p><code class="docutils literal"><span class="pre">tnt_deauth</span></code> is a shortcut for <code class="docutils literal"><span class="pre">tnt_auth(s,</span> <span class="pre">NULL,</span> <span class="pre">0,</span> <span class="pre">NULL,</span> <span class="pre">0)</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">ulen</span></code> and <code class="docutils literal notranslate"><span class="pre">plen</span></code> are the lengths (in bytes) of user’s name <code class="docutils literal notranslate"><span class="pre">user</span></code> and
+password <code class="docutils literal notranslate"><span class="pre">pass</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tnt_deauth</span></code> is a shortcut for <code class="docutils literal notranslate"><span class="pre">tnt_auth(s,</span> <span class="pre">NULL,</span> <span class="pre">0,</span> <span class="pre">NULL,</span> <span class="pre">0)</span></code>.</p>
 </dd></dl>
 
 <dl class="function">
@@ -222,10 +222,10 @@ ssize_t <code class="descname">tnt_ping</code><span class="sig-paren">(</span>st
 <dt id="c.tnt_select">
 ssize_t <code class="descname">tnt_select</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, uint32_t<em>&nbsp;space</em>, uint32_t<em>&nbsp;index</em>, uint32_t<em>&nbsp;limit</em>, uint32_t<em>&nbsp;offset</em>, uint8_t<em>&nbsp;iterator</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_select" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a select request.</p>
-<p><code class="docutils literal"><span class="pre">limit</span></code> is the number of requests to gather. For gathering all results,
-set <code class="docutils literal"><span class="pre">limit</span></code> = <code class="docutils literal"><span class="pre">UINT32_MAX</span></code>.</p>
-<p><code class="docutils literal"><span class="pre">offset</span></code> is the number of requests to skip.</p>
-<p><code class="docutils literal"><span class="pre">iterator</span></code> is the <a class="reference internal" href="request_builder.html#tnt-iterator-types"><span class="std std-ref">iterator type</span></a> to use.</p>
+<p><code class="docutils literal notranslate"><span class="pre">limit</span></code> is the number of requests to gather. For gathering all results,
+set <code class="docutils literal notranslate"><span class="pre">limit</span></code> = <code class="docutils literal notranslate"><span class="pre">UINT32_MAX</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">offset</span></code> is the number of requests to skip.</p>
+<p><code class="docutils literal notranslate"><span class="pre">iterator</span></code> is the <a class="reference internal" href="request_builder.html#tnt-iterator-types"><span class="std std-ref">iterator type</span></a> to use.</p>
 </dd></dl>
 
 </div>
@@ -235,7 +235,7 @@ set <code class="docutils literal"><span class="pre">limit</span></code> = <code
 <dt id="c.tnt_update">
 ssize_t <code class="descname">tnt_update</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*s</em>, uint32_t<em>&nbsp;space</em>, uint32_t<em>&nbsp;index</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*key</em>, struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*ops</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Basic function for adding an update request.</p>
-<p><code class="docutils literal"><span class="pre">ops</span></code> must be a container gained with the <code class="xref py py-func docutils literal"><span class="pre">tnt_update_container()</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">ops</span></code> must be a container gained with the <code class="xref py py-func docutils literal notranslate"><span class="pre">tnt_update_container()</span></code>
 function.</p>
 </dd></dl>
 
@@ -266,11 +266,11 @@ int <code class="descname">tnt_update_container_reset</code><span class="sig-par
 <dt id="c.tnt_update_bit">
 ssize_t <code class="descname">tnt_update_bit</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*ops</em>, uint32_t<em>&nbsp;fieldno</em>, char<em>&nbsp;op</em>, uint64_t<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_update_bit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function for adding a byte operation.</p>
-<p>Possible <code class="docutils literal"><span class="pre">op</span></code> values are:</p>
+<p>Possible <code class="docutils literal notranslate"><span class="pre">op</span></code> values are:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">'&amp;'</span></code> - for binary AND</li>
-<li><code class="docutils literal"><span class="pre">'|'</span></code> - for binary OR</li>
-<li><code class="docutils literal"><span class="pre">'^'</span></code> - for binary XOR</li>
+<li><code class="docutils literal notranslate"><span class="pre">'&amp;'</span></code> - for binary AND</li>
+<li><code class="docutils literal notranslate"><span class="pre">'|'</span></code> - for binary OR</li>
+<li><code class="docutils literal notranslate"><span class="pre">'^'</span></code> - for binary XOR</li>
 </ul>
 </dd></dl>
 
@@ -283,10 +283,10 @@ ssize_t <code class="descname">tnt_update_arith_float</code><span class="sig-par
 ssize_t <code class="descname">tnt_update_arith_double</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*ops</em>, uint32_t<em>&nbsp;fieldno</em>, char<em>&nbsp;op</em>, double<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_update_arith_double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Three functions for adding an arithmetic operation for a specific data type
 (integer, float or double).</p>
-<p>Possible <code class="docutils literal"><span class="pre">op</span></code>’s are:</p>
+<p>Possible <code class="docutils literal notranslate"><span class="pre">op</span></code>’s are:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">+</span></code> - for addition</li>
-<li><code class="docutils literal"><span class="pre">-</span></code> - for subtraction</li>
+<li><code class="docutils literal notranslate"><span class="pre">+</span></code> - for addition</li>
+<li><code class="docutils literal notranslate"><span class="pre">-</span></code> - for subtraction</li>
 </ul>
 </dd></dl>
 
@@ -294,7 +294,7 @@ ssize_t <code class="descname">tnt_update_arith_double</code><span class="sig-pa
 <dt id="c.tnt_update_delete">
 ssize_t <code class="descname">tnt_update_delete</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*ops</em>, uint32_t<em>&nbsp;fieldno</em>, uint32_t<em>&nbsp;fieldcount</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_update_delete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a delete operation for the update request.
-<code class="docutils literal"><span class="pre">fieldcount</span></code> is the number of fields to delete.</p>
+<code class="docutils literal notranslate"><span class="pre">fieldcount</span></code> is the number of fields to delete.</p>
 </dd></dl>
 
 <dl class="function">
@@ -313,8 +313,8 @@ ssize_t <code class="descname">tnt_update_assign</code><span class="sig-paren">(
 <dt id="c.tnt_update_splice">
 ssize_t <code class="descname">tnt_update_splice</code><span class="sig-paren">(</span>struct <a class="reference internal" href="stream.html#c.tnt_stream" title="tnt_stream">tnt_stream</a><em>&nbsp;*ops</em>, uint32_t<em>&nbsp;fieldno</em>, uint32_t<em>&nbsp;position</em>, uint32_t<em>&nbsp;offset</em>, const char<em>&nbsp;*buffer</em>, size_t<em>&nbsp;buffer_len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_update_splice" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a splice operation for the update request.</p>
-<p>“Splice” means to remove <code class="docutils literal"><span class="pre">offset</span></code> bytes from position <code class="docutils literal"><span class="pre">position</span></code> in
-field <code class="docutils literal"><span class="pre">fieldno</span></code> and paste <code class="docutils literal"><span class="pre">buffer</span></code> in the room of this fragment.</p>
+<p>“Splice” means to remove <code class="docutils literal notranslate"><span class="pre">offset</span></code> bytes from position <code class="docutils literal notranslate"><span class="pre">position</span></code> in
+field <code class="docutils literal notranslate"><span class="pre">fieldno</span></code> and paste <code class="docutils literal notranslate"><span class="pre">buffer</span></code> in the room of this fragment.</p>
 </dd></dl>
 
 </div>

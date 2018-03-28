@@ -170,7 +170,7 @@
 <dl class="type">
 <dt id="c.tnt_stream">
 struct <code class="descname">tnt_stream</code><a class="headerlink" href="#c.tnt_stream" title="Permalink to this definition">¶</a></dt>
-<dd><div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="p">{</span>
+<dd><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">alloc</span><span class="p">;</span>
     <span class="kt">ssize_t</span> <span class="p">(</span><span class="o">*</span> <span class="n">write</span><span class="p">)(</span><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">s</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">);</span>
     <span class="kt">ssize_t</span> <span class="p">(</span><span class="o">*</span> <span class="n">writev</span><span class="p">)(</span><span class="k">struct</span> <span class="n">tnt_stream</span> <span class="o">*</span> <span class="n">s</span><span class="p">,</span> <span class="k">struct</span> <span class="n">iovec</span> <span class="o">*</span> <span class="n">iov</span><span class="p">,</span> <span class="kt">int</span> <span class="n">count</span><span class="p">);</span>
@@ -233,8 +233,8 @@ ssize_t <code class="descname">tnt_stream.write</code><span class="sig-paren">(<
 <dt id="c.tnt_stream.writev">
 ssize_t <code class="descname">tnt_stream.writev</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<em>&nbsp;s</em>, struct iovec *<em>&nbsp;iov</em>, int<em>&nbsp;count</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream.writev" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a string or a vector to a stream.
-Here <code class="docutils literal"><span class="pre">size</span></code> is the string’s size (in bytes), and <code class="docutils literal"><span class="pre">count</span></code> is the number
-of records in the <code class="docutils literal"><span class="pre">iov</span></code> vector.</p>
+Here <code class="docutils literal notranslate"><span class="pre">size</span></code> is the string’s size (in bytes), and <code class="docutils literal notranslate"><span class="pre">count</span></code> is the number
+of records in the <code class="docutils literal notranslate"><span class="pre">iov</span></code> vector.</p>
 </dd></dl>
 
 <dl class="function">
@@ -242,9 +242,9 @@ of records in the <code class="docutils literal"><span class="pre">iov</span></c
 ssize_t <code class="descname">tnt_stream.read</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<em>&nbsp;s</em>, char *<em>&nbsp;buf</em>, size_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream.read" title="Permalink to this definition">¶</a></dt>
 <dt id="c.tnt_stream.read_reply">
 int <code class="descname">tnt_stream.read_reply</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.tnt_stream" title="tnt_stream">tnt_stream</a> *<em>&nbsp;s</em>, struct <a class="reference internal" href="reply.html#c.tnt_reply" title="tnt_reply">tnt_reply</a> *<em>&nbsp;r</em><span class="sig-paren">)</span><a class="headerlink" href="#c.tnt_stream.read_reply" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read a reply from server. The <code class="xref py py-func docutils literal"><span class="pre">read()</span></code> function simply writes the reply
-to a string buffer, while the <code class="xref py py-func docutils literal"><span class="pre">read_reply()</span></code> function parses it and
-writes to a <code class="docutils literal"><span class="pre">tnt_reply</span></code> data structure.</p>
+<dd><p>Read a reply from server. The <code class="xref py py-func docutils literal notranslate"><span class="pre">read()</span></code> function simply writes the reply
+to a string buffer, while the <code class="xref py py-func docutils literal notranslate"><span class="pre">read_reply()</span></code> function parses it and
+writes to a <code class="docutils literal notranslate"><span class="pre">tnt_reply</span></code> data structure.</p>
 </dd></dl>
 
 </div>
