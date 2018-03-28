@@ -7,9 +7,14 @@ OUTPUT_PATH="$TRAVIS_BUILD_DIR/output"
 COMMIT_AUTHOR_EMAIL="${COMMIT_AUTHOR_EMAIL:-build@tarantool.org}"
 
 function doCompile {
+    mkdir benv
+    virtualenv benv
+    source benv/bin/activate
     pip install sphinx sphinx_rtd_theme
     cmake .
     make sphinx-html
+    deactivate
+    rm -rf benv
 }
 
 # Pull requests and commits to other branches shouldn't try to deploy, just
