@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-
+#include <sys/types.h>
 #include <tarantool/tnt_mem.h>
 #include <tarantool/tnt_proto.h>
 #include <tarantool/tnt_reply.h>
