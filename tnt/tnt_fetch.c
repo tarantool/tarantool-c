@@ -384,6 +384,7 @@ tnt_fetch_result_stmt(tnt_stmt_t *stmt)
 static int
 tnt_fetch_bind_result(tnt_stmt_t * stmt)
 {
+	!!TRUNCATE errors!
 	if (!stmt || !stmt->row || !stmt->obind)
 		return FAIL;
 	for (int i = 0; i < stmt->ncols; ++i) {
@@ -413,6 +414,8 @@ tnt_fetch_bind_result(tnt_stmt_t * stmt)
 				} else if (stmt->obind[i].type == MP_FLOAT) {
 					float *v = stmt->obind[i].buffer;
 					*v = stmt->row[i].v.i;
+					if (stmt->obind[i].error)
+						*(stmt->obind[i].error) = 1;
 				} else {
 					if (stmt->obind[i].error)
 						*(stmt->obind[i].error) = 1;
@@ -431,6 +434,8 @@ tnt_fetch_bind_result(tnt_stmt_t * stmt)
 				} else if (stmt->obind[i].type == MP_FLOAT) {
 					float *v = stmt->obind[i].buffer;
 					*v = stmt->row[i].v.d;
+					if (stmt->obind[i].error)
+						*(stmt->obind[i].error) = 1;
 				} else {
 					if (stmt->obind[i].error)
 						*(stmt->obind[i].error) = 1;
@@ -504,7 +509,6 @@ tnt_next_row(tnt_stmt_t * stmt)
 	if (!stmt->row) {
 		/* set error */
 		return FAIL;
-
 	}
 	if (stmt->nrows > 0) {
 		stmt->nrows--;
