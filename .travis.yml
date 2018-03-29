@@ -24,7 +24,6 @@ env:
       - OS=ubuntu DIST=precise
       - OS=ubuntu DIST=trusty
       - OS=ubuntu DIST=xenial
-      - OS=ubuntu DIST=yakkety
       - OS=debian DIST=wheezy
       - OS=debian DIST=jessie
       - OS=debian DIST=stretch
@@ -56,8 +55,6 @@ matrix:
       - env: OS=ubuntu DIST=trusty
         compiler: clang
       - env: OS=ubuntu DIST=xenial
-        compiler: clang
-      - env: OS=ubuntu DIST=yakkety
         compiler: clang
       - env: OS=debian DIST=wheezy
         compiler: clang
