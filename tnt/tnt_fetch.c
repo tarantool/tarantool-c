@@ -1,4 +1,4 @@
-/* -*- C -*- */
+* -*- C -*- */
 
 #include <tarantool/tnt_fetch.h>
 
@@ -384,7 +384,6 @@ tnt_fetch_result_stmt(tnt_stmt_t *stmt)
 static int
 tnt_fetch_bind_result(tnt_stmt_t * stmt)
 {
-	!!TRUNCATE errors!
 	if (!stmt || !stmt->row || !stmt->obind)
 		return FAIL;
 	for (int i = 0; i < stmt->ncols; ++i) {
