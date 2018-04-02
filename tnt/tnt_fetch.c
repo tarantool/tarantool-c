@@ -1,4 +1,4 @@
-* -*- C -*- */
+/* -*- C -*- */
 
 #include <tarantool/tnt_fetch.h>
 
