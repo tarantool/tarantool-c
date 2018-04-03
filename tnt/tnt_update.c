@@ -75,7 +75,7 @@ tnt_upsert(struct tnt_stream *s, uint32_t space,
 	v[1].iov_len  = hdr.end - hdr.header;
 	char body[64]; body_start = body; data = body;
 
-	data = mp_encode_map(data, 4);
+	data = mp_encode_map(data, 3);
 	data = mp_encode_uint(data, TNT_SPACE);
 	data = mp_encode_uint(data, space);
 	data = mp_encode_uint(data, TNT_TUPLE);
