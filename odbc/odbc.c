@@ -85,9 +85,9 @@ SQLConnect(SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user, SQLS
 {
 	odbc_connect *tcon = (odbc_connect *)conn;
 	odbc_parse_dsn(tcon,serv,serv_sz);
-
+	
 	tcon->tnt_stream = tnt_open(tcon->host, user, user_sz, auth, auth_sz, tcon->port);
 
-	SQL_SUCCESS;
+	return SQL_SUCCESS;
 }
 

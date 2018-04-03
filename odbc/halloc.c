@@ -38,13 +38,9 @@ alloc_connect(SQLHENV env, SQLHDBC *hdbc)
 	if (*retcon == NULL)
 		return SQL_ERROR;
 	memset(*retcon,0,sizeof(odbc_connect));
-	
-	(*retcon)->tnt_handle = tnt_net(NULL);
-	if ((*retcom)->tnt_handle == NULL) {
-		free(*retcon);
-		return SQL_ERROR;
-	}
+
 	odbc_env *env_ptr = (odbc_env *)env;
+	(*retcon)->end = end_ptr;
 	if (env_ptr->con_end) {
 		odbc_connect *old_end = env_ptr->con_end;
 		

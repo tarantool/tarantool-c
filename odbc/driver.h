@@ -6,7 +6,8 @@ typedef struct odbc_connect_t {
 	struct odbc_env_t *env;
 	struct odbc_stmt_t* stmt_end;
 	bool is_connected;
-	struct tnt_stream *tnt_handle; 
+	struct tnt_stream *tnt_handle;
+	int error_code;
 } odbc_connect;
 
 typedef struct odbc_stmt_t {
