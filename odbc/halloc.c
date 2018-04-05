@@ -77,6 +77,7 @@ free_connect(SQLHDBC hdbc)
 	}
 	while(ocon->stmt_end) 
 		free_stmt(ocon->stmt_end);
+	free(ocon->opt_timeout);
 	free(ocon);
 }
 
