@@ -46,6 +46,7 @@ extern "C" {
 #include <tarantool/tnt_proto.h>
 #include <tarantool/tnt_reply.h>
 #include <tarantool/tnt_stream.h>
+#include <tarantool/tnt_fetch.h>
 #include <tarantool/tnt_buf.h>
 #include <tarantool/tnt_object.h>
 #include <tarantool/tnt_iter.h>
