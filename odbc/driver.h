@@ -1,4 +1,10 @@
 
+
+enum ERROR_CODES {
+	ODBC_DSN_ERROR=2,
+	ODBC_MEM_ERROR=4
+};
+
 struct dsn {
 	char* orig;
 	char* database;
@@ -12,9 +18,9 @@ typedef struct odbc_connect_t {
 	struct odbc_connect_t *prev;
 	struct odbc_env_t *env;
 	struct odbc_stmt_t* stmt_end;
-	bool is_connected;
+	int is_connected;
 	struct dsn* dsn_params;
-	struct tnt_stream *tnt_handle;
+	struct tnt_stream *tnt_hndl;
 	int32_t *opt_timeout;
 	int error_code;
 } odbc_connect;

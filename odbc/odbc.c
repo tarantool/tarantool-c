@@ -126,7 +126,7 @@ SQLRETURN SQL_API
 SQLConnect(SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user, SQLSMALLINT user_sz,
 	   SQLCHAR *auth, SQLSMALLINT auth_sz)
 {
-	return odbc_connect(conn,serv,serv_sz,user,user_sz,auth,auth_sz);
+	return odbc_dbconnect(conn,serv,serv_sz,user,user_sz,auth,auth_sz);
 }
 
 SQLRETURN SQL_API
