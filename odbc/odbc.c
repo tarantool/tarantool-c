@@ -59,6 +59,7 @@ SQLFreeStmt(SQLHSTMT stmt, SQLUSMALLINT option)
 
 
 
+
 SQLRETURN 
 SQLFreeHandle(SQLSMALLINT handle_type, SQLHANDLE ihandle)
 {
@@ -135,4 +136,24 @@ SQLDisconnect(SQLHDBC conn)
 	return odbc_disconnect(conn);
 }
 
+SQLRETURN SQL_API
+SQLBrowseConnect(SQLHDBC         hdbc,  
+		 SQLCHAR *       InConnectionString,  
+		 SQLSMALLINT     StringLength1,  
+		 SQLCHAR *       OutConnectionString,  
+		 SQLSMALLINT     BufferLength,  
+		 SQLSMALLINT *   StringLength2Ptr)
+{
+	if (hdbc == SQL_NULL_HDBC)
+                return SQL_INVALID_HANDLE;
+
+	return SQL_ERROR;
+
+}
+
+SQLRETURN SQL_API
+SQLPrepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
+{
+        return stmt_prepare( stmth, query, query_len);
+}
 

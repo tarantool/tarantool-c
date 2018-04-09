@@ -9,10 +9,19 @@
 #include <tarantool/tnt_net.h>
 #include "driver.h"
 
-int
-tnt2odbc_error(int e)
+
+void
+free_dsn(struct dsn *dsn)
 {
-	return e;
+	if(dsn) {
+		free(dsn->orig);
+		free(dsn->database);
+		free(dsn->host);
+		free(dsn->flag);
+		free(dsn->user);
+		free(dsn->password);
+		free(dsn);
+	}
 }
 
 int
@@ -67,24 +76,65 @@ getdsnattr(char *dsn, char* attr, char *val, int olen)
 	return -1;
 }
 
+#define PARAMSZ  1024
+#define ODBCINI "odbc.ini"
+
 struct dsn *
-odbc_parse_dsn(odbc_connect *tcon, SQLCHAR *serv, SQLSMALLINT serv_sz)
+odbc_parse_dsn(odbc_connect *tcon, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user, SQLSMALLINT user_sz,
+	       SQLCHAR *password, SQLSMALLINT password_sz)
 {
 	struct dsn *ret = (struct dsn *)malloc(sizeof(struct dsn));
 	memset(ret,0,sizeof(struct dsn));
 	if (!ret)
 		return NULL;
 	if (serv) {
-		ret->orig = (char*)malloc(serv_sz+1);
+		ret->orig = strndup((char*)serv,serv_sz);
 		if (!ret->orig)
 			goto error;
-		ret->orig[serv_sz]='\0';
-		memcpy(ret->orig, serv,serv_sz);			 
 	}
+
+	ret->database = (char*) malloc(PARAMSZ);
+	ret->host = (char*) malloc(PARAMSZ);
+	ret->flag = (char*) malloc(PARAMSZ);
+	if (!ret->database || !ret->host || !ret->flag)
+		goto error;
+	
+	char port[PARAMSZ];
+
+	
+	SQLGetPrivateProfileString(ret->orig, "HOST", "localhost", ret->host, PARAMSZ, ODBCINI );
+	SQLGetPrivateProfileString(ret->orig, "DATABASE", "", ret->database, PARAMSZ, ODBCINI );
+	SQLGetPrivateProfileString(ret->orig, "FLAG", "0", ret->flag, PARAMSZ, ODBCINI );
+	SQLGetPrivateProfileString(ret->orig, "PORT","0", &port[0], PARAMSZ, ODBCINI );
+	
+	ret->port = atoi (port);
+	      
+	if (user) {
+		ret->user = strndup((char*)user,user_sz);
+		if (!ret->user)
+			goto error;		
+	} else {
+		ret->user = (char*) malloc(PARAMSZ);
+		if (!ret->user) 
+			goto error;
+		SQLGetPrivateProfileString(ret->orig, "USER","", ret->user, PARAMSZ, ODBCINI );
+	}
+
+	if (password) {
+		ret->password = strndup((char*)password,password_sz);
+		if (!ret->password)
+			goto error;		
+	} else {
+		ret->password = (char*) malloc(PARAMSZ);
+		if (!ret->password) 
+			goto error;
+		SQLGetPrivateProfileString(ret->orig, "PASSWORD","", ret->password, PARAMSZ, ODBCINI );
+	}
+	
 	return ret;
 error:
-	free(ret->orig);
-	free(ret);
+	free_dsn(ret);
+	set_connect_error(tcon,ODBC_MEM_ERROR,"Unable to allocate memory");
 	return NULL;
 }
 
@@ -92,37 +142,28 @@ SQLRETURN
 odbc_dbconnect (SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user, SQLSMALLINT user_sz,
 	   SQLCHAR *auth, SQLSMALLINT auth_sz)
 {
+	if (conn == SQL_NULL_HDBC)
+		return SQL_INVALID_HANDLE;
 	odbc_connect *tcon = (odbc_connect *)conn;
 	if (tcon->is_connected)
 		return SQL_SUCCESS_WITH_INFO;
-	tcon->dsn_params=odbc_parse_dsn(tcon,serv,serv_sz);
-	if (!tcon->dsn_params) {
-		tcon->error_code = ODBC_DSN_ERROR;
+	tcon->dsn_params=odbc_parse_dsn(tcon,serv,serv_sz,user,user_sz,auth,auth_sz);
+	if (!tcon->dsn_params) 
 		return SQL_ERROR;
-	}
+	
 	tcon->tnt_hndl = tnt_net(NULL);
 	if (!tcon->tnt_hndl) {
-		tcon->error_code = ODBC_MEM_ERROR;
+		set_connect_error(tcon,ODBC_MEM_ERROR,"Unable to allocate memory");
 		return SQL_ERROR;
 	}
 	if (tcon->opt_timeout) {
 		struct timeval tv = {*(tcon->opt_timeout),0};
 		tnt_set(tcon->tnt_hndl,TNT_OPT_TMOUT_CONNECT,&tv);
 	}
-
-	char *u = strndup((char*)user,user_sz);
-	if (!u)
-		return SQL_ERROR;
-	char *a = strndup((char*)auth,auth_sz);
-	if (!a) {
-		free(u);
-		return SQL_ERROR;
-	}
-	struct tnt_stream* ret = tnt_reopen(tcon->tnt_hndl,tcon->dsn_params->host, u, a, tcon->dsn_params->port);
-	free(u);
-	free(a);
-	if (!ret) {
-		tcon->error_code = tnt2odbc_error(tnt_error(tcon->tnt_hndl));
+	if (!tnt_reopen(tcon->tnt_hndl,tcon->dsn_params->host, tcon->dsn_params->user,
+			tcon->dsn_params->password, tcon->dsn_params->port)) {
+		set_connect_error(tcon,tnt2odbc_error(tnt_error(tcon->tnt_hndl)),
+				  tnt2odbc_error_message(tnt_error(tcon->tnt_hndl)));
 		return SQL_ERROR;
 	}
 	tcon->is_connected = 1;
@@ -130,17 +171,6 @@ odbc_dbconnect (SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 }
 
 
-void
-free_dsn(struct dsn *dsn)
-{
-	if(dsn) {
-		free(dsn->orig);
-		free(dsn->database);
-		free(dsn->host);
-		free(dsn->flag);
-		free(dsn);
-	}
-}
 
 SQLRETURN
 odbc_disconnect (SQLHDBC conn)

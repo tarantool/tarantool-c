@@ -2,6 +2,51 @@
 
 #include "driver.h"
 
+
+
+int
+tnt2odbc_error(int e)
+{
+	return e;
+}
+
+char*
+tnt2odbc_error_message(int e)
+{
+	return NULL;
+}
+
+
+void
+set_connect_error(odbc_connect *tcon, int code, const char* msg)
+{
+	if (tcon) {
+		tcon->error_code = code;
+		if (tcon->error_message)
+			free(tcon->error_message);
+		if (msg)
+			tcon->error_message = strdup(msg);
+		else
+			tcon->error_message = NULL;
+	}
+}
+
+void
+set_stmt_error(odbc_stmt *tcon, int code, const char* msg)
+{
+	if (tcon) {
+		tcon->error_code = code;
+		if (tcon->error_message)
+			free(tcon->error_message);
+		if (msg)
+			tcon->error_message = strdup(msg);
+		else
+			tcon->error_message = NULL;
+	}
+}
+
+
+
 SQLRETURN
 alloc_env(SQLHENV *oenv)
 {
@@ -81,3 +126,62 @@ free_connect(SQLHDBC hdbc)
 	free(ocon);
 }
 
+
+SQLRETURN 
+alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
+{
+	odbc_connect * con = (odbc_connect *)conn;
+	odbc_stmt **out = (odbc_stmt **)ostmt;
+	if (!con || !out)
+		return SQL_INVALID_HANDLE;
+
+	*out = (odbc_stmt*) malloc(sizeof(odbc_stmt));
+	if (*out == NULL) {
+		set_connect_error(con,ODBC_MEM_ERROR,"Unable to allocate memory for statement");
+		return SQL_ERROR;
+	}
+	memset(*out,0,sizeof(odbc_stmt));
+	*out->connect = con;
+
+	if (con->stmt_end) {
+		odbc_stmt *old_end = con->stmt_end;
+		
+		(*out)->next = old_end->next;
+		old_end->next->prev = *out;
+		
+		old_end->next = *out;
+		*out->prev = old_end;
+	} else {
+		con->stmt_end = *out;
+		(*out)->next = (*out)->prev = *out;
+	}
+
+	return SQL_SUCCESS;
+	
+}
+
+SQLRETURN
+free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmt;
+	if (!stmt)
+		return SQL_INVALID_HANDLE;
+	switch (option) {
+	case SQL_CLOSE: {
+		if (!stmt->tnt_statement)
+			return SQL_SUCCESS_WITH_INFO;
+		else
+			tnt_stmt_free(stmt->tnt_statement);
+		
+		return SQL_SUCCESS;
+	}
+	case SQL_UNBIND: {
+	if (!stmt->tnt_statement || !stmt->bind_params)
+			return SQL_SUCCESS_WITH_INFO;
+		else
+			free(stmt->bind_params);
+		return SQL_SUCCESS;
+	}
+	}
+	
+}
