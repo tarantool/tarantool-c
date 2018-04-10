@@ -34,8 +34,12 @@ typedef struct odbc_stmt_t {
 	struct odbc_connect_t *connect;
 	
 	tnt_stmt *tnt_statement;
-	tnt_bind_t * bind_params;
-	int bind_items;
+	tnt_bind_t * inbind_params;
+	tnt_bind_t * outbind_params;
+     
+	int inbind_items;
+	int outbind_items;
+	
 	int error_code;
 	char *error_message;
 } odbc_stmt;

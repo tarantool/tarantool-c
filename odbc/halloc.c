@@ -161,6 +161,12 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 }
 
 SQLRETURN
+real_free_stmt(odbc_stmt *st)
+{
+	
+}
+
+SQLRETURN
 free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmt;
@@ -176,12 +182,22 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 		return SQL_SUCCESS;
 	}
 	case SQL_UNBIND: {
-	if (!stmt->tnt_statement || !stmt->bind_params)
+	if (!stmt->tnt_statement || !stmt->inbind_params)
 			return SQL_SUCCESS_WITH_INFO;
 		else
 			free(stmt->bind_params);
 		return SQL_SUCCESS;
 	}
+	case SQL_RESET_PARAMS: {
+	if (!stmt->tnt_statement || !stmt->outbind_params)
+			return SQL_SUCCESS_WITH_INFO;
+		else
+			free(stmt->bind_params);
+		return SQL_SUCCESS;
+	}
+	case SQL_DROP: {
+		return real_free_stmt(stmt);
 	}
 	
+	}
 }

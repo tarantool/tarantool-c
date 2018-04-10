@@ -57,7 +57,11 @@ SQLFreeStmt(SQLHSTMT stmt, SQLUSMALLINT option)
 	return free_stmt(stmt,option);
 }
 
-
+SQLRETURN 
+SQLCloseCursor(SQLHSTMT stmt)
+{
+	return free_stmt(stmt,SQL_CLOSE);
+}
 
 
 SQLRETURN 
@@ -69,7 +73,7 @@ SQLFreeHandle(SQLSMALLINT handle_type, SQLHANDLE ihandle)
 	case SQL_HANDLE_DBC:
 		return free_connect(ihandle);
 	case SQL_HANDLE_STMT:
-		return free_stmt(ihandle);
+		return free_stmt(ihandle,SQL_DROP);
 	case SQL_HANDLE_DESC:
 	default:
 		return SQL_ERROR;
@@ -146,7 +150,6 @@ SQLBrowseConnect(SQLHDBC         hdbc,
 {
 	if (hdbc == SQL_NULL_HDBC)
                 return SQL_INVALID_HANDLE;
-
 	return SQL_ERROR;
 
 }
