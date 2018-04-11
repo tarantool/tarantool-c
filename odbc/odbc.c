@@ -155,8 +155,25 @@ SQLBrowseConnect(SQLHDBC         hdbc,
 }
 
 SQLRETURN SQL_API
-SQLPrepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
+SQLPrepare(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
 {
         return stmt_prepare( stmth, query, query_len);
 }
 
+SQLRETURN SQL_API
+SQLExecute(SQLHSTMT stmth)
+{
+	return stmt_execute(stmth);
+}
+
+SQLRETURN SQL_API
+SQLExecDirect(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
+{
+	if (stmth == NULL)
+		return SQL_INVALID_HANDLE;
+	int rc = stmt_prepare( stmth, query, query_len);
+	if (rc != SQL_SUCCESS)
+		return rc;
+	return stmt_execute(stmth);
+}
+              

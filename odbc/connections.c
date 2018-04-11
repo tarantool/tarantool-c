@@ -178,6 +178,16 @@ odbc_disconnect (SQLHDBC conn)
 	odbc_connect *tcon = (odbc_connect *)conn;
 	if (!tcon->is_connected)
 		return SQL_SUCCESS_WITH_INFO;
+
+	/* According to documentation disconnect should return SQL_ERROR
+	 * if asynchronous operation is in progress or some transactions still
+	 * open.
+	 **/
+	while(tcon->stmt_end) {
+                if (free_stmt(tcon->stmt_end,SQL_DROP) == SQL_ERROR)
+			return SQL_ERROR;
+	}
+	
 	if (tcon->tnt_hndl)
 		tnt_close(tcon->tnt_hndl);
 	free_dsn(tcon->dsn_params);

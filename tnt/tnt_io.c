@@ -221,10 +221,6 @@ static enum tnt_error tnt_io_xbufmax(struct tnt_stream_net *s, int opt, int min)
 
 static enum tnt_error tnt_io_setopts(struct tnt_stream_net *s) {
 	int opt = 1;
-	if (s->opt.uri->host_hint != URI_UNIX) {
-		if (setsockopt(s->fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) == -1)
-			goto error;
-	}
 
 	tnt_io_xbufmax(s, SO_SNDBUF, s->opt.send_buf);
 	tnt_io_xbufmax(s, SO_RCVBUF, s->opt.recv_buf);
@@ -518,3 +514,4 @@ int getiovmax()
 		return 1024;
 	#endif
 }
+

@@ -121,7 +121,7 @@ free_connect(SQLHDBC hdbc)
 		env->con_end = NULL;
 	}
 	while(ocon->stmt_end) 
-		free_stmt(ocon->stmt_end);
+		free_stmt(ocon->stmt_end,SQL_DROP);
 	free(ocon->opt_timeout);
 	free(ocon);
 }
@@ -161,9 +161,27 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 }
 
 SQLRETURN
-real_free_stmt(odbc_stmt *st)
+mem_free_stmt(odbc_stmt *stmt)
 {
+	if (!stmt)
+		return SQL_INVALID_HANDLE;
+	free_stmt(stmt,SQL_CLOSE);
+	free_stmt(stmt,SQL_RESET_PARAMS);
+	free_stmt(stmt,SQL_UNBIND);
+	free(stmt->error_message);
 	
+	odbc_connect *parent = stmt->connect;
+	if (stmt->next != stmt) {
+		stmt->prev->next = stmt->next;
+		stmt->next->prev = stmt->prev;
+
+		if (parent->stmt_end == stmt)
+			parent->stmt_end = stmt->prev;
+	} else {
+		parent->stmt_end = NULL; 
+	}
+	
+	return SQL_SUCCESS;
 }
 
 SQLRETURN
@@ -173,31 +191,33 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
 	switch (option) {
-	case SQL_CLOSE: {
+	case SQL_CLOSE: 
 		if (!stmt->tnt_statement)
 			return SQL_SUCCESS_WITH_INFO;
-		else
+		else {
 			tnt_stmt_free(stmt->tnt_statement);
-		
+			stmt->tnt_statement = NULL;
+		}
 		return SQL_SUCCESS;
-	}
-	case SQL_UNBIND: {
-	if (!stmt->tnt_statement || !stmt->inbind_params)
+	case SQL_RESET_PARAMS: 
+		if (!stmt->tnt_statement || !stmt->inbind_params)
 			return SQL_SUCCESS_WITH_INFO;
-		else
-			free(stmt->bind_params);
+		else {
+			free(stmt->inbind_params);
+			stmt->inbind_params = NULL;
+		}
 		return SQL_SUCCESS;
-	}
-	case SQL_RESET_PARAMS: {
-	if (!stmt->tnt_statement || !stmt->outbind_params)
+	case SQL_UNBIND: 
+		if (!stmt->tnt_statement || !stmt->outbind_params)
 			return SQL_SUCCESS_WITH_INFO;
-		else
-			free(stmt->bind_params);
+		else {
+			free(stmt->outbind_params);
+			stmt->outbind_params = NULL;
+		}
 		return SQL_SUCCESS;
-	}
-	case SQL_DROP: {
-		return real_free_stmt(stmt);
-	}
-	
+	case SQL_DROP: 
+		return mem_free_stmt(stmt);
+	default:
+		return SQL_ERROR;
 	}
 }
