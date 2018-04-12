@@ -16,17 +16,46 @@ tnt2odbc_error_message(int e)
 	return NULL;
 }
 
-
 void
-set_connect_error(odbc_connect *tcon, int code, const char* msg)
+set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len)
 {
 	if (tcon) {
 		tcon->error_code = code;
 		if (tcon->error_message)
 			free(tcon->error_message);
-		if (msg)
-			tcon->error_message = strdup(msg);
-		else
+		if (msg) {
+			if (len==-1)
+				tcon->error_message = strdup(msg);
+			else
+				tcon->error_message = strndup(msg,len);
+		} else
+			tcon->error_message = NULL;
+	}
+}
+
+/*
+ * Null terminated string version of set_connect_error_len
+ **/
+
+void
+set_connect_error(odbc_connect *tcon, int code, const char* msg)
+{
+	set_connect_error_len(tcon,code,msg,-1);
+}
+
+void
+set_stmt_error_len(odbc_stmt *tcon, int code, const char* msg, int len)
+{
+	if (tcon) {
+		tcon->error_code = code;
+		if (tcon->error_message)
+			free(tcon->error_message);
+		if (msg) {
+			if (len==-1)
+				tcon->error_message = strdup(msg);
+			else
+				tcon->error_message = strndup(msg,len);
+		} else
 			tcon->error_message = NULL;
 	}
 }
@@ -34,17 +63,8 @@ set_connect_error(odbc_connect *tcon, int code, const char* msg)
 void
 set_stmt_error(odbc_stmt *tcon, int code, const char* msg)
 {
-	if (tcon) {
-		tcon->error_code = code;
-		if (tcon->error_message)
-			free(tcon->error_message);
-		if (msg)
-			tcon->error_message = strdup(msg);
-		else
-			tcon->error_message = NULL;
-	}
+	set_stmt_error_len(tcon,code,msg,-1);
 }
-
 
 
 SQLRETURN

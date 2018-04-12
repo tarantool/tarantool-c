@@ -71,6 +71,14 @@ void
 set_connect_error(odbc_connect *tcon, int code, const char* msg);
 
 /*
+ * As above function with string length parameter. It's the same as above function If 
+ * called with len equal to -1.
+ **/
+
+void
+set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len);
+
+/*
  * Stores error code and error message into odbc_stmt structure
  * for latter return with connected SQLSTATE message SQLGetDiagRec function.
  **/
@@ -78,4 +86,9 @@ set_connect_error(odbc_connect *tcon, int code, const char* msg);
 void
 set_stmt_error(odbc_stmt *tcon, int code, const char* msg);
 
-
+/*
+ * As above function with string length parameter. It's the same as above function If 
+ * called with len equal to -1.
+ **/
+void
+set_stmt_error_len(odbc_stmt *tcon, int code, const char* msg, int len);

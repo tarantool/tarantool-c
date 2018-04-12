@@ -63,6 +63,12 @@ SQLCloseCursor(SQLHSTMT stmt)
 	return free_stmt(stmt,SQL_CLOSE);
 }
 
+SQLRETURN 
+SQLCancel(SQLHSTMT stmt)
+{
+	return free_stmt(stmt,SQL_CLOSE);
+}
+
 
 SQLRETURN 
 SQLFreeHandle(SQLSMALLINT handle_type, SQLHANDLE ihandle)
@@ -176,4 +182,33 @@ SQLExecDirect(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
 		return rc;
 	return stmt_execute(stmth);
 }
+
+/*
+ * Just copy original string since we do not preprocess query
+ **/
               
+SQLRETURN  SQL_API
+SQLNativeSql(SQLHDBC hdbc, SQLCHAR *inq, SQLINTEGER in_len, SQLCHAR *outq, SQLINTEGER out_len, SQLINTEGER *out_len_res)
+{
+	odbc_stmt *h = (odbc_stmt*) hdbc;
+	if (!h || inq == NULL)
+		return SQL_INVALID_HANDLE;
+	if (outq == NULL && out_len_res) {
+		*out_len_res=in_len;
+		return SQL_SUCCESS;
+	}
+	int rlen = out_len<in_len?out_len:in_len;
+	memcpy(outq,inq,rlen);
+	if (out_len_res)
+		*out_len_res = rlen;
+	return SQL_SUCCESS;
+}
+
+
+SQLRETURN  SQL_API
+SQLBindParameter(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT ctype, SQLSMALLINT sqltype,
+		 SQLUINTEGER col_len, SQLSMALLINT scale, SQLPOINTER buf,
+		 SQLINTEGER buf_len, SQLINTEGER *len_ind)
+{
+	return stmt_in_bind(stmth, parnum, ptype, ctype, sqltype, col_len, scale, buf, buf_len, len_ind);
+}
