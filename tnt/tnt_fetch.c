@@ -268,9 +268,16 @@ bind2object(tnt_stmt_t* stmt)
 			if (tnt_object_add_nil(obj) == FAIL)
                                 goto error;
 			break;
-		case MP_INT:
-		case MP_UINT: {
+
+		case MP_INT: {
 			int64_t *v = (int64_t *)stmt->ibind[npar-i-1].buffer;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+                                goto error;
+			break;
+		}
+
+		case MP_UINT: {
+			uint64_t *v = (int64_t *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
                                 goto error;
 			break;

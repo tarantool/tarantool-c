@@ -19,7 +19,12 @@ stmt_prepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
         odbc_stmt *tstmt = (odbc_stmt *) stmth;
 	if (!tstmt)
 		return SQL_INVALID_HANDLE;
-	tstmt->tnt_statetment = tnt_prepare(tstmt->connect->tnt_hndl,query, query_len);
+
+	if (query_len == SQL_NTS)
+		tstmt->tnt_statetment = tnt_prepare(tstmt->connect->tnt_hndl,query, strlen(query));
+	else
+		tstmt->tnt_statetment = tnt_prepare(tstmt->connect->tnt_hndl,query, query_len);
+	
 	if (tstmt->tnt_statetment)
 		return SQL_SUCCESS;
 	else {
@@ -54,6 +59,24 @@ stmt_execute(SQLHSTMT stmth)
 	return SQL_SUCCESS;
 }
 
+int
+odbc_types_covert(SQLSMALLINT ctype)
+{
+	switch (ctype) {
+	case SQL_C_CHAR:
+	case SQL_C_BINARY:
+		return MP_STR;
+	case SQL_C_DOUBLE:
+		return MP_DOUBLE:
+	case SQL_C_FLOAT:
+		return MP_FLOAT:
+	case SQL_C_SBIGINT:
+		return MP_INT;
+	case SQL_C_UBIGINT:
+		return MP_UINT;
+	}
+}
+
 SQLRETURN  
 stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT ctype, SQLSMALLINT sqltype,
 		 SQLUINTEGER col_len, SQLSMALLINT scale, SQLPOINTER buf,
@@ -63,17 +86,8 @@ stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
-
-	if (stmt->inbind_params == NULL) {
-		stmt->inbind_params = (tnt_bind_t *)malloc(sizeof(tnt_bind_t *)*parnum);
-		if (!stmt->inbind_params) {
-			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
-			return SQL_ERROR;
-		}
-		memset(stmt->inbind_params,'0',sizeof(tnt_bind_t *)*parnum);
-		stmt->inbind_items = parnum;
-	}
-	if (parnum>stmt->inbind_items) {
+	
+	if (parnum>stmt->inbind_items || stmt->inbind_params == NULL) {
 		tnt_bind_t * npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t *)*parnum);
 		if (!npar) {
 			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
@@ -87,5 +101,18 @@ stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT
 		stmt->inbind_params = npar;
 		stmt->inbind_items = parnum;
 	}
+
+	--parnum;
+	if (*len_ind != SQL_NULL_DATA) {
+		stmt->inbind_params[parnum].type = odbc_types_covert(ctype);
+		stmt->inbind_params[parnum].buffer = (void *)buf;
+		if (stmt->inbind_params[parnum].type == MP_STR && *len_ind == SQL_NTS)
+			stmt->inbind_params[parnum].in_len = strlen ((char *)stmt->inbind_params[parnum].buffer);
+		else
+			stmt->inbind_params[parnum].in_len = buf_len;
+	} else {
+		stmt->inbind_params[parnum].type = MP_NIL;
+	}
 	
+	return SQL_SUCCESS;
 }
