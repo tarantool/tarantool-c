@@ -264,44 +264,76 @@ bind2object(tnt_stmt_t* stmt)
 	int i=npar;
 	while(i-- > 0) {
 		switch(stmt->ibind[npar-i-1].type) {
-		case MP_NIL:
+		case TNTC_NIL:
 			if (tnt_object_add_nil(obj) == FAIL)
                                 goto error;
 			break;
 
-		case MP_INT: {
-			int64_t *v = (int64_t *)stmt->ibind[npar-i-1].buffer;
+
+		case TNTC_SINT:
+		case TNTC_INT: {
+			int *v = (int *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
                                 goto error;
 			break;
 		}
 
-		case MP_UINT: {
-			uint64_t *v = (int64_t *)stmt->ibind[npar-i-1].buffer;
+		case TNTC_UINT: {
+			unsigned *v = (unsigned *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
                                 goto error;
 			break;
 		}
-		case MP_BOOL: {
+
+		case TNTC_SINT:
+		case TNTC_INT: {
+			int *v = (int *)stmt->ibind[npar-i-1].buffer;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+                                goto error;
+			break;
+		}
+
+		case TNTC_UINT: {
+			unsigned *v = (unsigned *)stmt->ibind[npar-i-1].buffer;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+                                goto error;
+			break;
+		}
+
+		case TNTC_SSHORT:
+		case TNTC_SHORT: {
+			short *v = (short *)stmt->ibind[npar-i-1].buffer;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+                                goto error;
+			break;
+		}
+
+		case TNTC_USHORT: {
+			unsigned short *v = (unsigned short *)stmt->ibind[npar-i-1].buffer;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+                                goto error;
+			break;
+		}
+		case TNTC_BOOL: {
 			bool *v = (bool *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_bool(obj,*v) == FAIL)
                                 goto error;
 			break;
 		}
-		case MP_FLOAT: {
+		case TNTC_FLOAT: {
 			float *v = (float *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_float(obj,*v) == FAIL)
                                 goto error;
 			break;
 		}
-		case MP_DOUBLE: {
+		case TNTC_DOUBLE: {
 			double *v = (double *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_double(obj,*v) == FAIL)
                                 goto error;
 			break;
 		}
-		case MP_STR:
-		case MP_BIN:
+		case TNTC_STR:
+		case TNTC_BIN:
 			if (tnt_object_add_str(obj,stmt->ibind[npar-i-1].buffer,
 					       stmt->ibind[npar-i-1].in_len) == FAIL)
                                 goto error;

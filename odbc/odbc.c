@@ -212,3 +212,9 @@ SQLBindParameter(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMAL
 {
 	return stmt_in_bind(stmth, parnum, ptype, ctype, sqltype, col_len, scale, buf, buf_len, len_ind);
 }
+
+SQLRETURN SQL_API
+SQLBindCol(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER val, SQLLEN in_len, SQLLEN *out_len)
+{
+	retrun stmt_out_bind(stmth, colnum, ctype, val, in_len, out_len);
+}

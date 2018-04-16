@@ -64,16 +64,33 @@ odbc_types_covert(SQLSMALLINT ctype)
 {
 	switch (ctype) {
 	case SQL_C_CHAR:
+		return TNTC_STR;
 	case SQL_C_BINARY:
-		return MP_STR;
+		return TNTC_BIN;
 	case SQL_C_DOUBLE:
-		return MP_DOUBLE:
+		return TNTC_DOUBLE:
 	case SQL_C_FLOAT:
-		return MP_FLOAT:
+		return TNTC_FLOAT:
 	case SQL_C_SBIGINT:
-		return MP_INT;
+		return TNTC_SBIGINT;
 	case SQL_C_UBIGINT:
-		return MP_UINT;
+		return TNTC_UBIGINT;
+	case SQL_C_BIGINT:
+		return TNTC_BIGINT;
+	case SQL_C_SINT:
+		return TNTC_SINT;
+	case SQL_C_UINT:
+		return TNTC_UINT;
+	case SQL_C_INT:
+		return TNTC_INT;
+	case SQL_C_SSHORT:
+		return TNTC_SSHORT;
+	case SQL_C_USHORT:
+		return TNTC_USHORT;
+	case SQL_C_SHORT:
+		return TNTC_SHORT;
+	default:
+		return -1;
 	}
 }
 
@@ -86,6 +103,17 @@ stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
+
+	if (parnum < 1 ) {
+		set_stmt_error(stmt,ODBC_07009_ERROR,"ODBC bind parameter invalid index number");
+		return SQL_ERROR;
+	}
+
+	int in_type = odbc_types_covert(ctype);
+	if (in_type == -1) {
+		set_stmt_error(stmt,ODBC_HY003_ERROR,"Invalid application buffer type");
+		return SQL_ERROR;
+	}
 	
 	if (parnum>stmt->inbind_items || stmt->inbind_params == NULL) {
 		tnt_bind_t * npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t *)*parnum);
@@ -104,7 +132,8 @@ stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT
 
 	--parnum;
 	if (*len_ind != SQL_NULL_DATA) {
-		stmt->inbind_params[parnum].type = odbc_types_covert(ctype);
+		stmt->inbind_params[parnum].type = in_type;
+		if (stmt->inbind_params[parnum].type == -1)
 		stmt->inbind_params[parnum].buffer = (void *)buf;
 		if (stmt->inbind_params[parnum].type == MP_STR && *len_ind == SQL_NTS)
 			stmt->inbind_params[parnum].in_len = strlen ((char *)stmt->inbind_params[parnum].buffer);
@@ -113,6 +142,52 @@ stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT
 	} else {
 		stmt->inbind_params[parnum].type = MP_NIL;
 	}
-	
 	return SQL_SUCCESS;
+}
+
+
+SQLRETURN 
+stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER val, SQLLEN in_len, SQLLEN *out_len)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+	if (!stmt)
+		return SQL_INVALID_HANDLE;
+
+	if (colnum < 1 ) {
+		set_stmt_error(stmt,ODBC_07009_ERROR,"ODBC bind parameter invalid column number");
+		return SQL_ERROR;
+	}
+
+	if (in_len<0) {
+		set_stmt_error(stmt, ODBC_HY090_ERROR,"Invalid string or buffer length");
+		return SQL_ERROR;
+	}
+
+	int in_type = odbc_types_covert(ctype);
+	if (in_type == -1) {
+		set_stmt_error(stmt,ODBC_HY003_ERROR,"Invalid application buffer type");
+		return SQL_ERROR;
+	}
+
+		
+	if (colnum>stmt->outbind_items || stmt->outbind_params == NULL) {
+		tnt_bind_t * npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t *)*colnum);
+		if (!npar) {
+			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
+			return SQL_ERROR;
+		}
+		memset(npar,'0',sizeof(tnt_bind_t *)*colnum);
+		for(int i=0;i<stmt->outbind_items;++i) {
+			npar[i] = stmt->outbind_params[i];
+		}
+		free(stmt->outbind_params);
+		stmt->outbind_params = npar;
+		stmt->outbind_items = parnum;
+	}
+	--colnum;
+	stmt->outbind_params[colnum].type = in_type;
+	stmt->outbind_params[colnum].buffer = (void *)val;
+	stmt->outbind_params[colnum].out_len = out_len; TODO
+
+	retrun SQL_SUCCESS;
 }

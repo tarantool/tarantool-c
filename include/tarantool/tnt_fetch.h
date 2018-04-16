@@ -62,6 +62,25 @@ typedef struct tnt_stmt {
 
 
 
+enum CTYPES {
+	TNTC_NIL = MP_NIL,
+	TNTC_SINT,
+	TNTC_UINT,
+	TNTC_INT,
+	TNTC_SSHORT,
+	TNTC_USHORT,
+	TNTC_SHORT,
+	TNTC_BIGINT,
+	TNTC_SBIGINT = MP_INT,
+	TNTC_UBIGINT = MP_UINT,
+	TNTC_BOOL = MP_BOOL,
+	TNTC_FLOAT = MP_FLOAT,
+	TNTC_DOUBLE = MP_DOUBLE,
+	TNTC_CHAR = MP_STR,
+	TNTC_BIN = MP_BIN
+};
+
+
 /**
  * Result code (error)  of last sql operation.
 */

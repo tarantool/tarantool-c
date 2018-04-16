@@ -1,8 +1,11 @@
 
 
 enum ERROR_CODES {
-	ODBC_DSN_ERROR=2,
-	ODBC_MEM_ERROR=4
+	ODBC_DSN_ERROR=2, /* Error parsing dsn parameters */
+	ODBC_MEM_ERROR=4, /* Unable to allocate memory */
+	ODBC_07009_ERROR, /* Invalid number in bind parameters reference */
+	ODBC_HY003_ERROR, /* Invalid application buffer type */
+	ODBC_HY090_ERROR, /* Invalid string or buffer length */
 };
 
 struct dsn {

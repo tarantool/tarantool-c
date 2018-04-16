@@ -334,7 +334,7 @@ static int test_connection()
 
 static int
 test_execute(char *uri) {
-	plan(220);
+	plan(222);
 	header();
 
 	struct tnt_reply reply;
@@ -623,6 +623,14 @@ test_execute(char *uri) {
 		}
 		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute bind dublicate value test");
 		isnt(tnt_stmt_code(result),0,"checking code after 2 val bind dublicate insert");
+
+		param[1].type=MP_STR;
+		char sval[]="780";
+		param[1].buffer = (void *) sval;
+		param[1].in_len = 3;
+		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute str->int conversation binding");
+		is(tnt_stmt_code(result),0,"checking code after str->int conversation binding");
+
 		tnt_stmt_free(result);
 	}
 
@@ -659,7 +667,7 @@ test_execute(char *uri) {
 			ok(!nil,"Checking for not null");
 			i++;
 		}
-		is(i,10,"Checking number of resulted rows"); 
+		is(i,11,"Checking number of resulted rows"); 
 		tnt_stmt_free(result);
 	}
 
