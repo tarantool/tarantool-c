@@ -6,6 +6,9 @@ enum ERROR_CODES {
 	ODBC_07009_ERROR, /* Invalid number in bind parameters reference */
 	ODBC_HY003_ERROR, /* Invalid application buffer type */
 	ODBC_HY090_ERROR, /* Invalid string or buffer length */
+	ODBC_24000_ERROR, /* Invalid cursor state */
+	ODBC_HYC00_ERROR, /* HYC00   Optional feature not implemented */
+	ODBC_EMPTY_STATEMENT, /* ODBC statement without query/prepare */
 };
 
 struct dsn {
@@ -17,7 +20,6 @@ struct dsn {
 	int port;
 	char* flag;
 };
-
 typedef struct odbc_connect_t {
 	struct odbc_connect_t *next;
 	struct odbc_connect_t *prev;
@@ -31,12 +33,20 @@ typedef struct odbc_connect_t {
 	char *error_message;
 } odbc_connect;
 
+
+enum statement_state {
+	CLOSED=0,
+	PREPARED,
+	EXECUTED
+};
+
 typedef struct odbc_stmt_t {
 	struct odbc_stmt_t *next;
 	struct odbc_stmt_t *prev;
 	struct odbc_connect_t *connect;
-	
-	tnt_stmt *tnt_statement;
+
+	int state;
+	tnt_stmt_t *tnt_statement;
 	tnt_bind_t * inbind_params;
 	tnt_bind_t * outbind_params;
      

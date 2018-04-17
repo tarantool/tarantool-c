@@ -4,10 +4,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <odbcinst.h>
+#include <sqlext.h>
+#include <odbcinstext.h>
 
 #include <tarantool/tarantool.h>
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_fetch.h>
+
 #include "driver.h"
 
 
@@ -16,20 +19,24 @@
 SQLRETURN 
 stmt_prepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
 {
-        odbc_stmt *tstmt = (odbc_stmt *) stmth;
-	if (!tstmt)
+        odbc_stmt *stmt = (odbc_stmt *) stmth;
+	if (!stmt)
 		return SQL_INVALID_HANDLE;
 
+	if (stmt->state!=CLOSED) {
+		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state");
+		return SQL_ERROR;
+	}
 	if (query_len == SQL_NTS)
-		tstmt->tnt_statetment = tnt_prepare(tstmt->connect->tnt_hndl,query, strlen(query));
-	else
-		tstmt->tnt_statetment = tnt_prepare(tstmt->connect->tnt_hndl,query, query_len);
+		query_len = strlen((char *)query);
+	stmt->tnt_statement = tnt_prepare(stmt->connect->tnt_hndl,(char *)query, query_len);
 	
-	if (tstmt->tnt_statetment)
+	if (stmt->tnt_statement) {
+		stmt->state = PREPARED;
 		return SQL_SUCCESS;
-	else {
-		/* Prepare just copy query string so only memory error could be here. */
-		set_stmt_error(tstmt,ODBC_MEM_ERROR,"Unable to allocate memory");
+	} else {
+		/* Prepare just copying query string so only memory error could be here. */
+		set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
 		return SQL_ERROR;
 	}
 }
@@ -40,15 +47,20 @@ stmt_execute(SQLHSTMT stmth)
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
+	
+	if (stmt->state!=PREPARED) {
+		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state");
+		return SQL_ERROR;
+	}
 	if (!stmt->tnt_statement) {
 		set_stmt_error(stmt,ODBC_EMPTY_STATEMENT,"ODBC statement without query/prepare");
 		return SQL_ERROR;
 	}
 	if (stmt->inbind_params)
-		tnt_bind_query(result,stmt->inbind_params,stmt->inbind_items);
+		tnt_bind_query(stmt->tnt_statement,stmt->inbind_params,stmt->inbind_items);
 
 	if (stmt->outbind_params)
-		tnt_bind_query(result,stmt->outbind_params,stmt->outbind_items);
+		tnt_bind_query(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
 
 	if (tnt_stmt_execute(stmt->tnt_statement)!=OK) {
 		size_t sz=0;
@@ -56,6 +68,7 @@ stmt_execute(SQLHSTMT stmth)
 		set_stmt_error_len(stmt,tnt2odbc_error(tnt_stmt_code(stmt->tnt_statement)),error,sz);
 		return SQL_ERROR;
 	}
+	stmt->state = EXECUTED;
 	return SQL_SUCCESS;
 }
 
@@ -64,25 +77,17 @@ odbc_types_covert(SQLSMALLINT ctype)
 {
 	switch (ctype) {
 	case SQL_C_CHAR:
-		return TNTC_STR;
+		return TNTC_CHAR;
 	case SQL_C_BINARY:
 		return TNTC_BIN;
 	case SQL_C_DOUBLE:
-		return TNTC_DOUBLE:
+		return TNTC_DOUBLE;
 	case SQL_C_FLOAT:
-		return TNTC_FLOAT:
+		return TNTC_FLOAT;
 	case SQL_C_SBIGINT:
 		return TNTC_SBIGINT;
 	case SQL_C_UBIGINT:
 		return TNTC_UBIGINT;
-	case SQL_C_BIGINT:
-		return TNTC_BIGINT;
-	case SQL_C_SINT:
-		return TNTC_SINT;
-	case SQL_C_UINT:
-		return TNTC_UINT;
-	case SQL_C_INT:
-		return TNTC_INT;
 	case SQL_C_SSHORT:
 		return TNTC_SSHORT;
 	case SQL_C_USHORT:
@@ -92,6 +97,43 @@ odbc_types_covert(SQLSMALLINT ctype)
 	default:
 		return -1;
 	}
+}
+
+/*
+	if (parnum>stmt->inbind_items || stmt->inbind_params == NULL) {
+		tnt_bind_t * npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t *)*parnum);
+		if (!npar) {
+			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
+			return SQL_ERROR;
+		}
+		memset(npar,'0',sizeof(tnt_bind_t *)*parnum);
+		for(int i=0;i<stmt->inbind_items;++i) {
+			npar[i] = stmt->inbind_params[i];
+		}
+		free(stmt->inbind_params);
+		stmt->inbind_params = npar;
+		stmt->inbind_items = parnum;
+	}
+
+*/
+
+int
+realloc_params(int num,int *old_num, tnt_bind_t **params)
+{
+	if (num>*old_num || *params == NULL) {
+		tnt_bind_t *npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t *)*num);
+		if (!npar) {
+			return FAIL;
+		}
+		memset(npar,'0',sizeof(tnt_bind_t *)*num);
+		for(int i=0;i<*old_num;++i) {
+			npar[i] = *params[i];
+		}
+		free(*params);
+		*params = npar;
+		*old_num = num;
+	}
+	return OK;
 }
 
 SQLRETURN  
@@ -114,23 +156,13 @@ stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT
 		set_stmt_error(stmt,ODBC_HY003_ERROR,"Invalid application buffer type");
 		return SQL_ERROR;
 	}
-	
-	if (parnum>stmt->inbind_items || stmt->inbind_params == NULL) {
-		tnt_bind_t * npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t *)*parnum);
-		if (!npar) {
-			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
-			return SQL_ERROR;
-		}
-		memset(npar,'0',sizeof(tnt_bind_t *)*parnum);
-		for(int i=0;i<stmt->inbind_items;++i) {
-			npar[i] = stmt->inbind_params[i];
-		}
-		free(stmt->inbind_params);
-		stmt->inbind_params = npar;
-		stmt->inbind_items = parnum;
-	}
 
+	if (realloc_params(parnum,&(stmt->inbind_items),&(stmt->inbind_params))==FAIL) {
+		set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
+		return SQL_ERROR;
+	}
 	--parnum;
+	
 	if (*len_ind != SQL_NULL_DATA) {
 		stmt->inbind_params[parnum].type = in_type;
 		if (stmt->inbind_params[parnum].type == -1)
@@ -154,7 +186,7 @@ stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER
 		return SQL_INVALID_HANDLE;
 
 	if (colnum < 1 ) {
-		set_stmt_error(stmt,ODBC_07009_ERROR,"ODBC bind parameter invalid column number");
+		set_stmt_error(stmt,ODBC_HYC00_ERROR,"HYC00   Optional feature not implemented");
 		return SQL_ERROR;
 	}
 
@@ -169,25 +201,33 @@ stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER
 		return SQL_ERROR;
 	}
 
-		
-	if (colnum>stmt->outbind_items || stmt->outbind_params == NULL) {
-		tnt_bind_t * npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t *)*colnum);
-		if (!npar) {
-			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
-			return SQL_ERROR;
-		}
-		memset(npar,'0',sizeof(tnt_bind_t *)*colnum);
-		for(int i=0;i<stmt->outbind_items;++i) {
-			npar[i] = stmt->outbind_params[i];
-		}
-		free(stmt->outbind_params);
-		stmt->outbind_params = npar;
-		stmt->outbind_items = parnum;
+	if (realloc_params(colnum,&(stmt->outbind_items),&(stmt->outbind_params))==FAIL) {
+		set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
+		return SQL_ERROR;
 	}
 	--colnum;
 	stmt->outbind_params[colnum].type = in_type;
 	stmt->outbind_params[colnum].buffer = (void *)val;
-	stmt->outbind_params[colnum].out_len = out_len; TODO
+	stmt->outbind_params[colnum].out_len = out_len;
 
-	retrun SQL_SUCCESS;
+	return SQL_SUCCESS;
+}
+
+SQLRETURN
+stmt_fetch(SQLHSTMT stmth)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+	if (!stmt)
+		return SQL_INVALID_HANDLE;
+	if (!stmt->tnt_statement || stmt->state!=EXECUTED) {
+		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state");
+		return SQL_ERROR;
+	}
+	int retcode = tnt_next_row(stmt->tnt_statement);
+	if (retcode==OK)
+		return SQL_SUCCESS;
+	else if (retcode==NODATA)
+		return SQL_NO_DATA;
+	else
+		return SQL_ERROR;
 }

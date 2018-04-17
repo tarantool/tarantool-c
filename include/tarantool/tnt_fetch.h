@@ -11,6 +11,10 @@
 
 #define OK 0
 #define FAIL (-1)
+#define NODATA (-2)
+
+
+typedef long tnt_size_t;
 
 /**
  * Structure for holding column values from result row.
@@ -18,7 +22,7 @@
 
 struct tnt_coldata {
 	int32_t type;
-	int32_t size;
+	tnt_size_t size;
 	union {
 		int64_t i;
 		float f;
@@ -33,8 +37,8 @@ struct tnt_coldata {
 typedef struct tnt_bind {
 	int32_t type;
 	void *buffer;
-	int32_t in_len;
-	int32_t *out_len;
+	tnt_size_t in_len;
+	tnt_size_t *out_len;
 	int8_t *is_null;
 	int8_t *error;		/* conversation result. O is OK */
 } tnt_bind_t;
@@ -64,20 +68,25 @@ typedef struct tnt_stmt {
 
 enum CTYPES {
 	TNTC_NIL = MP_NIL,
+	TNTC_BIGINT = MP_INT,
+	TNTC_UBIGINT = MP_UINT,
+	TNTC_BOOL = MP_BOOL,
+	TNTC_FLOAT = MP_FLOAT,
+	TNTC_DOUBLE = MP_DOUBLE,
+	TNTC_CHAR = MP_STR,
+	TNTC_STR = MP_STR,
+	TNTC_BIN = MP_BIN,
+	TNTC_MP_MAX_TP = 64,
 	TNTC_SINT,
 	TNTC_UINT,
 	TNTC_INT,
 	TNTC_SSHORT,
 	TNTC_USHORT,
 	TNTC_SHORT,
-	TNTC_BIGINT,
-	TNTC_SBIGINT = MP_INT,
-	TNTC_UBIGINT = MP_UINT,
-	TNTC_BOOL = MP_BOOL,
-	TNTC_FLOAT = MP_FLOAT,
-	TNTC_DOUBLE = MP_DOUBLE,
-	TNTC_CHAR = MP_STR,
-	TNTC_BIN = MP_BIN
+	TNTC_SBIGINT,
+	TNTC_LONG,
+	TNTC_SLONG,
+	TNTC_ULONG
 };
 
 

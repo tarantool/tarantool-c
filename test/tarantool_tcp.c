@@ -508,7 +508,7 @@ test_execute(char *uri) {
 	if (result) {
 		char out[10]="xxHerxllo";
 		tnt_bind_t param[2];
-		int32_t len;
+		long len;
 		int8_t nil=1;
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_STR;
@@ -554,7 +554,7 @@ test_execute(char *uri) {
 	if (result) {
 		char out[10]="xxHerxllo";
 		tnt_bind_t param[1];
-		int32_t len;
+		long len;
 		int8_t nil=0;
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_STR;
@@ -644,7 +644,7 @@ test_execute(char *uri) {
 		double ref=2.456;
 		double out;
 		tnt_bind_t param[2];
-		int32_t len;
+		long len;
 		int8_t nil=1;
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_DOUBLE;

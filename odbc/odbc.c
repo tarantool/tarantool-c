@@ -218,3 +218,9 @@ SQLBindCol(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER va
 {
 	retrun stmt_out_bind(stmth, colnum, ctype, val, in_len, out_len);
 }
+
+SQLRETURN SQL_API
+SQLFetch(SQLHSTMT stmth)
+{
+	return stmt_fetch(stmth);
+}

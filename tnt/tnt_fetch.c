@@ -285,21 +285,6 @@ bind2object(tnt_stmt_t* stmt)
 			break;
 		}
 
-		case TNTC_SINT:
-		case TNTC_INT: {
-			int *v = (int *)stmt->ibind[npar-i-1].buffer;
-			if (tnt_object_add_int(obj,*v) == FAIL)
-                                goto error;
-			break;
-		}
-
-		case TNTC_UINT: {
-			unsigned *v = (unsigned *)stmt->ibind[npar-i-1].buffer;
-			if (tnt_object_add_int(obj,*v) == FAIL)
-                                goto error;
-			break;
-		}
-
 		case TNTC_SSHORT:
 		case TNTC_SHORT: {
 			short *v = (short *)stmt->ibind[npar-i-1].buffer;
@@ -314,6 +299,39 @@ bind2object(tnt_stmt_t* stmt)
                                 goto error;
 			break;
 		}
+
+		case TNTC_SLONG:
+		case TNTC_LONG: {
+			long *v = (long *)stmt->ibind[npar-i-1].buffer;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+                                goto error;
+			break;
+		}
+
+		case TNTC_ULONG: {
+			unsigned long *v = (unsigned long *)stmt->ibind[npar-i-1].buffer;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+                                goto error;
+			break;
+		}
+
+
+		case TNTC_SBIGINT:
+		case TNTC_BIGINT: {
+			int64_t *v = (int64_t *)stmt->ibind[npar-i-1].buffer;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+                                goto error;
+			break;
+		}
+
+		case TNTC_UBIGINT: {
+			uint64_t *v = (uint64_t *)stmt->ibind[npar-i-1].buffer;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+                                goto error;
+			break;
+		}
+
+
 		case TNTC_BOOL: {
 			bool *v = (bool *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_bool(obj,*v) == FAIL)
@@ -332,14 +350,14 @@ bind2object(tnt_stmt_t* stmt)
                                 goto error;
 			break;
 		}
-		case TNTC_STR:
+		case TNTC_CHAR:
 		case TNTC_BIN:
 			if (tnt_object_add_str(obj,stmt->ibind[npar-i-1].buffer,
 					       stmt->ibind[npar-i-1].in_len) == FAIL)
                                 goto error;
 			break;
 		default:
-			break;
+			goto error;
 		}
 	}
 	if (tnt_object_container_close(obj)==FAIL)
@@ -560,7 +578,7 @@ tnt_next_row(tnt_stmt_t * stmt)
 			tnt_fetch_bind_result(stmt);
 		return OK;
 	} else
-		return FAIL;
+		return NODATA;
 }
 /*
 static int

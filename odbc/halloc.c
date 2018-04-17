@@ -211,7 +211,8 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
 	switch (option) {
-	case SQL_CLOSE: 
+	case SQL_CLOSE:
+		stmt->state = CLOSED;
 		if (!stmt->tnt_statement)
 			return SQL_SUCCESS_WITH_INFO;
 		else {

@@ -93,6 +93,15 @@ odbc_parse_dsn(odbc_connect *tcon, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *
 			goto error;
 	}
 
+	if (serv_sz == SQL_NTS)
+		serv_sz = strlen(serv);
+	if (user_sz == SQL_NTS)
+		user_sz = strlen(user);
+	if (password_sz == SQL_NTS)
+		password_sz = strlen(password);
+	
+	    
+
 	ret->database = (char*) malloc(PARAMSZ);
 	ret->host = (char*) malloc(PARAMSZ);
 	ret->flag = (char*) malloc(PARAMSZ);
