@@ -16,6 +16,10 @@ tnt2odbc_error_message(int e)
 	return NULL;
 }
 
+
+
+
+
 void
 set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len)
 {
@@ -92,6 +96,22 @@ free_env(SQLHENV env)
 	return SQL_SUCCESS;
 }
 
+SQLRETURN  SQL_API
+env_set_attr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len)
+{
+	odbc_env *env_ptr = (odbc_env *)env;
+	/* HYC00	Optional feature not implemented*/
+	/* SQL_ATTR_ODBC_VERSION */
+	/* SQL_ATTR_OUTPUT_NTS */
+	return SQL_ERROR;
+}
+
+SQLRETURN SQL_API
+env_get_attr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER in_len, SQLINTEGER *out_len)
+{
+	odbc_env *env_ptr = (odbc_env *)env;
+	return SQL_ERROR;
+}
 
 SQLRETURN
 alloc_connect(SQLHENV env, SQLHDBC *hdbc)

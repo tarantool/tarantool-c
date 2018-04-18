@@ -554,6 +554,9 @@ tnt_next_row(tnt_stmt_t * stmt)
 		/* set some error */
 		return FAIL;
 	}
+	if (stmt->nrows <= 0)
+		return NODATA;
+	
 	if (mp_typeof(*stmt->data) != MP_ARRAY) {
 		/* set error */
 		return FAIL;
@@ -566,19 +569,17 @@ tnt_next_row(tnt_stmt_t * stmt)
 		/* set error */
 		return FAIL;
 	}
-	if (stmt->nrows > 0) {
-		stmt->nrows--;
-		for (int i = 0; i < stmt->ncols; i++) {
-			if (tnt_decode_col(stmt, &stmt->row[i])!=OK) {
-				/* set invalid stream data error */
-				return FAIL;
-			}
+	
+	stmt->nrows--;
+	for (int i = 0; i < stmt->ncols; i++) {
+		if (tnt_decode_col(stmt, &stmt->row[i])!=OK) {
+			/* set invalid stream data error */
+			return FAIL;
 		}
-		if (stmt->obind)
-			tnt_fetch_bind_result(stmt);
-		return OK;
-	} else
-		return NODATA;
+	}
+	if (stmt->obind)
+		tnt_fetch_bind_result(stmt);
+	return OK;
 }
 /*
 static int

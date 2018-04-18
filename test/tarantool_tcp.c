@@ -334,7 +334,7 @@ static int test_connection()
 
 static int
 test_execute(char *uri) {
-	plan(222);
+	plan(225);
 	header();
 
 	struct tnt_reply reply;
@@ -416,7 +416,8 @@ test_execute(char *uri) {
 	  is(tnt_number_of_cols(result),1,"Checking number of columns");
 	  is(tnt_col_type(result,0),MP_INT,"Checking result column type 0");
 	  is(tnt_col_int(result,0),0,"Checking result column value 0");
-	  isnt(tnt_next_row(result),OK,"Check for fail of next row");
+	  r = tnt_next_row(result);
+	  is(r,NODATA,"Check for NODATA of next row");
 	}
 	tnt_stmt_free(result);
 

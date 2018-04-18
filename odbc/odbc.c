@@ -86,6 +86,19 @@ SQLFreeHandle(SQLSMALLINT handle_type, SQLHANDLE ihandle)
 	}
 }
 
+SQLRETURN  SQL_API
+SQLSetEnvAttr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len)
+{
+
+	return env_set_attr(ehndl,attr,val,len);
+}
+
+SQLRETURN SQL_API
+SQLGetEnvAttr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER in_len, SQLINTEGER *out_len)
+{
+
+	return env_get_attr(ehndl,attr,val,in_len,out_len);
+}
 
 SQLRETURN SQL_API
 SQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att,SQLPOINTER  val, SQLINTEGER  len)
