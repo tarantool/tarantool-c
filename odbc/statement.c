@@ -186,7 +186,7 @@ stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER
 		return SQL_INVALID_HANDLE;
 
 	if (colnum < 1 ) {
-		set_stmt_error(stmt,ODBC_HYC00_ERROR,"HYC00   Optional feature not implemented");
+		set_stmt_error(stmt,ODBC_HYC00_ERROR,"Optional feature not implemented");
 		return SQL_ERROR;
 	}
 
@@ -230,4 +230,47 @@ stmt_fetch(SQLHSTMT stmth)
 		return SQL_NO_DATA;
 	else
 		return SQL_ERROR;
+}
+
+
+SQLRETURN 
+get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER    val_ptr, SQLLEN in_len, SQLLEN *out_len)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+	if (!stmt)
+		return SQL_INVALID_HANDLE;
+	if (!stmt->tnt_statement || stmt->state!=EXECUTED) {
+		set_stmt_error(stmt,ODBC_HY010_ERROR,"Function sequence error");
+		return SQL_ERROR;
+	}
+	/* Don't do bookmarks for now */
+	--num;
+	if (num<0 && num>stmt->tnt_statement->ncols) {
+		set_stmt_error(stmt,ODBC_07009_ERROR,"Invalid descriptor index");
+		return SQL_ERROR;
+	}
+
+	if (stmt->tnt_statement->nrows<=0) {
+		set_stmt_error(stmt,ODBC_07009_ERROR,"No data or row in current row");
+		return SQL_ERROR;		
+	}
+	if (tnt_col_isnil(stmt->tnt_statement,num)) {
+		if (out_len) {
+			*out_len = SQL_NULL_DATA;
+			return SQL_SUCCESS;
+		} else {
+			set_stmt_error(stmt,ODBC_HY009_ERROR,"Invalid use of null pointer");
+			return SQL_ERROR;		
+		}
+	}
+	if (in_len<0) {
+		set_stmt_error(stmt,ODBC_HY090_ERROR,"Invalid string or buffer length");
+		return SQL_ERROR;
+	}
+	
+	int in_type = odbc_types_covert(type);
+	if (in_type == TNTC_CHAR) {
+		
+	}
+	
 }

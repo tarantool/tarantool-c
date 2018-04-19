@@ -434,6 +434,107 @@ tnt_fetch_result_stmt(tnt_stmt_t *stmt)
 	return stmt;
 }
 
+void
+store_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind)
+{
+	if (obind->buffer == NULL)
+		return;
+	if (obind->error)
+		*obind->error = 0;
+	if (obind->is_null)
+		*obind->is_null = 0;
+	if (obind->out_len)
+		*obind->out_len = stmt->row[i].size;
+	
+	switch (stmt->row[i].type) {
+	case MP_NIL:
+		if (obind->is_null)
+			*obind->is_null = 1;
+		break;
+	case MP_INT:
+	case MP_UINT:
+		/* don't check for input buffer size for
+		 * intergral types */
+		if (obind->type == MP_INT || obind->type == MP_UINT) {
+			int64_t *v = obind->buffer;
+			*v = stmt->row[i].v.i;
+		} else if (obind->type == MP_DOUBLE) {
+			double *v = obind->buffer;
+			*v = stmt->row[i].v.i;
+		} else if (obind->type == MP_FLOAT) {
+			float *v = obind->buffer;
+			*v = stmt->row[i].v.i;
+			if (obind->error)
+				*(obind->error) = 1;
+		} else if (obind->type == MP_STR) {
+			snprintf(obind->buffer,obind->in_str,"%ld",stmt->row[i].v.i);
+		} else {
+			if (obind->error)
+				*(obind->error) = 1;
+		}
+	break;
+		
+	case MP_DOUBLE:
+		if (obind->type == MP_INT || obind->type == MP_UINT) {
+			int64_t *v = obind->buffer;
+			*v = stmt->row[i].v.d;
+		} else if (obind->type == MP_DOUBLE) {
+			double *v = obind->buffer;
+			*v = stmt->row[i].v.d;
+		} else if (obind->type == MP_FLOAT) {
+			float *v = obind->buffer;
+			*v = stmt->row[i].v.d;
+			if (obind->error)
+				*(obind->error) = 1;
+		} else if (obind->type == MP_STR) {
+			snprintf(obind->buffer,obind->in_str,"%lf",stmt->row[i].v.d);
+		} else {
+			if (obind->error)
+				*(obind->error) = 1;
+		}
+		break;
+	case MP_FLOAT:
+		if (obind->type == MP_INT || obind->type == MP_UINT) {
+			int64_t *v = obind->buffer;
+			*v = stmt->row[i].v.f;
+		} else if (obind->type == MP_DOUBLE) {
+			double *v = obind->buffer;
+			*v = stmt->row[i].v.f;
+		} else if (obind->type == MP_FLOAT) {
+			float *v = obind->buffer;
+			*v = stmt->row[i].v.f;
+		} else if (obind->type == MP_STR) {
+			snprintf(obind->buffer,obind->in_str,"%lf",stmt->row[i].v.d);
+		} else {
+			if (obind->error)
+				*(obind->error) = 1;
+		}
+	break;
+		
+	case MP_STR:
+	case MP_BIN:
+		if (obind->type != MP_STR && obind->type != MP_BIN) {
+			if (obind->error)
+				*(obind->error) = 1;
+			break;
+		}
+		if (obind->in_len > 0) {
+			/* XXX if the input buffer length is less
+			 * then column string size, last available
+			 * character will be 0. */
+			int32_t len = (obind->in_len < stmt->row[i].size) ? obind->in_len : stmt->row[i].size;
+			memcpy(obind->buffer, stmt->row[i].v.p, len);
+			if (stmt->row[i].type == MP_STR) {
+				if (len == obind->in_len)
+					len--;
+				((char *)obind->buffer)[len] = '\0';
+			}
+		}
+		break;
+	}
+}
+
+
 /**
  * Copyes result into bind variables. One can call it many times as soon as
  * fetched row available.
@@ -571,6 +672,7 @@ tnt_next_row(tnt_stmt_t * stmt)
 	}
 	
 	stmt->nrows--;
+	stmt->cur_row++;
 	for (int i = 0; i < stmt->ncols; i++) {
 		if (tnt_decode_col(stmt, &stmt->row[i])!=OK) {
 			/* set invalid stream data error */
@@ -673,48 +775,48 @@ tnt_stmt_error(tnt_stmt_t * stmt, size_t * sz)
 }
 
 int
-tnt_number_of_cols(tnt_stmt_t * stmt)
+tnt_number_of_cols(tnt_stmt_t *stmt)
 {
 	return stmt->ncols;
 }
 
 const char **
-tnt_cols_names(tnt_stmt_t * stmt)
+tnt_cols_names(tnt_stmt_t *stmt)
 {
 	return stmt->field_names;
 }
 
 int
-tnt_col_isnil(tnt_stmt_t * stmt, int icol)
+tnt_col_isnil(tnt_stmt_t *stmt, int icol)
 {
 	return stmt->row[icol].type == MP_NIL && (stmt->row[icol].v.p == NULL);
 }
 
 int
-tnt_col_type(tnt_stmt_t * stmt, int icol)
+tnt_col_type(tnt_stmt_t *stmt, int icol)
 {
 	return stmt->row[icol].type;
 }
 
 int
-tnt_col_len(tnt_stmt_t * stmt, int icol)
+tnt_col_len(tnt_stmt_t *stmt, int icol)
 {
 	return stmt->row[icol].size;
 }
 
 const char *
-tnt_col_str(tnt_stmt_t * stmt, int icol)
+tnt_col_str(tnt_stmt_t *stmt, int icol)
 {
 	return (const char *)stmt->row[icol].v.p;
 }
 
 const char *
-tnt_col_bin(tnt_stmt_t * stmt, int icol)
+tnt_col_bin(tnt_stmt_t *stmt, int icol)
 {
 	return tnt_col_str(stmt, icol);
 }
 int64_t
-tnt_col_int(tnt_stmt_t * stmt, int icol)
+tnt_col_int(tnt_stmt_t *stmt, int icol)
 {
 	return stmt->row[icol].v.i;
 }

@@ -1,4 +1,4 @@
-/* -*- C -*- */
+x/* -*- C -*- */
 
 #include "driver.h"
 
@@ -236,4 +236,10 @@ SQLRETURN SQL_API
 SQLFetch(SQLHSTMT stmth)
 {
 	return stmt_fetch(stmth);
+}
+
+SQLRETURN SQL_API
+SQLGetData(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER    val_ptr, SQLLEN in_len, SQLLEN *out_len)
+{
+	return get_data(stmth,num,type,val_ptr,in_len,out_len);
 }

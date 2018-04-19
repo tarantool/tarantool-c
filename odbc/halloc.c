@@ -1,5 +1,11 @@
 /* -*- C -*- */
 
+#include <unistd.h>
+#include <stdlib.h>
+#include <tarantool/tarantool.h>
+#include <tarantool/tnt_fetch.h>
+#include <odbcinst.h>
+
 #include "driver.h"
 
 
@@ -17,25 +23,41 @@ tnt2odbc_error_message(int e)
 }
 
 
+/*
+ * Sets error code and copies message into internal structure of relevant handles.
+ * If len == -1 treat 'msg' as a null terminated string.
+ **/
 
+static void
+set_error_len(struct error_holder *e, int code, const char* msg, int len)
+{
+	if (e) {
+		e->error_code = code;
+		if (e->error_message)
+			free(e->error_message);
+		if (msg) {
+			if (len==-1)
+				e->error_message = strdup(msg);
+			else
+				e->error_message = strndup(msg,len);
+		} else
+			e->error_message = NULL;
+	}
+}
+
+
+/*
+ * Sets error message and code in connect structure.
+ **/ 
 
 
 void
 set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len)
 {
-	if (tcon) {
-		tcon->error_code = code;
-		if (tcon->error_message)
-			free(tcon->error_message);
-		if (msg) {
-			if (len==-1)
-				tcon->error_message = strdup(msg);
-			else
-				tcon->error_message = strndup(msg,len);
-		} else
-			tcon->error_message = NULL;
-	}
+	if (tcon)
+		set_error_len(&(tcon->e),code,msg,len);
 }
+
 
 /*
  * Null terminated string version of set_connect_error_len
@@ -47,28 +69,43 @@ set_connect_error(odbc_connect *tcon, int code, const char* msg)
 	set_connect_error_len(tcon,code,msg,-1);
 }
 
+/*
+ * Sets statement error and message in stmt structure.
+ **/
+
 void
-set_stmt_error_len(odbc_stmt *tcon, int code, const char* msg, int len)
+set_stmt_error_len(odbc_stmt *stmt, int code, const char* msg, int len)
 {
-	if (tcon) {
-		tcon->error_code = code;
-		if (tcon->error_message)
-			free(tcon->error_message);
-		if (msg) {
-			if (len==-1)
-				tcon->error_message = strdup(msg);
-			else
-				tcon->error_message = strndup(msg,len);
-		} else
-			tcon->error_message = NULL;
-	}
+	if (stmt) 
+		set_error_len(&(stmt->e),code,msg,len);
 }
 
 void
-set_stmt_error(odbc_stmt *tcon, int code, const char* msg)
+set_stmt_error(odbc_stmt *stmt, int code, const char* msg)
 {
-	set_stmt_error_len(tcon,code,msg,-1);
+	set_stmt_error_len(stmt,code,msg,-1);
 }
+
+/*
+ * Stores error code and error message into odbc_env structure
+ * for latter return with connected SQLSTATE message SQLGetDiagRec function.
+ **/
+
+void
+set_env_error_len(odbc_env *env, int code, const char* msg, int len)
+{
+		if (env)
+			set_error_len(&(env->e),code,msg,len);
+}
+
+
+
+void
+set_env_error(odbc_env *env, int code, const char* msg)
+{
+	set_env_error_len(env, code, msg, -1);
+}
+
 
 
 SQLRETURN
@@ -87,10 +124,11 @@ alloc_env(SQLHENV *oenv)
 SQLRETURN
 free_env(SQLHENV env)
 {
-	odbc_env* env_ptr = (odbc_enc *)env;
+	odbc_env* env_ptr = (odbc_env *)env;
 	if (env_ptr) {
 		while (env_ptr->con_end)
 				free_connect(env_ptr->con_end);
+		free(env_ptr->e.error_message);
 		free(env_ptr);
 	}
 	return SQL_SUCCESS;
@@ -99,7 +137,7 @@ free_env(SQLHENV env)
 SQLRETURN  SQL_API
 env_set_attr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len)
 {
-	odbc_env *env_ptr = (odbc_env *)env;
+	odbc_env *env_ptr = (odbc_env *)ehndl;
 	/* HYC00	Optional feature not implemented*/
 	/* SQL_ATTR_ODBC_VERSION */
 	/* SQL_ATTR_OUTPUT_NTS */
@@ -109,7 +147,7 @@ env_set_attr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len)
 SQLRETURN SQL_API
 env_get_attr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER in_len, SQLINTEGER *out_len)
 {
-	odbc_env *env_ptr = (odbc_env *)env;
+	odbc_env *env_ptr = (odbc_env *)ehndl;
 	return SQL_ERROR;
 }
 
@@ -125,7 +163,7 @@ alloc_connect(SQLHENV env, SQLHDBC *hdbc)
 	memset(*retcon,0,sizeof(odbc_connect));
 
 	odbc_env *env_ptr = (odbc_env *)env;
-	(*retcon)->end = end_ptr;
+	(*retcon)->env = env_ptr;
 	if (env_ptr->con_end) {
 		odbc_connect *old_end = env_ptr->con_end;
 		
@@ -136,7 +174,7 @@ alloc_connect(SQLHENV env, SQLHDBC *hdbc)
 		old_end->next->prev = *retcon;
 		
 		old_end->next = *retcon;
-		*retcon->prev = old_end;
+		(*retcon)->prev = old_end;
 	} else {
 		env_ptr->con_end = *retcon;
 		(*retcon)->next = (*retcon)->prev = *retcon;
@@ -149,8 +187,8 @@ SQLRETURN
 free_connect(SQLHDBC hdbc)
 {
 	odbc_connect *ocon = (odbc_connect *)hdbc;
-	if (ocon->tnt_handle)
-		tnt_stream_free(env->tnt_handle);
+	if (ocon->tnt_hndl)
+		tnt_stream_free(ocon->tnt_hndl);
 	odbc_env *env = ocon->env;
 	if (ocon->next != ocon) {
 		ocon->prev->next = ocon->next;
@@ -162,8 +200,10 @@ free_connect(SQLHDBC hdbc)
 	}
 	while(ocon->stmt_end) 
 		free_stmt(ocon->stmt_end,SQL_DROP);
+	free(ocon->e.error_message);
 	free(ocon->opt_timeout);
 	free(ocon);
+	return SQL_SUCCESS;
 }
 
 
@@ -181,7 +221,7 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 		return SQL_ERROR;
 	}
 	memset(*out,0,sizeof(odbc_stmt));
-	*out->connect = con;
+	(*out)->connect = con;
 
 	if (con->stmt_end) {
 		odbc_stmt *old_end = con->stmt_end;
@@ -190,7 +230,7 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 		old_end->next->prev = *out;
 		
 		old_end->next = *out;
-		*out->prev = old_end;
+		(*out)->prev = old_end;
 	} else {
 		con->stmt_end = *out;
 		(*out)->next = (*out)->prev = *out;
@@ -208,7 +248,7 @@ mem_free_stmt(odbc_stmt *stmt)
 	free_stmt(stmt,SQL_CLOSE);
 	free_stmt(stmt,SQL_RESET_PARAMS);
 	free_stmt(stmt,SQL_UNBIND);
-	free(stmt->error_message);
+	free(stmt->e.error_message);
 	
 	odbc_connect *parent = stmt->connect;
 	if (stmt->next != stmt) {
@@ -220,7 +260,8 @@ mem_free_stmt(odbc_stmt *stmt)
 	} else {
 		parent->stmt_end = NULL; 
 	}
-	
+
+	free(stmt);
 	return SQL_SUCCESS;
 }
 

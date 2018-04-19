@@ -52,9 +52,10 @@ typedef struct tnt_stmt {
 	const char *data;
 	struct tnt_coldata *row;
 	const char **field_names;
-	int64_t a_rows;
+	int64_t a_rows; /* Affected rows */
 	int32_t nrows;
 	int32_t ncols;
+	int32_t cur_row;
 	char *query;
 	int32_t query_len;
 	/* int32_t ibind_len; */
