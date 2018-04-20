@@ -25,7 +25,7 @@ struct tnt_coldata {
 	tnt_size_t size;
 	union {
 		int64_t i;
-		float f;
+		uint64_t u;
 		double d;
 		void *p;
 	} v;
@@ -218,5 +218,9 @@ void tnt_stmt_free(tnt_stmt_t *);
  */
 void tnt_stmt_close_cursor(tnt_stmt_t *);
 
+/**
+ * This is internal API function only for ODBC driver
+ */
+void store_conv_bind_var(tnt_stmt_t *stmt, int i, tnt_bind_t *obind);
 
 #endif

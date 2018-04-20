@@ -99,23 +99,6 @@ odbc_types_covert(SQLSMALLINT ctype)
 	}
 }
 
-/*
-	if (parnum>stmt->inbind_items || stmt->inbind_params == NULL) {
-		tnt_bind_t * npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t *)*parnum);
-		if (!npar) {
-			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
-			return SQL_ERROR;
-		}
-		memset(npar,'0',sizeof(tnt_bind_t *)*parnum);
-		for(int i=0;i<stmt->inbind_items;++i) {
-			npar[i] = stmt->inbind_params[i];
-		}
-		free(stmt->inbind_params);
-		stmt->inbind_params = npar;
-		stmt->inbind_items = parnum;
-	}
-
-*/
 
 int
 realloc_params(int num,int *old_num, tnt_bind_t **params)
@@ -234,7 +217,7 @@ stmt_fetch(SQLHSTMT stmth)
 
 
 SQLRETURN 
-get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER    val_ptr, SQLLEN in_len, SQLLEN *out_len)
+get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr, SQLLEN in_len, SQLLEN *out_len)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
@@ -269,8 +252,22 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER    val_p
 	}
 	
 	int in_type = odbc_types_covert(type);
-	if (in_type == TNTC_CHAR) {
-		
+	if (in_type == FAIL) {
+		set_stmt_error(stmt,ODBC_HY090_ERROR,"Invalid string or buffer length");
+		return SQL_ERROR;
 	}
+
 	
+	tnt_bind_t par;
+	par.type = in_type;
+	par.buffer = val_ptr;
+	par.in_len = in_len;
+	par.out_len = out_len;
+
+	int error = 0;
+	par.error = &error;
+
+	store_conv_bind_var(stmt->tnt_statement, num , &par);
+	/* Todo chuncked fetch */
+	return SQL_SUCCESS;
 }
