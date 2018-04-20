@@ -334,7 +334,7 @@ static int test_connection()
 
 static int
 test_execute(char *uri) {
-	plan(225);
+	plan(262);
 	header();
 
 	struct tnt_reply reply;
@@ -631,7 +631,6 @@ test_execute(char *uri) {
 		param[1].in_len = 3;
 		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute str->int conversation binding");
 		is(tnt_stmt_code(result),0,"checking code after str->int conversation binding");
-
 		tnt_stmt_free(result);
 	}
 
@@ -668,7 +667,36 @@ test_execute(char *uri) {
 			ok(!nil,"Checking for not null");
 			i++;
 		}
-		is(i,11,"Checking number of resulted rows"); 
+		is(i,11,"Checking number of resulted rows");
+		i = 0;
+		tnt_stmt_close_cursor(result);
+		memset(&param[0],0,sizeof(param));
+		char double_str[100];
+		param[0].type=MP_STR;
+		param[0].buffer = (void*)&double_str;
+		param[0].out_len=&len;
+		param[0].is_null=&nil;
+		param[0].in_len = sizeof(double_str);
+
+		char int_str[100];
+		param[1].type=MP_STR;
+		param[1].buffer = (void*)&int_str;
+		param[1].in_len = sizeof(int_str);
+
+		is(tnt_bind_result(result,&param[0],2),OK,"Output second double bind array test with str conv");
+
+		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute second double 2 val bind  select test");
+		is(tnt_stmt_code(result),0,"checking code after second double 2 val bind select");
+
+		while(tnt_next_row(result)==OK) {
+			out = atof(double_str);
+			ok(fabsl(ref-out)<0.01,"Checking result of first double bind var str conv");
+			val = atoi(int_str);
+			ok(val>=666,"Checking result of second int bind var str conv");
+			ok(!nil,"Checking for not null of second exec");
+			i++;
+		}
+		is(i,11,"Checking number of resulted rows of second execute");
 		tnt_stmt_free(result);
 	}
 

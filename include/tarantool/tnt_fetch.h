@@ -212,4 +212,11 @@ const char *tnt_col_bin(tnt_stmt_t *, int col);
  */
 void tnt_stmt_free(tnt_stmt_t *);
 
+/**
+ * Close cusor data associated with statement
+ * Now the statement ready for next excute.
+ */
+void tnt_stmt_close_cursor(tnt_stmt_t *);
+
+
 #endif

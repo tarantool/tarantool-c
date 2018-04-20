@@ -1,5 +1,4 @@
 /* -*- C -*- */
-
 #include <tarantool/tnt_fetch.h>
 
 
@@ -112,23 +111,44 @@ tnt_fetch_fields(tnt_stmt_t * stmt)
 	return FAIL;
 }
 
+static void
+free_stmt_cursor_mem(tnt_stmt_t *stmt)
+{
+	if (stmt->reply) {
+		tnt_reply_free(stmt->reply);
+		tnt_mem_free(stmt->reply);
+	}
+	if (stmt->row)
+		tnt_mem_free(stmt->row);
+	if (stmt->field_names) {
+		free_strings(stmt->field_names, stmt->ncols);
+		tnt_mem_free(stmt->field_names);
+	}
+}
 
 
 void
-tnt_stmt_free(tnt_stmt_t * stmt)
+tnt_stmt_close_cursor(tnt_stmt_t *stmt)
 {
 	if (stmt) {
-		if (stmt->reply) {
-			tnt_reply_free(stmt->reply);
-			tnt_mem_free(stmt->reply);
-		}
-		if (stmt->row)
-			tnt_mem_free(stmt->row);
+		free_stmt_cursor_mem(stmt);
+		stmt->data = 0;
+		stmt->row = 0;
+		stmt->reply = 0;
+		stmt->field_names = 0;
+		stmt->a_rows = 0;
+		stmt->ncols = 0;
+		stmt->cur_row = 0;
+		stmt->nrows = 0;
+	}
+}
+
+void
+tnt_stmt_free(tnt_stmt_t *stmt)
+{
+	if (stmt) {
+		free_stmt_cursor_mem(stmt);
 		tnt_mem_free(stmt);
-		if (stmt->field_names) {
-			free_strings(stmt->field_names, stmt->ncols);
-			tnt_mem_free(stmt->field_names);
-		}
 	}
 }
 
@@ -467,7 +487,10 @@ store_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind)
 			if (obind->error)
 				*(obind->error) = 1;
 		} else if (obind->type == MP_STR) {
-			snprintf(obind->buffer,obind->in_str,"%ld",stmt->row[i].v.i);
+			snprintf(obind->buffer,obind->in_len,"%lld",stmt->row[i].v.i);
+			if (obind->out_len)
+				*obind->out_len = strlen((char*)obind->buffer);
+
 		} else {
 			if (obind->error)
 				*(obind->error) = 1;
@@ -487,7 +510,10 @@ store_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind)
 			if (obind->error)
 				*(obind->error) = 1;
 		} else if (obind->type == MP_STR) {
-			snprintf(obind->buffer,obind->in_str,"%lf",stmt->row[i].v.d);
+			snprintf(obind->buffer,obind->in_len,"%lf",stmt->row[i].v.d);
+			if (obind->out_len)
+				*obind->out_len = strlen((char*)obind->buffer);
+
 		} else {
 			if (obind->error)
 				*(obind->error) = 1;
@@ -504,7 +530,10 @@ store_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind)
 			float *v = obind->buffer;
 			*v = stmt->row[i].v.f;
 		} else if (obind->type == MP_STR) {
-			snprintf(obind->buffer,obind->in_str,"%lf",stmt->row[i].v.d);
+			snprintf(obind->buffer,obind->in_len,"%lf",stmt->row[i].v.d);
+			if (obind->out_len)
+				*obind->out_len = strlen((char*)obind->buffer);
+
 		} else {
 			if (obind->error)
 				*(obind->error) = 1;
@@ -529,6 +558,11 @@ store_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind)
 					len--;
 				((char *)obind->buffer)[len] = '\0';
 			}
+			if (obind->out_len)
+				*obind->out_len = len;
+		} else {
+			if (obind->out_len)
+				*obind->out_len = 0;
 		}
 		break;
 	}
@@ -544,101 +578,8 @@ tnt_fetch_bind_result(tnt_stmt_t * stmt)
 {
 	if (!stmt || !stmt->row || !stmt->obind)
 		return FAIL;
-	for (int i = 0; i < stmt->ncols; ++i) {
-		if (stmt->obind[i].error)
-			*(stmt->obind[i].error) = 0;
-		if (stmt->obind[i].is_null)
-			*stmt->obind[i].is_null = 0;
-		if (stmt->obind[i].out_len)
-			*stmt->obind[i].out_len = stmt->row[i].size;
-
-		switch (stmt->row[i].type) {
-		case MP_NIL:
-			if (stmt->obind[i].is_null)
-				*stmt->obind[i].is_null = 1;
-			break;
-		case MP_INT:
-		case MP_UINT:
-			if (stmt->obind[i].buffer) {
-				/* don't check for input buffer size for
-				 * intergral types */
-				if (stmt->obind[i].type == MP_INT || stmt->obind[i].type == MP_UINT) {
-					int64_t *v = stmt->obind[i].buffer;
-					*v = stmt->row[i].v.i;
-				} else if (stmt->obind[i].type == MP_DOUBLE) {
-					double *v = stmt->obind[i].buffer;
-					*v = stmt->row[i].v.i;
-				} else if (stmt->obind[i].type == MP_FLOAT) {
-					float *v = stmt->obind[i].buffer;
-					*v = stmt->row[i].v.i;
-					if (stmt->obind[i].error)
-						*(stmt->obind[i].error) = 1;
-				} else {
-					if (stmt->obind[i].error)
-						*(stmt->obind[i].error) = 1;
-				}
-			}
-			break;
-
-		case MP_DOUBLE:
-			if (stmt->obind[i].buffer) {
-				if (stmt->obind[i].type == MP_INT || stmt->obind[i].type == MP_UINT) {
-					int64_t *v = stmt->obind[i].buffer;
-					*v = stmt->row[i].v.d;
-				} else if (stmt->obind[i].type == MP_DOUBLE) {
-					double *v = stmt->obind[i].buffer;
-					*v = stmt->row[i].v.d;
-				} else if (stmt->obind[i].type == MP_FLOAT) {
-					float *v = stmt->obind[i].buffer;
-					*v = stmt->row[i].v.d;
-					if (stmt->obind[i].error)
-						*(stmt->obind[i].error) = 1;
-				} else {
-					if (stmt->obind[i].error)
-						*(stmt->obind[i].error) = 1;
-				}
-			}
-			break;
-		case MP_FLOAT:
-			if (stmt->obind[i].buffer) {
-				if (stmt->obind[i].type == MP_INT || stmt->obind[i].type == MP_UINT) {
-					int64_t *v = stmt->obind[i].buffer;
-					*v = stmt->row[i].v.f;
-				} else if (stmt->obind[i].type == MP_DOUBLE) {
-					double *v = stmt->obind[i].buffer;
-					*v = stmt->row[i].v.f;
-				} else if (stmt->obind[i].type == MP_FLOAT) {
-					float *v = stmt->obind[i].buffer;
-					*v = stmt->row[i].v.f;
-				} else {
-					if (stmt->obind[i].error)
-						*(stmt->obind[i].error) = 1;
-				}
-			}
-			break;
-
-		case MP_STR:
-		case MP_BIN:
-			if (stmt->obind[i].type != MP_STR && stmt->obind[i].type != MP_BIN) {
-				if (stmt->obind[i].error)
-					*(stmt->obind[i].error) = 1;
-				break;
-			}
-			if (stmt->obind[i].buffer && stmt->obind[i].in_len > 0) {
-				/* XXX if the input buffer length is less
-				 * then column string size, last available
-				 * character will be 0. */
-				int32_t len = (stmt->obind[i].in_len < stmt->row[i].size) ? stmt->obind[i].in_len : stmt->row[i].size;
-				memcpy(stmt->obind[i].buffer, stmt->row[i].v.p, len);
-				if (stmt->row[i].type == MP_STR) {
-					if (len == stmt->obind[i].in_len)
-						len--;
-					((char *)stmt->obind[i].buffer)[len] = '\0';
-				}
-			}
-			break;
-		}
-	}
+	for (int i = 0; i < stmt->ncols; ++i)
+		store_bind_var(stmt,i, &(stmt->obind[i]));
 	return OK;
 }
 
@@ -701,7 +642,8 @@ tnt_store_desc(tnt_stmt_t* stmt)
 static int
 tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col)
 {
-	uint32_t sz;
+	uint32_t sz=0;
+	col->size = 0;
 	int tp = mp_typeof(*stmt->data);
 	switch (tp) {
 	case MP_UINT:
