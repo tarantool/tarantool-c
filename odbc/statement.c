@@ -207,6 +207,10 @@ stmt_fetch(SQLHSTMT stmth)
 		return SQL_ERROR;
 	}
 	int retcode = tnt_next_row(stmt->tnt_statement);
+	/* drop last col SQLGetData offset */
+	stmt->last_col = 0;
+	stmt->last_col_sent = 0;
+	
 	if (retcode==OK)
 		return SQL_SUCCESS;
 	else if (retcode==NODATA)
@@ -267,7 +271,29 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 	int error = 0;
 	par.error = &error;
 
-	store_conv_bind_var(stmt->tnt_statement, num , &par);
-	/* Todo chuncked fetch */
-	return SQL_SUCCESS;
+	if (stmt->last_col != num || !out_len) 
+		/* Flush chunked offset */
+		stmt->last_col_sofar = 0;
+
+	if (stmt->last_col_sofar && (stmt->last_col_sofar >= tnt_col_len(stmt->tnt_statement,num))) {
+		return NO_DATA;
+	}
+	
+	store_conv_bind_var(stmt->tnt_statement, num , &par, stmt->last_col_sofar);
+	
+	/* If application don't provide the out_len or it's not a string or a binary data  
+	 * chuncked get_data is not provided.
+	 */
+	if (!out_len || (tnt_col_type(stmt->tnt_statement,num)!=MP_STR &&
+			 tnt_col_type(stmt->tnt_statement,num)!=MP_BIN)) {
+		return SQL_SUCCESS;
+	}
+
+	stmt->last_col_sofar += out_len;
+	if (stmt->last_col_sofar >= tnt_col_len(stmt->tnt_statement,num)) {
+		return SQL_SUCCESS;
+	} else {
+		set_stmt_error(stmt,ODBC_01004_ERROR,"String data, right truncated");
+		return SQL_SUCCESS_WITH_INFO;
+	}
 }

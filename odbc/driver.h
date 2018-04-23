@@ -3,6 +3,7 @@
 enum ERROR_CODES {
 	ODBC_DSN_ERROR=2, /* Error parsing dsn parameters */
 	ODBC_MEM_ERROR=4, /* Unable to allocate memory */
+	ODBC_01004_ERROR, /* String data, right truncated */
 	ODBC_HY010_ERROR, /* Function sequence error */
 	ODBC_07009_ERROR, /* Invalid number in bind parameters reference or in descriptor */
 	ODBC_HY003_ERROR, /* Invalid application buffer type */
@@ -60,7 +61,7 @@ typedef struct odbc_stmt_t {
 	int outbind_items;
 
 	int last_col;
-	int last_col_sent;
+	int last_col_sofar;
 	struct error_holder e;
 } odbc_stmt;
 

@@ -13,6 +13,10 @@
 #define FAIL (-1)
 #define NODATA (-2)
 
+enum CONV_ERROR {
+	TRUNCATE=2,
+	CONVERT=1
+};
 
 typedef long tnt_size_t;
 

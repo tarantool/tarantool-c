@@ -457,7 +457,7 @@ tnt_fetch_result_stmt(tnt_stmt_t *stmt)
 }
 
 void
-store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind)
+store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 {
 	if (obind->buffer == NULL)
 		return;
@@ -479,32 +479,32 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind)
 			unsigned long *v = obind->buffer;
 			*v = (unsigned long) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.u>ULONG_MAX))
-				*obind->error = 1;
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_LONG || obind->type == TNTC_SLONG) {
 			long *v = obind->buffer;
 			*v = (long) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>LONG_MAX || stmt->row[i].v.i<LONG_MIN))
-				*obind->error = 1;
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_USHORT) {
 			unsigned short *v = obind->buffer;
 			*v = (unsigned short) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>USHRT_MAX))
-				*obind->error = 1;
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_SHORT || obind->type == TNTC_SSHORT) {
 			short *v = obind->buffer;
 			*v = (short) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>SHRT_MAX || stmt->row[i].v.i<SHRT_MIN))
-				*obind->error = 1;
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_UINT)  {
 			unsigned int *v = obind->buffer;
 			*v = (unsigned int) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>UINT_MAX))
-				*obind->error = 1;					
+				*obind->error = TRUNCATE;					
 		} else if (obind->type == TNTC_INT || obind->type == TNTC_SINT) {
 			int *v = obind->buffer;
 			*v = (int) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>INT_MAX || stmt->row[i].v.i<INT_MIN))
-				*obind->error = 1;
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_BIGINT || obind->type == TNTC_UBIGINT) {
 			/* TNTC_BIGINT ~~ MP_INT */
 			int64_t *v = obind->buffer;
@@ -518,12 +518,14 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind)
 			if (obind->error)
 				*(obind->error) = 1;
 		} else if (obind->type == MP_STR) {
-			snprintf(obind->buffer,obind->in_len,"%lld",stmt->row[i].v.i);
+			int wr=snprintf(obind->buffer,obind->in_len,"%lld",stmt->row[i].v.i);
 			if (obind->out_len)
 				*obind->out_len = strlen((char*)obind->buffer);
+			if (obind->error && (wr+1) >= obind->in_len)
+				*(obind->error) = TRUNCATE;
 		} else {
 			if (obind->error)
-				*(obind->error) = 1;
+				*(obind->error) = CONVERT;
 		}
 	break;
 		
@@ -533,32 +535,32 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind)
 			unsigned long *v = obind->buffer;
 			*v = (unsigned long) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>ULONG_MAX))
-				*obind->error = 1;
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_LONG || obind->type == TNTC_SLONG) {
 			long *v = obind->buffer;
 			*v = (long) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>LONG_MAX || stmt->row[i].v.d<LONG_MIN))
-				*obind->error = 1;
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_USHORT) {
 			unsigned short *v = obind->buffer;
 			*v = (unsigned short) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>USHRT_MAX))
-				*obind->error = 1;
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_SHORT || obind->type == TNTC_SSHORT) {
 			short *v = obind->buffer;
 			*v = (short) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>SHRT_MAX || stmt->row[i].v.d<SHRT_MIN))
-				*obind->error = 1;
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_UINT)  {
 			unsigned int *v = obind->buffer;
 			*v = (unsigned int) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>UINT_MAX))
-				*obind->error = 1;					
+				*obind->error = TRUNCATE;					
 		} else if (obind->type == TNTC_INT || obind->type == TNTC_SINT) {
 			int *v = obind->buffer;
 			*v = (int) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>INT_MAX || stmt->row[i].v.d<INT_MIN))
-				*obind->error = 1;
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_BIGINT || obind->type == TNTC_UBIGINT) {
 			int64_t *v = obind->buffer;
 			*v = stmt->row[i].v.d;
@@ -569,27 +571,29 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind)
 			float *v = obind->buffer;
 			*v = stmt->row[i].v.d;
 		} else if (obind->type == MP_STR) {
-			snprintf(obind->buffer,obind->in_len,"%lf",stmt->row[i].v.d);
+			int wr = snprintf(obind->buffer,obind->in_len,"%lf",stmt->row[i].v.d);
 			if (obind->out_len)
 				*obind->out_len = strlen((char*)obind->buffer);
+			if (obind->error && (wr+1) >= obind->in_len)
+				*(obind->error) = TRUNCATE;
 		} else {
 			if (obind->error)
-				*(obind->error) = 1;
+				*(obind->error) = CONVERT;
 		}
 		break;		
 	case MP_STR:
 	case MP_BIN:
 		if (obind->type != MP_STR && obind->type != MP_BIN) {
 			if (obind->error)
-				*(obind->error) = 1;
+				*(obind->error) = CONVERT;
 			break;
 		}
 		if (obind->in_len > 0) {
 			/* XXX if the input buffer length is less
 			 * then column string size, last available
 			 * character will be 0. */
-			int32_t len = (obind->in_len < stmt->row[i].size) ? obind->in_len : stmt->row[i].size;
-			memcpy(obind->buffer, stmt->row[i].v.p, len);
+			int32_t len = (obind->in_len < (stmt->row[i].size-off)) ? obind->in_len : stmt->row[i].size-off;
+			memcpy(obind->buffer, ((const char*)stmt->row[i].v.p)+off, len);
 			if (stmt->row[i].type == MP_STR) {
 				if (len == obind->in_len)
 					len--;
@@ -616,7 +620,7 @@ tnt_fetch_bind_result(tnt_stmt_t * stmt)
 	if (!stmt || !stmt->row || !stmt->obind)
 		return FAIL;
 	for (int i = 0; i < stmt->ncols; ++i)
-		store_conv_bind_var(stmt,i, &(stmt->obind[i]));
+		store_conv_bind_var(stmt,i, &(stmt->obind[i]),0);
 	return OK;
 }
 

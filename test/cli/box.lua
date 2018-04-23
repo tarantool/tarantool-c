@@ -2,7 +2,7 @@
 os = require('os')
 
 -- local listen_port = os.getenv('LISTEN')
-local listen_port = 33000
+local listen_port = '/tmp/tarantool-serv.sock'
 
 require('log').info(listen_port)
 
