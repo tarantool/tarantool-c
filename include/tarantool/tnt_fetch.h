@@ -43,8 +43,8 @@ typedef struct tnt_bind {
 	void *buffer;
 	tnt_size_t in_len;
 	tnt_size_t *out_len;
-	int8_t *is_null;
-	int8_t *error;		/* conversation result. O is OK */
+	int *is_null;
+	int *error;		/* conversation result. O is OK */
 } tnt_bind_t;
 
 /**
@@ -225,6 +225,6 @@ void tnt_stmt_close_cursor(tnt_stmt_t *);
 /**
  * This is internal API function only for ODBC driver
  */
-void store_conv_bind_var(tnt_stmt_t *stmt, int i, tnt_bind_t *obind);
+void store_conv_bind_var(tnt_stmt_t *stmt, int i, tnt_bind_t *obind, int offset);
 
 #endif

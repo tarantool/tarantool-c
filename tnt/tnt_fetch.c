@@ -1,6 +1,9 @@
 /* -*- C -*- */
 
 #include <limits.h>
+#include <float.h>
+#include <math.h>
+
 #include <tarantool/tnt_fetch.h>
 
 
@@ -456,6 +459,27 @@ tnt_fetch_result_stmt(tnt_stmt_t *stmt)
 	return stmt;
 }
 
+
+
+
+float
+double2float(double v,int *e)
+{
+        int exp;
+        double fractional = frexp(v,&exp);
+        *e = 0;
+
+        if (exp<FLT_MIN_EXP)
+		/* Do not threat lost precision as error */
+                return 0.0*copysign(1.0,v);
+        if (exp>FLT_MAX_EXP) {
+                *e = 1;
+                return FLT_MAX*copysign(1.0,v);
+        }
+        return v;
+}
+
+
 void
 store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 {
@@ -569,7 +593,10 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			*v = stmt->row[i].v.d;
 		} else if (obind->type == MP_FLOAT) {
 			float *v = obind->buffer;
-			*v = stmt->row[i].v.d;
+			int e;
+			*v = double2float(stmt->row[i].v.d,&e);
+			if (obind->error && e)
+				*(obind->error) = TRUNCATE;
 		} else if (obind->type == MP_STR) {
 			int wr = snprintf(obind->buffer,obind->in_len,"%lf",stmt->row[i].v.d);
 			if (obind->out_len)

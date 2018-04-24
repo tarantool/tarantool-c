@@ -8,6 +8,7 @@ enum ERROR_CODES {
 	ODBC_07009_ERROR, /* Invalid number in bind parameters reference or in descriptor */
 	ODBC_HY003_ERROR, /* Invalid application buffer type */
 	ODBC_HY090_ERROR, /* Invalid string or buffer length */
+	ODBC_HY009_ERROR, /* Invalid use of null pointer */
 	ODBC_24000_ERROR, /* Invalid cursor state */
 	ODBC_HYC00_ERROR, /* HYC00   Optional feature not implemented */
 	ODBC_EMPTY_STATEMENT, /* ODBC statement without query/prepare */

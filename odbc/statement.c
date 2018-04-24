@@ -202,14 +202,16 @@ stmt_fetch(SQLHSTMT stmth)
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
+
+	/* drop last col SQLGetData offset */
+	stmt->last_col = 0;
+	stmt->last_col_sofar = 0;
+
 	if (!stmt->tnt_statement || stmt->state!=EXECUTED) {
 		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state");
 		return SQL_ERROR;
 	}
 	int retcode = tnt_next_row(stmt->tnt_statement);
-	/* drop last col SQLGetData offset */
-	stmt->last_col = 0;
-	stmt->last_col_sent = 0;
 	
 	if (retcode==OK)
 		return SQL_SUCCESS;
@@ -271,12 +273,14 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 	int error = 0;
 	par.error = &error;
 
-	if (stmt->last_col != num || !out_len) 
+	if (stmt->last_col != num || !out_len) { 
 		/* Flush chunked offset */
 		stmt->last_col_sofar = 0;
+		stmt->last_col = num;
+	}
 
 	if (stmt->last_col_sofar && (stmt->last_col_sofar >= tnt_col_len(stmt->tnt_statement,num))) {
-		return NO_DATA;
+		return NODATA;
 	}
 	
 	store_conv_bind_var(stmt->tnt_statement, num , &par, stmt->last_col_sofar);
@@ -289,11 +293,74 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 		return SQL_SUCCESS;
 	}
 
-	stmt->last_col_sofar += out_len;
+	stmt->last_col_sofar += *out_len;
 	if (stmt->last_col_sofar >= tnt_col_len(stmt->tnt_statement,num)) {
 		return SQL_SUCCESS;
 	} else {
 		set_stmt_error(stmt,ODBC_01004_ERROR,"String data, right truncated");
 		return SQL_SUCCESS_WITH_INFO;
 	}
+}
+
+int
+tnt2odbc(int t)
+{
+	switch (t) {
+	case MP_INT:
+	case MP_UINT:
+		return SQL_BIGINT;
+	case MP_STR:
+		return SQL_CHAR; /* Or SQL_VARCHAR? */
+	case MP_FLOAT:
+		return SQL_FLOAT;
+	case MP_DOUBLE:
+		return SQL_DOUBLE;
+	case MP_BIN:
+		return SQL_BINARY;
+	default:
+		return SQL_CHAR; /* Shouldn't be */
+	}
+}
+
+SQLRETURN 
+column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT maxname, SQLSMALLINT *name_len,
+	    SQLSMALLINT *type, SQLUINTEGER *colsz, SQLSMALLINT *scale, SQLSMALLINT *isnull)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+        if (!stmt)
+                return SQL_INVALID_HANDLE;
+	if (!stmt->tnt_statement || !stmt->tnt_statement->reply) {
+                set_stmt_error(stmt,ODBC_HY010_ERROR,"Function sequence error");
+                return SQL_ERROR;
+        }
+	if (!stmt->tnt_statement->field_names) {
+		set_stmt_error(stmt,ODBC_07005_ERROR, "Prepared statement not a cursor-specification");
+		return SQL_ERROR;
+	}
+	ncol--;
+	if (ncol<0 || ncol>=tnt_number_of_cols(stmt->tnt_statement)) {
+		set_stmt_error(stmt,ODBC_07009_ERROR,"Invalid descriptor index");
+		return SQL_ERROR;
+	}
+	if (isnull)
+		*isnull = SQL_NULLABLE_UNKNOWN;
+	if (scale)
+		*scale = 0;
+	if (colsz)
+		*colsz = 0;
+	int status = SQL_SUCCESS;
+	if (colname) {
+		strncpy(colname,tnt_cols_names(stmt->tnt_statement)[ncol],maxname);
+		if (maxname<=strlen(tnt_cols_names(stmt->tnt_statement)[ncol])) {
+			status = SQL_SUCCESS_WITH_INFO;
+			set_stmt_error(stmt,ODBC_01004_ERROR,"String data, right truncated");
+		}
+	}
+	if (namelen) {
+		*namelen = strlen(tnt_cols_names(stmt->tnt_statement)[ncol]);
+	}
+	if (type) {
+		*type = tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol));
+	}
+	return STATUS;
 }
