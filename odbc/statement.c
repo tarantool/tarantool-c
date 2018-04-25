@@ -310,7 +310,7 @@ tnt2odbc(int t)
 	case MP_UINT:
 		return SQL_BIGINT;
 	case MP_STR:
-		return SQL_CHAR; /* Or SQL_VARCHAR? */
+		return SQL_VARCHAR; /* Or SQL_VARCHAR? */
 	case MP_FLOAT:
 		return SQL_FLOAT;
 	case MP_DOUBLE:
@@ -321,6 +321,28 @@ tnt2odbc(int t)
 		return SQL_CHAR; /* Shouldn't be */
 	}
 }
+
+const char *
+sqltypestr(int t)
+{
+	switch (t) {
+	case MP_INT:
+		return "MP_INT";
+	case MP_UINT:
+		return "MP_UINT";
+	case MP_STR:
+		return "MP_STR"; /* Or SQL_VARCHAR? */
+	case MP_FLOAT:
+		return "MP_FLOAT";
+	case MP_DOUBLE:
+		return "MP_DOUBLE";
+	case MP_BIN:
+		return "MP_BIN";
+	default:
+		return "";
+	}	
+}
+
 
 SQLRETURN 
 column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT maxname, SQLSMALLINT *name_len,
@@ -362,5 +384,168 @@ column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT max
 	if (type) {
 		*type = tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol));
 	}
-	return STATUS;
+	return status;
+}
+
+SQLRETURN SQL_API
+num_cols(SQLHSTMT stmth, SQLSMALLINT *ncols)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+        if (!stmt)
+                return SQL_INVALID_HANDLE;
+	if (!ncols) {
+		set_stmt_error(stmt,ODBC_HY009_ERROR,"Invalid use of null pointer");
+		return SQL_ERROR;		
+	}
+	if (!stmt->tnt_statement || stmt->state!=EXECUTED) {
+                set_stmt_error(stmt,ODBC_HY010_ERROR,"Function sequence error");
+                return SQL_ERROR;
+        }
+	if (!stmt->tnt_statement->field_names) {
+		*ncols = 0;
+	} else {
+		*ncols = tnt_number_of_cols(stmt->tnt_statement);
+	}
+	return SQL_SUCCESS;
+}
+
+SQLRETURN
+affected_rows(SQLHSTMT stmth,SQLLEN *cnt)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+        if (!stmt)
+                return SQL_INVALID_HANDLE;
+	if (!cnt) {
+		set_stmt_error(stmt,ODBC_HY009_ERROR,"Invalid use of null pointer");
+		return SQL_ERROR;		
+	}
+	if (stmt->tnt_statement->qtype == DML) {
+		*cnt = tnt_affected_rows(stmt->tnt_statement); 
+	} else {
+		*cnt = -1;
+	}
+	return SQL_SUCCESS;
+}
+
+void
+len_strncpy(SQLPOINTER char_p, const char *d, SQLSMALLINT buflen, SQLSMALLINT *out_len)
+{
+	if (char_p) {
+		strncpy((char*)char_p, d, buflen );
+		if (out_len)
+			out_len = strlen((char *)char_p);
+	}
+}
+
+SQLRETURN 
+col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER char_p,
+		SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLLEN *num_p)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+        if (!stmt)
+                return SQL_INVALID_HANDLE;
+
+	--ncol;
+
+	if (!stmt->tnt_statement) {
+                set_stmt_error(stmt,ODBC_HY010_ERROR,"Function sequence error");
+                return SQL_ERROR;
+        }
+	if (ncol<0 || ncol >= stmt->tnt_statement(stmt->tnt_statement)) {
+		set_stmt_error(stmt,ODBC_07009_ERROR,"Invalid descriptor index");
+		return SQL_ERROR;		
+	}
+	
+	int val = 0;
+	
+	switch (id) {
+	case SQL_DESC_AUTO_UNIQUE_VALUE:
+                val = -1;
+                break;
+        case SQL_DESC_BASE_COLUMN_NAME:
+                len_strncpy( char_p, "" , buflen, out_len);
+                break;
+        case SQL_DESC_BASE_TABLE_NAME:
+                len_strncpy( char_p, "" , buflen, out_len);
+                break;
+        case SQL_DESC_CASE_SENSITIVE:
+                val  = -1;
+                break;
+	case SQL_DESC_CATALOG_NAME:
+		len_strncpy( char_p, "" , buflen, out_len);
+		break;
+	case SQL_DESC_CONCISE_TYPE:
+		val = -1;
+		break;
+	case SQL_DESC_COUNT:
+		val = tnt_number_of_cols(stmt->tnt_statement);
+		break;
+	case SQL_DESC_DISPLAY_SIZE:
+		val = -1;
+		break;
+	case SQL_DESC_FIXED_PREC_SCALE:
+		val = -1;
+		break;
+	case SQL_DESC_LABEL:
+		len_strncpy( char_p, "" , buflen, out_len);
+                break;
+        case SQL_DESC_LENGTH:
+                val = tnt_col_len(stmt->tnt_statement,ncol);
+                break;
+        case SQL_DESC_LITERAL_PREFIX:
+		len_strncpy( char_p, "" , buflen, out_len);
+                break;
+        case SQL_DESC_LITERAL_SUFFIX:
+		len_strncpy( char_p, "" , buflen, out_len);
+                break;
+	case SQL_DESC_LOCAL_TYPE_NAME:
+		len_strncpy( char_p, "" , buflen, out_len);
+                break;
+        case SQL_DESC_NAME:
+		len_strncpy( char_p, tnt_cols_names(stmt->tnt_statement)[ncol], buflen, out_len);
+                break;
+        case SQL_DESC_NULLABLE:
+                val = -1;
+                break;
+        case SQL_DESC_NUM_PREC_RADIX:
+                val = -1;
+                break;
+        case SQL_DESC_OCTET_LENGTH:
+		val = -1;
+                break;
+        case SQL_DESC_PRECISION:
+		val = -1;
+                break;
+        case SQL_DESC_SCALE:
+		val = -1;
+                break;
+        case SQL_DESC_SCHEMA_NAME:
+		len_strncpy( char_p, "" , buflen, out_len);
+                break;
+	case SQL_DESC_SEARCHABLE:
+		val = -1;
+                break;
+        case SQL_DESC_TABLE_NAME:
+		len_strncpy( char_p, "" , buflen, out_len);
+                break;
+        case SQL_DESC_TYPE:
+		val = tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol));
+                break;
+        case SQL_DESC_TYPE_NAME:
+		len_strncpy( char_p, sqltypestr(tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol))) , buflen, out_len);
+                break;
+        case SQL_DESC_UNNAMED:
+		val = -1;
+                break;
+        case SQL_DESC_UNSIGNED:
+		val = -1;
+                break;
+        case SQL_DESC_UPDATABLE:
+		val = -1;
+                break;
+	default:
+	}
+	if (num_p)
+		*num_p = val;
+	return SQL_SUCCESS;
 }

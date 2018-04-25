@@ -145,6 +145,7 @@ tnt_stmt_close_cursor(tnt_stmt_t *stmt)
 		stmt->ncols = 0;
 		stmt->cur_row = 0;
 		stmt->nrows = 0;
+		stmt->qtype = 0;
 	}
 }
 
@@ -452,9 +453,11 @@ tnt_fetch_result_stmt(tnt_stmt_t *stmt)
 	if (stmt->data) {
 		tnt_fetch_fields(stmt);
 		stmt->nrows = mp_decode_array(&stmt->data);
+		stmt->qtype = SEL;
 	} else {
 		stmt->nrows = 0;
 		tnt_read_affected_rows(stmt);
+		stmt->qtype = DML;
 	}
 	return stmt;
 }

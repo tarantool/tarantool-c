@@ -250,3 +250,22 @@ SQLDescribeCol(SQLHSTMT stmt, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT m
 {
 	return column_info(stmt,ncol,colname,maxname,name_len,type,colsz,scale,isnull);
 }
+
+SQLRETURN SQL_API
+SQLNumResultCols(SQLHSTMT stmt, SQLSMALLINT *ncols)
+{
+	return num_cols(stmt,ncols);
+}
+
+SQLRETURN SQL_API
+SQLRowCount(SQLHSTMT stmth, SQLLEN *cnt)
+{
+	return affected_rows(stmth,cnt);
+}
+
+SQLRETURN SQL_API
+SQLColAttribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER char_p,
+		SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLLEN *num_p)
+{
+	return col_attribute(stmth, ncol, id, char_p, buflen, out_len, num_p);
+}

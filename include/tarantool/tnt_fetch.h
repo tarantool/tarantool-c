@@ -18,6 +18,12 @@ enum CONV_ERROR {
 	CONVERT=1
 };
 
+enum QUERY_TYPE {
+	UNKNOWN = 0,
+	DML = 1,
+	SEL = 2
+};
+
 typedef long tnt_size_t;
 
 /**
@@ -67,6 +73,7 @@ typedef struct tnt_stmt {
 	/* int32_t obind_len */
 	tnt_bind_t *obind;
 	int64_t reqid;
+	int qtype;
 } tnt_stmt_t;
 
 
