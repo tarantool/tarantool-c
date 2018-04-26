@@ -372,14 +372,14 @@ column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT max
 		*colsz = 0;
 	int status = SQL_SUCCESS;
 	if (colname) {
-		strncpy(colname,tnt_cols_names(stmt->tnt_statement)[ncol],maxname);
-		if (maxname<=strlen(tnt_cols_names(stmt->tnt_statement)[ncol])) {
+		strncpy(colname,tnt_col_name(stmt->tnt_statement,ncol),maxname);
+		if (maxname<=strlen(tnt_col_name(stmt->tnt_statement,ncol))) {
 			status = SQL_SUCCESS_WITH_INFO;
 			set_stmt_error(stmt,ODBC_01004_ERROR,"String data, right truncated");
 		}
 	}
 	if (namelen) {
-		*namelen = strlen(tnt_cols_names(stmt->tnt_statement)[ncol]);
+		*namelen = strlen(tnt_col_name(stmt->tnt_statement,ncol));
 	}
 	if (type) {
 		*type = tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol));
@@ -475,7 +475,7 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER cha
 		len_strncpy( char_p, "" , buflen, out_len);
 		break;
 	case SQL_DESC_CONCISE_TYPE:
-		val = -1;
+		val = tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol));;
 		break;
 	case SQL_DESC_COUNT:
 		val = tnt_number_of_cols(stmt->tnt_statement);
@@ -502,10 +502,10 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER cha
 		len_strncpy( char_p, "" , buflen, out_len);
                 break;
         case SQL_DESC_NAME:
-		len_strncpy( char_p, tnt_cols_names(stmt->tnt_statement)[ncol], buflen, out_len);
+		len_strncpy( char_p, tnt_col_name(stmt->tnt_statement,ncol), buflen, out_len);
                 break;
         case SQL_DESC_NULLABLE:
-                val = -1;
+                val = SQL_NULLABLE_UNKNOWN;
                 break;
         case SQL_DESC_NUM_PREC_RADIX:
                 val = -1;
@@ -538,7 +538,7 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER cha
 		val = -1;
                 break;
         case SQL_DESC_UNSIGNED:
-		val = -1;
+		val = tnt_col_type(stmt->tnt_statement,ncol)==MP_INT?SQL_FALSE:SQL_TRUE;
                 break;
         case SQL_DESC_UPDATABLE:
 		val = -1;
@@ -549,3 +549,24 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER cha
 		*num_p = val;
 	return SQL_SUCCESS;
 }
+
+SQLRETURN
+num_params(SQLHSTMT stmth, SQLSMALLINT *cnt)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+        if (!stmt)
+                return SQL_INVALID_HANDLE;
+	if (cnt) {
+		if (stmt->tnt_statement && stmt->tnt_statement->query) {
+			*cnt = get_query_num(stmt->tnt_statement->query,
+					     stmt->tnt_statement->query_len);
+		} else {
+			if (!stmt->tnt_statement) {
+				set_stmt_error(stmt,ODBC_HY010_ERROR,"Function sequence error");
+				return SQL_ERROR;
+			}
+		}
+	}
+	return SQL_SUCCESS;
+}
+

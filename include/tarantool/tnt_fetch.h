@@ -230,8 +230,9 @@ void tnt_stmt_free(tnt_stmt_t *);
 void tnt_stmt_close_cursor(tnt_stmt_t *);
 
 /**
- * This is internal API function only for ODBC driver
+ * This is internal API functions only for ODBC driver
  */
 void store_conv_bind_var(tnt_stmt_t *stmt, int i, tnt_bind_t *obind, int offset);
+int get_query_num(const char *s,size_t len);
 
 #endif

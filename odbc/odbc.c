@@ -269,3 +269,11 @@ SQLColAttribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER c
 {
 	return col_attribute(stmth, ncol, id, char_p, buflen, out_len, num_p);
 }
+
+
+SQLRETURN SQL_API
+SQLNumParams(SQLHSTMT stmth, SQLSMALLINT *cnt)
+{
+	return num_params(stmth,cnt);
+}
+

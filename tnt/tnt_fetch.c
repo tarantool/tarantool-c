@@ -182,7 +182,7 @@ enum sql_state {
 	COMMENT2
 };
 
-static int
+int
 get_query_num(const char *s,size_t len)
 {
 	const char *ptr=s;
@@ -797,6 +797,12 @@ const char **
 tnt_cols_names(tnt_stmt_t *stmt)
 {
 	return stmt->field_names;
+}
+
+const char *
+tnt_col_name(tnt_stmt_t *stmt,icol)
+{
+	return stmt->field_names==NULL?"":stmt->field_names[icol];
 }
 
 int
