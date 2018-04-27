@@ -277,3 +277,16 @@ SQLNumParams(SQLHSTMT stmth, SQLSMALLINT *cnt)
 	return num_params(stmth,cnt);
 }
 
+SQLRETURN SQL_API
+SQLGetDiagRec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLCHAR *state,  
+	      SQLINTEGER *errno_ptr,SQLCHAR *txt, SQLSMALLINT buflen, SQLSMALLINT *out_len)
+{
+	return get_diag_rec(hndl_type, hndl, rnum, state,errno_ptr, txt, buflen, out_len);
+}
+
+SQLRETURN SQL_API
+SQLGetDiagField(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLSMALLINT diag_id,
+		SQLPOINTER info_ptr, SQLSMALLINT buflen, SQLSMALLINT * out_len)
+{
+	return get_diag_field(hndl_type, hndl, rnum, diag_id, info_ptr, buflen, out_len);
+}

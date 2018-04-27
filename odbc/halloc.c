@@ -99,6 +99,143 @@ set_env_error_len(odbc_env *env, int code, const char* msg, int len)
 }
 
 
+struct error_holder *
+get_error_struct(SQLSMALLINT hndl_type, SQLHANDLE hndl)
+{
+	switch (hndl_type) {
+	case SQL_HANDLE_DBC:
+		return &(((odbc_connect *)hndl)->e);
+	case SQL_HANDLE_STMT:
+		return &(((odbc_stmt *)hndl)->e);
+	case SQL_HANDLE_ENV:
+		return &(((odbc_env *)hndl)->e);
+	case SQL_HANDLE_DESC:
+		return &(((odbc_desc *)hndl)->e);
+	default:
+		return SQL_INVALID_HANDLE;
+	}
+}
+
+
+const char *
+code2sqlstate(int code)
+{
+	switch (code) {	
+	case ODBC_01004_ERROR:
+		return "01004";
+	case ODBC_HY010_ERROR:
+		return "HY010";
+	case ODBC_07009_ERROR:
+		return "07009";
+	case ODBC_HY003_ERROR:
+		return "HY003";
+	case ODBC_HY090_ERROR:
+		return "HY090";
+	case ODBC_HY009_ERROR:
+		return "HY009";
+	case ODBC_24000_ERROR:
+		return "24000";
+	case ODBC_HYC00_ERROR:
+		return "HYC00";
+	case ODBC_MEM_ERROR:
+	case ODBC_EMPTY_STATEMENT:
+	case ODBC_MEM_ERROR:
+	default:
+		return "00000";
+	}
+}
+
+
+SQLRETURN
+get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLCHAR *state,  
+	      SQLINTEGER *errno_ptr, SQLCHAR *txt, SQLSMALLINT buflen, SQLSMALLINT *out_len)
+{
+	if (rnum>1)
+		return SQL_NO_DATA;
+	if (!hndl)
+		return SQL_ERROR;
+
+	if (errno_ptr)
+		*(SQLINTEGER *)errno_ptr = get_error_struct(hndl_type,hndl)->native_error;
+	char * etxt = get_error_struct(hndl_type,hndl)->error_message;
+	if (txt)
+		strncpy(txt,etxt,buflen);
+	if (out_len) {
+		if (!txt)
+			*out_len = (SQLSMALLINT)strlen(etxt);
+		else
+			*out_len = (SQLSMALLINT)strlen(txt);
+	}
+	return SQL_SUCCESS;
+}
+
+SQLRETURN SQL_API
+get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLSMALLINT diag_id,
+		SQLPOINTER info_ptr, SQLSMALLINT buflen, SQLSMALLINT * out_len)
+{
+	
+	if (rnum>1)
+		return SQL_NO_DATA;
+	if (!hndl)
+		return SQL_ERROR;
+
+	switch (diag_id) {
+	case SQL_DIAG_NUMBER:
+		*(SQLINTEGER *)info_ptr = 1;
+		return SQL_SUCCESS;
+	case SQL_DIAG_CONNECTION_NAME:
+	case SQL_DIAG_SERVER_NAME:
+	case SQL_DIAG_SUBCLASS_ORIGIN:
+		if (out_len)
+			*out_len = 0;
+		info_ptr = "";
+		return SQL_SUCCESS;
+	case SQL_DIAG_NATIVE:
+		*(SQLINTEGER *)info_ptr = get_error_struct(hndl_type,hndl)->native_error;
+		return SQL_SUCCESS;
+	case SQL_DIAG_MESSAGE_TEXT:
+		*(SQLCHAR *)info_ptr = get_error_struct(hndl_type,hndl)->error_message;
+		if (out_len)
+			*out_len = (SQLSMALLINT)strlen((char *)info_ptr);
+		return SQL_SUCCESS;
+	case SQL_DIAG_SQL_STATE:
+		*(SQLCHAR *)info_ptr = code2sqlstate(get_error_struct(hndl_type,hndl)->error_code);
+		if (out_len)
+			*out_len = (SQLSMALLINT)strlen((char *)info_ptr);
+		return SQL_SUCCESS;
+	}
+		
+	switch (hndl_type) {
+	case SQL_HANDLE_STMT:
+		odbc_stmt *stmt = (odbc_stmt *) hndl;
+		switch (diag_id) {
+		case SQL_DIAG_CURSOR_ROW_COUNT:
+			if (stmt->tnt_statement)
+				*(SQLLEN *)info_ptr = stmt->tnt_statement->nrows;
+			else
+				*(SQLLEN *)info_ptr = 0;
+			break;
+		case SQL_DIAG_ROW_COUNT:
+			*(SQLLEN *)info_ptr = tnt_affected_rows(stmt->tnt_statement);
+			break;
+		case SQL_DIAG_COLUMN_NUMBER:
+			*(SQLLEN *)info_ptr = SQL_COLUMN_NUMBER_UNKNOWN;
+			break;
+		case SQL_DIAG_ROW_NUMBER:
+			*(SQLLEN *)info_ptr = SQL_ROW_NUMBER_UNKNOWN;
+			break;
+		case SQL_DIAG_DYNAMIC_FUNCTION:
+		case SQL_DIAG_DYNAMIC_FUNCTION_CODE:
+			*(SQLINTEGER *)info_ptr = 0;
+			break;
+		}
+		break;
+	default:
+		return SQL_ERROR;
+	}
+	return SQL_SUCCESS;
+}
+
 
 void
 set_env_error(odbc_env *env, int code, const char* msg)

@@ -10,7 +10,7 @@ enum ERROR_CODES {
 	ODBC_HY090_ERROR, /* Invalid string or buffer length */
 	ODBC_HY009_ERROR, /* Invalid use of null pointer */
 	ODBC_24000_ERROR, /* Invalid cursor state */
-	ODBC_HYC00_ERROR, /* HYC00   Optional feature not implemented */
+	ODBC_HYC00_ERROR, /* Optional feature not implemented */
 	ODBC_EMPTY_STATEMENT, /* ODBC statement without query/prepare */
 };
 
@@ -27,6 +27,7 @@ struct dsn {
 struct error_holder {
 	int error_code;
 	char *error_message;
+	int native_error;
 };
 
 typedef struct odbc_connect_t {
@@ -41,6 +42,9 @@ typedef struct odbc_connect_t {
 	struct error_holder e;
 } odbc_connect;
 
+typedef odbc_desc {
+	struct error_holder e;
+} odbc_desc;
 
 enum statement_state {
 	CLOSED=0,
