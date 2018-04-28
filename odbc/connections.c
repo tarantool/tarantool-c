@@ -94,11 +94,11 @@ odbc_parse_dsn(odbc_connect *tcon, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *
 	}
 
 	if (serv_sz == SQL_NTS)
-		serv_sz = strlen(serv);
+		serv_sz = strlen((char *)serv);
 	if (user_sz == SQL_NTS)
-		user_sz = strlen(user);
+		user_sz = strlen((char*)user);
 	if (password_sz == SQL_NTS)
-		password_sz = strlen(password);
+		password_sz = strlen((char *)password);
 	
 	    
 

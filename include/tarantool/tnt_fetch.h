@@ -200,6 +200,11 @@ double tnt_col_double(tnt_stmt_t *, int col);
 float tnt_col_float(tnt_stmt_t *, int col);
 
 /**
+ * Returns the column name  of current result set row
+ */
+const char *tnt_col_name(tnt_stmt_t *, int col);
+
+/**
  * Returns the length of column 'col' in current result row.
  * It's actual for binary and strings.
  */

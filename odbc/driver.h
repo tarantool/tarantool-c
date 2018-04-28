@@ -1,4 +1,5 @@
 
+#include <stdint.h>
 
 enum ERROR_CODES {
 	ODBC_DSN_ERROR=2, /* Error parsing dsn parameters */
@@ -12,6 +13,7 @@ enum ERROR_CODES {
 	ODBC_24000_ERROR, /* Invalid cursor state */
 	ODBC_HYC00_ERROR, /* Optional feature not implemented */
 	ODBC_EMPTY_STATEMENT, /* ODBC statement without query/prepare */
+	ODBC_07005_ERROR /* "Prepared statement not a cursor-specification" */
 };
 
 struct dsn {
@@ -42,7 +44,7 @@ typedef struct odbc_connect_t {
 	struct error_holder e;
 } odbc_connect;
 
-typedef odbc_desc {
+typedef struct odbc_desc_t {
 	struct error_holder e;
 } odbc_desc;
 
@@ -138,3 +140,45 @@ set_env_error_len(odbc_env *env, int code, const char* msg, int len);
 
 SQLRETURN free_connect(SQLHDBC hdbc);
 SQLRETURN free_stmt(SQLHSTMT stmth, SQLUSMALLINT option);
+SQLRETURN alloc_env(SQLHENV *oenv);
+SQLRETURN alloc_connect(SQLHENV env, SQLHDBC *oconn);
+SQLRETURN alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt );
+SQLRETURN free_env(SQLHENV env);
+SQLRETURN free_connect(SQLHDBC conn);
+SQLRETURN env_set_attr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len);
+SQLRETURN env_get_attr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER in_len, SQLINTEGER *out_len);
+SQLRETURN odbc_dbconnect(SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user, SQLSMALLINT user_sz,
+			 SQLCHAR *auth, SQLSMALLINT auth_sz);
+SQLRETURN odbc_disconnect(SQLHDBC conn);
+SQLRETURN stmt_prepare(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len);
+SQLRETURN stmt_execute(SQLHSTMT stmth);
+SQLRETURN  stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT ctype, SQLSMALLINT sqltype,
+			SQLUINTEGER col_len, SQLSMALLINT scale, SQLPOINTER buf,
+			SQLINTEGER buf_len, SQLLEN *len_ind);
+SQLRETURN stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER val, SQLLEN in_len, SQLLEN *out_len);
+
+SQLRETURN stmt_fetch(SQLHSTMT stmth);
+
+SQLRETURN  get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
+		    SQLLEN in_len, SQLLEN *out_len);
+
+SQLRETURN column_info(SQLHSTMT stmt, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT maxname, SQLSMALLINT *name_len,
+		      SQLSMALLINT *type, SQLULEN *colsz, SQLSMALLINT *scale, SQLSMALLINT *isnull);
+SQLRETURN num_cols(SQLHSTMT stmt, SQLSMALLINT *ncols);
+SQLRETURN affected_rows(SQLHSTMT stmth, SQLLEN *cnt);
+SQLRETURN col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER char_p,
+	      SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLLEN *num_p);
+SQLRETURN num_params(SQLHSTMT stmth, SQLSMALLINT *cnt);
+SQLRETURN get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLCHAR *state,  
+		       SQLINTEGER *errno_ptr,SQLCHAR *txt, SQLSMALLINT buflen, SQLSMALLINT *out_len);
+SQLRETURN get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLSMALLINT diag_id,
+	       SQLPOINTER info_ptr, SQLSMALLINT buflen, SQLSMALLINT * out_len);
+
+
+
+
+
+
+
+
+

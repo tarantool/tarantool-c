@@ -122,7 +122,7 @@ realloc_params(int num,int *old_num, tnt_bind_t **params)
 SQLRETURN  
 stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT ctype, SQLSMALLINT sqltype,
 		 SQLUINTEGER col_len, SQLSMALLINT scale, SQLPOINTER buf,
-		 SQLINTEGER buf_len, SQLINTEGER *len_ind)
+		 SQLINTEGER buf_len, SQLLEN *len_ind)
 {
 
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
@@ -346,7 +346,7 @@ sqltypestr(int t)
 
 SQLRETURN 
 column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT maxname, SQLSMALLINT *name_len,
-	    SQLSMALLINT *type, SQLUINTEGER *colsz, SQLSMALLINT *scale, SQLSMALLINT *isnull)
+	    SQLSMALLINT *type, SQLULEN *colsz, SQLSMALLINT *scale, SQLSMALLINT *isnull)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
         if (!stmt)
@@ -372,14 +372,14 @@ column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT max
 		*colsz = 0;
 	int status = SQL_SUCCESS;
 	if (colname) {
-		strncpy(colname,tnt_col_name(stmt->tnt_statement,ncol),maxname);
+		strncpy((char*)colname,tnt_col_name(stmt->tnt_statement,ncol),maxname);
 		if (maxname<=strlen(tnt_col_name(stmt->tnt_statement,ncol))) {
 			status = SQL_SUCCESS_WITH_INFO;
 			set_stmt_error(stmt,ODBC_01004_ERROR,"String data, right truncated");
 		}
 	}
-	if (namelen) {
-		*namelen = strlen(tnt_col_name(stmt->tnt_statement,ncol));
+	if (name_len) {
+		*name_len = strlen(tnt_col_name(stmt->tnt_statement,ncol));
 	}
 	if (type) {
 		*type = tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol));
@@ -433,7 +433,7 @@ len_strncpy(SQLPOINTER char_p, const char *d, SQLSMALLINT buflen, SQLSMALLINT *o
 	if (char_p) {
 		strncpy((char*)char_p, d, buflen );
 		if (out_len)
-			out_len = strlen((char *)char_p);
+			*out_len = strlen((char *)char_p);
 	}
 }
 
@@ -451,7 +451,7 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER cha
                 set_stmt_error(stmt,ODBC_HY010_ERROR,"Function sequence error");
                 return SQL_ERROR;
         }
-	if (ncol<0 || ncol >= stmt->tnt_statement(stmt->tnt_statement)) {
+	if (ncol<0 || ncol >= tnt_number_of_cols(stmt->tnt_statement)) {
 		set_stmt_error(stmt,ODBC_07009_ERROR,"Invalid descriptor index");
 		return SQL_ERROR;		
 	}
@@ -544,6 +544,7 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER cha
 		val = -1;
                 break;
 	default:
+		break;
 	}
 	if (num_p)
 		*num_p = val;

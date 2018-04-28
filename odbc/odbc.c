@@ -1,5 +1,10 @@
 /* -*- C -*- */
 
+#include <sql.h>
+#include <sqlext.h>
+#include <odbcinst.h>
+
+#include <tarantool/tarantool.h>
 #include "driver.h"
 
 SQLRETURN
@@ -22,21 +27,20 @@ SQLAllocStmt(SQLHDBC conn, SQLHSTMT *ostmt )
 }
 
 
-
 SQLRETURN 
 SQLAllocHandle(SQLSMALLINT handle_type, SQLHANDLE ihandle, SQLHANDLE *ohandle)
 {
-	switch (handle_type) {
+switch (handle_type) {
 	case SQL_HANDLE_ENV:
-		return alloc_env(ohandle);
+return alloc_env(ohandle);
 	case SQL_HANDLE_DBC:
 		return alloc_connect(ihandle,ohandle);
 	case SQL_HANDLE_STMT:
-		return alloc_stmt(conn, ostmt);
+return alloc_stmt(ihandle, ohandle);
 	case SQL_HANDLE_DESC:
 	default:
 		return SQL_ERROR;
-	}
+}
 }
 
 SQLRETURN
@@ -112,7 +116,7 @@ SQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att,SQLPOINTER  val, SQLINTEGER  len
 			ocon->opt_timeout = (int32_t *)malloc(sizeof(int32_t));
 			if (!ocon->opt_timeout)
 				return SQL_ERROR;
-			ocon->opt_timeout = (int32_t) val; 
+                        *(ocon->opt_timeout) = (int32_t) val; 
 		}
 		break;
 	default:
@@ -133,7 +137,7 @@ SQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val, SQLINTEGER len,
                 if (!ocon->opt_timeout) 
 			return SQL_ERROR;
 		if (val)
-			*((int32_t*)val)=ocon->opt_timeout;
+			*((int32_t*)val)=*ocon->opt_timeout;
 		if (olen)
 			*olen = sizeof(int32_t);
 		break;
@@ -220,8 +224,8 @@ SQLNativeSql(SQLHDBC hdbc, SQLCHAR *inq, SQLINTEGER in_len, SQLCHAR *outq, SQLIN
 
 SQLRETURN  SQL_API
 SQLBindParameter(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT ctype, SQLSMALLINT sqltype,
-		 SQLUINTEGER col_len, SQLSMALLINT scale, SQLPOINTER buf,
-		 SQLINTEGER buf_len, SQLINTEGER *len_ind)
+		 SQLULEN col_len, SQLSMALLINT scale, SQLPOINTER buf,
+		 SQLLEN buf_len, SQLLEN *len_ind)
 {
 	return stmt_in_bind(stmth, parnum, ptype, ctype, sqltype, col_len, scale, buf, buf_len, len_ind);
 }
@@ -229,7 +233,7 @@ SQLBindParameter(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMAL
 SQLRETURN SQL_API
 SQLBindCol(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER val, SQLLEN in_len, SQLLEN *out_len)
 {
-	retrun stmt_out_bind(stmth, colnum, ctype, val, in_len, out_len);
+	return stmt_out_bind(stmth, colnum, ctype, val, in_len, out_len);
 }
 
 SQLRETURN SQL_API
@@ -246,7 +250,7 @@ SQLGetData(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER    val
 
 SQLRETURN SQL_API
 SQLDescribeCol(SQLHSTMT stmt, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT maxname, SQLSMALLINT *name_len,
-	       SQLSMALLINT *type, SQLUINTEGER *colsz, SQLSMALLINT *scale, SQLSMALLINT *isnull)
+	       SQLSMALLINT *type, SQLULEN *colsz, SQLSMALLINT *scale, SQLSMALLINT *isnull)
 {
 	return column_info(stmt,ncol,colname,maxname,name_len,type,colsz,scale,isnull);
 }

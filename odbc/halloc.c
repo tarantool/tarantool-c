@@ -4,7 +4,10 @@
 #include <stdlib.h>
 #include <tarantool/tarantool.h>
 #include <tarantool/tnt_fetch.h>
+#include <sql.h>
+#include <sqlext.h>
 #include <odbcinst.h>
+
 
 #include "driver.h"
 
@@ -112,7 +115,7 @@ get_error_struct(SQLSMALLINT hndl_type, SQLHANDLE hndl)
 	case SQL_HANDLE_DESC:
 		return &(((odbc_desc *)hndl)->e);
 	default:
-		return SQL_INVALID_HANDLE;
+		return NULL;
 	}
 }
 
@@ -138,8 +141,11 @@ code2sqlstate(int code)
 	case ODBC_HYC00_ERROR:
 		return "HYC00";
 	case ODBC_MEM_ERROR:
+		return "HY001";
 	case ODBC_EMPTY_STATEMENT:
-	case ODBC_MEM_ERROR:
+		return "HY009";
+	case ODBC_07005_ERROR:
+		return "07005";
 	default:
 		return "00000";
 	}
@@ -159,12 +165,12 @@ get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLCHAR *s
 		*(SQLINTEGER *)errno_ptr = get_error_struct(hndl_type,hndl)->native_error;
 	char * etxt = get_error_struct(hndl_type,hndl)->error_message;
 	if (txt)
-		strncpy(txt,etxt,buflen);
+		strncpy((char*)txt,etxt,buflen);
 	if (out_len) {
 		if (!txt)
 			*out_len = (SQLSMALLINT)strlen(etxt);
 		else
-			*out_len = (SQLSMALLINT)strlen(txt);
+			*out_len = (SQLSMALLINT)strlen((char*)txt);
 	}
 	return SQL_SUCCESS;
 }
@@ -194,19 +200,19 @@ get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLSMALL
 		*(SQLINTEGER *)info_ptr = get_error_struct(hndl_type,hndl)->native_error;
 		return SQL_SUCCESS;
 	case SQL_DIAG_MESSAGE_TEXT:
-		*(SQLCHAR *)info_ptr = get_error_struct(hndl_type,hndl)->error_message;
+		info_ptr = get_error_struct(hndl_type,hndl)->error_message;
 		if (out_len)
 			*out_len = (SQLSMALLINT)strlen((char *)info_ptr);
 		return SQL_SUCCESS;
-	case SQL_DIAG_SQL_STATE:
-		*(SQLCHAR *)info_ptr = code2sqlstate(get_error_struct(hndl_type,hndl)->error_code);
+	case SQL_DIAG_SQLSTATE:
+		info_ptr = (SQLPOINTER)code2sqlstate(get_error_struct(hndl_type,hndl)->error_code);
 		if (out_len)
 			*out_len = (SQLSMALLINT)strlen((char *)info_ptr);
 		return SQL_SUCCESS;
 	}
 		
 	switch (hndl_type) {
-	case SQL_HANDLE_STMT:
+	case SQL_HANDLE_STMT: {
 		odbc_stmt *stmt = (odbc_stmt *) hndl;
 		switch (diag_id) {
 		case SQL_DIAG_CURSOR_ROW_COUNT:
@@ -230,6 +236,7 @@ get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLSMALL
 			break;
 		}
 		break;
+	}
 	default:
 		return SQL_ERROR;
 	}
