@@ -30,17 +30,17 @@ SQLAllocStmt(SQLHDBC conn, SQLHSTMT *ostmt )
 SQLRETURN 
 SQLAllocHandle(SQLSMALLINT handle_type, SQLHANDLE ihandle, SQLHANDLE *ohandle)
 {
-switch (handle_type) {
+	switch (handle_type) {
 	case SQL_HANDLE_ENV:
-return alloc_env(ohandle);
+		return alloc_env(ohandle);
 	case SQL_HANDLE_DBC:
 		return alloc_connect(ihandle,ohandle);
 	case SQL_HANDLE_STMT:
-return alloc_stmt(ihandle, ohandle);
+		return alloc_stmt(ihandle, ohandle);
 	case SQL_HANDLE_DESC:
 	default:
 		return SQL_ERROR;
-}
+	}
 }
 
 SQLRETURN
@@ -105,7 +105,7 @@ SQLGetEnvAttr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER in_len
 }
 
 SQLRETURN SQL_API
-SQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att,SQLPOINTER  val, SQLINTEGER  len)
+SQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER  val, SQLINTEGER  len)
 {
 	odbc_connect *ocon = (odbc_connect *)hdbc;
 	if (!ocon)
