@@ -1,0 +1,3 @@
+[Tarantool] 
+Description     = Tarantool  
+Driver          = /Users/alexey.gadzhiev/tarantool/tarantool-c/odbc/libtnt_odbc.dylib

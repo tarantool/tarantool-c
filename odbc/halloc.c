@@ -16,14 +16,40 @@
 int
 tnt2odbc_error(int e)
 {
+	int r;
+	switch (e) {
+	case TNT_EOK: /*!< Everything is OK */
+		r = ODBC_00000_ERROR;
+		break;
+        case TNT_EFAIL: /*!< Fail */
+		r = ODBC_HY000_ERROR;
+		break;
+        case TNT_EMEMORY: /*!< Memory allocation failed */
+		r = ODBC_HY001_ERROR;
+		break;
+        case TNT_ESYSTEM: /*!< System error */
+		r = ODBC_08001_ERROR;
+	case TNT_ESIZE: /*!< Bad buffer size */
+	case TNT_EBIG: /*!< Buffer is too big */
+		r = ODBC_22003_ERROR;
+		break;
+        case TNT_ERESOLVE: /*!< gethostbyname(2) failed */
+		r = ODBC_08001_ERROR;
+		break;
+        case TNT_ETMOUT: /*!< Operation timeout */
+		r = ODBC_HYT00_ERROR;
+		break;
+        case TNT_EBADVAL: /*!< Bad argument (value) */
+		r = ODBC_HY000_ERROR;
+        case TNT_ELOGIN: /*!< Failed to login */
+		r = ODBC_28000_ERROR;
+		break;
+	default:
+		r = ODBC_HY000_ERROR;
+	}
 	return e;
 }
 
-char*
-tnt2odbc_error_message(int e)
-{
-	return NULL;
-}
 
 
 /*
@@ -126,6 +152,20 @@ code2sqlstate(int code)
 	switch (code) {	
 	case ODBC_01004_ERROR:
 		return "01004";
+	case ODBC_00000_ERROR:
+		return "00000";
+	case ODBC_28000_ERROR:
+		return "28000";
+	case ODBC_HY000_ERROR:
+		return "HY000";
+	case ODBC_HYT00_ERROR:
+		return "HYT00";
+	case ODBC_08001_ERROR:
+		return "08001";
+	case ODBC_22003_ERROR:
+		return "22003";
+	case ODBC_HY001_ERROR:
+		return "HY001";
 	case ODBC_HY010_ERROR:
 		return "HY010";
 	case ODBC_07009_ERROR:
@@ -164,6 +204,8 @@ get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLCHAR *s
 	if (errno_ptr)
 		*(SQLINTEGER *)errno_ptr = get_error_struct(hndl_type,hndl)->native_error;
 	char * etxt = get_error_struct(hndl_type,hndl)->error_message;
+	if (etxt == NULL)
+		etxt = "";
 	if (txt)
 		strncpy((char*)txt,etxt,buflen);
 	if (out_len) {

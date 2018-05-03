@@ -4,7 +4,14 @@
 enum ERROR_CODES {
 	ODBC_DSN_ERROR=2, /* Error parsing dsn parameters */
 	ODBC_MEM_ERROR=4, /* Unable to allocate memory */
+	ODBC_00000_ERROR, /* Success */
+	ODBC_28000_ERROR, /* Invalid authorization specification */
+	ODBC_HY000_ERROR, /* General error */
+	ODBC_HYT00_ERROR, /* Timeout expired */
+	ODBC_08001_ERROR, /* Client unable to establish connection */
 	ODBC_01004_ERROR, /* String data, right truncated */
+	ODBC_22003_ERROR, /* Value too big */
+	ODBC_HY001_ERROR, /* Underling memory allocation failed */
 	ODBC_HY010_ERROR, /* Function sequence error */
 	ODBC_07009_ERROR, /* Invalid number in bind parameters reference or in descriptor */
 	ODBC_HY003_ERROR, /* Invalid application buffer type */

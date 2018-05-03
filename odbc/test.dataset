@@ -1,0 +1,7 @@
+[tarantoolTest] 
+Driver  = Tarantool 
+Description     = Tarantool test DSN 
+Trace   = Yes
+Server      = localhost 
+Port      = 33000
+Database        = test

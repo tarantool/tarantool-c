@@ -28,7 +28,7 @@ int main() {
             SQLSetConnectAttr(hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);  
 
             // Connect to data source  
-            retcode = SQLConnect(hdbc, (SQLCHAR*) "NorthWind", SQL_NTS, (SQLCHAR*) NULL, 0, NULL, 0);  
+            retcode = SQLConnect(hdbc, (SQLCHAR*) "tarantoolTest", SQL_NTS, (SQLCHAR*) NULL, 0, NULL, 0);  
 
             // Allocate statement handle  
             if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {  
