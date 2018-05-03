@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <float.h>
 #include <math.h>
-
+#include <inttypes.h>
 #include <tarantool/tnt_fetch.h>
 
 
@@ -469,7 +469,7 @@ float
 double2float(double v,int *e)
 {
         int exp;
-        double fractional = frexp(v,&exp);
+        frexp(v,&exp);
         *e = 0;
 
         if (exp<FLT_MIN_EXP)
@@ -545,7 +545,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			if (obind->error)
 				*(obind->error) = 1;
 		} else if (obind->type == MP_STR) {
-			int wr=snprintf(obind->buffer,obind->in_len,"%lld",stmt->row[i].v.i);
+			int wr=snprintf(obind->buffer,obind->in_len,"%" PRId64 ,stmt->row[i].v.i);
 			if (obind->out_len)
 				*obind->out_len = strlen((char*)obind->buffer);
 			if (obind->error && (wr+1) >= obind->in_len)
@@ -800,7 +800,7 @@ tnt_cols_names(tnt_stmt_t *stmt)
 }
 
 const char *
-tnt_col_name(tnt_stmt_t *stmt,icol)
+tnt_col_name(tnt_stmt_t *stmt,int icol)
 {
 	return stmt->field_names==NULL?"":stmt->field_names[icol];
 }
