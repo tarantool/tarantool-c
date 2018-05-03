@@ -7,8 +7,6 @@
 #include <sql.h>
 #include <sqlext.h>
 #include <odbcinst.h>
-
-
 #include "driver.h"
 
 
@@ -56,6 +54,13 @@ tnt2odbc_error(int e)
  * Sets error code and copies message into internal structure of relevant handles.
  * If len == -1 treat 'msg' as a null terminated string.
  **/
+
+void
+set_connect_native_error(odbc_connect *tcon, int err)
+{
+	tcon->e.native_error = err;
+}
+
 
 static void
 set_error_len(struct error_holder *e, int code, const char* msg, int len)
@@ -214,10 +219,13 @@ get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLCHAR *s
 		else
 			*out_len = (SQLSMALLINT)strlen((char*)txt);
 	}
+	if (state) {
+		strncpy(state,code2sqlstate(get_error_struct(hndl_type,hndl)->error_code),5);
+	}
 	return SQL_SUCCESS;
 }
 
-SQLRETURN SQL_API
+SQLRETURN 
 get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLSMALLINT diag_id,
 		SQLPOINTER info_ptr, SQLSMALLINT buflen, SQLSMALLINT * out_len)
 {

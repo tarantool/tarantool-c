@@ -172,9 +172,10 @@ odbc_dbconnect (SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 	if (!tnt_reopen(tcon->tnt_hndl,tcon->dsn_params->host, tcon->dsn_params->user,
 			tcon->dsn_params->password, tcon->dsn_params->port)) {
 		int odbc_error;
-		if (tnt_error(tcon->tnt_hndl) == TNT_ESYSTEM)
+		if (tnt_error(tcon->tnt_hndl) == TNT_ESYSTEM) {
 			odbc_error = ODBC_08001_ERROR;
-		else
+			set_connect_native_error(tcon,tnt_errno(tcon->tnt_hndl));
+		} else
 			odbc_error = tnt2odbc_error(tnt_error(tcon->tnt_hndl));
 		set_connect_error(tcon, odbc_error , tnt_strerror(tcon->tnt_hndl));
 		return SQL_ERROR;

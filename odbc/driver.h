@@ -84,6 +84,10 @@ typedef struct odbc_env_t {
 	struct error_holder e;
 } odbc_env;
 
+
+void
+set_connect_native_error(odbc_connect *tcon, int err);
+
 /*
  * Convert tnt error code to ODBC error.
  **/
