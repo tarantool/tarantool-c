@@ -285,6 +285,10 @@ env_set_attr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len)
 	/* HYC00	Optional feature not implemented*/
 	/* SQL_ATTR_ODBC_VERSION */
 	/* SQL_ATTR_OUTPUT_NTS */
+	 switch (attr) {
+	 case SQL_ATTR_ODBC_VERSION:
+		 return SQL_SUCCESS;
+	 }
 	return SQL_ERROR;
 }
 
