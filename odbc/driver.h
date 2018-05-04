@@ -13,7 +13,8 @@ enum ERROR_CODES {
 	ODBC_22003_ERROR, /* Value too big */
 	ODBC_HY001_ERROR, /* Underling memory allocation failed */
 	ODBC_HY010_ERROR, /* Function sequence error */
-	ODBC_07009_ERROR, /* Invalid number in bind parameters reference or in descriptor */
+	ODBC_07009_ERROR, /* Invalid number in bind parameters reference
+			     or in descriptor */
 	ODBC_HY003_ERROR, /* Invalid application buffer type */
 	ODBC_HY090_ERROR, /* Invalid string or buffer length */
 	ODBC_HY009_ERROR, /* Invalid use of null pointer */
@@ -34,9 +35,9 @@ struct dsn {
 };
 
 struct error_holder {
-	int error_code;
-	char *error_message;
-	int native_error;
+	int code;
+	char *message;
+	int native;
 };
 
 typedef struct odbc_connect_t {
@@ -111,8 +112,8 @@ void
 set_connect_error(odbc_connect *tcon, int code, const char* msg);
 
 /*
- * As above function with string length parameter. It's the same as above function If 
- * called with len equal to -1.
+ * As above function with string length parameter. It's the same as above
+ * function if it is called with len equal to -1.
  **/
 
 void
@@ -127,8 +128,8 @@ void
 set_stmt_error(odbc_stmt *tcon, int code, const char* msg);
 
 /*
- * As above function with string length parameter. It's the same as above function If 
- * called with len equal to -1.
+ * As above function with string length parameter. It's the same as above
+ * function if called with len equal to -1.
  **/
 void
 set_stmt_error_len(odbc_stmt *tcon, int code, const char* msg, int len);
@@ -142,54 +143,50 @@ void
 set_env_error(odbc_env *env, int code, const char* msg);
 
 /*
- * As above function with string length parameter. It's the same as above function If 
- * called with len equal to -1.
+ * As above function with string length parameter. It's the same as above
+ * function if it iscalled with len equal to -1.
  **/
 
 void
 set_env_error_len(odbc_env *env, int code, const char* msg, int len);
 
-SQLRETURN free_connect(SQLHDBC hdbc);
-SQLRETURN free_stmt(SQLHSTMT stmth, SQLUSMALLINT option);
-SQLRETURN alloc_env(SQLHENV *oenv);
-SQLRETURN alloc_connect(SQLHENV env, SQLHDBC *oconn);
-SQLRETURN alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt );
-SQLRETURN free_env(SQLHENV env);
-SQLRETURN free_connect(SQLHDBC conn);
-SQLRETURN env_set_attr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len);
-SQLRETURN env_get_attr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER in_len, SQLINTEGER *out_len);
-SQLRETURN odbc_dbconnect(SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user, SQLSMALLINT user_sz,
-			 SQLCHAR *auth, SQLSMALLINT auth_sz);
-SQLRETURN odbc_disconnect(SQLHDBC conn);
-SQLRETURN stmt_prepare(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len);
-SQLRETURN stmt_execute(SQLHSTMT stmth);
-SQLRETURN  stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT ctype, SQLSMALLINT sqltype,
-			SQLUINTEGER col_len, SQLSMALLINT scale, SQLPOINTER buf,
-			SQLINTEGER buf_len, SQLLEN *len_ind);
-SQLRETURN stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER val, SQLLEN in_len, SQLLEN *out_len);
-
-SQLRETURN stmt_fetch(SQLHSTMT stmth);
-
-SQLRETURN  get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
-		    SQLLEN in_len, SQLLEN *out_len);
-
-SQLRETURN column_info(SQLHSTMT stmt, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT maxname, SQLSMALLINT *name_len,
-		      SQLSMALLINT *type, SQLULEN *colsz, SQLSMALLINT *scale, SQLSMALLINT *isnull);
-SQLRETURN num_cols(SQLHSTMT stmt, SQLSMALLINT *ncols);
-SQLRETURN affected_rows(SQLHSTMT stmth, SQLLEN *cnt);
-SQLRETURN col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER char_p,
-	      SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLLEN *num_p);
-SQLRETURN num_params(SQLHSTMT stmth, SQLSMALLINT *cnt);
-SQLRETURN get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLCHAR *state,  
-		       SQLINTEGER *errno_ptr,SQLCHAR *txt, SQLSMALLINT buflen, SQLSMALLINT *out_len);
-SQLRETURN get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLSMALLINT diag_id,
-	       SQLPOINTER info_ptr, SQLSMALLINT buflen, SQLSMALLINT * out_len);
-
-
-
-
-
-
-
-
+SQLRETURN free_connect(SQLHDBC);
+SQLRETURN free_stmt(SQLHSTMT, SQLUSMALLINT);
+SQLRETURN alloc_env(SQLHENV *);
+SQLRETURN alloc_connect(SQLHENV, SQLHDBC *);
+SQLRETURN alloc_stmt(SQLHDBC, SQLHSTMT *);
+SQLRETURN free_env(SQLHENV);
+SQLRETURN free_connect(SQLHDBC);
+SQLRETURN env_set_attr(SQLHENV, SQLINTEGER, SQLPOINTER, SQLINTEGER);
+SQLRETURN env_get_attr(SQLHENV, SQLINTEGER, SQLPOINTER, SQLINTEGER,
+		       SQLINTEGER *);
+SQLRETURN odbc_dbconnect(SQLHDBC, SQLCHAR *, SQLSMALLINT, SQLCHAR *,
+			 SQLSMALLINT,SQLCHAR *, SQLSMALLINT);
+SQLRETURN odbc_disconnect(SQLHDBC);
+SQLRETURN stmt_prepare(SQLHSTMT ,SQLCHAR  *, SQLINTEGER);
+SQLRETURN stmt_execute(SQLHSTMT);
+SQLRETURN  stmt_in_bind(SQLHSTMT, SQLUSMALLINT, SQLSMALLINT, SQLSMALLINT,
+			SQLSMALLINT ,SQLUINTEGER, SQLSMALLINT, SQLPOINTER,
+			SQLINTEGER, SQLLEN *);
+SQLRETURN stmt_out_bind(SQLHSTMT ,SQLUSMALLINT, SQLSMALLINT, SQLPOINTER,
+			SQLLEN, SQLLEN *);
+SQLRETURN stmt_fetch(SQLHSTMT);
+SQLRETURN  get_data(SQLHSTMT, SQLUSMALLINT, SQLSMALLINT, SQLPOINTER,
+		    SQLLEN, SQLLEN *);
+SQLRETURN column_info(SQLHSTMT, SQLUSMALLINT, SQLCHAR *, SQLSMALLINT,
+		      SQLSMALLINT *,SQLSMALLINT *, SQLULEN *, SQLSMALLINT *,
+		      SQLSMALLINT *);
+SQLRETURN num_cols(SQLHSTMT, SQLSMALLINT *);
+SQLRETURN affected_rows(SQLHSTMT, SQLLEN *);
+SQLRETURN col_attribute(SQLHSTMT, SQLUSMALLINT, SQLUSMALLINT, SQLPOINTER,
+			SQLSMALLINT ,SQLSMALLINT *, SQLLEN *);
+SQLRETURN num_params(SQLHSTMT ,SQLSMALLINT *);
+SQLRETURN get_diag_rec(SQLSMALLINT ,SQLHANDLE ,SQLSMALLINT, SQLCHAR *,
+		       SQLINTEGER *,SQLCHAR *, SQLSMALLINT, SQLSMALLINT *);
+SQLRETURN get_diag_field(SQLSMALLINT, SQLHANDLE, SQLSMALLINT, SQLSMALLINT,
+			 SQLPOINTER, SQLSMALLINT, SQLSMALLINT *);
+SQLRETURN get_connect_attr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
+			   SQLINTEGER len, SQLINTEGER *olen);
+SQLRETURN set_connect_attr(SQLHDBC hdbc, SQLINTEGER att, SQLPOINTER val,
+			   SQLINTEGER len);
 
