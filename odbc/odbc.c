@@ -98,53 +98,26 @@ SQLSetEnvAttr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len)
 }
 
 SQLRETURN SQL_API
-SQLGetEnvAttr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER in_len, SQLINTEGER *out_len)
+SQLGetEnvAttr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val,
+	      SQLINTEGER in_len, SQLINTEGER *out_len)
 {
 
 	return env_get_attr(ehndl,attr,val,in_len,out_len);
 }
 
 SQLRETURN SQL_API
-SQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER  val, SQLINTEGER  len)
+SQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER  val,
+		  SQLINTEGER len)
 {
-	odbc_connect *ocon = (odbc_connect *)hdbc;
-	if (!ocon)
-		return SQL_ERROR;
-	switch (att) {
-	case SQL_ATTR_CONNECTION_TIMEOUT:
-		if (!ocon->opt_timeout) {
-			ocon->opt_timeout = (int32_t *)malloc(sizeof(int32_t));
-			if (!ocon->opt_timeout)
-				return SQL_ERROR;
-                        *(ocon->opt_timeout) = (int32_t) val; 
-		}
-		break;
-	default:
-		return SQL_ERROR;
-	}
-	return SQL_SUCCESS;
+	return set_connect_attr(hdbc,att,val,len);
 }
 
 
 SQLRETURN SQL_API
-SQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val, SQLINTEGER len, SQLINTEGER *olen)
+SQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
+		  SQLINTEGER len, SQLINTEGER *olen)
 {
-	odbc_connect *ocon = (odbc_connect *)hdbc;
-        if (!ocon)
-                return SQL_ERROR;
-        switch (att) {
-        case SQL_ATTR_CONNECTION_TIMEOUT:
-                if (!ocon->opt_timeout) 
-			return SQL_ERROR;
-		if (val)
-			*((int32_t*)val)=*ocon->opt_timeout;
-		if (olen)
-			*olen = sizeof(int32_t);
-		break;
-	default:
-		return SQL_ERROR;
-	}
-	return SQL_SUCCESS;
+	return get_connect_attr(hdbc,att,val,len,olen);
 }
 		
 SQLRETURN SQL_API
@@ -156,8 +129,8 @@ SQLDriverConnect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 
 
 SQLRETURN SQL_API
-SQLConnect(SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user, SQLSMALLINT user_sz,
-	   SQLCHAR *auth, SQLSMALLINT auth_sz)
+SQLConnect(SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
+	   SQLSMALLINT user_sz, SQLCHAR *auth, SQLSMALLINT auth_sz)
 {
 	return odbc_dbconnect(conn,serv,serv_sz,user,user_sz,auth,auth_sz);
 }
@@ -210,7 +183,8 @@ SQLExecDirect(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
  **/
               
 SQLRETURN  SQL_API
-SQLNativeSql(SQLHDBC hdbc, SQLCHAR *inq, SQLINTEGER in_len, SQLCHAR *outq, SQLINTEGER out_len, SQLINTEGER *out_len_res)
+SQLNativeSql(SQLHDBC hdbc, SQLCHAR *inq, SQLINTEGER in_len, SQLCHAR *outq,
+	     SQLINTEGER out_len, SQLINTEGER *out_len_res)
 {
 	odbc_stmt *h = (odbc_stmt*) hdbc;
 	if (!h || inq == NULL)
@@ -228,15 +202,18 @@ SQLNativeSql(SQLHDBC hdbc, SQLCHAR *inq, SQLINTEGER in_len, SQLCHAR *outq, SQLIN
 
 
 SQLRETURN  SQL_API
-SQLBindParameter(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT ctype, SQLSMALLINT sqltype,
-		 SQLULEN col_len, SQLSMALLINT scale, SQLPOINTER buf,
-		 SQLLEN buf_len, SQLLEN *len_ind)
+SQLBindParameter(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype,
+		 SQLSMALLINT ctype, SQLSMALLINT sqltype, SQLULEN col_len,
+		 SQLSMALLINT scale, SQLPOINTER buf, SQLLEN buf_len,
+		 SQLLEN *len_ind)
 {
-	return stmt_in_bind(stmth, parnum, ptype, ctype, sqltype, col_len, scale, buf, buf_len, len_ind);
+	return stmt_in_bind(stmth,parnum,ptype,ctype,sqltype,col_len,scale,
+			    buf, buf_len, len_ind);
 }
 
 SQLRETURN SQL_API
-SQLBindCol(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER val, SQLLEN in_len, SQLLEN *out_len)
+SQLBindCol(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype,
+	   SQLPOINTER val, SQLLEN in_len, SQLLEN *out_len)
 {
 	return stmt_out_bind(stmth, colnum, ctype, val, in_len, out_len);
 }
@@ -254,10 +231,12 @@ SQLGetData(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER    val
 }
 
 SQLRETURN SQL_API
-SQLDescribeCol(SQLHSTMT stmt, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT maxname, SQLSMALLINT *name_len,
-	       SQLSMALLINT *type, SQLULEN *colsz, SQLSMALLINT *scale, SQLSMALLINT *isnull)
+SQLDescribeCol(SQLHSTMT stmt, SQLUSMALLINT ncol, SQLCHAR *colname,
+	       SQLSMALLINT maxname, SQLSMALLINT *name_len, SQLSMALLINT *type,
+	       SQLULEN *colsz, SQLSMALLINT *scale, SQLSMALLINT *isnull)
 {
-	return column_info(stmt,ncol,colname,maxname,name_len,type,colsz,scale,isnull);
+	return column_info(stmt,ncol,colname,maxname,name_len,type,colsz,
+			   scale,isnull);
 }
 
 SQLRETURN SQL_API
@@ -273,8 +252,9 @@ SQLRowCount(SQLHSTMT stmth, SQLLEN *cnt)
 }
 
 SQLRETURN SQL_API
-SQLColAttribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER char_p,
-		SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLLEN *num_p)
+SQLColAttribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id,
+		SQLPOINTER char_p, SQLSMALLINT buflen, SQLSMALLINT *out_len,
+		SQLLEN *num_p)
 {
 	return col_attribute(stmth, ncol, id, char_p, buflen, out_len, num_p);
 }
@@ -287,15 +267,19 @@ SQLNumParams(SQLHSTMT stmth, SQLSMALLINT *cnt)
 }
 
 SQLRETURN SQL_API
-SQLGetDiagRec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLCHAR *state,  
-	      SQLINTEGER *errno_ptr,SQLCHAR *txt, SQLSMALLINT buflen, SQLSMALLINT *out_len)
+SQLGetDiagRec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
+	      SQLCHAR *state, SQLINTEGER *errno_ptr,SQLCHAR *txt,
+	      SQLSMALLINT buflen, SQLSMALLINT *out_len)
 {
-	return get_diag_rec(hndl_type, hndl, rnum, state,errno_ptr, txt, buflen, out_len);
+	return get_diag_rec(hndl_type, hndl, rnum, state,errno_ptr, txt,
+			    buflen, out_len);
 }
 
 SQLRETURN SQL_API
-SQLGetDiagField(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum, SQLSMALLINT diag_id,
-		SQLPOINTER info_ptr, SQLSMALLINT buflen, SQLSMALLINT * out_len)
+SQLGetDiagField(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
+		SQLSMALLINT diag_id, SQLPOINTER info_ptr, SQLSMALLINT buflen,
+		SQLSMALLINT * out_len)
 {
-	return get_diag_field(hndl_type, hndl, rnum, diag_id, info_ptr, buflen, out_len);
+	return get_diag_field(hndl_type, hndl, rnum, diag_id, info_ptr,
+			      buflen, out_len);
 }
