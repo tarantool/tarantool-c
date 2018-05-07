@@ -17,7 +17,7 @@ void
 free_dsn(struct dsn *dsn)
 {
 	if(dsn) {
-		free(dsn->orig);
+		free(dsn->dsn);
 		free(dsn->database);
 		free(dsn->host);
 		free(dsn->flag);
@@ -331,7 +331,7 @@ odbc_dbconnect (SQLHDBC dbch, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 		return SQL_INVALID_HANDLE;
 	odbc_connect *tcon = (odbc_connect *)dbch;
 	if (tcon->is_connected)
-		return SQL_SUCCESS_WITH_INFO;<<<<<<< HEAD
+		return SQL_SUCCESS_WITH_INFO;
 	tcon->dsn_params = alloc_dsn();
 	if (!tcon->dsn_params || !odbc_read_dsn(tcon,serv,serv_sz,user,user_sz,auth,auth_sz))
 		return SQL_ERROR;
