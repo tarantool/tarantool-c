@@ -24,13 +24,14 @@ enum ERROR_CODES {
 };
 
 struct dsn {
-	char* orig;
-	char* database;
-	char* host;
-	char* user;
-	char* password;
+	char *dsn;
+	char *database;
+	char *host;
+	char *user;
+	char *password;
 	int port;
-	char* flag;
+	int timeout;
+	char *flag;
 };
 
 struct error_holder {

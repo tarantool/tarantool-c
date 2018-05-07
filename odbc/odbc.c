@@ -147,7 +147,12 @@ SQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val, SQLINTEGER len,
 	return SQL_SUCCESS;
 }
 		
-
+SQLRETURN SQL_API
+SQLDriverConnect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,  
+		 SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLUSMALLINT drv_compl)
+{
+	odbc_drv_connect(dbch, whndl, conn_s, slen, out_conn_s, buflen, out_len, drv_compl);
+}
 
 
 SQLRETURN SQL_API

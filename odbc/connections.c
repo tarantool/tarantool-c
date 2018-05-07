@@ -24,6 +24,8 @@ free_dsn(struct dsn *dsn)
 	}
 }
 
+
+
 int
 getdsnattr(char *dsn, char* attr, char *val, int olen)
 {
@@ -76,25 +78,134 @@ getdsnattr(char *dsn, char* attr, char *val, int olen)
 	return -1;
 }
 
+struct attributes {
+	char *name;
+	char *value;
+};
+
+struct keyval {
+	struct attributes *pairs; 
+	char *buffer;
+	int size;
+};
+
+static void
+free_keys(struct keyval* keys)
+{
+	if (keys) {
+		free(keys->pairs);
+		free(kyes->buffer);
+		free(kyes);
+	}
+}
+
+static struct keyval*
+load_attr(const char *dsn_str, int dsn_len)
+{
+	if (dsn_len == SQL_NTS)
+		dsn_len = strlen(dsn_str);
+	char *dsn_copy = stndup(dsn_str,dsn_len);
+	char *p = dsn_copy;
+	char *attr;
+	struct keyval *keys = (struct keyval*) malloc (sizeof(struct keyval));
+	if (keys) {
+		kyes->buffer = dsn_copy;
+		keys->pairs = NULL;
+		keys->size = 0;
+	} else
+		goto error;
+	
+	while((attr = strsep(&p,";"))) {
+			char *val = strchr(attr,'=');
+			if (!val)
+				continue;
+			*val = '\0';
+			val++;
+			keys->size++;
+			keys->pairs  = (struct attributes *)realloc(keys->pairs, sizeof(struct attributes)*(keys->size));
+			if (!keys->pairs)
+				goto error;
+			keys->pairs[keys->size-1].name = attr;
+			keys->pairs[keys->size-1].value = val;
+	}
+	return keys;
+error:
+	free_keys(keys);
+	return NULL:
+}
+
+static char *
+get_attr(const char *name,const struct keyval* items)
+{
+	if (items && items->pairs) {
+		for(int sz = items->size; sz ; sz--)
+			if (strcmp(items->pairs[items->size-sz].name,name)==0)
+				return items->pairs[sz-1].value;
+	}
+	return NULL;
+}
+
+struct dsn *
+parse_dsn_attr_string(odbc_connect *tcon, SQLCHAR *dsn_str, SQLSMALLINT dsnlen)
+{
+	struct dsn *ret = tcon->dsn_params;
+	struct keyval *kv = load_attr(dsn_str,dsnlen);
+	if (!kv)
+		return NULL;
+	char *v;
+	if ((v=get_attr("DSN",kv))) {
+		ret->dsn = strdup(v);
+	}
+	if ((v=get_attr("UID",kv))) {
+		ret->user = strdup(v);
+	}
+	if ((v=get_attr("PWD",kv))) {
+		ret->password = strdup(v);
+	}
+	if ((v=get_attr("HOST",kv))) {
+		ret->host = strdup(v);
+	}
+	if ((v=get_attr("DATABASE",kv))) {
+		ret->database = strdup(v);
+	}
+	if ((v=get_attr("PORT",kv))) {
+		ret->port = atoi(v);
+	}
+	if ((v=get_attr("TIMEOUT",kv))) {
+		ret->timeout = atoi(v);
+	}
+	if ((v=get_attr("FLAGS",kv))) {
+		ret->flags = strdup(v);
+	}
+	return ret;
+}
+
+static struct dsn *
+alloc_dsn(void)
+{
+	struct dsn *ret = (struct dsn *)malloc(sizeof(struct dsn));
+	if (!ret)
+		return NULL;
+	memset(ret,0,sizeof(struct dsn));
+	retunr ret;
+}
+
 #define PARAMSZ  1024
 #define ODBCINI "odbc.ini"
 
 struct dsn *
-odbc_parse_dsn(odbc_connect *tcon, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user, SQLSMALLINT user_sz,
-	       SQLCHAR *password, SQLSMALLINT password_sz)
+odbc_read_dsn(odbc_connect *tcon, SQLCHAR *dsn, SQLSMALLINT dsn_sz, SQLCHAR *user,
+	       SQLSMALLINT user_sz, SQLCHAR *password, SQLSMALLINT password_sz)
 {
-	struct dsn *ret = (struct dsn *)malloc(sizeof(struct dsn));
-	memset(ret,0,sizeof(struct dsn));
-	if (!ret)
-		return NULL;
+	struct dsn *ret = tcon->dsn_params;
 	if (serv) {
-		ret->orig = strndup((char*)serv,serv_sz);
-		if (!ret->orig)
+		if (dsn_sz == SQL_NTS)
+			dsn_sz = strlen((char *)dsn);
+		ret->dsn = strndup((char*)dsn,dsn_sz);
+		if (!ret->dsn)
 			goto error;
 	}
-
-	if (serv_sz == SQL_NTS)
-		serv_sz = strlen((char *)serv);
+	
 	if (user_sz == SQL_NTS)
 		user_sz = strlen((char*)user);
 	if (password_sz == SQL_NTS)
@@ -111,13 +222,16 @@ odbc_parse_dsn(odbc_connect *tcon, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *
 	char port[PARAMSZ];
 
 	
-	SQLGetPrivateProfileString(ret->orig, "HOST", "localhost", ret->host, PARAMSZ, ODBCINI );
-	SQLGetPrivateProfileString(ret->orig, "DATABASE", "", ret->database, PARAMSZ, ODBCINI );
-	SQLGetPrivateProfileString(ret->orig, "FLAG", "0", ret->flag, PARAMSZ, ODBCINI );
-	SQLGetPrivateProfileString(ret->orig, "PORT","0", &port[0], PARAMSZ, ODBCINI );
+	SQLGetPrivateProfileString(ret->dsn, "HOST", "localhost", ret->host, PARAMSZ, ODBCINI );
+	SQLGetPrivateProfileString(ret->dsn, "DATABASE", "", ret->database, PARAMSZ, ODBCINI );
+	SQLGetPrivateProfileString(ret->dsn, "FLAG", "0", ret->flag, PARAMSZ, ODBCINI );
 	
-	ret->port = atoi (port);
-	      
+	SQLGetPrivateProfileString(ret->dsn, "PORT","0", &port[0], PARAMSZ, ODBCINI );
+	ret->port = atoi(port);
+
+	SQLGetPrivateProfileString(ret->dsn, "TIMEOUT","0", &port[0], PARAMSZ, ODBCINI );
+	ret->timeout = atoi(port); 
+	
 	if (user) {
 		ret->user = strndup((char*)user,user_sz);
 		if (!ret->user)
@@ -126,38 +240,58 @@ odbc_parse_dsn(odbc_connect *tcon, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *
 		ret->user = (char*) malloc(PARAMSZ);
 		if (!ret->user) 
 			goto error;
-		SQLGetPrivateProfileString(ret->orig, "USER","", ret->user, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, "UID","", ret->user, PARAMSZ, ODBCINI );
 	}
 
 	if (password) {
-		ret->password = strndup((char*)password,password_sz);
+		ret->password = strndup((char *)password,password_sz);
 		if (!ret->password)
 			goto error;		
 	} else {
-		ret->password = (char*) malloc(PARAMSZ);
+		ret->password = (char *)malloc(PARAMSZ);
 		if (!ret->password) 
 			goto error;
-		SQLGetPrivateProfileString(ret->orig, "PASSWORD","", ret->password, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, "PASSWORD","", ret->password, PARAMSZ, ODBCINI );
 	}
 	
 	return ret;
 error:
-	free_dsn(ret);
 	set_connect_error(tcon,ODBC_MEM_ERROR,"Unable to allocate memory");
 	return NULL;
 }
 
-SQLRETURN
-odbc_dbconnect (SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user, SQLSMALLINT user_sz,
-	   SQLCHAR *auth, SQLSMALLINT auth_sz)
+
+
+
+SQLRETURN SQL_API
+odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,  
+		 SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLUSMALLINT drv_compl)
 {
-	if (conn == SQL_NULL_HDBC)
+
+	if (dbch == SQL_NULL_HDBC)
 		return SQL_INVALID_HANDLE;
-	odbc_connect *tcon = (odbc_connect *)conn;
+	odbc_connect *tcon = (odbc_connect *)dbch;
 	if (tcon->is_connected)
 		return SQL_SUCCESS_WITH_INFO;
-	tcon->dsn_params=odbc_parse_dsn(tcon,serv,serv_sz,user,user_sz,auth,auth_sz);
-	if (!tcon->dsn_params) 
+	tcon->dsn_params = alloc_dsn();
+	if (!tcon->dsn_params || !parse_dsn_attr_string(tcon,conn_s,slen))
+		return SQL_ERROR;
+	
+
+}
+
+
+SQLRETURN
+odbc_dbconnect (SQLHDBC dbch, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user, SQLSMALLINT user_sz,
+	   SQLCHAR *auth, SQLSMALLINT auth_sz)
+{
+	if (dbch == SQL_NULL_HDBC)
+		return SQL_INVALID_HANDLE;
+	odbc_connect *tcon = (odbc_connect *)dbch;
+	if (tcon->is_connected)
+		return SQL_SUCCESS_WITH_INFO;
+	tcon->dsn_params = alloc_dsn();
+	if (!tcon->dsn_params || !odbc_read_dsn(tcon,serv,serv_sz,user,user_sz,auth,auth_sz))
 		return SQL_ERROR;
 	
 	tcon->tnt_hndl = tnt_net(NULL);
