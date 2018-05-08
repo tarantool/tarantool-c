@@ -12,6 +12,7 @@
 #include <tarantool/tnt_net.h>
 #include "driver.h"
 
+#define PARAMSZ  1024
 
 void
 free_dsn(struct dsn *dsn)
@@ -121,7 +122,7 @@ load_attr(const char *dsn_str, int dsn_len)
 	
 	while((attr = strsep(&p,";"))) {
 			char *val = strchr(attr,'=');
-			if (!val)
+			if (!val || (strlen(val)-1) > PARAMSZ)
 				continue;
 			*val = '\0';
 			val++;
@@ -158,19 +159,19 @@ parse_dsn_attr_string(odbc_connect *tcon, SQLCHAR *dsn_str, SQLSMALLINT dsnlen)
 		return NULL;
 	char *v;
 	if ((v=get_attr("DSN",kv))) {
-		ret->dsn = strdup(v);
+		strcpy(ret->dsn,v);
 	}
 	if ((v=get_attr("UID",kv))) {
-		ret->user = strdup(v);
+		strcpy(ret->user,v);
 	}
 	if ((v=get_attr("PWD",kv))) {
-		ret->password = strdup(v);
+		strcpy(ret->password,v);
 	}
 	if ((v=get_attr("HOST",kv))) {
-		ret->host = strdup(v);
+		strcpy(ret->host,v);
 	}
 	if ((v=get_attr("DATABASE",kv))) {
-		ret->database = strdup(v);
+		strcpy(ret->database,v);
 	}
 	if ((v=get_attr("PORT",kv))) {
 		ret->port = atoi(v);
@@ -179,9 +180,31 @@ parse_dsn_attr_string(odbc_connect *tcon, SQLCHAR *dsn_str, SQLSMALLINT dsnlen)
 		ret->timeout = atoi(v);
 	}
 	if ((v=get_attr("FLAGS",kv))) {
-		ret->flags = strdup(v);
+		strcpy(ret->flags,v);
 	}
 	return ret;
+}
+
+int
+make_connect_string(char *buf, odbc_connect *dbc)
+{
+	struct dsn *d = dbc->dsn_params;
+	return snprintf(buf,PARAMSZ,"DSN=%s;UID=%s;PWD=%s;HOST=%s;DATABASE=%s;FLAGS=%s;PORT=%d;TIMEOUT=%d",
+			   d->dsn,d->user,d->password,d->host,d->database,d->flags,d->port,d->timeout);
+}
+
+
+int
+alloc_z(char **p)
+{
+	*p = (char *)malloc(PARAMSZ);
+	if (!p)
+		return 0;
+	else {
+		*p[0] = '\0';
+		*p[PARAMSZ-1] = '\0';
+	}
+	return 1;
 }
 
 static struct dsn *
@@ -191,11 +214,29 @@ alloc_dsn(void)
 	if (!ret)
 		return NULL;
 	memset(ret,0,sizeof(struct dsn));
-	retunr ret;
+
+	if (alloc_z(&ret->dsn) &&
+	    alloc_z(&ret->database) &&
+	    alloc_z(&ret->host) &&
+	    alloc_z(&ret->flag) &&
+	    alloc_z(&ret->user) &&
+	    alloc_z(&ret->password))
+		return ret;
+	else
+		return NULL;
 }
 
-#define PARAMSZ  1024
+
 #define ODBCINI "odbc.ini"
+
+int
+copy_check(char *d, const char *s, int sz)
+{
+	if (( sz == SQL_NTS && strlen((char *)s)>PARAMSZ) || dsn_sz > PARAMSZ)
+		return 0;;
+	strcpy(d,s);
+	return 1;
+}
 
 struct dsn *
 odbc_read_dsn(odbc_connect *tcon, SQLCHAR *dsn, SQLSMALLINT dsn_sz, SQLCHAR *user,
@@ -203,26 +244,9 @@ odbc_read_dsn(odbc_connect *tcon, SQLCHAR *dsn, SQLSMALLINT dsn_sz, SQLCHAR *use
 {
 	struct dsn *ret = tcon->dsn_params;
 	if (dsn) {
-		if (dsn_sz == SQL_NTS)
-			dsn_sz = strlen((char *)dsn);
-		ret->dsn = strndup((char*)dsn,dsn_sz);
-		if (!ret->dsn)
+		if (!copy_check(ret->dsn,dsn,dsn_sz))
 			goto error;
 	}
-	
-	if (user_sz == SQL_NTS)
-		user_sz = strlen((char*)user);
-	if (password_sz == SQL_NTS)
-		password_sz = strlen((char *)password);
-	
-	    
-
-	ret->database = (char*) malloc(PARAMSZ);
-	ret->host = (char*) malloc(PARAMSZ);
-	ret->flag = (char*) malloc(PARAMSZ);
-	if (!ret->database || !ret->host || !ret->flag)
-		goto error;
-	
 	char port[PARAMSZ];
 
 	SQLGetPrivateProfileString(ret->dsn, "HOST", "localhost", ret->host, PARAMSZ, ODBCINI );
@@ -236,32 +260,55 @@ odbc_read_dsn(odbc_connect *tcon, SQLCHAR *dsn, SQLSMALLINT dsn_sz, SQLCHAR *use
 	ret->timeout = atoi(port); 
 
 	if (user) {
-		ret->user = strndup((char*)user,user_sz);
-		if (!ret->user)
-			goto error;		
-	} else {
-		ret->user = (char*) malloc(PARAMSZ);
-		if (!ret->user) 
+		if (!copy_check(ret->user,user,user_sz))
 			goto error;
+	} else {
 		SQLGetPrivateProfileString(ret->dsn, "UID","", ret->user, PARAMSZ, ODBCINI );
 	}
 
 	if (password) {
-		ret->password = strndup((char *)password,password_sz);
-		if (!ret->password)
-			goto error;		
-	} else {
-		ret->password = (char *)malloc(PARAMSZ);
-		if (!ret->password) 
+		if (!copy_check(ret->password,password,password_sz))
 			goto error;
+	} else {
 		SQLGetPrivateProfileString(ret->dsn, "PASSWORD","", ret->password, PARAMSZ, ODBCINI );
 	}
 	
 	return ret;
 error:
-	set_connect_error(tcon,ODBC_MEM_ERROR,"Unable to allocate memory");
+	set_connect_error(tcon,ODBC_HY090_ERROR, "Invalid string or buffer length");
 	return NULL;
 }
+
+static SQLRETURN
+real_connect(odbc_connect *tcon)
+{
+	tcon->tnt_hndl = tnt_net(NULL);
+	if (!tcon->tnt_hndl) {
+		set_connect_error(tcon,ODBC_MEM_ERROR,
+				  "Unable to allocate memory");
+		return SQL_ERROR;
+	}
+	if (tcon->opt_timeout) {
+		struct timeval tv = {*(tcon->opt_timeout),0};
+		tnt_set(tcon->tnt_hndl,TNT_OPT_TMOUT_CONNECT,&tv);
+	}
+	if (!tnt_reopen(tcon->tnt_hndl,tcon->dsn_params->host,
+			tcon->dsn_params->user, tcon->dsn_params->password,
+			tcon->dsn_params->port)) {
+		int odbc_error;
+		if (tnt_error(tcon->tnt_hndl) == TNT_ESYSTEM) {
+			odbc_error = ODBC_08001_ERROR;
+			set_connect_native_error(tcon,tnt_errno(tcon->tnt_hndl));
+		} else
+			odbc_error = tnt2odbc_error(tnt_error(tcon->tnt_hndl));
+		set_connect_error(tcon, odbc_error ,
+				  tnt_strerror(tcon->tnt_hndl));
+		return SQL_ERROR;
+	}
+	tcon->is_connected = 1;
+	return SQL_SUCCESS;
+}
+
 
 SQLRETURN 
 odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,  
@@ -276,7 +323,36 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	tcon->dsn_params = alloc_dsn();
 	if (!tcon->dsn_params || !parse_dsn_attr_string(tcon,conn_s,slen))
 		return SQL_ERROR;
-}	
+
+	/* odbc_read_dsn somehow */
+
+	switch( drv_compl) { 
+        case SQL_DRIVER_PROMPT:
+        case SQL_DRIVER_COMPLETE:
+        case SQL_DRIVER_COMPLETE_REQUIRED:
+        case SQL_DRIVER_NOPROMPT:
+        default:
+		/* Don't do any Windows stuff for prompting user parameters */
+		break;
+	}
+	SQLRETURN ret = real_connect(tcon);
+
+	if (out_conn_s || out_len) {
+		char buff[PARMSZ];
+		int len = make_connect_string(buff,tcon);
+		if (out_conn_s) {
+			if (buflen<len) {
+				strncpy(out_conn_s,buff,buflen-1);
+				out_conn_s[buflen-1] = '\0';
+			} else {
+				strcpy(out_conn_s,buff);
+			}
+		}
+		if (out_len)
+			*out_len = len;
+	}
+	return ret;
+}
 
 SQLRETURN
 get_connect_attr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
@@ -335,32 +411,7 @@ odbc_dbconnect (SQLHDBC dbch, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 	tcon->dsn_params = alloc_dsn();
 	if (!tcon->dsn_params || !odbc_read_dsn(tcon,serv,serv_sz,user,user_sz,auth,auth_sz))
 		return SQL_ERROR;
-	
-	tcon->tnt_hndl = tnt_net(NULL);
-	if (!tcon->tnt_hndl) {
-		set_connect_error(tcon,ODBC_MEM_ERROR,
-				  "Unable to allocate memory");
-		return SQL_ERROR;
-	}
-	if (tcon->opt_timeout) {
-		struct timeval tv = {*(tcon->opt_timeout),0};
-		tnt_set(tcon->tnt_hndl,TNT_OPT_TMOUT_CONNECT,&tv);
-	}
-	if (!tnt_reopen(tcon->tnt_hndl,tcon->dsn_params->host,
-			tcon->dsn_params->user, tcon->dsn_params->password,
-			tcon->dsn_params->port)) {
-		int odbc_error;
-		if (tnt_error(tcon->tnt_hndl) == TNT_ESYSTEM) {
-			odbc_error = ODBC_08001_ERROR;
-			set_connect_native_error(tcon,tnt_errno(tcon->tnt_hndl));
-		} else
-			odbc_error = tnt2odbc_error(tnt_error(tcon->tnt_hndl));
-		set_connect_error(tcon, odbc_error ,
-				  tnt_strerror(tcon->tnt_hndl));
-		return SQL_ERROR;
-	}
-	tcon->is_connected = 1;
-	return SQL_SUCCESS;
+	return real_connect(tcon);
 }
 
 
