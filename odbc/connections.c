@@ -99,8 +99,8 @@ free_keys(struct keyval* keys)
 {
 	if (keys) {
 		free(keys->pairs);
-		free(kyes->buffer);
-		free(kyes);
+		free(keys->buffer);
+		free(keys);
 	}
 }
 
@@ -109,12 +109,12 @@ load_attr(const char *dsn_str, int dsn_len)
 {
 	if (dsn_len == SQL_NTS)
 		dsn_len = strlen(dsn_str);
-	char *dsn_copy = stndup(dsn_str,dsn_len);
+	char *dsn_copy = strndup(dsn_str,dsn_len);
 	char *p = dsn_copy;
 	char *attr;
 	struct keyval *keys = (struct keyval*) malloc (sizeof(struct keyval));
 	if (keys) {
-		kyes->buffer = dsn_copy;
+		keys->buffer = dsn_copy;
 		keys->pairs = NULL;
 		keys->size = 0;
 	} else
@@ -136,7 +136,7 @@ load_attr(const char *dsn_str, int dsn_len)
 	return keys;
 error:
 	free_keys(keys);
-	return NULL:
+	return NULL;
 }
 
 static char *
@@ -145,16 +145,15 @@ get_attr(const char *name,const struct keyval* items)
 	if (items && items->pairs) {
 		for(int sz = items->size; sz ; sz--)
 			if (strcmp(items->pairs[items->size-sz].name,name)==0)
-				return items->pairs[sz-1].value;
+				return items->pairs[items->size-sz].value;
 	}
 	return NULL;
 }
 
 struct dsn *
-parse_dsn_attr_string(odbc_connect *tcon, SQLCHAR *dsn_str, SQLSMALLINT dsnlen)
+set_dsn_attr_string(odbc_connect *tcon, struct keyval *kv)
 {
 	struct dsn *ret = tcon->dsn_params;
-	struct keyval *kv = load_attr(dsn_str,dsnlen);
 	if (!kv)
 		return NULL;
 	char *v;
@@ -180,7 +179,7 @@ parse_dsn_attr_string(odbc_connect *tcon, SQLCHAR *dsn_str, SQLSMALLINT dsnlen)
 		ret->timeout = atoi(v);
 	}
 	if ((v=get_attr("FLAGS",kv))) {
-		strcpy(ret->flags,v);
+		strcpy(ret->flag,v);
 	}
 	return ret;
 }
@@ -189,8 +188,8 @@ int
 make_connect_string(char *buf, odbc_connect *dbc)
 {
 	struct dsn *d = dbc->dsn_params;
-	return snprintf(buf,PARAMSZ,"DSN=%s;UID=%s;PWD=%s;HOST=%s;DATABASE=%s;FLAGS=%s;PORT=%d;TIMEOUT=%d",
-			   d->dsn,d->user,d->password,d->host,d->database,d->flags,d->port,d->timeout);
+	return snprintf(buf, PARAMSZ, "DSN=%s;UID=%s;PWD=%s;HOST=%s;DATABASE=%s;FLAGS=%s;PORT=%d;TIMEOUT=%d",
+			   d->dsn, d->user, d->password, d->host, d->database, d->flag, d->port, d->timeout);
 }
 
 
@@ -198,11 +197,11 @@ int
 alloc_z(char **p)
 {
 	*p = (char *)malloc(PARAMSZ);
-	if (!p)
+	if (!*p)
 		return 0;
 	else {
-		*p[0] = '\0';
-		*p[PARAMSZ-1] = '\0';
+		(*p)[0] = '\0';
+		(*p)[PARAMSZ-1] = '\0';
 	}
 	return 1;
 }
@@ -232,56 +231,71 @@ alloc_dsn(void)
 int
 copy_check(char *d, const char *s, int sz)
 {
-	if (( sz == SQL_NTS && strlen((char *)s)>PARAMSZ) || dsn_sz > PARAMSZ)
+	if (( sz == SQL_NTS && strlen((char *)s)>PARAMSZ) || sz > PARAMSZ)
 		return 0;;
 	strcpy(d,s);
 	return 1;
 }
 
+
 struct dsn *
-odbc_read_dsn(odbc_connect *tcon, SQLCHAR *dsn, SQLSMALLINT dsn_sz, SQLCHAR *user,
-	       SQLSMALLINT user_sz, SQLCHAR *password, SQLSMALLINT password_sz)
+set_connection_params(odbc_connect *tcon, SQLCHAR *user, SQLSMALLINT user_sz,
+		      SQLCHAR *password, SQLSMALLINT password_sz)
 {
 	struct dsn *ret = tcon->dsn_params;
-	if (dsn) {
-		if (!copy_check(ret->dsn,dsn,dsn_sz))
-			goto error;
-	}
-	char port[PARAMSZ];
-
-	SQLGetPrivateProfileString(ret->dsn, "HOST", "localhost", ret->host, PARAMSZ, ODBCINI );
-	SQLGetPrivateProfileString(ret->dsn, "DATABASE", "", ret->database, PARAMSZ, ODBCINI );
-	SQLGetPrivateProfileString(ret->dsn, "FLAG", "0", ret->flag, PARAMSZ, ODBCINI );
-	
-	SQLGetPrivateProfileString(ret->dsn, "PORT","0", &port[0], PARAMSZ, ODBCINI );
-	ret->port = atoi(port);
-
-	SQLGetPrivateProfileString(ret->dsn, "TIMEOUT","0", &port[0], PARAMSZ, ODBCINI );
-	ret->timeout = atoi(port); 
-
 	if (user) {
-		if (!copy_check(ret->user,user,user_sz))
+		if (!copy_check(ret->user,(char *)user,user_sz))
 			goto error;
-	} else {
-		SQLGetPrivateProfileString(ret->dsn, "UID","", ret->user, PARAMSZ, ODBCINI );
-	}
-
+	} 
 	if (password) {
-		if (!copy_check(ret->password,password,password_sz))
+		if (!copy_check(ret->password,(char *)password,password_sz))
 			goto error;
-	} else {
-		SQLGetPrivateProfileString(ret->dsn, "PASSWORD","", ret->password, PARAMSZ, ODBCINI );
-	}
-	
+	} 
 	return ret;
 error:
 	set_connect_error(tcon,ODBC_HY090_ERROR, "Invalid string or buffer length");
 	return NULL;
 }
 
+struct dsn *
+odbc_read_dsn(odbc_connect *tcon, char *dsn, int dsn_sz)
+{
+	struct dsn *ret = tcon->dsn_params;
+	char port[PARAMSZ];
+	
+	if (dsn) {
+		if (!copy_check(ret->dsn,(char *)dsn,dsn_sz))
+			goto error;
+	}
+	
+	if (ret->host[0] == '\0')
+		SQLGetPrivateProfileString(ret->dsn, "HOST", "localhost", ret->host, PARAMSZ, ODBCINI );
+	if (ret->database[0] == '\0')
+		SQLGetPrivateProfileString(ret->dsn, "DATABASE", "", ret->database, PARAMSZ, ODBCINI );
+	if (ret->flag[0] == '\0')
+		SQLGetPrivateProfileString(ret->dsn, "FLAG", "0", ret->flag, PARAMSZ, ODBCINI );
+	
+	SQLGetPrivateProfileString(ret->dsn, "PORT","0", &port[0], PARAMSZ, ODBCINI );
+	ret->port = atoi(port);
+
+	SQLGetPrivateProfileString(ret->dsn, "TIMEOUT","0", &port[0], PARAMSZ, ODBCINI );
+	ret->timeout = atoi(port);
+	
+	if (ret->user[0] == '\0')
+		SQLGetPrivateProfileString(ret->dsn, "UID","", ret->user, PARAMSZ, ODBCINI );
+	if (ret->password[0] == '\0')
+		SQLGetPrivateProfileString(ret->dsn, "PASSWORD","", ret->password, PARAMSZ, ODBCINI );
+	
+	return ret;
+error:
+	set_connect_error(tcon, ODBC_HY090_ERROR, "Invalid string or buffer length");
+	return NULL;
+}
+
 static SQLRETURN
 real_connect(odbc_connect *tcon)
 {
+	struct dsn *ret = tcon->dsn_params;
 	tcon->tnt_hndl = tnt_net(NULL);
 	if (!tcon->tnt_hndl) {
 		set_connect_error(tcon,ODBC_MEM_ERROR,
@@ -311,7 +325,7 @@ real_connect(odbc_connect *tcon)
 
 
 SQLRETURN 
-odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,  
+odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,
 		 SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLUSMALLINT drv_compl)
 {
 
@@ -320,11 +334,26 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	odbc_connect *tcon = (odbc_connect *)dbch;
 	if (tcon->is_connected)
 		return SQL_SUCCESS_WITH_INFO;
+	
+	struct keyval *kv;
 	tcon->dsn_params = alloc_dsn();
-	if (!tcon->dsn_params || !parse_dsn_attr_string(tcon,conn_s,slen))
-		return SQL_ERROR;
 
-	/* odbc_read_dsn somehow */
+	 /* first we'll read DSN string and parse information from it */
+	if (!tcon->dsn_params || !(kv = load_attr((char *)conn_s, slen))) {
+		set_connect_error(tcon,ODBC_MEM_ERROR, "Unable to allocate memory");
+		return SQL_ERROR;
+	}
+	char * data_source = get_attr("DSN", kv);
+	if (!data_source)
+		data_source = "DEFAULT";
+    
+	/* Next we'll fill defaults with DSN system defaults using data source from string*/
+	odbc_read_dsn(tcon, data_source, strlen(data_source));
+
+	
+	/* And finally override all with supplied DSN string */
+	set_dsn_attr_string(tcon, kv);
+	free_keys(kv);
 
 	switch( drv_compl) { 
         case SQL_DRIVER_PROMPT:
@@ -338,7 +367,7 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	SQLRETURN ret = real_connect(tcon);
 
 	if (out_conn_s || out_len) {
-		char buff[PARMSZ];
+		char buff[PARAMSZ];
 		int len = make_connect_string(buff,tcon);
 		if (out_conn_s) {
 			if (buflen<len) {
@@ -409,8 +438,10 @@ odbc_dbconnect (SQLHDBC dbch, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 	if (tcon->is_connected)
 		return SQL_SUCCESS_WITH_INFO;
 	tcon->dsn_params = alloc_dsn();
-	if (!tcon->dsn_params || !odbc_read_dsn(tcon,serv,serv_sz,user,user_sz,auth,auth_sz))
+	if (!tcon->dsn_params || !odbc_read_dsn(tcon, (char *)serv, serv_sz)
+	    || !set_connection_params(tcon, user, user_sz, auth, auth_sz))
 		return SQL_ERROR;
+
 	return real_connect(tcon);
 }
 
