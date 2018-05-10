@@ -11,7 +11,7 @@
 static int
 tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col);
 static int
-tnt_fetch_bind_result(tnt_stmt_t * stmt);
+tnt_fetch_binded_result(tnt_stmt_t * stmt);
 
 static tnt_stmt_t *
 tnt_stmt_new(struct tnt_stream *s)
@@ -162,7 +162,7 @@ tnt_stmt_t *
 tnt_query(struct tnt_stream *s, const char *text, int32_t len)
 {
 	if (s && (tnt_execute(s,text,len,NULL)!=FAIL))
-		return tnt_stmt_fetch(s);
+		return tnt_filfull(s);
 	return NULL;
 }
 
@@ -396,7 +396,7 @@ error:
 }
 
 static tnt_stmt_t* 
-tnt_fetch_result_stmt(tnt_stmt_t *);
+tnt_filfull_stmt(tnt_stmt_t *);
 
 int
 tnt_stmt_execute(tnt_stmt_t* stmt)
@@ -414,13 +414,13 @@ tnt_stmt_execute(tnt_stmt_t* stmt)
 			tnt_stream_free(args);
 		}
 	}
-	if (result !=FAIL && (tnt_fetch_result_stmt(stmt)!=NULL))
+	if (result !=FAIL && (tnt_filfull_stmt(stmt)!=NULL))
 		return OK;
 	return FAIL;
 }
 
 tnt_stmt_t *
-tnt_stmt_fetch(struct tnt_stream *stream)
+tnt_filfull(struct tnt_stream *stream)
 {
 	tnt_stmt_t *stmt = (tnt_stmt_t *) tnt_mem_alloc(sizeof(tnt_stmt_t));
 	if (!stmt)
@@ -428,7 +428,7 @@ tnt_stmt_fetch(struct tnt_stream *stream)
 	stmt->stream = stream;
 	stmt->row = NULL;
 	stmt->a_rows = 0;
-	if (!tnt_fetch_result_stmt(stmt)) {
+	if (!tnt_filfull_stmt(stmt)) {
 		tnt_stmt_free(stmt);
 		return NULL;
 	}
@@ -436,7 +436,7 @@ tnt_stmt_fetch(struct tnt_stream *stream)
 }
 
 static tnt_stmt_t *
-tnt_fetch_result_stmt(tnt_stmt_t *stmt)
+tnt_filfull_stmt(tnt_stmt_t *stmt)
 {
 	struct tnt_stream *stream = stmt->stream;
 	if (tnt_flush(stream) == -1)
@@ -645,7 +645,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
  * fetched row available.
  */
 static int
-tnt_fetch_bind_result(tnt_stmt_t * stmt)
+tnt_fetch_binded_result(tnt_stmt_t * stmt)
 {
 	if (!stmt || !stmt->row || !stmt->obind)
 		return FAIL;
@@ -661,7 +661,7 @@ tnt_fetch_bind_result(tnt_stmt_t * stmt)
  */
 
 int
-tnt_next_row(tnt_stmt_t * stmt)
+tnt_fetch(tnt_stmt_t * stmt)
 {
 	if (!stmt->reply || stmt->reply->code != 0) {
 		/* set some error */
@@ -692,7 +692,7 @@ tnt_next_row(tnt_stmt_t * stmt)
 		}
 	}
 	if (stmt->obind)
-		tnt_fetch_bind_result(stmt);
+		tnt_fetch_binded_result(stmt);
 	return OK;
 }
 /*

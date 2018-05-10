@@ -76,7 +76,7 @@ test_connect_tcp() {
 	tnt_close(s);
 	tnt_stream_free(s);
 
-	struct tnt_stream sa = {0}; tnt_net(&sa);
+	struct tnt_stream sa; tnt_net(&sa);
 	is  (sa.alloc, 0, "Checking sa.alloc");
 	isnt(tnt_set(&sa, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(&sa), -1, "Connecting");
@@ -406,17 +406,17 @@ test_execute(char *uri) {
 	     "Create execute sql request: select no args");
 	/* isnt(tnt_flush(tnt), -1, "Send to server"); */
        
-	tnt_stmt_t* result = tnt_stmt_fetch(tnt);
+	tnt_stmt_t* result = tnt_filfull(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence");
 
 	if (result) {
-	  int r = tnt_next_row(result);
-	  is(r,OK,"Check tnt_next_row return ok");
+	  int r = tnt_fetch(result);
+	  is(r,OK,"Check tnt_fetch_row return ok");
 	  isnt(result->reply->metadata,NULL,"checking metadata ok");
 	  is(tnt_number_of_cols(result),1,"Checking number of columns");
 	  is(tnt_col_type(result,0),MP_INT,"Checking result column type 0");
 	  is(tnt_col_int(result,0),0,"Checking result column value 0");
-	  r = tnt_next_row(result);
+	  r = tnt_fetch(result);
 	  is(r,NODATA,"Check for NODATA of next row");
 	}
 	tnt_stmt_free(result);
@@ -425,7 +425,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: create table");
 
-	result = tnt_stmt_fetch(tnt);
+	result = tnt_filfull(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after create table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
@@ -455,7 +455,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
-	result = tnt_stmt_fetch(tnt);
+	result = tnt_filfull(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
@@ -510,7 +510,7 @@ test_execute(char *uri) {
 		char out[10]="xxHerxllo";
 		tnt_bind_t param[2];
 		long len;
-		int8_t nil=1;
+		int nil=1;
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_STR;
 		param[0].buffer = (void*)out;
@@ -527,7 +527,7 @@ test_execute(char *uri) {
 		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute 2 val bind  select test");
 		is(tnt_stmt_code(result),0,"checking code after 2 val bind select");
 		int i=0;
-		while(tnt_next_row(result)==OK) {
+		while(tnt_fetch(result)==OK) {
 			is(strncmp(out,"Hello",len),0,"Checking result of first bind var");
 			ok(val>=666,"Cheking result of second int bind var");
 			ok(!nil,"Cheking for not null");
@@ -556,7 +556,7 @@ test_execute(char *uri) {
 		char out[10]="xxHerxllo";
 		tnt_bind_t param[1];
 		long len;
-		int8_t nil=0;
+		int nil=0;
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_STR;
 		param[0].buffer = (void*)out;
@@ -569,7 +569,7 @@ test_execute(char *uri) {
 		is(tnt_bind_result(result,&param[0],1),OK,"output bind result for null");
 
 		int i=0;
-		while(tnt_next_row(result)==OK) {
+		while(tnt_fetch(result)==OK) {
 			ok(nil,"Cheking result for null");
 			i++;
 		}
@@ -581,7 +581,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
-	result = tnt_stmt_fetch(tnt);
+	result = tnt_filfull(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
@@ -645,7 +645,7 @@ test_execute(char *uri) {
 		double out;
 		tnt_bind_t param[2];
 		long len;
-		int8_t nil=1;
+		int nil=1;
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_DOUBLE;
 		param[0].buffer = (void*)&out;
@@ -661,7 +661,7 @@ test_execute(char *uri) {
 		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute double 2 val bind  select test");
 		is(tnt_stmt_code(result),0,"checking code after double 2 val bind select");
 		int i=0;
-		while(tnt_next_row(result)==OK) {
+		while(tnt_fetch(result)==OK) {
 			ok(fabsl(ref-out)<0.01,"Checking result of first double bind var");
 			ok(val>=666,"Checking result of second int bind var");
 			ok(!nil,"Checking for not null");
@@ -688,7 +688,7 @@ test_execute(char *uri) {
 		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute second double 2 val bind  select test");
 		is(tnt_stmt_code(result),0,"checking code after second double 2 val bind select");
 
-		while(tnt_next_row(result)==OK) {
+		while(tnt_fetch(result)==OK) {
 			out = atof(double_str);
 			ok(fabsl(ref-out)<0.01,"Checking result of first double bind var str conv");
 			val = atoi(int_str);
@@ -704,7 +704,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
-	result = tnt_stmt_fetch(tnt);
+	result = tnt_filfull(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
