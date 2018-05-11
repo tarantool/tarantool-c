@@ -7,27 +7,27 @@
 #include <tarantool/tarantool.h>
 #include "driver.h"
 
-SQLRETURN
+SQLRETURN SQL_API
 SQLAllocEnv(SQLHENV *oenv)
 {
 	return alloc_env(oenv);
 }
 
-SQLRETURN 
+SQLRETURN SQL_API
 SQLAllocConnect(SQLHENV env, SQLHDBC *oconn)
 {
 	return alloc_connect(env,oconn);
 }
 
 
-SQLRETURN 
+SQLRETURN SQL_API
 SQLAllocStmt(SQLHDBC conn, SQLHSTMT *ostmt )
 {
     return alloc_stmt(conn, ostmt);
 }
 
 
-SQLRETURN 
+SQLRETURN SQL_API 
 SQLAllocHandle(SQLSMALLINT handle_type, SQLHANDLE ihandle, SQLHANDLE *ohandle)
 {
 	switch (handle_type) {
@@ -43,38 +43,38 @@ SQLAllocHandle(SQLSMALLINT handle_type, SQLHANDLE ihandle, SQLHANDLE *ohandle)
 	}
 }
 
-SQLRETURN
+SQLRETURN SQL_API
 SQLFreeEnv(SQLHENV env)
 {
 	return free_env(env);
 }
 
-SQLRETURN
+SQLRETURN SQL_API
 SQLFreeConnect(SQLHDBC conn)
 {
 	return free_connect(conn);
 }
 
-SQLRETURN
+SQLRETURN SQL_API
 SQLFreeStmt(SQLHSTMT stmt, SQLUSMALLINT option)
 {
 	return free_stmt(stmt,option);
 }
 
-SQLRETURN 
+SQLRETURN SQL_API 
 SQLCloseCursor(SQLHSTMT stmt)
 {
 	return free_stmt(stmt,SQL_CLOSE);
 }
 
-SQLRETURN 
+SQLRETURN SQL_API
 SQLCancel(SQLHSTMT stmt)
 {
 	return free_stmt(stmt,SQL_CLOSE);
 }
 
 
-SQLRETURN 
+SQLRETURN SQL_API
 SQLFreeHandle(SQLSMALLINT handle_type, SQLHANDLE ihandle)
 {
 	switch (handle_type) {
@@ -283,3 +283,10 @@ SQLGetDiagField(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 	return get_diag_field(hndl_type, hndl, rnum, diag_id, info_ptr,
 			      buflen, out_len);
 }
+
+SQLRETURN SQL_API
+SQLEndTran(SQLSMALLINT htype, SQLHANDLE hndl, SQLSMALLINT tran_type)
+{
+	return end_transact(htype, hndl, tran_type);
+}
+

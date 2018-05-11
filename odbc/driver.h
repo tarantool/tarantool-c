@@ -21,8 +21,22 @@ enum ERROR_CODES {
 	ODBC_24000_ERROR, /* Invalid cursor state */
 	ODBC_HYC00_ERROR, /* Optional feature not implemented */
 	ODBC_EMPTY_STATEMENT, /* ODBC statement without query/prepare */
-	ODBC_07005_ERROR /* "Prepared statement not a cursor-specification" */
+	ODBC_07005_ERROR, /* "Prepared statement not a cursor-specification" */
+	/* ODBC_22003_ERROR,  Bind parameters out of range */
+        ODBC_HY105_ERROR, /* Invalid bind parameters type */
+	/* ODBC_07009_ERROR,  Invalid parameter number */
+	ODBC_42000_ERROR, /* Sql execution error */
+	ODBC_07002_ERROR  /* Too many bind parameters */
 };
+enum TNT_SQL_ERROR {
+	ER_SQL_RANGE = 154,
+	ER_SQL_TYPE = 155,
+	ER_SQL_MAXARG = 156,
+	ER_SQL_EXEC = 157,
+	ER_SQL_GEN = 158,
+	ER_WRONG_BIND = 159
+};
+
 
 struct dsn {
 	char *dsn;

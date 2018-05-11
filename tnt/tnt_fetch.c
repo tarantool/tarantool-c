@@ -447,7 +447,7 @@ tnt_filfull_stmt(tnt_stmt_t *stmt)
 	if (stmt->stream->read_reply(stmt->stream, stmt->reply) != 0) 
 		return NULL;
 	if (tnt_stmt_code(stmt) != 0)
-		return stmt;
+		return NULL;
 
 	stmt->data = stmt->reply->data;
 	if (stmt->data) {

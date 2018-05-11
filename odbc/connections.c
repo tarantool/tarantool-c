@@ -371,10 +371,10 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 		int len = make_connect_string(buff,tcon);
 		if (out_conn_s) {
 			if (buflen<len) {
-				strncpy(out_conn_s,buff,buflen-1);
+				strncpy((char *)out_conn_s,buff,buflen-1);
 				out_conn_s[buflen-1] = '\0';
 			} else {
-				strcpy(out_conn_s,buff);
+				strcpy((char *)out_conn_s,buff);
 			}
 		}
 		if (out_len)
@@ -473,6 +473,12 @@ odbc_disconnect (SQLHDBC conn)
 	return SQL_SUCCESS;
 }
 
+  
+SQLRETURN
+end_transact(SQLSMALLINT htype, SQLHANDLE hndl, SQLSMALLINT tran_type)
+{
+        return SQL_SUCCESS;
+}
 
 #define TEST 1
 #ifdef TEST
@@ -548,5 +554,7 @@ main(int ac, char *av[])
 
 	return 0;
 }
+
+
 
 #endif

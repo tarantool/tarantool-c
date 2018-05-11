@@ -211,7 +211,7 @@ stmt_fetch(SQLHSTMT stmth)
 		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state");
 		return SQL_ERROR;
 	}
-	int retcode = tnt_next_row(stmt->tnt_statement);
+	int retcode = tnt_fetch(stmt->tnt_statement);
 	
 	if (retcode==OK)
 		return SQL_SUCCESS;

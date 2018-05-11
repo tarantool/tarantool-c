@@ -39,13 +39,32 @@ tnt2odbc_error(int e)
 		break;
         case TNT_EBADVAL: /*!< Bad argument (value) */
 		r = ODBC_HY000_ERROR;
+		break;
         case TNT_ELOGIN: /*!< Failed to login */
 		r = ODBC_28000_ERROR;
+		break;
+	case ER_SQL_RANGE:
+		r = ODBC_22003_ERROR;
+		break;
+	case ER_SQL_TYPE:
+		r = ODBC_HY105_ERROR;
+		break;
+	case ER_SQL_MAXARG:
+		r = ODBC_07009_ERROR;
+		break;
+	case ER_SQL_EXEC:
+		r = ODBC_42000_ERROR;
+		break;
+	case ER_SQL_GEN:
+		r = ODBC_HY000_ERROR;
+		break;
+	case ER_WRONG_BIND:
+		r = ODBC_07002_ERROR;
 		break;
 	default:
 		r = ODBC_HY000_ERROR;
 	}
-	return e;
+	return r;
 }
 
 
@@ -154,7 +173,17 @@ get_error(SQLSMALLINT hndl_type, SQLHANDLE hndl)
 const char *
 code2sqlstate(int code)
 {
-	switch (code) {	
+	switch (code) {
+	case ODBC_22003_ERROR:
+		return "22003";
+	case ODBC_HY105_ERROR:
+		return "HY105";
+	case ODBC_07009_ERROR:
+		return "07009";
+	case ODBC_42000_ERROR:
+		return "42000";
+	case ODBC_07002_ERROR:
+		return "07002";
 	case ODBC_01004_ERROR:
 		return "01004";
 	case ODBC_00000_ERROR:
@@ -167,15 +196,11 @@ code2sqlstate(int code)
 		return "HYT00";
 	case ODBC_08001_ERROR:
 		return "08001";
-	case ODBC_22003_ERROR:
-		return "22003";
 	case ODBC_HY001_ERROR:
 		return "HY001";
 	case ODBC_HY010_ERROR:
 		return "HY010";
-	case ODBC_07009_ERROR:
-		return "07009";
-	case ODBC_HY003_ERROR:
+ 	case ODBC_HY003_ERROR:
 		return "HY003";
 	case ODBC_HY090_ERROR:
 		return "HY090";
@@ -192,7 +217,7 @@ code2sqlstate(int code)
 	case ODBC_07005_ERROR:
 		return "07005";
 	default:
-		return "00000";
+		return "HY000";
 	}
 }
 
@@ -222,7 +247,7 @@ get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 			*out_len = (SQLSMALLINT)strlen((char*)txt);
 	}
 	if (state)
-		strncpy(state,code2sqlstate(get_error(hndl_type,hndl)->code),5);
+		strncpy((char *)state,code2sqlstate(get_error(hndl_type,hndl)->code),5);
 	return SQL_SUCCESS;
 }
 
