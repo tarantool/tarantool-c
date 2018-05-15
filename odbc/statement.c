@@ -65,6 +65,11 @@ stmt_execute(SQLHSTMT stmth)
 	if (tnt_stmt_execute(stmt->tnt_statement)!=OK) {
 		size_t sz=0;
 		const char* error = tnt_stmt_error(stmt->tnt_statement,&sz);
+		if (!error) {
+			fprintf(stderr,"tnt %d %d\n", TNT_SNET_CAST(stmt->tnt_statement->stream)->error,
+				TNT_SNET_CAST(stmt->tnt_statement->stream)->errno_);
+			fprintf(stderr,"tnt %s %s\n", stmt->tnt_statement->reply->error, error);
+		}
 		set_stmt_error_len(stmt,tnt2odbc_error(tnt_stmt_code(stmt->tnt_statement)),error,sz);
 		return SQL_ERROR;
 	}
@@ -94,6 +99,13 @@ odbc_types_covert(SQLSMALLINT ctype)
 		return TNTC_USHORT;
 	case SQL_C_SHORT:
 		return TNTC_SHORT;
+	case SQL_C_LONG:
+		return TNTC_LONG;
+	case SQL_C_SLONG:
+		return TNTC_SLONG;
+	case SQL_C_ULONG:
+		return TNTC_ULONG;
+	
 	default:
 		return -1;
 	}
@@ -146,11 +158,10 @@ stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT
 	}
 	--parnum;
 	
-	if (*len_ind != SQL_NULL_DATA) {
+	if (!len_ind || *len_ind != SQL_NULL_DATA) {
 		stmt->inbind_params[parnum].type = in_type;
-		if (stmt->inbind_params[parnum].type == -1)
 		stmt->inbind_params[parnum].buffer = (void *)buf;
-		if (stmt->inbind_params[parnum].type == MP_STR && *len_ind == SQL_NTS)
+		if (stmt->inbind_params[parnum].type == MP_STR && buf_len == SQL_NTS)
 			stmt->inbind_params[parnum].in_len = strlen ((char *)stmt->inbind_params[parnum].buffer);
 		else
 			stmt->inbind_params[parnum].in_len = buf_len;
