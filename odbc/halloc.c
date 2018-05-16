@@ -38,7 +38,7 @@ tnt2odbc_error(int e)
 		r = ODBC_HYT00_ERROR;
 		break;
         case TNT_EBADVAL: /*!< Bad argument (value) */
-		r = ODBC_HY000_ERROR;
+		r = ODBC_07009_ERROR;
 		break;
         case TNT_ELOGIN: /*!< Failed to login */
 		r = ODBC_28000_ERROR;

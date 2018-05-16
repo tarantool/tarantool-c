@@ -66,9 +66,7 @@ stmt_execute(SQLHSTMT stmth)
 		size_t sz=0;
 		const char* error = tnt_stmt_error(stmt->tnt_statement,&sz);
 		if (!error) {
-			fprintf(stderr,"tnt %d %d\n", TNT_SNET_CAST(stmt->tnt_statement->stream)->error,
-				TNT_SNET_CAST(stmt->tnt_statement->stream)->errno_);
-			fprintf(stderr,"tnt %s %s\n", stmt->tnt_statement->reply->error, error);
+			error = "Unknown error state";
 		}
 		set_stmt_error_len(stmt,tnt2odbc_error(tnt_stmt_code(stmt->tnt_statement)),error,sz);
 		return SQL_ERROR;
@@ -116,13 +114,13 @@ int
 realloc_params(int num,int *old_num, tnt_bind_t **params)
 {
 	if (num>*old_num || *params == NULL) {
-		tnt_bind_t *npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t *)*num);
+		tnt_bind_t *npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t)*num);
 		if (!npar) {
 			return FAIL;
 		}
 		memset(npar,'0',sizeof(tnt_bind_t *)*num);
 		for(int i=0;i<*old_num;++i) {
-			npar[i] = *params[i];
+			npar[i] = (*params)[i];
 		}
 		free(*params);
 		*params = npar;

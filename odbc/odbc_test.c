@@ -235,6 +235,45 @@ test_inbind(const char *dsn, const char *sql,int p1,const char *p2) {
 		retcode = SQLPrepare(st.hstmt,(SQLCHAR*)sql, SQL_NTS);
 		SQLINTEGER int_val = p1;
 		SQLCHAR *str_val = (SQLCHAR *)p2;
+		if (p2)
+			retcode = SQLBindParameter(st.hstmt, 1, SQL_PARAM_INPUT,
+						   SQL_C_CHAR, SQL_CHAR, 0, 0, str_val, SQL_NTS, 0);
+		else {
+			SQLLEN optlen = SQL_NULL_DATA;
+			retcode = SQLBindParameter(st.hstmt, 1, SQL_PARAM_INPUT,
+						   SQL_C_CHAR, SQL_CHAR, 0, 0, (SQLCHAR *) NULL, SQL_NTS, &optlen);
+		}
+
+		retcode = SQLBindParameter(st.hstmt, 2, SQL_PARAM_INPUT,
+					   SQL_C_LONG, SQL_INTEGER, 0, 0, &int_val, 0, 0); 
+			
+		// Process data
+		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
+			retcode = SQLExecute(st.hstmt);
+			SQLLEN ar = -1;
+			if (retcode == SQL_SUCCESS) {
+				ret_code = 1;
+			} else {
+				show_error(SQL_HANDLE_STMT, st.hstmt);
+				ret_code = 0;
+			}
+		}
+		close_set(&st);
+	}
+	return ret_code;
+}
+
+int
+test_inbindbad(const char *dsn, const char *sql,int p1,const char *p2) {
+	int ret_code = 0;
+
+	struct set_handles st;
+	SQLRETURN retcode;
+
+	if (init_dbc(&st,dsn)) {
+		retcode = SQLPrepare(st.hstmt,(SQLCHAR*)sql, SQL_NTS);
+		SQLINTEGER int_val = p1;
+		SQLCHAR *str_val = (SQLCHAR *)p2;
 		retcode = SQLBindParameter(st.hstmt, 1, SQL_PARAM_INPUT,
 					   SQL_C_LONG, SQL_INTEGER, 0, 0, &int_val, 0, 0); 
 		retcode = SQLBindParameter(st.hstmt, 2, SQL_PARAM_INPUT,
@@ -255,7 +294,6 @@ test_inbind(const char *dsn, const char *sql,int p1,const char *p2) {
 	}
 	return ret_code;
 }
-
 
 
 void
@@ -311,8 +349,17 @@ main(int ac, char* av[])
 	fprintf(stderr,"SQLRowCount next 2 is ok: insert.\n");
 	test(test_execrowcount(good_dsn,"INSERT INTO str_table(id,val) VALUES ('bb',2)",1));
 
+	testfail(test_inbindbad(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
+	fprintf(stderr, "next is good input binding\n");
 	test(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
-//	test(test_execrowcount(good_dsn,"drop table str_table",1));
+	testfail(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
 	
+	testfail(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
+	test(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
+	testfail(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
+	testfail(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
+	fprintf(stderr, "next is good insefrt binding NULL\n");
+	test(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",5,NULL));
+//	test(test_execrowcount(good_dsn,"drop table str_table",1));
 	
 }

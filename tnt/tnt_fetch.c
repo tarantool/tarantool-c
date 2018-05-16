@@ -2,6 +2,7 @@
 
 #include <limits.h>
 #include <float.h>
+#include <stdio.h>
 #include <math.h>
 #include <inttypes.h>
 #include <tarantool/tnt_fetch.h>
@@ -284,9 +285,14 @@ struct tnt_stream *
 bind2object(tnt_stmt_t* stmt)
 {
 	int npar = get_query_num(stmt->query,stmt->query_len);
-	struct tnt_stream *obj = tnt_object(NULL);
+	struct tnt_stream *obj = tnt_object(NULL); 
+	if (!obj) 
+		return NULL;
+
+	
 	if ((tnt_object_type(obj, TNT_SBO_PACKED) == FAIL) || (tnt_object_add_array(obj, 0) == FAIL))
 		goto error;
+
 	int i=npar;
 	while(i-- > 0) {
 		switch(stmt->ibind[npar-i-1].type) {
@@ -299,7 +305,7 @@ bind2object(tnt_stmt_t* stmt)
 		case TNTC_SINT:
 		case TNTC_INT: {
 			int *v = (int *)stmt->ibind[npar-i-1].buffer;
-			if (tnt_object_add_int(obj,*v) == FAIL)
+			if (tnt_object_add_int(obj,*v) == FAIL) 
                                 goto error;
 			break;
 		}
@@ -329,7 +335,7 @@ bind2object(tnt_stmt_t* stmt)
 		case TNTC_SLONG:
 		case TNTC_LONG: {
 			long *v = (long *)stmt->ibind[npar-i-1].buffer;
-			if (tnt_object_add_int(obj,*v) == FAIL)
+			if (tnt_object_add_int(obj,*v) == FAIL) 
                                 goto error;
 			break;
 		}
@@ -389,6 +395,7 @@ bind2object(tnt_stmt_t* stmt)
 	if (tnt_object_container_close(obj)==FAIL)
 		goto error;
 
+
 	return obj;
 error:
 	tnt_stream_free(obj);
@@ -403,15 +410,17 @@ tnt_stmt_execute(tnt_stmt_t* stmt)
 {
 	int result=FAIL;
 	if (!stmt->ibind) {
-		result = tnt_execute(stmt->stream,stmt->query,stmt->query_len, NULL);
+		result = tnt_execute(stmt->stream, stmt->query, stmt->query_len, NULL);
 		/* reqid Overflow ? */
 		stmt->reqid = stmt->stream->reqid - 1;
 	} else {
 		struct tnt_stream *args = bind2object(stmt);
 		if (args) {
-			result = tnt_execute(stmt->stream,stmt->query,stmt->query_len,args);
+			result = tnt_execute(stmt->stream, stmt->query, stmt->query_len, args);
 			stmt->reqid = stmt->stream->reqid - 1;
 			tnt_stream_free(args);
+		} else {
+			TNT_SNET_CAST(stmt->stream)->error = TNT_EBADVAL;
 		}
 	}
 	if (result !=FAIL && (tnt_filfull_stmt(stmt)!=NULL))
@@ -423,8 +432,10 @@ tnt_stmt_t *
 tnt_filfull(struct tnt_stream *stream)
 {
 	tnt_stmt_t *stmt = (tnt_stmt_t *) tnt_mem_alloc(sizeof(tnt_stmt_t));
-	if (!stmt)
+	if (!stmt) {
+		TNT_SNET_CAST(stream)->error = TNT_EMEMORY;
 		return NULL;
+	}
 	stmt->stream = stream;
 	stmt->row = NULL;
 	stmt->a_rows = 0;
@@ -439,15 +450,20 @@ static tnt_stmt_t *
 tnt_filfull_stmt(tnt_stmt_t *stmt)
 {
 	struct tnt_stream *stream = stmt->stream;
-	if (tnt_flush(stream) == -1)
+	if (tnt_flush(stream) == -1) {
 		return NULL;
+	}
 	stmt->reply = (struct tnt_reply *)tnt_mem_alloc(sizeof(struct tnt_reply));
-	if (!stmt->reply && !tnt_reply_init(stmt->reply))
+	if (!stmt->reply) {
+		TNT_SNET_CAST(stream)->error = TNT_EMEMORY;
 		return NULL;
-	if (stmt->stream->read_reply(stmt->stream, stmt->reply) != 0) 
+	}
+	if (!tnt_reply_init(stmt->reply) || stmt->stream->read_reply(stmt->stream, stmt->reply) != 0) {
 		return NULL;
-	if (tnt_stmt_code(stmt) != 0)
+	}
+	if (tnt_stmt_code(stmt) != 0) {
 		return NULL;
+	}
 
 	stmt->data = stmt->reply->data;
 	if (stmt->data) {
@@ -768,9 +784,12 @@ tnt_affected_rows(tnt_stmt_t * stmt)
 int
 tnt_stmt_code(tnt_stmt_t * stmt)
 {
-	if (stmt && stmt->reply)
-		return stmt->reply->code;
-	else
+	if (stmt) {
+		if (stmt->reply)
+			return stmt->reply->code;
+		else
+			return TNT_SNET_CAST(stmt->stream)->error;
+	} else
 		return FAIL;
 }
 /*
@@ -780,10 +799,15 @@ tnt_stmt_code(tnt_stmt_t * stmt)
 const char *
 tnt_stmt_error(tnt_stmt_t * stmt, size_t * sz)
 {
-	if (stmt && stmt->reply && stmt->reply->error) {
+	if (!stmt)
+		return NULL;
+	if (stmt->reply && stmt->reply->error) {
 		*sz = stmt->reply->error_end - stmt->reply->error;
 		return stmt->reply->error;
 	}
+	if (stmt->stream)
+		return tnt_strerror(stmt->stream);
+	
 	return NULL;
 }
 
