@@ -1,6 +1,7 @@
 #include <stdlib.h>  
 #include <sqlext.h>
 #include <stdio.h>
+#include <strings.h>
 
 #define BUFSZ 255
 
@@ -264,6 +265,146 @@ test_inbind(const char *dsn, const char *sql,int p1,const char *p2) {
 }
 
 int
+do_fetch(struct set_handles *st, void *cnt)
+{
+	int row_cnt = 0;
+	while(1) {
+		int code = SQLFetch(st->hstmt);
+		if (code == SQL_SUCCESS) {
+			row_cnt ++ ;
+		} else if (code == SQL_NO_DATA) {
+			fprintf(stderr, "fetched good %d rows\n", row_cnt);
+			return row_cnt == (int)cnt;
+		} else {
+			fprintf(stderr, "fetched good %d rows\n", row_cnt);
+			show_error(SQL_HANDLE_STMT, st->hstmt);
+			return 0;
+		}
+	}
+}
+
+struct fetchbind_par {
+	int cnt;
+	void *args;
+	int is_null;
+};
+
+int
+do_fetchbind(struct set_handles *st, void *p)
+{
+	struct fetchbind_par *par_ptr = p;
+	int row_cnt = 0;
+
+	long val;
+	SQLLEN val_len;
+	int code = SQLBindCol (st->hstmt,                  // Statement handle
+			       2,                    // Column number
+			       SQL_C_LONG,      // C Data Type
+			       &val,          // Data buffer
+			       0,      // Size of Data Buffer
+			       &val_len); // Size of data returned
+	if (code != SQL_SUCCESS) {
+		show_error(SQL_HANDLE_STMT, st->hstmt);
+		return 0;
+	}
+	while(1) {
+		code = SQLFetch(st->hstmt);
+		if (code == SQL_SUCCESS) {
+			fprintf(stderr, "val is %ld is null/rel len %ld\n", val, val_len);
+			row_cnt ++ ;
+		} else if (code == SQL_NO_DATA) {
+			fprintf(stderr, "fetched good %d rows\n", row_cnt);
+			return row_cnt == par_ptr->cnt;
+		} else {
+			fprintf(stderr, "fetched good %d rows\n", row_cnt);
+			show_error(SQL_HANDLE_STMT, st->hstmt);
+			return 0;
+		}
+	}
+}
+
+
+
+int
+test_describecol(const char *dsn, const char *sql, int icol, int type, const char *cname, int null_type)
+{
+	int ret_code = 0;
+
+	struct set_handles st;
+	SQLRETURN retcode;
+
+	if (init_dbc(&st,dsn)) {
+		retcode = SQLPrepare(st.hstmt,(SQLCHAR*)sql, SQL_NTS);
+		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
+			retcode = SQLExecute(st.hstmt);
+			if (retcode == SQL_SUCCESS) {				
+				retcode = SQLFetch(st.hstmt);
+				if (retcode == SQL_SUCCESS) {
+					char colname[BUFSZ]="invalid";
+					SQLSMALLINT colnamelen;
+					SQLSMALLINT ret_type;
+					SQLSMALLINT is_null;
+
+					retcode = SQLDescribeCol (st.hstmt, icol, (SQLCHAR *)colname, BUFSZ,
+								  &colnamelen, &ret_type, 0, 0, &is_null);
+					if (retcode != SQL_SUCCESS) {
+						show_error(SQL_HANDLE_STMT, st.hstmt);
+						ret_code = 0;
+					} else {
+						fprintf (stderr, "describecol(colname='%s'(%s),type=%d(%d), is_null=%d(%d))\n",
+							 colname, cname, ret_type, type, is_null, null_type);
+						if (strcasecmp(colname,cname) == 0 &&
+						    ret_type == type &&
+						    is_null == null_type)
+							ret_code = 1;
+						else
+							ret_code = 0;
+					}
+
+				} else {
+					show_error(SQL_HANDLE_STMT, st.hstmt);
+				}
+			} else {
+				show_error(SQL_HANDLE_STMT, st.hstmt);
+			}
+		}
+		close_set(&st);
+	}
+	return ret_code;
+}
+
+
+int
+test_fetch(const char *dsn, const char *sql,void* cnt, int (*fnc) (struct set_handles *,void *))
+{
+	int ret_code = 0;
+
+	struct set_handles st;
+	SQLRETURN retcode;
+
+	if (init_dbc(&st,dsn)) {
+		retcode = SQLPrepare(st.hstmt,(SQLCHAR*)sql, SQL_NTS);
+		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
+			retcode = SQLExecute(st.hstmt);
+			if (retcode == SQL_SUCCESS) {				
+				ret_code = fnc(&st,cnt);
+			} else {
+				show_error(SQL_HANDLE_STMT, st.hstmt);
+				ret_code = 0;
+			}
+		}
+		close_set(&st);
+	}
+	return ret_code;
+}
+
+
+
+
+
+
+
+int
 test_inbindbad(const char *dsn, const char *sql,int p1,const char *p2) {
 	int ret_code = 0;
 
@@ -354,12 +495,26 @@ main(int ac, char* av[])
 	test(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
 	testfail(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
 	
-	testfail(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
-	test(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
-	testfail(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
-	testfail(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
-	fprintf(stderr, "next is good insefrt binding NULL\n");
-	test(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",5,NULL));
+	testfail(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
+	test(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
+	testfail(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
+	testfail(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
+	fprintf(stderr, "next is good insert binding NULL\n");
+	test(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",5,NULL));
+	test(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",5,NULL));
+	test(test_fetch(good_dsn, "select * from str_table", (void*)4, do_fetch));
+	test(test_fetch(good_dsn,"select id from str_table where val=100", 0, do_fetch));
+
+
+	struct fetchbind_par par = {.cnt=4};
+	test(test_fetch(good_dsn, "select * from str_table",&par, do_fetchbind));
+	
+	test(test_describecol(good_dsn, "select * from str_table", 2 , SQL_BIGINT, "val", SQL_NULLABLE_UNKNOWN));
+	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NULLABLE_UNKNOWN));
+
+	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NULLABLE));
+	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NO_NULLS));  
+
 //	test(test_execrowcount(good_dsn,"drop table str_table",1));
 	
 }

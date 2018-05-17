@@ -60,7 +60,7 @@ stmt_execute(SQLHSTMT stmth)
 		tnt_bind_query(stmt->tnt_statement,stmt->inbind_params,stmt->inbind_items);
 
 	if (stmt->outbind_params)
-		tnt_bind_query(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
+		tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
 
 	if (tnt_stmt_execute(stmt->tnt_statement)!=OK) {
 		size_t sz=0;
@@ -202,6 +202,8 @@ stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER
 	stmt->outbind_params[colnum].buffer = (void *)val;
 	stmt->outbind_params[colnum].out_len = out_len;
 
+	tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
+	
 	return SQL_SUCCESS;
 }
 
@@ -321,7 +323,7 @@ tnt2odbc(int t)
 	case MP_STR:
 		return SQL_VARCHAR; /* Or SQL_VARCHAR? */
 	case MP_FLOAT:
-		return SQL_FLOAT;
+		return SQL_REAL;
 	case MP_DOUBLE:
 		return SQL_DOUBLE;
 	case MP_BIN:
