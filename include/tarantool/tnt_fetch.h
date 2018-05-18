@@ -149,12 +149,12 @@ int tnt_stmt_execute(tnt_stmt_t *);
 /**
  * Associates input bind parameters array with statements.
  */
-int tnt_bind_query(tnt_stmt_t *, tnt_bind_t *, int ncols);
+int tnt_bind_query(tnt_stmt_t *, tnt_bind_t *, int number_of_parameters);
 
 /**
  * Associates output bind parameters array with statements.
  */
-int tnt_bind_result(tnt_stmt_t *, tnt_bind_t *, int ncols);
+int tnt_bind_result(tnt_stmt_t *, tnt_bind_t *, int number_of_parameters);
 
 
 /**

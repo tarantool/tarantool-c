@@ -49,9 +49,9 @@ tnt_prepare(struct tnt_stream *s, const char *text, int32_t len)
  * Associates input bind parameters array with statements.
  **/
 int
-tnt_bind_query(tnt_stmt_t * stmt, tnt_bind_t * bnd, int ncols)
+tnt_bind_query(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters)
 {
-	(void)(ncols);		/* Stop unused warning */
+	(void)(number_of_parameters);		/* Stop unused warning */
 	stmt->ibind = bnd;
 	return OK;
 }
@@ -59,9 +59,9 @@ tnt_bind_query(tnt_stmt_t * stmt, tnt_bind_t * bnd, int ncols)
  * Associates output bind parameters array with statements.
  **/
 int
-tnt_bind_result(tnt_stmt_t * stmt, tnt_bind_t * bnd, int ncols)
+tnt_bind_result(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters)
 {
-	(void)(ncols);		/* Stop unused warning */
+	(void)(number_of_parameters);		/* Stop unused warning */
 	stmt->obind = bnd;
 	return OK;
 }
