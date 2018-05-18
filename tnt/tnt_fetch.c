@@ -830,9 +830,9 @@ tnt_col_name(tnt_stmt_t *stmt,int icol)
 }
 
 int
-tnt_col_isnil(tnt_stmt_t *stmt, int icol)
+tnt_col_is_null(tnt_stmt_t *stmt, int icol)
 {
-	return stmt->row[icol].type == MP_NIL && (stmt->row[icol].v.p == NULL);
+	return stmt->row[icol].type == MP_NIL;
 }
 
 int

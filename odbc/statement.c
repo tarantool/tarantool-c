@@ -254,7 +254,7 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 		set_stmt_error(stmt,ODBC_07009_ERROR,"No data or row in current row");
 		return SQL_ERROR;		
 	}
-	if (tnt_col_isnil(stmt->tnt_statement,num)) {
+	if (tnt_col_is_null(stmt->tnt_statement,num)) {
 		if (out_len) {
 			*out_len = SQL_NULL_DATA;
 			return SQL_SUCCESS;

@@ -177,7 +177,7 @@ int tnt_fetch(tnt_stmt_t *);
 /**
  * Returns True if value of column 'col' is NULL in current result row
  */
-int tnt_col_isnil(tnt_stmt_t *, int col);
+int tnt_col_is_null(tnt_stmt_t *, int col);
 
 /**
  * Returns type of value of column 'col' in current result row
