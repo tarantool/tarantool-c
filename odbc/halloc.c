@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include <tarantool/tarantool.h>
 #include <tarantool/tnt_fetch.h>
 #include <sql.h>
@@ -158,10 +159,12 @@ set_error_len(struct error_holder *e, int code, const char* msg, int len)
 
 
 void
-set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len)
+set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len, const char *fname)
 {
-	if (tcon)
+	if (tcon) {
 		set_error_len(&(tcon->e),code,msg,len);
+		LOG_ERROR(tcon,"[%s][%s] %s\n", fname, code2sqlstate(code), tcon->e.message); 
+	}
 }
 
 
@@ -170,10 +173,9 @@ set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len)
  **/
 
 void
-set_connect_error(odbc_connect *tcon, int code, const char* msg)
+set_connect_error(odbc_connect *tcon, int code, const char* msg, const char* fname)
 {
-	set_connect_error_len(tcon,code,msg,-1);
-	LOG_ERROR(tcon,"[%s] %s\n", code2sqlstate(code), msg); 
+	set_connect_error_len(tcon, code, msg, -1, fname);
 }
 
 /*
@@ -181,18 +183,18 @@ set_connect_error(odbc_connect *tcon, int code, const char* msg)
  **/
 
 void
-set_stmt_error_len(odbc_stmt *stmt, int code, const char* msg, int len)
+set_stmt_error_len(odbc_stmt *stmt, int code, const char* msg, int len, const char *fname)
 {
-	if (stmt) 
+	if (stmt) {
 		set_error_len(&(stmt->e),code,msg,len);
+		LOG_ERROR(stmt,"[%s][%s] %s\n", fname, code2sqlstate(code), stmt->e.message); 		
+	}
 }
 
 void
-set_stmt_error(odbc_stmt *stmt, int code, const char* msg)
+set_stmt_error(odbc_stmt *stmt, int code, const char* msg, const char *fname)
 {
-
-	set_stmt_error_len(stmt,code,msg,-1);
-	LOG_ERROR(stmt,"[%s] %s\n", code2sqlstate(code), msg); 
+	set_stmt_error_len(stmt, code, msg, -1, fname);
 }
 
 /*
@@ -332,6 +334,12 @@ set_env_error(odbc_env *env, int code, const char *msg)
 	set_env_error_len(env, code, msg, -1);
 }
 
+static char * gen_env_id(void);
+static char * gen_next_id(const char *, uint64_t *);
+
+static uint64_t env_sq=1;
+static uint64_t con_sq=1;
+static uint64_t stmt_sq=1;
 
 
 SQLRETURN
@@ -344,6 +352,7 @@ alloc_env(SQLHENV *oenv)
 	if (*retenv == NULL)
 		return SQL_ERROR;
 	memset(*retenv,0,sizeof(odbc_env));
+	(*retenv)->id = gen_env_id();
 	return SQL_SUCCESS;
 }
 
@@ -411,7 +420,93 @@ alloc_connect(SQLHENV env, SQLHDBC *hdbc)
 		env_ptr->con_end = *retcon;
 		(*retcon)->next = (*retcon)->prev = *retcon;
 	}
+	(*retcon)->id = gen_next_id(env_ptr->id, &con_sq);
 	return SQL_SUCCESS;
+}
+
+static uint64_t
+fnv(const char* t)
+{
+	uint64_t prime = 0x100000001b3;
+	uint64_t hash  = 0xcbf29ce484222325;
+	while (*t) {
+		hash *= prime;
+		hash ^= (unsigned char) *t++;
+	}
+	return hash;
+}
+
+#define IBUFSIZ 512
+#define HBUFSIZ 256
+
+
+
+static uint64_t
+ainc_id_seq(uint64_t *v)
+{
+	/* Well, since we tackle with parallel execution here increment of "*v" should be
+	 * done under a lock. Since this lock happened only under structure creation and 
+	 * a structure creation needs a lock let's leave the increment unprotected.  
+	 */
+	(*v)++;
+	return *v;
+}
+
+static const char *
+hostid(char *b, int len)
+{
+	/* Should be something similar for windows */
+	if (gethostname(b,len)==0)
+		return b;
+	else
+		return strncpy(b,"invalidhostname",len);
+}
+
+static char * 
+gen_env_id(void)
+{
+	char buf[IBUFSIZ];
+	char host[HBUFSIZ];
+	snprintf(buf, IBUFSIZ, "%s%lu%llu", hostid(host, HBUFSIZ), time(0), ainc_id_seq(&env_sq));
+
+	snprintf(buf, IBUFSIZ, "%llu", fnv(buf)); 
+	
+	return strdup(buf);
+}
+
+static char *
+gen_next_id(const char *env_id, uint64_t *seq)
+{
+	char buf[IBUFSIZ];
+	snprintf(buf,IBUFSIZ, "%s-%llu", env_id, ainc_id_seq(seq));
+	return strdup(buf);
+}
+
+void
+start_measure(struct tmeasure *tm)
+{
+	struct timeval tp;
+	gettimeofday(&tp, NULL);
+
+	tm->sec = tp.tv_sec;
+	tm->usec = tp.tv_usec; 
+}
+
+struct tmeasure*
+stop_measure(struct tmeasure *t_start)
+{
+	struct timeval tp;
+	gettimeofday(&tp, NULL);
+
+	tp.tv_sec -= t_start->sec;
+	tp.tv_usec -= t_start->usec;
+	if (tp.tv_usec < 0) {
+		tp.tv_sec --;
+		tp.tv_usec += 1000000; 
+	}
+	t_start->sec = tp.tv_sec;
+	t_start->usec = tp.tv_usec;
+	return t_start;
 }
 
 
@@ -434,6 +529,7 @@ free_connect(SQLHDBC hdbc)
 		free_stmt(ocon->stmt_end,SQL_DROP);
 	free(ocon->e.message);
 	free(ocon->opt_timeout);
+	free(ocon->id);
 	free(ocon);
 	return SQL_SUCCESS;
 }
@@ -442,7 +538,7 @@ free_connect(SQLHDBC hdbc)
 SQLRETURN 
 alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 {
-	odbc_connect * con = (odbc_connect *)conn;
+	odbc_connect *con = (odbc_connect *)conn;
 	odbc_stmt **out = (odbc_stmt **)ostmt;
 	if (!con || !out)
 		return SQL_INVALID_HANDLE;
@@ -450,7 +546,7 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 	*out = (odbc_stmt*) malloc(sizeof(odbc_stmt));
 	if (*out == NULL) {
 		set_connect_error(con,ODBC_MEM_ERROR,
-				  "Unable to allocate memory for statement");
+				  "Unable to allocate memory for statement", "SQLStatement");
 		return SQL_ERROR;
 	}
 	memset(*out,0,sizeof(odbc_stmt));
@@ -470,6 +566,7 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 	}
 	(*out)->log = con->log;
 	(*out)->log_level = con->log_level;
+	(*out)->id = gen_next_id(con->id, &stmt_sq);
 	return SQL_SUCCESS;
 }
 
@@ -482,6 +579,7 @@ mem_free_stmt(odbc_stmt *stmt)
 	free_stmt(stmt,SQL_RESET_PARAMS);
 	free_stmt(stmt,SQL_UNBIND);
 	free(stmt->e.message);
+	free(stmt->id);
 	
 	odbc_connect *parent = stmt->connect;
 	if (stmt->next != stmt) {

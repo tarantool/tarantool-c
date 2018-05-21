@@ -264,7 +264,7 @@ set_connection_params(odbc_connect *tcon, SQLCHAR *user, SQLSMALLINT user_sz,
 	} 
 	return ret;
 error:
-	set_connect_error(tcon,ODBC_HY090_ERROR, "Invalid string or buffer length");
+	set_connect_error(tcon,ODBC_HY090_ERROR, "Invalid string or buffer length", "*Connect");
 	return NULL;
 }
 
@@ -306,7 +306,7 @@ odbc_read_dsn(odbc_connect *tcon, char *dsn, int dsn_sz)
 	
 	return ret;
 error:
-	set_connect_error(tcon, ODBC_HY090_ERROR, "Invalid string or buffer length");
+	set_connect_error(tcon, ODBC_HY090_ERROR, "Invalid string or buffer length", "*Connect");
 	return NULL;
 }
 
@@ -317,7 +317,7 @@ real_connect(odbc_connect *tcon)
 	tcon->tnt_hndl = tnt_net(NULL);
 	if (!tcon->tnt_hndl) {
 		set_connect_error(tcon,ODBC_MEM_ERROR,
-				  "Unable to allocate memory");
+				  "Unable to allocate memory", "*Connect");
 		return SQL_ERROR;
 	}
 	if (tcon->opt_timeout) {
@@ -334,7 +334,7 @@ real_connect(odbc_connect *tcon)
 		} else
 			odbc_error = tnt2odbc_error(tnt_error(tcon->tnt_hndl));
 		set_connect_error(tcon, odbc_error ,
-				  tnt_strerror(tcon->tnt_hndl));
+				  tnt_strerror(tcon->tnt_hndl), "*Connect");
 		return SQL_ERROR;
 	}
 	tcon->is_connected = 1;
@@ -358,7 +358,7 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 
 	 /* first we'll read DSN string and parse information from it */
 	if (!tcon->dsn_params || !(kv = load_attr((char *)conn_s, slen))) {
-		set_connect_error(tcon,ODBC_MEM_ERROR, "Unable to allocate memory");
+		set_connect_error(tcon,ODBC_MEM_ERROR, "Unable to allocate memory", "SQLDriverConnect");
 		return SQL_ERROR;
 	}
 	char * data_source = get_attr("DSN", kv);

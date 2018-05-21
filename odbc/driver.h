@@ -70,6 +70,7 @@ typedef struct odbc_connect_t {
 	struct error_holder e;
 	int log_level;
 	FILE *log;
+	char *id;
 } odbc_connect;
 
 #define ERR (1)
@@ -77,7 +78,7 @@ typedef struct odbc_connect_t {
 #define INFO (3)
 
 #define LOG(a, l, format, ...) do { if ( a->log && a->log_level >= l) \
-		{ fprintf(a->log, "%ld| "format, time(0), __VA_ARGS__);} } while(0)
+		{ fprintf(a->log, "%ld|%s " format, time(0), a->id,  __VA_ARGS__);} } while(0)
 #define LOG_TRACE(a, format, ...) LOG(a, TRACE , format, __VA_ARGS__)
 #define LOG_ERROR(a, format, ...) LOG(a, ERR , format, __VA_ARGS__)
 #define LOG_INFO(a, format, ...) LOG(a, INFO , format, __VA_ARGS__)
@@ -111,13 +112,27 @@ typedef struct odbc_stmt_t {
 	struct error_holder e;
 	int log_level;
 	FILE *log;
+	char *id;
 } odbc_stmt;
 
 typedef struct odbc_env_t {
 	odbc_connect *con_end;
 	struct error_holder e;
+	char *id;
 } odbc_env;
 
+
+
+struct tmeasure {
+	long sec;
+	long usec;
+};
+
+/* This two functions is for time measure */
+void start_measure (struct tmeasure *tm);
+
+/* returns point to res containg reulted time (stop_measure - start_measure) */
+struct tmeasure * stop_measure (struct tmeasure *res);
 
 void
 set_connect_native_error(odbc_connect *tcon, int err);
@@ -142,7 +157,7 @@ tnt2odbc_error_message(int e);
  **/
 
 void
-set_connect_error(odbc_connect *tcon, int code, const char* msg);
+set_connect_error(odbc_connect *tcon, int code, const char* msg, const char *fname);
 
 /*
  * As above function with string length parameter. It's the same as above
@@ -150,7 +165,7 @@ set_connect_error(odbc_connect *tcon, int code, const char* msg);
  **/
 
 void
-set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len);
+set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len, const char *fname);
 
 /*
  * Stores error code and error message into odbc_stmt structure
@@ -158,14 +173,14 @@ set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len);
  **/
 
 void
-set_stmt_error(odbc_stmt *tcon, int code, const char* msg);
+set_stmt_error(odbc_stmt *tcon, int code, const char* msg, const char *fname);
 
 /*
  * As above function with string length parameter. It's the same as above
  * function if called with len equal to -1.
  **/
 void
-set_stmt_error_len(odbc_stmt *tcon, int code, const char* msg, int len);
+set_stmt_error_len(odbc_stmt *tcon, int code, const char* msg, int len, const char *fname);
 
 /*
  * Stores error code and error message into odbc_env structure

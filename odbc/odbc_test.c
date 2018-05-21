@@ -410,6 +410,53 @@ do_fetchgetdata(struct set_handles *st, void *p)
 	return 0;
 }
 
+int
+do_fetchgetdata_stream(struct set_handles *st, void *p)
+{
+	struct fetchbind_par *par_ptr = p;
+	int row_cnt = 0;
+	int matches = 0;
+	long val;
+	SQLLEN val_len;
+	long *pars = (long*) par_ptr->args;
+	
+	while(row_cnt < 100) {
+		int code = SQLFetch(st->hstmt);
+		if (code == SQL_SUCCESS) {
+			SQLBIGINT long_val;
+			SQLDOUBLE  double_val;
+			SQLCHAR str_val[2] = "";
+
+			SQLLEN str_len;
+			int have_with_info = 0;
+			do {
+				code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val[0], 2, &str_len);
+				if (code != SUCCESS_WITH_INFO)
+					break;
+				have_with_info = 1;
+			} while (1);			
+			if (code == SQL_SUCCESS) {
+				if (have_with_info)
+					matches ++;
+				code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val[0], 2, &str_len);
+				if (code != SQL_NO_DATA) {
+					show_error(SQL_HANDLE_STMT, st->hstmt);
+					return 0;
+				}
+			}
+			row_cnt ++ ;
+		} else if (code == SQL_NO_DATA) {
+			fprintf(stderr, "fetched good %d rows matches is %d\n", row_cnt, matches);
+			return matches == par_ptr->cnt;
+		} else {
+			fprintf(stderr, "fetched good %d rows\n", row_cnt);
+			show_error(SQL_HANDLE_STMT, st->hstmt);
+			return 0;
+		}
+	}
+	return 0;
+}
+
 
 int
 test_describecol(const char *dsn, const char *sql, int icol, int type, const char *cname, int null_type)
@@ -550,7 +597,8 @@ main(int ac, char* av[])
 	test(test_driver_connect("DSN=tarantoolTest;PORT=33000"));
 	testfail(test_driver_connect("DSN=tarantoolTest;PORT=33003"));
 	testfail(test_driver_connect("DSN=tarantoolTest;UID=test;PWD=wrongpwd;PORT=33000;UID=test;PWD=test"));
-	const char *good_dsn = "DSN=tarantoolTest;UID=test;PWD=test;PORT=33000;UID=test;PWD=test";
+	const char *good_dsn = "DSN=tarantoolTest;UID=test;PWD=test;PORT=33000;UID=test;PWD=test"
+		";LOG_FILENAME=./odbc.log;LOG_LEVEL=5";
 	test(test_driver_connect(good_dsn));
 	test(test_prepare(good_dsn,"select * from test"));
 	/* next test is ok since we don't check sql text at prepare stage */

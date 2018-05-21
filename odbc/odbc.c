@@ -124,15 +124,25 @@ SQLRETURN SQL_API
 SQLDriverConnect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,  
 		 SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLUSMALLINT drv_compl)
 {
-	return odbc_drv_connect(dbch, whndl, conn_s, slen, out_conn_s, buflen, out_len, drv_compl);
+	struct tmeasure tm;
+	start_measure(&tm);
+	SQLRETURN r = odbc_drv_connect(dbch, whndl, conn_s, slen, out_conn_s, buflen, out_len, drv_compl);
+	stop_measure(&tm);
+	LOG_INFO(((odbc_connect*)dbch),"SQLDriverConnect() = %ld Sec %ld uSec\n", tm.sec, tm.usec);
+	return r;
 }
 
 
 SQLRETURN SQL_API
-SQLConnect(SQLHDBC conn, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
+SQLConnect(SQLHDBC dbch, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 	   SQLSMALLINT user_sz, SQLCHAR *auth, SQLSMALLINT auth_sz)
 {
-	return odbc_dbconnect(conn,serv,serv_sz,user,user_sz,auth,auth_sz);
+	struct tmeasure tm;
+	start_measure(&tm);
+	SQLRETURN r = odbc_dbconnect(dbch, serv, serv_sz, user, user_sz, auth, auth_sz);
+	stop_measure(&tm);
+	LOG_INFO(((odbc_connect*)dbch),"SQLConnect() = %ld Sec %ld uSec\n", tm.sec, tm.usec);
+	return r;
 }
 
 SQLRETURN SQL_API
@@ -164,18 +174,30 @@ SQLPrepare(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
 SQLRETURN SQL_API
 SQLExecute(SQLHSTMT stmth)
 {
-	return stmt_execute(stmth);
+	struct tmeasure tm;
+	start_measure(&tm);
+	SQLRETURN r = stmt_execute(stmth); 
+	stop_measure(&tm);
+	LOG_INFO(((odbc_stmt *)stmth), "SQLExecute = %ld Sec %ld uSec\n", tm.sec, tm.usec);
+	return r;
 }
 
 SQLRETURN SQL_API
 SQLExecDirect(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
 {
+	
 	if (stmth == NULL)
 		return SQL_INVALID_HANDLE;
-	int rc = stmt_prepare( stmth, query, query_len);
-	if (rc != SQL_SUCCESS)
-		return rc;
-	return stmt_execute(stmth);
+	int r = stmt_prepare( stmth, query, query_len);
+	if (r != SQL_SUCCESS)
+		return r;
+	
+	struct tmeasure tm;
+	start_measure(&tm);
+	r = stmt_execute(stmth); 
+	stop_measure(&tm);
+	LOG_INFO(((odbc_stmt*)stmth),"SQLExecDirect = %ld Sec %ld uSec\n", tm.sec, tm.usec);
+	return r;
 }
 
 /*
