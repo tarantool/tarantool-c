@@ -10,6 +10,7 @@ enum ERROR_CODES {
 	ODBC_HYT00_ERROR, /* Timeout expired */
 	ODBC_08001_ERROR, /* Client unable to establish connection */
 	ODBC_01004_ERROR, /* String data, right truncated */
+	ODBC_22002_ERROR, /* Indicator variable required but not supplied */
 	ODBC_22003_ERROR, /* Value too big */
 	ODBC_HY001_ERROR, /* Underling memory allocation failed */
 	ODBC_HY010_ERROR, /* Function sequence error */
@@ -47,6 +48,8 @@ struct dsn {
 	int port;
 	int timeout;
 	char *flag;
+	int log_level;
+	char *log_filename;
 };
 
 struct error_holder {
@@ -65,7 +68,20 @@ typedef struct odbc_connect_t {
 	struct tnt_stream *tnt_hndl;
 	int32_t *opt_timeout;
 	struct error_holder e;
+	int log_level;
+	FILE *log;
 } odbc_connect;
+
+#define ERR (1)
+#define TRACE (2)
+#define INFO (3)
+
+#define LOG(a, l, format, ...) do { if ( a->log && a->log_level >= l) \
+		{ fprintf(a->log, "%ld| "format, time(0), __VA_ARGS__);} } while(0)
+#define LOG_TRACE(a, format, ...) LOG(a, TRACE , format, __VA_ARGS__)
+#define LOG_ERROR(a, format, ...) LOG(a, ERR , format, __VA_ARGS__)
+#define LOG_INFO(a, format, ...) LOG(a, INFO , format, __VA_ARGS__)
+
 
 typedef struct odbc_desc_t {
 	struct error_holder e;
@@ -93,6 +109,8 @@ typedef struct odbc_stmt_t {
 	int last_col;
 	int last_col_sofar;
 	struct error_holder e;
+	int log_level;
+	FILE *log;
 } odbc_stmt;
 
 typedef struct odbc_env_t {

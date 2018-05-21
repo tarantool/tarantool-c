@@ -502,20 +502,21 @@ double2float(double v,int *e)
 void
 store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 {
-	if (obind->buffer == NULL)
-		return;
-	if (obind->error)
-		*obind->error = 0;
-	if (obind->is_null)
-		*obind->is_null = 0;
+	if (obind->is_null) {
+		*obind->is_null = (stmt->row[i].type == MP_NIL)?1:0;
+	}
+	
 	if (obind->out_len)
 		*obind->out_len = stmt->row[i].size;
 	
+	if (obind->error)
+		*obind->error = 0;
+	
+	if (obind->buffer == NULL) {		
+		return;
+	}
+		
 	switch (stmt->row[i].type) {
-	case MP_NIL:
-		if (obind->is_null)
-			*obind->is_null = 1;
-		break;
 	case MP_INT:
 	case MP_UINT:
 		if (obind->type == TNTC_ULONG) {

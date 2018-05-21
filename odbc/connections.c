@@ -24,6 +24,7 @@ free_dsn(struct dsn *dsn)
 		free(dsn->flag);
 		free(dsn->user);
 		free(dsn->password);
+		free(dsn->log_filename);
 		free(dsn);
 	}
 }
@@ -175,6 +176,13 @@ set_dsn_attr_string(odbc_connect *tcon, struct keyval *kv)
 	if ((v=get_attr("PORT",kv))) {
 		ret->port = atoi(v);
 	}
+	if ((v=get_attr("LOG_LEVEL",kv))) {
+		ret->log_level = atoi(v);
+	}
+	if ((v=get_attr("LOG_FILENAME",kv))) {
+		strcpy(ret->log_filename,v);
+	}
+
 	if ((v=get_attr("TIMEOUT",kv))) {
 		ret->timeout = atoi(v);
 	}
@@ -188,8 +196,10 @@ int
 make_connect_string(char *buf, odbc_connect *dbc)
 {
 	struct dsn *d = dbc->dsn_params;
-	return snprintf(buf, PARAMSZ, "DSN=%s;UID=%s;PWD=%s;HOST=%s;DATABASE=%s;FLAGS=%s;PORT=%d;TIMEOUT=%d",
-			   d->dsn, d->user, d->password, d->host, d->database, d->flag, d->port, d->timeout);
+	return snprintf(buf, PARAMSZ, "DSN=%s;UID=%s;PWD=%s;HOST=%s;DATABASE=%s;"
+			"FLAGS=%s;PORT=%d;TIMEOUT=%d;LOG_FILENAME=%s;LOG_LEVEL=%d",
+			d->dsn, d->user, d->password, d->host, d->database, d->flag, d->port,
+			d->timeout, d->log_filename, d->log_level);
 }
 
 
@@ -219,7 +229,8 @@ alloc_dsn(void)
 	    alloc_z(&ret->host) &&
 	    alloc_z(&ret->flag) &&
 	    alloc_z(&ret->user) &&
-	    alloc_z(&ret->password))
+	    alloc_z(&ret->password) &&
+	    alloc_z(&ret->log_filename))
 		return ret;
 	else
 		return NULL;
@@ -285,6 +296,13 @@ odbc_read_dsn(odbc_connect *tcon, char *dsn, int dsn_sz)
 		SQLGetPrivateProfileString(ret->dsn, "UID","", ret->user, PARAMSZ, ODBCINI );
 	if (ret->password[0] == '\0')
 		SQLGetPrivateProfileString(ret->dsn, "PASSWORD","", ret->password, PARAMSZ, ODBCINI );
+
+	if (ret->log_filename[0] == '\0')
+		SQLGetPrivateProfileString(ret->dsn, "LOG_FILENAME","", ret->log_filename, PARAMSZ, ODBCINI );
+
+	
+	SQLGetPrivateProfileString(ret->dsn, "LOG_LEVEL","0", &port[0], PARAMSZ, ODBCINI );
+	ret->log_level = atoi(port);
 	
 	return ret;
 error:
@@ -355,6 +373,15 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	set_dsn_attr_string(tcon, kv);
 	free_keys(kv);
 
+	if (tcon->dsn_params->log_filename && tcon->dsn_params->log_filename[0]!='\0') {
+		tcon->log = fopen(tcon->dsn_params->log_filename,"a");
+		tcon->log_level = tcon->dsn_params->log_level;
+	}
+
+	LOG_TRACE(tcon,"SQLDriverConnect(host=%s,port=%d,user=%s)\n", tcon->dsn_params->host,
+		  tcon->dsn_params->port, tcon->dsn_params->user);
+
+	
 	switch( drv_compl) { 
         case SQL_DRIVER_PROMPT:
         case SQL_DRIVER_COMPLETE:
@@ -441,6 +468,14 @@ odbc_dbconnect (SQLHDBC dbch, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 	if (!tcon->dsn_params || !odbc_read_dsn(tcon, (char *)serv, serv_sz)
 	    || !set_connection_params(tcon, user, user_sz, auth, auth_sz))
 		return SQL_ERROR;
+	
+	if (tcon->dsn_params->log_filename && tcon->dsn_params->log_filename[0]!='\0') {
+		tcon->log = fopen(tcon->dsn_params->log_filename,"a");
+		tcon->log_level = tcon->dsn_params->log_level;
+	}
+	
+	LOG_TRACE(tcon,"SQLConnect(host=%s,port=%d,user=%s)\n", tcon->dsn_params->host,
+		  tcon->dsn_params->port, tcon->dsn_params->user);
 
 	return real_connect(tcon);
 }
@@ -470,6 +505,10 @@ odbc_disconnect (SQLHDBC conn)
 	tcon->tnt_hndl = NULL;
 	tcon->dsn_params = NULL;
 	tcon->is_connected = 0;
+	if (tcon->log) {
+		fclose(tcon->log);
+		tcon->log = NULL;
+	}
 	return SQL_SUCCESS;
 }
 

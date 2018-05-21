@@ -23,6 +23,8 @@ stmt_prepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
 
+	LOG_TRACE(stmt, "SQLPrepare(sql='%s')", query);
+
 	if (stmt->state!=CLOSED) {
 		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state");
 		return SQL_ERROR;
@@ -47,9 +49,11 @@ stmt_execute(SQLHSTMT stmth)
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
+
+	LOG_TRACE(stmt, "SQLExecute(%s)", "" );
 	
 	if (stmt->state!=PREPARED) {
-		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state");
+		set_stmt_error(stmt, ODBC_24000_ERROR, "Invalid cursor state");
 		return SQL_ERROR;
 	}
 	if (!stmt->tnt_statement) {
@@ -59,8 +63,6 @@ stmt_execute(SQLHSTMT stmth)
 	if (stmt->inbind_params)
 		tnt_bind_query(stmt->tnt_statement,stmt->inbind_params,stmt->inbind_items);
 
-	if (stmt->outbind_params)
-		tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
 
 	if (tnt_stmt_execute(stmt->tnt_statement)!=OK) {
 		size_t sz=0;
@@ -71,6 +73,18 @@ stmt_execute(SQLHSTMT stmth)
 		set_stmt_error_len(stmt,tnt2odbc_error(tnt_stmt_code(stmt->tnt_statement)),error,sz);
 		return SQL_ERROR;
 	}
+	
+
+	if (stmt->outbind_params) {
+		if (tnt_number_of_cols(stmt->tnt_statement) > stmt->outbind_items &&
+		    realloc_params(tnt_number_of_cols(stmt->tnt_statement),
+				   &(stmt->outbind_items),&(stmt->outbind_params)) == FAIL) {
+			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory for parameters");
+			return SQL_ERROR;
+		}
+		tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
+	}
+	
 	stmt->state = EXECUTED;
 	return SQL_SUCCESS;
 }
@@ -118,7 +132,7 @@ realloc_params(int num,int *old_num, tnt_bind_t **params)
 		if (!npar) {
 			return FAIL;
 		}
-		memset(npar,'0',sizeof(tnt_bind_t *)*num);
+		memset(npar, 0, sizeof(tnt_bind_t)*num);
 		for(int i=0;i<*old_num;++i) {
 			npar[i] = (*params)[i];
 		}
@@ -187,23 +201,32 @@ stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER
 		return SQL_ERROR;
 	}
 
+	int num_of_cols = colnum;
+	if (stmt->state == EXECUTED) {
+		num_of_cols = tnt_number_of_cols(stmt->tnt_statement);
+		if (num_of_cols < colnum) {
+			set_stmt_error(stmt,ODBC_07009_ERROR,"Invalid descriptor index");
+			return SQL_ERROR;
+		}
+	}
+
+	if (realloc_params(num_of_cols, &(stmt->outbind_items), &(stmt->outbind_params))==FAIL) {
+		set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
+		return SQL_ERROR;
+	}
+
 	int in_type = odbc_types_covert(ctype);
 	if (in_type == -1) {
 		set_stmt_error(stmt,ODBC_HY003_ERROR,"Invalid application buffer type");
 		return SQL_ERROR;
 	}
 
-	if (realloc_params(colnum,&(stmt->outbind_items),&(stmt->outbind_params))==FAIL) {
-		set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory");
-		return SQL_ERROR;
-	}
 	--colnum;
 	stmt->outbind_params[colnum].type = in_type;
 	stmt->outbind_params[colnum].buffer = (void *)val;
 	stmt->outbind_params[colnum].out_len = out_len;
 
 	tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
-	
 	return SQL_SUCCESS;
 }
 
@@ -250,7 +273,7 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 		return SQL_ERROR;
 	}
 
-	if (stmt->tnt_statement->nrows<=0) {
+	if (stmt->tnt_statement->nrows<0) {
 		set_stmt_error(stmt,ODBC_07009_ERROR,"No data or row in current row");
 		return SQL_ERROR;		
 	}
@@ -259,7 +282,7 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 			*out_len = SQL_NULL_DATA;
 			return SQL_SUCCESS;
 		} else {
-			set_stmt_error(stmt,ODBC_HY009_ERROR,"Invalid use of null pointer");
+			set_stmt_error(stmt, ODBC_22002_ERROR, "Indicator variable required but not supplied");
 			return SQL_ERROR;		
 		}
 	}
@@ -276,10 +299,12 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 
 	
 	tnt_bind_t par;
+	memset(&par, 0 , sizeof(tnt_bind_t));
 	par.type = in_type;
 	par.buffer = val_ptr;
 	par.in_len = in_len;
 	par.out_len = out_len;
+	par.is_null = NULL;
 
 	int error = 0;
 	par.error = &error;

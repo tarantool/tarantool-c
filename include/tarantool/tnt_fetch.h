@@ -14,8 +14,8 @@
 #define NODATA (-2)
 
 enum CONV_ERROR {
-	TRUNCATE=2,
-	CONVERT=1
+	TRUNCATE = 2,
+	CONVERT = 1
 };
 
 enum QUERY_TYPE {

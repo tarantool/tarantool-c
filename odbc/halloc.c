@@ -67,6 +67,59 @@ tnt2odbc_error(int e)
 	return r;
 }
 
+const char *
+code2sqlstate(int code)
+{
+	switch (code) {
+	case ODBC_22003_ERROR:
+		return "22003";
+	case ODBC_22002_ERROR:
+		return "22002";
+	case ODBC_HY105_ERROR:
+		return "HY105";
+	case ODBC_07009_ERROR:
+		return "07009";
+	case ODBC_42000_ERROR:
+		return "42000";
+	case ODBC_07002_ERROR:
+		return "07002";
+	case ODBC_01004_ERROR:
+		return "01004";
+	case ODBC_00000_ERROR:
+		return "00000";
+	case ODBC_28000_ERROR:
+		return "28000";
+	case ODBC_HY000_ERROR:
+		return "HY000";
+	case ODBC_HYT00_ERROR:
+		return "HYT00";
+	case ODBC_08001_ERROR:
+		return "08001";
+	case ODBC_HY001_ERROR:
+		return "HY001";
+	case ODBC_HY010_ERROR:
+		return "HY010";
+ 	case ODBC_HY003_ERROR:
+		return "HY003";
+	case ODBC_HY090_ERROR:
+		return "HY090";
+	case ODBC_HY009_ERROR:
+		return "HY009";
+	case ODBC_24000_ERROR:
+		return "24000";
+	case ODBC_HYC00_ERROR:
+		return "HYC00";
+	case ODBC_MEM_ERROR:
+		return "HY001";
+	case ODBC_EMPTY_STATEMENT:
+		return "HY009";
+	case ODBC_07005_ERROR:
+		return "07005";
+	default:
+		return "HY000";
+	}
+}
+
 
 
 /*
@@ -120,6 +173,7 @@ void
 set_connect_error(odbc_connect *tcon, int code, const char* msg)
 {
 	set_connect_error_len(tcon,code,msg,-1);
+	LOG_ERROR(tcon,"[%s] %s\n", code2sqlstate(code), msg); 
 }
 
 /*
@@ -136,7 +190,9 @@ set_stmt_error_len(odbc_stmt *stmt, int code, const char* msg, int len)
 void
 set_stmt_error(odbc_stmt *stmt, int code, const char* msg)
 {
+
 	set_stmt_error_len(stmt,code,msg,-1);
+	LOG_ERROR(stmt,"[%s] %s\n", code2sqlstate(code), msg); 
 }
 
 /*
@@ -169,57 +225,6 @@ get_error(SQLSMALLINT hndl_type, SQLHANDLE hndl)
 	}
 }
 
-
-const char *
-code2sqlstate(int code)
-{
-	switch (code) {
-	case ODBC_22003_ERROR:
-		return "22003";
-	case ODBC_HY105_ERROR:
-		return "HY105";
-	case ODBC_07009_ERROR:
-		return "07009";
-	case ODBC_42000_ERROR:
-		return "42000";
-	case ODBC_07002_ERROR:
-		return "07002";
-	case ODBC_01004_ERROR:
-		return "01004";
-	case ODBC_00000_ERROR:
-		return "00000";
-	case ODBC_28000_ERROR:
-		return "28000";
-	case ODBC_HY000_ERROR:
-		return "HY000";
-	case ODBC_HYT00_ERROR:
-		return "HYT00";
-	case ODBC_08001_ERROR:
-		return "08001";
-	case ODBC_HY001_ERROR:
-		return "HY001";
-	case ODBC_HY010_ERROR:
-		return "HY010";
- 	case ODBC_HY003_ERROR:
-		return "HY003";
-	case ODBC_HY090_ERROR:
-		return "HY090";
-	case ODBC_HY009_ERROR:
-		return "HY009";
-	case ODBC_24000_ERROR:
-		return "24000";
-	case ODBC_HYC00_ERROR:
-		return "HYC00";
-	case ODBC_MEM_ERROR:
-		return "HY001";
-	case ODBC_EMPTY_STATEMENT:
-		return "HY009";
-	case ODBC_07005_ERROR:
-		return "07005";
-	default:
-		return "HY000";
-	}
-}
 
 
 SQLRETURN
@@ -463,9 +468,9 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 		con->stmt_end = *out;
 		(*out)->next = (*out)->prev = *out;
 	}
-
+	(*out)->log = con->log;
+	(*out)->log_level = con->log_level;
 	return SQL_SUCCESS;
-	
 }
 
 SQLRETURN

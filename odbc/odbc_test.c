@@ -294,7 +294,7 @@ do_fetchbind(struct set_handles *st, void *p)
 {
 	struct fetchbind_par *par_ptr = p;
 	int row_cnt = 0;
-
+	int matches = 0;
 	long val;
 	SQLLEN val_len;
 	int code = SQLBindCol (st->hstmt,                  // Statement handle
@@ -323,6 +323,92 @@ do_fetchbind(struct set_handles *st, void *p)
 	}
 }
 
+int
+do_fetchbindint(struct set_handles *st, void *p)
+{
+	struct fetchbind_par *par_ptr = p;
+	int row_cnt = 0;
+	int matches = 0;
+	long val;
+	SQLLEN val_len;
+	long *pars = (long*) par_ptr->args;
+	int code = SQLBindCol (st->hstmt,                  // Statement handle
+			       2,                    // Column number
+			       SQL_C_LONG,      // C Data Type
+			       &val,          // Data buffer
+			       0,      // Size of Data Buffer
+			       &val_len); // Size of data returned
+	if (code != SQL_SUCCESS) {
+		show_error(SQL_HANDLE_STMT, st->hstmt);
+		return 0;
+	}
+	// 10 is enough.
+	while(row_cnt < 10) {
+		code = SQLFetch(st->hstmt);
+		if (code == SQL_SUCCESS) {
+			fprintf(stderr, "val is %ld match is %ld\n", val, pars[row_cnt]);
+			if (val == pars[row_cnt])
+				matches ++;
+			row_cnt ++ ;
+		} else if (code == SQL_NO_DATA) {
+			fprintf(stderr, "fetched good %d rows matches is %d\n", row_cnt, matches);
+			return matches == par_ptr->cnt;
+		} else {
+			fprintf(stderr, "fetched good %d rows\n", row_cnt);
+			show_error(SQL_HANDLE_STMT, st->hstmt);
+			return 0;
+		}
+	}
+	return 0;
+}
+
+#define CHECK(a,b) do { if (a != SQL_SUCCESS) { b ; return 0;} } while(0)
+
+int
+do_fetchgetdata(struct set_handles *st, void *p)
+{
+	struct fetchbind_par *par_ptr = p;
+	int row_cnt = 0;
+	int matches = 0;
+	long val;
+	SQLLEN val_len;
+	long *pars = (long*) par_ptr->args;
+	
+	while(row_cnt < 100) {
+		int code = SQLFetch(st->hstmt);
+		if (code == SQL_SUCCESS) {
+			SQLBIGINT long_val;
+			SQLDOUBLE  double_val;
+			SQLCHAR str_val[BUFSIZ] = "";
+
+			SQLLEN str_len;
+
+			code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val[0], BUFSIZ, &str_len);
+			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
+
+			code = SQLGetData(st->hstmt, 2, SQL_C_LONG, &long_val, 0, 0);
+			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
+			
+			code = SQLGetData(st->hstmt, 3, SQL_C_DOUBLE, &double_val, 0, 0);
+			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
+
+			
+			fprintf(stderr, "long_val is %ld match is %ld double_val %lf and str_val is %s\n",
+				long_val, pars[row_cnt], double_val, str_val);
+			if (long_val == pars[row_cnt])
+				matches ++;
+			row_cnt ++ ;
+		} else if (code == SQL_NO_DATA) {
+			fprintf(stderr, "fetched good %d rows matches is %d\n", row_cnt, matches);
+			return matches == par_ptr->cnt;
+		} else {
+			fprintf(stderr, "fetched good %d rows\n", row_cnt);
+			show_error(SQL_HANDLE_STMT, st->hstmt);
+			return 0;
+		}
+	}
+	return 0;
+}
 
 
 int
@@ -506,8 +592,14 @@ main(int ac, char* av[])
 	test(test_fetch(good_dsn,"select id from str_table where val=100", 0, do_fetch));
 
 
-	struct fetchbind_par par = {.cnt=4};
+	struct fetchbind_par par = {.cnt=5};
 	test(test_fetch(good_dsn, "select * from str_table",&par, do_fetchbind));
+	
+	long vals[] = {1 , 2 , 3 , 4 , 5 , 6 , 7 , 8, 9 , 10};
+        par.cnt = 5 ;
+	par.args = &vals[0];
+
+	test(test_fetch(good_dsn, "select * from str_table order by val",&par, do_fetchbindint));
 	
 	test(test_describecol(good_dsn, "select * from str_table", 2 , SQL_BIGINT, "val", SQL_NULLABLE_UNKNOWN));
 	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NULLABLE_UNKNOWN));
@@ -515,6 +607,23 @@ main(int ac, char* av[])
 	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NULLABLE));
 	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NO_NULLS));  
 
+	testfail(test_execrowcount(good_dsn,"drop table dbl",1));
+	test(test_execrowcount(good_dsn,"CREATE TABLE dbl(id STRING, val INTEGER, d DOUBLE, PRIMARY KEY (val))",1));
+	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('ab', 1, 0.22222)",1));
+	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('bb', 2, 100002.22222)",1));
+	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('cb', 3, 0.93473422222)",1));
+	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('db', 4, 2332.293823)",1));
+	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES (NULL, 5, 3.99999999999999999)",1));
+	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('gb', 6, 3.1415926535897932384626433832795)",1));	
+
+
+	long vals2[] = {1 , 2 , 3 , 4 , 5 , 6 , 7 , 8, 9 , 10};
+        par.cnt = 6 ;
+	par.args = &vals2[0];
+
+	
+	test(test_fetch(good_dsn, "select * from dbl order by val",&par, do_fetchgetdata));
+	
 //	test(test_execrowcount(good_dsn,"drop table str_table",1));
 	
 }
