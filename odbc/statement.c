@@ -85,7 +85,7 @@ stmt_execute(SQLHSTMT stmth)
 	}
 	
 	stmt->state = EXECUTED;
-	LOG_INFO(stmt, "Execute(%s) = OK  %s %d rows so far\n",
+	LOG_INFO(stmt, "Execute(%s) = OK  %s %lld rows so far\n",
 		 (stmt->tnt_statement->qtype == DML)?"DML":"SELECT",
 		 (stmt->tnt_statement->qtype == DML)?"affected":"prefetched",
 		 (stmt->tnt_statement->qtype == DML)?tnt_affected_rows(stmt->tnt_statement):
@@ -269,9 +269,10 @@ stmt_fetch(SQLHSTMT stmth)
 SQLRETURN
 stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset)
 {
+	
         if (orientation != SQL_FETCH_NEXT) {
-		set_stmt_error(stmt,ODBC_HY106_ERROR,"Unsupported fetch orientation", "SQLFetchScroll");
-		return SQL_ERROR;		
+		set_stmt_error((odbc_stmt *)stmth, ODBC_HY106_ERROR, "Unsupported fetch orientation", "SQLFetchScroll");
+		return SQL_ERROR;
 	}
 	return stmt_fetch(stmth);
 }
@@ -337,7 +338,7 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 	}
 
 	if (stmt->last_col_sofar && (stmt->last_col_sofar >= tnt_col_len(stmt->tnt_statement,num))) {
-		return NODATA;
+		return SQL_NO_DATA;
 	}
 	
 	store_conv_bind_var(stmt->tnt_statement, num , &par, stmt->last_col_sofar);

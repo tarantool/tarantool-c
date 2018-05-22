@@ -1,6 +1,9 @@
 
 #include <stdint.h>
 
+
+#define DRIVER_VER_INFO "0.1"
+
 enum ERROR_CODES {
 	ODBC_DSN_ERROR=2, /* Error parsing dsn parameters */
 	ODBC_MEM_ERROR=4, /* Unable to allocate memory */
@@ -18,6 +21,7 @@ enum ERROR_CODES {
 			     or in descriptor */
 	ODBC_HY003_ERROR, /* Invalid application buffer type */
 	ODBC_HY090_ERROR, /* Invalid string or buffer length */
+	ODBC_HY106_ERROR, /* Unsupported range*/
 	ODBC_HY009_ERROR, /* Invalid use of null pointer */
 	ODBC_24000_ERROR, /* Invalid cursor state */
 	ODBC_HYC00_ERROR, /* Optional feature not implemented */
@@ -237,4 +241,8 @@ SQLRETURN get_connect_attr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
 			   SQLINTEGER len, SQLINTEGER *olen);
 SQLRETURN set_connect_attr(SQLHDBC hdbc, SQLINTEGER att, SQLPOINTER val,
 			   SQLINTEGER len);
-
+SQLRETURN end_transact(SQLSMALLINT htype, SQLHANDLE hndl, SQLSMALLINT tran_type);
+SQLRETURN get_info(SQLHDBC hndl, SQLUSMALLINT tp, SQLPOINTER iptr, SQLSMALLINT in_len, SQLSMALLINT * out_len);
+SQLRETURN  odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,
+			    SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLUSMALLINT drv_compl);
+SQLRETURN stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset);

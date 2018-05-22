@@ -431,6 +431,7 @@ do_fetchgetdata_stream(struct set_handles *st, void *p)
 			int have_with_info = 0;
 			do {
 				code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val[0], 2, &str_len);
+				row_cnt ++ ;
 				if (code != SQL_SUCCESS_WITH_INFO)
 					break;
 				have_with_info = 1;
@@ -440,11 +441,14 @@ do_fetchgetdata_stream(struct set_handles *st, void *p)
 					matches ++;
 				code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val[0], 2, &str_len);
 				if (code != SQL_NO_DATA) {
+					fprintf(stderr, "no SQL_NO_DATA after success code %d row_count %d\n",
+						code, row_cnt); 
 					show_error(SQL_HANDLE_STMT, st->hstmt);
 					return 0;
 				}
+				fprintf(stderr, "fetched good %d parts matches is %d\n", row_cnt, matches);
+				return row_cnt == par_ptr->cnt;
 			}
-			row_cnt ++ ;
 		} else if (code == SQL_NO_DATA) {
 			fprintf(stderr, "fetched good %d rows matches is %d\n", row_cnt, matches);
 			return matches == par_ptr->cnt;
@@ -662,7 +666,8 @@ main(int ac, char* av[])
 	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('cb', 3, 0.93473422222)",1));
 	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('db', 4, 2332.293823)",1));
 	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES (NULL, 5, 3.99999999999999999)",1));
-	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('gb', 6, 3.1415926535897932384626433832795)",1));	
+	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('12345678abcdfghjkl;poieuwtgdskdsdsdsdsgdkhsg',"
+			       " 6, 3.1415926535897932384626433832795)",1));	
 
 
 	long vals2[] = {1 , 2 , 3 , 4 , 5 , 6 , 7 , 8, 9 , 10};
@@ -671,7 +676,8 @@ main(int ac, char* av[])
 
 	
 	test(test_fetch(good_dsn, "select * from dbl order by val",&par, do_fetchgetdata));
-	
+	par.cnt = 44 ;
+	test(test_fetch(good_dsn, "select * from dbl where val=6", &par, do_fetchgetdata_stream));
 //	test(test_execrowcount(good_dsn,"drop table str_table",1));
 	
 }

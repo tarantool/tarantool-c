@@ -331,3 +331,15 @@ SQLGetInfo(SQLHDBC hndl, SQLUSMALLINT tp, SQLPOINTER iptr, SQLSMALLINT in_len, S
 {
 	return get_info(hndl, tp, iptr, in_len, out_len);
 }
+
+SQLRETURN SQL_API
+SQLMoreResults(SQLHSTMT hstmt)
+{
+    return SQL_NO_DATA;
+}
+
+SQLRETURN SQL_API
+SQLSetPos(HSTMT hstmt, SQLSETPOSIROW irow, SQLUSMALLINT fOption, SQLUSMALLINT fLock)
+{
+    return SQL_ERROR;
+}
