@@ -128,7 +128,8 @@ SQLDriverConnect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	start_measure(&tm);
 	SQLRETURN r = odbc_drv_connect(dbch, whndl, conn_s, slen, out_conn_s, buflen, out_len, drv_compl);
 	stop_measure(&tm);
-	LOG_INFO(((odbc_connect*)dbch),"SQLDriverConnect() = %ld Sec %ld uSec\n", tm.sec, tm.usec);
+	LOG_TRACE(((odbc_connect*)dbch),"SQLDriverConnect() = [%s]  %ld Sec %ld uSec\n", r==SQL_SUCCESS? "OK" : "NOTOK" , 
+		 tm.sec, tm.usec);
 	return r;
 }
 
@@ -141,7 +142,8 @@ SQLConnect(SQLHDBC dbch, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 	start_measure(&tm);
 	SQLRETURN r = odbc_dbconnect(dbch, serv, serv_sz, user, user_sz, auth, auth_sz);
 	stop_measure(&tm);
-	LOG_INFO(((odbc_connect*)dbch),"SQLConnect() = %ld Sec %ld uSec\n", tm.sec, tm.usec);
+	LOG_TRACE(((odbc_connect*)dbch),"SQLConnect() = [%s] %ld Sec %ld uSec\n",  r==SQL_SUCCESS? "OK" : "NOTOK" ,
+		 tm.sec, tm.usec);
 	return r;
 }
 
@@ -178,7 +180,8 @@ SQLExecute(SQLHSTMT stmth)
 	start_measure(&tm);
 	SQLRETURN r = stmt_execute(stmth); 
 	stop_measure(&tm);
-	LOG_INFO(((odbc_stmt *)stmth), "SQLExecute = %ld Sec %ld uSec\n", tm.sec, tm.usec);
+	LOG_TRACE(((odbc_stmt *)stmth), "SQLExecute = [%s] %ld Sec %ld uSec\n", r==SQL_SUCCESS? "OK" : "NOTOK" ,
+		 tm.sec, tm.usec);
 	return r;
 }
 
@@ -189,14 +192,17 @@ SQLExecDirect(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
 	if (stmth == NULL)
 		return SQL_INVALID_HANDLE;
 	int r = stmt_prepare( stmth, query, query_len);
-	if (r != SQL_SUCCESS)
+	if (r != SQL_SUCCESS) {
+		LOG_INFO(((odbc_stmt*)stmth),"SQLExecDirect = [NOTOK] 0 Sec %d uSec\n", 0);
 		return r;
+	}
 	
 	struct tmeasure tm;
 	start_measure(&tm);
 	r = stmt_execute(stmth); 
 	stop_measure(&tm);
-	LOG_INFO(((odbc_stmt*)stmth),"SQLExecDirect = %ld Sec %ld uSec\n", tm.sec, tm.usec);
+	LOG_INFO(((odbc_stmt*)stmth),"SQLExecDirect = [%s] %ld Sec %ld uSec\n", r==SQL_SUCCESS? "OK": "NOTOK" ,
+		 tm.sec, tm.usec);
 	return r;
 }
 
@@ -245,6 +251,14 @@ SQLFetch(SQLHSTMT stmth)
 {
 	return stmt_fetch(stmth);
 }
+
+SQLRETURN SQL_API
+SQLFetchScroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset)
+{
+	return stmt_fetch_scroll(stmth, orientation, offset);
+}
+
+
 
 SQLRETURN SQL_API
 SQLGetData(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER    val_ptr, SQLLEN in_len, SQLLEN *out_len)
@@ -312,3 +326,8 @@ SQLEndTran(SQLSMALLINT htype, SQLHANDLE hndl, SQLSMALLINT tran_type)
 	return end_transact(htype, hndl, tran_type);
 }
 
+SQLRETURN SQL_API
+SQLGetInfo(SQLHDBC hndl, SQLUSMALLINT tp, SQLPOINTER iptr, SQLSMALLINT in_len, SQLSMALLINT * out_len)
+{
+	return get_info(hndl, tp, iptr, in_len, out_len);
+}

@@ -50,8 +50,6 @@ stmt_execute(SQLHSTMT stmth)
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
-
-	LOG_TRACE(stmt, "SQLExecute(%s)\n", "" );
 	
 	if (stmt->state!=PREPARED) {
 		set_stmt_error(stmt, ODBC_24000_ERROR, "Invalid cursor state", "SQLExecute");
@@ -87,6 +85,11 @@ stmt_execute(SQLHSTMT stmth)
 	}
 	
 	stmt->state = EXECUTED;
+	LOG_INFO(stmt, "Execute(%s) = OK  %s %d rows so far\n",
+		 (stmt->tnt_statement->qtype == DML)?"DML":"SELECT",
+		 (stmt->tnt_statement->qtype == DML)?"affected":"prefetched",
+		 (stmt->tnt_statement->qtype == DML)?tnt_affected_rows(stmt->tnt_statement):
+		 stmt->tnt_statement->nrows);
 	return SQL_SUCCESS;
 }
 
@@ -247,13 +250,30 @@ stmt_fetch(SQLHSTMT stmth)
 		return SQL_ERROR;
 	}
 	int retcode = tnt_fetch(stmt->tnt_statement);
-	
-	if (retcode==OK)
+
+		
+	if (retcode==OK) {
+		LOG_INFO(stmt, "SQLFetch(OK) %d columns\n", tnt_number_of_cols(stmt->tnt_statement)); 
 		return SQL_SUCCESS;
-	else if (retcode==NODATA)
+	} else if (retcode==NODATA) {
+		LOG_INFO(stmt, "SQLFetch(NO_DATA) = %s\n", "END_OF_DATA"); 
 		return SQL_NO_DATA;
-	else
+	} else {
+		LOG_INFO(stmt, "SQLFetch(%s)\n", "FAIL"); 
 		return SQL_ERROR;
+	}
+}
+
+
+
+SQLRETURN
+stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset)
+{
+        if (orientation != SQL_FETCH_NEXT) {
+		set_stmt_error(stmt,ODBC_HY106_ERROR,"Unsupported fetch orientation", "SQLFetchScroll");
+		return SQL_ERROR;		
+	}
+	return stmt_fetch(stmth);
 }
 
 

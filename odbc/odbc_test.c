@@ -431,7 +431,7 @@ do_fetchgetdata_stream(struct set_handles *st, void *p)
 			int have_with_info = 0;
 			do {
 				code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val[0], 2, &str_len);
-				if (code != SUCCESS_WITH_INFO)
+				if (code != SQL_SUCCESS_WITH_INFO)
 					break;
 				have_with_info = 1;
 			} while (1);			

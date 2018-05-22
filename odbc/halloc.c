@@ -634,3 +634,4 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 		return SQL_ERROR;
 	}
 }
+
