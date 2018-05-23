@@ -11,6 +11,7 @@ enum ERROR_CODES {
 	ODBC_28000_ERROR, /* Invalid authorization specification */
 	ODBC_HY000_ERROR, /* General error */
 	ODBC_HYT00_ERROR, /* Timeout expired */
+	ODBC_IM001_ERROR, /* Timeout expired */
 	ODBC_08001_ERROR, /* Client unable to establish connection */
 	ODBC_01004_ERROR, /* String data, right truncated */
 	ODBC_22002_ERROR, /* Indicator variable required but not supplied */

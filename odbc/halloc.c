@@ -110,6 +110,8 @@ code2sqlstate(int code)
 		return "24000";
 	case ODBC_HYC00_ERROR:
 		return "HYC00";
+	case ODBC_IM001_ERROR:
+		return "IM001";
 	case ODBC_MEM_ERROR:
 		return "HY001";
 	case ODBC_EMPTY_STATEMENT:

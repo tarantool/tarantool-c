@@ -52,23 +52,23 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQL
 	}
 	switch (type) {
 	case SQL_MAX_USER_NAME_LEN:
-		*((SQLSMALLINT *) val) = 16;
+		*((SQLSMALLINT *) val) = 16; // Get From Tarantool
 		*valLen = sizeof (SQLSMALLINT);
 		break;
 	case SQL_USER_NAME:
-		strmak(val, "", valMax, valLen);
+		strmak(val, "", valMax, valLen); // Should be session user
 		break;
 	case SQL_DRIVER_ODBC_VER:
 		strmak(val, "03.00", valMax, valLen);
 
 		break;
-	case SQL_ACTIVE_CONNECTIONS:
-	case SQL_ACTIVE_STATEMENTS:
+	case SQL_ACTIVE_CONNECTIONS: // inf: max concurrent activiti  
+	case SQL_ACTIVE_STATEMENTS: // inf
 		*((SQLSMALLINT *) val) = 0;
 		*valLen = sizeof (SQLSMALLINT);
 		break;
 #ifdef SQL_ASYNC_MODE
-	case SQL_ASYNC_MODE:
+	case SQL_ASYNC_MODE: 
 		*((SQLUINTEGER *) val) = SQL_AM_NONE;
 		*valLen = sizeof (SQLUINTEGER);
 		break;
@@ -240,30 +240,30 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQL
 		*valLen = sizeof (SQLUINTEGER);
 		break;
 	case SQL_IDENTIFIER_CASE:
-		*((SQLSMALLINT *) val) = SQL_IC_SENSITIVE;
+		*((SQLSMALLINT *) val) = SQL_IC_MIXED; // ?  Insencitive ASK Kirill
 		*valLen = sizeof (SQLSMALLINT);
 		break;
 	case SQL_IDENTIFIER_QUOTE_CHAR:
 		strmak(val, "\"", valMax, valLen);
 		break;
-	case SQL_MAX_TABLE_NAME_LEN:
+	case SQL_MAX_TABLE_NAME_LEN: // Tarantool 
 	case SQL_MAX_COLUMN_NAME_LEN:
 		*((SQLSMALLINT *) val) = 255;
 		*valLen = sizeof (SQLSMALLINT);
 		break;
-	case SQL_MAX_CURSOR_NAME_LEN:
+	case SQL_MAX_CURSOR_NAME_LEN: // ??
 		*((SWORD *) val) = 255;
 		*valLen = sizeof (SWORD);
 		break;
-	case SQL_MAX_PROCEDURE_NAME_LEN:
+	case SQL_MAX_PROCEDURE_NAME_LEN: // tarantool 
 		*((SQLSMALLINT *) val) = 0;
 		break;
-	case SQL_MAX_QUALIFIER_NAME_LEN:
-	case SQL_MAX_OWNER_NAME_LEN:
+	case SQL_MAX_QUALIFIER_NAME_LEN: // T - 0
+	case SQL_MAX_OWNER_NAME_LEN: // T - 0
 		*((SQLSMALLINT *) val) = 255;
 		break;
 	case SQL_OWNER_TERM:
-		strmak(val, "", valMax, valLen);
+		strmak(val, "SCH", valMax, valLen);
 		break;
 	case SQL_PROCEDURE_TERM:
 		strmak(val, "PROCEDURE", valMax, valLen);

@@ -45,16 +45,42 @@ tnt_prepare(struct tnt_stream *s, const char *text, int32_t len)
 	}
 	return stmt;
 }
+
+static int
+set_bind_query_array(tnt_stmt_t * stmt, tnt_bind_t * bnd)
+{
+	stmt->ibind = bnd;
+	return OK;	
+}
+
 /*
  * Associates input bind parameters array with statements.
+ * This function assumes that all parameters are only numeric "?"
+ * And clean up all .name members to Null for safety reason. If one want  to use named parameters 
+ * please use tnt_bind_query_named() instread.
  **/
 int
 tnt_bind_query(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters)
 {
-	(void)(number_of_parameters);		/* Stop unused warning */
-	stmt->ibind = bnd;
-	return OK;
+	int i = 0;
+	while(i < number_of_parameters)
+		bnd[i++].name = NULL;
+	return set_bind_query_array(stmt, bnd);
 }
+
+/*
+ * This is function for associate binding paramters with statement.
+ * Parameters can be named also.
+ */
+
+int
+tnt_bind_query_named(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters)
+{
+	(void)(number_of_parameters);		/* Stop unused warning */
+	return set_bind_query_array(stmt, bnd);
+}
+
+
 /*
  * Associates output bind parameters array with statements.
  **/
@@ -183,6 +209,11 @@ enum sql_state {
 	COMMENT2
 };
 
+/* This is simple and probably incorrect function for extracting number of parameners from the query
+ * First incorrect point is that named (and numbered) parameters may be met  in query  more then ones as a 
+ * backreference.
+ */
+
 int
 get_query_num(const char *s,size_t len)
 {
@@ -194,6 +225,7 @@ get_query_num(const char *s,size_t len)
 		if (state == SQL) {
 			switch(*ptr) {
 			case '?':
+			case ':':
 				num++;
 				break;
 			case '\\':
@@ -295,6 +327,14 @@ bind2object(tnt_stmt_t* stmt)
 
 	int i=npar;
 	while(i-- > 0) {
+		int close_map = 0;
+		if (stmt->ibind[npar-i-1].name) {
+			if (tnt_object_add_map(obj, 1) == FAIL)
+				goto error;
+			if (tnt_object_add_strz(obj, stmt->ibind[npar-i-1].name) == FAIL)
+				goto error;
+			close_map = 1;
+		}
 		switch(stmt->ibind[npar-i-1].type) {
 		case TNTC_NIL:
 			if (tnt_object_add_nil(obj) == FAIL)
@@ -390,6 +430,10 @@ bind2object(tnt_stmt_t* stmt)
 			break;
 		default:
 			goto error;
+		}
+		if (close_map) {
+			if (tnt_object_container_close(obj)==FAIL)
+				goto error;
 		}
 	}
 	if (tnt_object_container_close(obj)==FAIL)

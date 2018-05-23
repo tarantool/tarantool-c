@@ -343,3 +343,11 @@ SQLSetPos(HSTMT hstmt, SQLSETPOSIROW irow, SQLUSMALLINT fOption, SQLUSMALLINT fL
 {
     return SQL_ERROR;
 }
+
+
+SQLRETURN SQL_API
+SQLDescribeParam(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr, SQLULEN *out_len, SQLSMALLINT *out_dnum,
+		 SQLSMALLINT *is_null)
+{
+	return param_info(stmth, pnum, type_ptr, out_len, out_dnum, is_null);
+}

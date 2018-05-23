@@ -24,10 +24,10 @@ stmt_prepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
 
-	LOG_TRACE(stmt, "SQLPrepare(sql='%s')\n", query);
+	LOG_TRACE(stmt, "Prepare(sql='%s')\n", query);
 
 	if (stmt->state!=CLOSED) {
-		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state", "SQLPrepare");
+		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state", "Prepare");
 		return SQL_ERROR;
 	}
 	if (query_len == SQL_NTS)
@@ -39,7 +39,7 @@ stmt_prepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
 		return SQL_SUCCESS;
 	} else {
 		/* Prepare just copying query string so only memory error could be here. */
-		set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory", "SQLPrepare");
+		set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory", "Prepare");
 		return SQL_ERROR;
 	}
 }
@@ -52,11 +52,11 @@ stmt_execute(SQLHSTMT stmth)
 		return SQL_INVALID_HANDLE;
 	
 	if (stmt->state!=PREPARED) {
-		set_stmt_error(stmt, ODBC_24000_ERROR, "Invalid cursor state", "SQLExecute");
+		set_stmt_error(stmt, ODBC_24000_ERROR, "Invalid cursor state", "Execute");
 		return SQL_ERROR;
 	}
 	if (!stmt->tnt_statement) {
-		set_stmt_error(stmt,ODBC_EMPTY_STATEMENT,"ODBC statement without query/prepare","SQLExecute");
+		set_stmt_error(stmt,ODBC_EMPTY_STATEMENT,"ODBC statement without query/prepare","Execute");
 		return SQL_ERROR;
 	}
 	if (stmt->inbind_params)
@@ -69,7 +69,7 @@ stmt_execute(SQLHSTMT stmth)
 		if (!error) {
 			error = "Unknown error state";
 		}
-		set_stmt_error_len(stmt,tnt2odbc_error(tnt_stmt_code(stmt->tnt_statement)),error,sz, "SQLExecute");
+		set_stmt_error_len(stmt,tnt2odbc_error(tnt_stmt_code(stmt->tnt_statement)),error,sz, "Execute");
 		return SQL_ERROR;
 	}
 	
@@ -78,7 +78,7 @@ stmt_execute(SQLHSTMT stmth)
 		if (tnt_number_of_cols(stmt->tnt_statement) > stmt->outbind_items &&
 		    realloc_params(tnt_number_of_cols(stmt->tnt_statement),
 				   &(stmt->outbind_items),&(stmt->outbind_params)) == FAIL) {
-			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory for parameters","SQLExecute");
+			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory for parameters","Execute");
 			return SQL_ERROR;
 		}
 		tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
@@ -629,3 +629,14 @@ num_params(SQLHSTMT stmth, SQLSMALLINT *cnt)
 	return SQL_SUCCESS;
 }
 
+SQLRETURN SQL_API
+param_info(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr, SQLULEN *out_len, SQLSMALLINT *out_dnum,
+                 SQLSMALLINT *is_null)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+        if (!stmt)
+                return SQL_INVALID_HANDLE;
+	/* Driver needs parsed statement in order to implement this */
+	set_stmt_error(stmt, ODBC_IM001_ERROR, "Driver does not support this function", "SQLDescribeParam");
+	return SQL_ERROR;
+}

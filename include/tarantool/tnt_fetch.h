@@ -45,6 +45,7 @@ struct tnt_coldata {
  * Bind array element structure.
  */
 typedef struct tnt_bind {
+	char *name;
 	int32_t type;
 	void *buffer;
 	tnt_size_t in_len;
@@ -146,10 +147,23 @@ tnt_stmt_t *tnt_query(struct tnt_stream *s, const char *text, int32_t len);
  */
 int tnt_stmt_execute(tnt_stmt_t *);
 
+
+
 /**
- * Associates input bind parameters array with statements.
+ * Associates input bind parameters array with the statement.
+ * This function assumes that all parameters are only numeric "?"
+ * And clean up all .name members to Null for safety reason. If one want  to use named parameters 
+ * please use tnt_bind_query_named() instead.
  */
-int tnt_bind_query(tnt_stmt_t *, tnt_bind_t *, int number_of_parameters);
+int
+tnt_bind_query(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters);
+
+/**
+ * This is function for associate binding paramters with statement.
+ * Parameters can be named also.
+ */
+int
+tnt_bind_query_named(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters);
 
 /**
  * Associates output bind parameters array with statements.
