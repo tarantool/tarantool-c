@@ -5,3 +5,5 @@ Trace   = Yes
 Server      = localhost 
 Port      = 33000
 Database        = test
+Log_filename = ./tarantool_odbc.log
+Log_level = 5
