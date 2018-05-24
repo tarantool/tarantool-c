@@ -84,7 +84,7 @@ stmt_execute(SQLHSTMT stmth)
 	
 	stmt->state = EXECUTED;
 	LOG_INFO(stmt, "Execute(%s) = OK  %s %" PRIu64 " rows so far\n",
-		 (stmt->tnt_statement->qtype == DML)?"DML":"SELECT",
+		 (stmt->tnt_statement->qtype == DML)?"DML/DDL":"SELECT",
 		 (stmt->tnt_statement->qtype == DML)?"affected":"prefetched",
 		 (stmt->tnt_statement->qtype == DML)?tnt_affected_rows(stmt->tnt_statement):
 		 stmt->tnt_statement->nrows);
