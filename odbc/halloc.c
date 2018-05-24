@@ -1,5 +1,6 @@
 /* -*- C -*- */
 
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -163,11 +164,13 @@ set_error_len(struct error_holder *e, int code, const char* msg, int len)
 
 
 void
-set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len, const char *fname)
+set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len,
+		      const char *fname)
 {
 	if (tcon) {
 		set_error_len(&(tcon->e),code,msg,len);
-		LOG_ERROR(tcon,"[%s][%s] %s\n", fname, code2sqlstate(code), tcon->e.message); 
+		LOG_ERROR(tcon,"[%s][%s] %s\n", fname, code2sqlstate(code),
+			  tcon->e.message); 
 	}
 }
 
@@ -177,7 +180,8 @@ set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len, co
  **/
 
 void
-set_connect_error(odbc_connect *tcon, int code, const char* msg, const char* fname)
+set_connect_error(odbc_connect *tcon, int code, const char* msg,
+		  const char* fname)
 {
 	set_connect_error_len(tcon, code, msg, -1, fname);
 }
@@ -471,9 +475,11 @@ gen_env_id(void)
 {
 	char buf[IBUFSIZ];
 	char host[HBUFSIZ];
-	snprintf(buf, IBUFSIZ, "%s%lu%llu", hostid(host, HBUFSIZ), time(0), ainc_id_seq(&env_sq));
+	snprintf(buf, IBUFSIZ, "%s" "%" PRIu64 "%" PRIu64,
+		 hostid(host, HBUFSIZ), (uint64_t) time(0),
+		 ainc_id_seq(&env_sq));
 
-	snprintf(buf, IBUFSIZ, "%llu", fnv(buf)); 
+	snprintf(buf, IBUFSIZ, "%" PRIu64, fnv(buf)); 
 	
 	return strdup(buf);
 }
@@ -482,7 +488,7 @@ static char *
 gen_next_id(const char *env_id, uint64_t *seq)
 {
 	char buf[IBUFSIZ];
-	snprintf(buf,IBUFSIZ, "%s-%llu", env_id, ainc_id_seq(seq));
+	snprintf(buf,IBUFSIZ, "%s-%" PRIu64, env_id, ainc_id_seq(seq));
 	return strdup(buf);
 }
 
@@ -518,6 +524,7 @@ SQLRETURN
 free_connect(SQLHDBC hdbc)
 {
 	odbc_connect *ocon = (odbc_connect *)hdbc;
+	LOG_INFO (ocon, "SQLDisconnect(%s)\n", "");
 	if (ocon->tnt_hndl)
 		tnt_stream_free(ocon->tnt_hndl);
 	odbc_env *env = ocon->env;
@@ -608,6 +615,7 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 		return SQL_INVALID_HANDLE;
 	switch (option) {
 	case SQL_CLOSE:
+		LOG_INFO (stmt, "SQLFreeStatement(%s)\n", "SQL_CLOSE");
 		stmt->state = CLOSED;
 		if (!stmt->tnt_statement)
 			return SQL_SUCCESS_WITH_INFO;
@@ -616,7 +624,8 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 			stmt->tnt_statement = NULL;
 		}
 		return SQL_SUCCESS;
-	case SQL_RESET_PARAMS: 
+	case SQL_RESET_PARAMS:
+		LOG_INFO (stmt, "SQLFreeStatement(%s)\n", "SQL_RESET_PARAMS");
 		if (!stmt->tnt_statement || !stmt->inbind_params)
 			return SQL_SUCCESS_WITH_INFO;
 		else {
@@ -624,7 +633,8 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 			stmt->inbind_params = NULL;
 		}
 		return SQL_SUCCESS;
-	case SQL_UNBIND: 
+	case SQL_UNBIND:
+		LOG_INFO (stmt, "SQLFreeStatement(%s)\n", "SQL_UNBIND");
 		if (!stmt->tnt_statement || !stmt->outbind_params)
 			return SQL_SUCCESS_WITH_INFO;
 		else {
@@ -632,7 +642,8 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 			stmt->outbind_params = NULL;
 		}
 		return SQL_SUCCESS;
-	case SQL_DROP: 
+	case SQL_DROP:
+		LOG_INFO (stmt, "SQLFreeStatement(%s)\n", "SQL_DROP");
 		return mem_free_stmt(stmt);
 	default:
 		return SQL_ERROR;

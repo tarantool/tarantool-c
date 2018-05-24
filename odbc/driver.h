@@ -1,6 +1,7 @@
 
 #include <stdint.h>
-
+#include <time.h>
+#include <inttypes.h>
 
 #define DRIVER_VER_INFO "0.1"
 
@@ -247,3 +248,7 @@ SQLRETURN get_info(SQLHDBC hndl, SQLUSMALLINT tp, SQLPOINTER iptr, SQLSMALLINT i
 SQLRETURN  odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,
 			    SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLUSMALLINT drv_compl);
 SQLRETURN stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset);
+
+SQLRETURN param_info (SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
+		      SQLULEN *out_len, SQLSMALLINT *out_dnum,
+		      SQLSMALLINT *is_null);

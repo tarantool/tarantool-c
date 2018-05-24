@@ -26,10 +26,8 @@ stmt_prepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
 
 	LOG_TRACE(stmt, "Prepare(sql='%s')\n", query);
 
-	if (stmt->state!=CLOSED) {
-		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state", "Prepare");
-		return SQL_ERROR;
-	}
+	free_stmt(stmth, SQL_CLOSE);
+
 	if (query_len == SQL_NTS)
 		query_len = strlen((char *)query);
 	stmt->tnt_statement = tnt_prepare(stmt->connect->tnt_hndl,(char *)query, query_len);
@@ -85,7 +83,7 @@ stmt_execute(SQLHSTMT stmth)
 	}
 	
 	stmt->state = EXECUTED;
-	LOG_INFO(stmt, "Execute(%s) = OK  %s %lld rows so far\n",
+	LOG_INFO(stmt, "Execute(%s) = OK  %s %" PRIu64 " rows so far\n",
 		 (stmt->tnt_statement->qtype == DML)?"DML":"SELECT",
 		 (stmt->tnt_statement->qtype == DML)?"affected":"prefetched",
 		 (stmt->tnt_statement->qtype == DML)?tnt_affected_rows(stmt->tnt_statement):
@@ -158,18 +156,24 @@ stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT
 		return SQL_INVALID_HANDLE;
 
 	if (parnum < 1 ) {
-		set_stmt_error(stmt,ODBC_07009_ERROR,"ODBC bind parameter invalid index number", "SQLBindParameter");
+		set_stmt_error(stmt,ODBC_07009_ERROR,
+			       "ODBC bind parameter invalid index number",
+			       "SQLBindParameter");
 		return SQL_ERROR;
 	}
 
 	int in_type = odbc_types_covert(ctype);
 	if (in_type == -1) {
-		set_stmt_error(stmt,ODBC_HY003_ERROR,"Invalid application buffer type", "SQLBindParameter");
+		set_stmt_error(stmt,ODBC_HY003_ERROR,
+			       "Invalid application buffer type",
+			       "SQLBindParameter");
 		return SQL_ERROR;
 	}
 
 	if (realloc_params(parnum,&(stmt->inbind_items),&(stmt->inbind_params))==FAIL) {
-		set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory", "SQLBindParameter");
+		set_stmt_error(stmt,ODBC_MEM_ERROR,
+			       "Unable to allocate memory",
+			       "SQLBindParameter");
 		return SQL_ERROR;
 	}
 	--parnum;
@@ -196,12 +200,16 @@ stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER
 		return SQL_INVALID_HANDLE;
 
 	if (colnum < 1 ) {
-		set_stmt_error(stmt,ODBC_HYC00_ERROR,"Optional feature not implemented", "SQLBindCol");
+		set_stmt_error(stmt,ODBC_HYC00_ERROR,
+			       "Optional feature not implemented",
+			       "SQLBindCol");
 		return SQL_ERROR;
 	}
 
 	if (in_len<0) {
-		set_stmt_error(stmt, ODBC_HY090_ERROR,"Invalid string or buffer length", "SQLBindCol");
+		set_stmt_error(stmt, ODBC_HY090_ERROR,
+			       "Invalid string or buffer length",
+			       "SQLBindCol");
 		return SQL_ERROR;
 	}
 
@@ -209,19 +217,25 @@ stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER
 	if (stmt->state == EXECUTED) {
 		num_of_cols = tnt_number_of_cols(stmt->tnt_statement);
 		if (num_of_cols < colnum) {
-			set_stmt_error(stmt,ODBC_07009_ERROR,"Invalid descriptor index", "SQLBindCol");
+			set_stmt_error(stmt,ODBC_07009_ERROR,
+				       "Invalid descriptor index",
+				       "SQLBindCol");
 			return SQL_ERROR;
 		}
 	}
 
 	if (realloc_params(num_of_cols, &(stmt->outbind_items), &(stmt->outbind_params))==FAIL) {
-		set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory", "SQLBindCol");
+		set_stmt_error(stmt,ODBC_MEM_ERROR,
+			       "Unable to allocate memory",
+			       "SQLBindCol");
 		return SQL_ERROR;
 	}
 
 	int in_type = odbc_types_covert(ctype);
 	if (in_type == -1) {
-		set_stmt_error(stmt,ODBC_HY003_ERROR,"Invalid application buffer type", "SQLBindCol");
+		set_stmt_error(stmt,ODBC_HY003_ERROR,
+			       "Invalid application buffer type",
+			       "SQLBindCol");
 		return SQL_ERROR;
 	}
 
@@ -230,7 +244,8 @@ stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER
 	stmt->outbind_params[colnum].buffer = (void *)val;
 	stmt->outbind_params[colnum].out_len = out_len;
 
-	tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
+	tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,
+			stmt->outbind_items);
 	return SQL_SUCCESS;
 }
 
@@ -253,7 +268,8 @@ stmt_fetch(SQLHSTMT stmth)
 
 		
 	if (retcode==OK) {
-		LOG_INFO(stmt, "SQLFetch(OK) %d columns\n", tnt_number_of_cols(stmt->tnt_statement)); 
+		LOG_INFO(stmt, "SQLFetch(OK) %d columns\n",
+			 tnt_number_of_cols(stmt->tnt_statement)); 
 		return SQL_SUCCESS;
 	} else if (retcode==NODATA) {
 		LOG_INFO(stmt, "SQLFetch(NO_DATA) = %s\n", "END_OF_DATA"); 
@@ -271,7 +287,9 @@ stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset)
 {
 	
         if (orientation != SQL_FETCH_NEXT) {
-		set_stmt_error((odbc_stmt *)stmth, ODBC_HY106_ERROR, "Unsupported fetch orientation", "SQLFetchScroll");
+		set_stmt_error((odbc_stmt *)stmth, ODBC_HY106_ERROR,
+			       "Unsupported fetch orientation",
+			       "SQLFetchScroll");
 		return SQL_ERROR;
 	}
 	return stmt_fetch(stmth);
@@ -279,24 +297,28 @@ stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset)
 
 
 SQLRETURN 
-get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr, SQLLEN in_len, SQLLEN *out_len)
+get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type,
+	 SQLPOINTER val_ptr, SQLLEN in_len, SQLLEN *out_len)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
 	if (!stmt->tnt_statement || stmt->state!=EXECUTED) {
-		set_stmt_error(stmt,ODBC_HY010_ERROR,"Function sequence error", "SQLGetData");
+		set_stmt_error(stmt,ODBC_HY010_ERROR,
+			       "Function sequence error", "SQLGetData");
 		return SQL_ERROR;
 	}
 	/* Don't do bookmarks for now */
 	--num;
 	if (num<0 && num>stmt->tnt_statement->ncols) {
-		set_stmt_error(stmt,ODBC_07009_ERROR,"Invalid descriptor index", "SQLGetData");
+		set_stmt_error(stmt,ODBC_07009_ERROR,
+			       "Invalid descriptor index", "SQLGetData");
 		return SQL_ERROR;
 	}
 
 	if (stmt->tnt_statement->nrows<0) {
-		set_stmt_error(stmt,ODBC_07009_ERROR,"No data or row in current row", "SQLGetData");
+		set_stmt_error(stmt,ODBC_07009_ERROR,
+			       "No data or row in current row", "SQLGetData");
 		return SQL_ERROR;		
 	}
 	if (tnt_col_is_null(stmt->tnt_statement,num)) {
@@ -304,18 +326,23 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 			*out_len = SQL_NULL_DATA;
 			return SQL_SUCCESS;
 		} else {
-			set_stmt_error(stmt, ODBC_22002_ERROR, "Indicator variable required but not supplied", "SQLGetData");
+			set_stmt_error(stmt, ODBC_22002_ERROR,
+				       "Indicator variable required but "
+				       "not supplied", "SQLGetData");
 			return SQL_ERROR;		
 		}
 	}
 	if (in_len<0) {
-		set_stmt_error(stmt,ODBC_HY090_ERROR,"Invalid string or buffer length", "SQLGetData");
+		set_stmt_error(stmt,ODBC_HY090_ERROR,
+			       "Invalid string or buffer length", "SQLGetData");
 		return SQL_ERROR;
 	}
 	
 	int in_type = odbc_types_covert(type);
 	if (in_type == FAIL) {
-		set_stmt_error(stmt,ODBC_HY090_ERROR,"Invalid string or buffer length", "SQLGetData");
+		set_stmt_error(stmt,ODBC_HY090_ERROR,
+			       "Invalid string or buffer length",
+			       "SQLGetData");
 		return SQL_ERROR;
 	}
 
@@ -337,13 +364,16 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 		stmt->last_col = num;
 	}
 
-	if (stmt->last_col_sofar && (stmt->last_col_sofar >= tnt_col_len(stmt->tnt_statement,num))) {
+	if (stmt->last_col_sofar && (stmt->last_col_sofar >=
+				     tnt_col_len(stmt->tnt_statement,num))) {
 		return SQL_NO_DATA;
 	}
 	
-	store_conv_bind_var(stmt->tnt_statement, num , &par, stmt->last_col_sofar);
+	store_conv_bind_var(stmt->tnt_statement, num , &par,
+			    stmt->last_col_sofar);
 	
-	/* If application don't provide the out_len or it's not a string or a binary data  
+	/* If application don't provide the out_len or it's not 
+	 *  a string or a binary data  
 	 * chuncked get_data is not provided.
 	 */
 	if (!out_len || (tnt_col_type(stmt->tnt_statement,num)!=MP_STR &&
@@ -355,7 +385,8 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
 	if (stmt->last_col_sofar >= tnt_col_len(stmt->tnt_statement,num)) {
 		return SQL_SUCCESS;
 	} else {
-		set_stmt_error(stmt,ODBC_01004_ERROR,"String data, right truncated", "SQLGetData");
+		set_stmt_error(stmt,ODBC_01004_ERROR,
+			       "String data, right truncated", "SQLGetData");
 		return SQL_SUCCESS_WITH_INFO;
 	}
 }
@@ -403,23 +434,29 @@ sqltypestr(int t)
 
 
 SQLRETURN 
-column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT maxname, SQLSMALLINT *name_len,
-	    SQLSMALLINT *type, SQLULEN *colsz, SQLSMALLINT *scale, SQLSMALLINT *isnull)
+column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname,
+	    SQLSMALLINT maxname, SQLSMALLINT *name_len,
+	    SQLSMALLINT *type, SQLULEN *colsz, SQLSMALLINT *scale,
+	    SQLSMALLINT *isnull)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
         if (!stmt)
                 return SQL_INVALID_HANDLE;
 	if (!stmt->tnt_statement || !stmt->tnt_statement->reply) {
-                set_stmt_error(stmt,ODBC_HY010_ERROR,"Function sequence error", "SQLDescribeCol");
+                set_stmt_error(stmt,ODBC_HY010_ERROR,
+			       "Function sequence error", "SQLDescribeCol");
                 return SQL_ERROR;
         }
 	if (!stmt->tnt_statement->field_names) {
-		set_stmt_error(stmt,ODBC_07005_ERROR, "Prepared statement not a cursor-specification", "SQLDescribeCol");
+		set_stmt_error(stmt,ODBC_07005_ERROR,
+			       "Prepared statement not a cursor-specification",
+			       "SQLDescribeCol");
 		return SQL_ERROR;
 	}
 	ncol--;
 	if (ncol<0 || ncol>=tnt_number_of_cols(stmt->tnt_statement)) {
-		set_stmt_error(stmt,ODBC_07009_ERROR,"Invalid descriptor index", "SQLDescribeCol");
+		set_stmt_error(stmt,ODBC_07009_ERROR,
+			       "Invalid descriptor index", "SQLDescribeCol");
 		return SQL_ERROR;
 	}
 	if (isnull)
@@ -430,10 +467,13 @@ column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname, SQLSMALLINT max
 		*colsz = 0;
 	int status = SQL_SUCCESS;
 	if (colname) {
-		strncpy((char*)colname,tnt_col_name(stmt->tnt_statement,ncol),maxname);
+		strncpy((char*)colname,tnt_col_name(stmt->tnt_statement,ncol),
+			maxname);
 		if (maxname<=strlen(tnt_col_name(stmt->tnt_statement,ncol))) {
 			status = SQL_SUCCESS_WITH_INFO;
-			set_stmt_error(stmt,ODBC_01004_ERROR,"String data, right truncated", "SQLDescribeCol");
+			set_stmt_error(stmt,ODBC_01004_ERROR,
+				       "String data, right truncated",
+				       "SQLDescribeCol");
 		}
 	}
 	if (name_len) {
@@ -452,11 +492,14 @@ num_cols(SQLHSTMT stmth, SQLSMALLINT *ncols)
         if (!stmt)
                 return SQL_INVALID_HANDLE;
 	if (!ncols) {
-		set_stmt_error(stmt, ODBC_HY009_ERROR, "Invalid use of null pointer", "SQLNumResultCols");
+		set_stmt_error(stmt, ODBC_HY009_ERROR,
+			       "Invalid use of null pointer",
+			       "SQLNumResultCols");
 		return SQL_ERROR;		
 	}
 	if (!stmt->tnt_statement || stmt->state!=EXECUTED) {
-                set_stmt_error(stmt, ODBC_HY010_ERROR, "Function sequence error", "SQLNumResultCols");
+                set_stmt_error(stmt, ODBC_HY010_ERROR,
+			       "Function sequence error", "SQLNumResultCols");
                 return SQL_ERROR;
         }
 	if (!stmt->tnt_statement->field_names) {
@@ -474,7 +517,8 @@ affected_rows(SQLHSTMT stmth,SQLLEN *cnt)
         if (!stmt)
                 return SQL_INVALID_HANDLE;
 	if (!cnt) {
-		set_stmt_error(stmt,ODBC_HY009_ERROR,"Invalid use of null pointer", "SQLRowCount");
+		set_stmt_error(stmt,ODBC_HY009_ERROR,
+			       "Invalid use of null pointer", "SQLRowCount");
 		return SQL_ERROR;
 	}
 	if (stmt->tnt_statement->qtype == DML) {
@@ -486,7 +530,8 @@ affected_rows(SQLHSTMT stmth,SQLLEN *cnt)
 }
 
 void
-len_strncpy(SQLPOINTER char_p, const char *d, SQLSMALLINT buflen, SQLSMALLINT *out_len)
+len_strncpy(SQLPOINTER char_p, const char *d, SQLSMALLINT buflen,
+	    SQLSMALLINT *out_len)
 {
 	if (char_p) {
 		strncpy((char*)char_p, d, buflen );
@@ -496,8 +541,9 @@ len_strncpy(SQLPOINTER char_p, const char *d, SQLSMALLINT buflen, SQLSMALLINT *o
 }
 
 SQLRETURN 
-col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER char_p,
-		SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLLEN *num_p)
+col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id,
+	      SQLPOINTER char_p, SQLSMALLINT buflen, SQLSMALLINT *out_len,
+	      SQLLEN *num_p)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
         if (!stmt)
@@ -506,11 +552,13 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER cha
 	--ncol;
 
 	if (!stmt->tnt_statement) {
-                set_stmt_error(stmt, ODBC_HY010_ERROR, "Function sequence error", "SQLColAttribute");
+                set_stmt_error(stmt, ODBC_HY010_ERROR,
+			       "Function sequence error", "SQLColAttribute");
                 return SQL_ERROR;
         }
 	if (ncol<0 || ncol >= tnt_number_of_cols(stmt->tnt_statement)) {
-		set_stmt_error(stmt, ODBC_07009_ERROR, "Invalid descriptor index", "SQLColAttribute");
+		set_stmt_error(stmt, ODBC_07009_ERROR,
+			       "Invalid descriptor index", "SQLColAttribute");
 		return SQL_ERROR;		
 	}
 	
@@ -560,7 +608,8 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER cha
 		len_strncpy( char_p, "" , buflen, out_len);
                 break;
         case SQL_DESC_NAME:
-		len_strncpy( char_p, tnt_col_name(stmt->tnt_statement,ncol), buflen, out_len);
+		len_strncpy( char_p, tnt_col_name(stmt->tnt_statement,ncol),
+			     buflen, out_len);
                 break;
         case SQL_DESC_NULLABLE:
                 val = SQL_NULLABLE_UNKNOWN;
@@ -590,13 +639,16 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id, SQLPOINTER cha
 		val = tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol));
                 break;
         case SQL_DESC_TYPE_NAME:
-		len_strncpy( char_p, sqltypestr(tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol))) , buflen, out_len);
+		len_strncpy( char_p,
+			     sqltypestr(tnt2odbc(tnt_col_type(
+                             stmt->tnt_statement,ncol))) , buflen, out_len);
                 break;
         case SQL_DESC_UNNAMED:
 		val = -1;
                 break;
         case SQL_DESC_UNSIGNED:
-		val = tnt_col_type(stmt->tnt_statement,ncol)==MP_INT?SQL_FALSE:SQL_TRUE;
+		val = tnt_col_type(stmt->tnt_statement,ncol)==MP_INT?SQL_FALSE:
+		SQL_TRUE;
                 break;
         case SQL_DESC_UPDATABLE:
 		val = -1;
@@ -621,7 +673,9 @@ num_params(SQLHSTMT stmth, SQLSMALLINT *cnt)
 					     stmt->tnt_statement->query_len);
 		} else {
 			if (!stmt->tnt_statement) {
-				set_stmt_error(stmt,ODBC_HY010_ERROR,"Function sequence error", "SQLNumParams");
+				set_stmt_error(stmt,ODBC_HY010_ERROR,
+					       "Function sequence error",
+					       "SQLNumParams");
 				return SQL_ERROR;
 			}
 		}
@@ -630,13 +684,16 @@ num_params(SQLHSTMT stmth, SQLSMALLINT *cnt)
 }
 
 SQLRETURN SQL_API
-param_info(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr, SQLULEN *out_len, SQLSMALLINT *out_dnum,
+param_info(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
+	   SQLULEN *out_len, SQLSMALLINT *out_dnum,
                  SQLSMALLINT *is_null)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
         if (!stmt)
                 return SQL_INVALID_HANDLE;
 	/* Driver needs parsed statement in order to implement this */
-	set_stmt_error(stmt, ODBC_IM001_ERROR, "Driver does not support this function", "SQLDescribeParam");
+	set_stmt_error(stmt, ODBC_IM001_ERROR,
+		       "Driver does not support this function",
+		       "SQLDescribeParam");
 	return SQL_ERROR;
 }
