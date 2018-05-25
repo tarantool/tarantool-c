@@ -54,6 +54,29 @@ typedef struct tnt_bind {
 	int *error;		/* conversation result. O is OK */
 } tnt_bind_t;
 
+/* This error codes are related to statment level. */ 
+enum STMT_ERROR {
+	STMT_BADSYNC = TNT_LAST+1, /* have read response with invalid sync number */
+	STMT_MEMORY,  /* memory allocation error at statement level */
+	STMT_BADPROTO, /* invalid data read from network */
+	STMT_BADSTATE /* function called in bad sequence */ 
+};
+
+
+/* We should invent better way to share constants */ 
+enum PROTO_CONSTANT {
+	TNT_PROTO_OK = 0,
+	TNT_PROTO_CHUNK = 128
+};
+
+enum REPLY_STATE {
+	RBEGIN = 0, /* befor request sent to server */
+	RSENT, /* request sent, no response so far. this is for future sync api */
+	RCHUNK, /* got some data, expect more */
+	REND, /* have got finalized responce (included errors) */
+};
+
+
 /**
  * Structure for query handling.
  */
@@ -73,8 +96,10 @@ typedef struct tnt_stmt {
 	tnt_bind_t *ibind;
 	/* int32_t obind_len */
 	tnt_bind_t *obind;
-	int64_t reqid;
+	uint64_t reqid;
+	int reply_state; 
 	int qtype;
+	int error;
 } tnt_stmt_t;
 
 

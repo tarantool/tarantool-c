@@ -30,6 +30,7 @@ tnt_stmt_new(struct tnt_stream *s)
  * Creates statement structure with prepared SQL statement.
  * One can bind parameters and execute it multiple times.
  **/
+
 tnt_stmt_t *
 tnt_prepare(struct tnt_stream *s, const char *text, int32_t len)
 {
@@ -38,8 +39,11 @@ tnt_prepare(struct tnt_stream *s, const char *text, int32_t len)
 		return NULL;
 	if (text && len > 0) {
 		stmt->query = (char *)tnt_mem_alloc(len);
-		if (!stmt->query)
+		if (!stmt->query) {
+			tnt_mem_free(stmt);
+			TNT_SNET_CAST(s)->error = TNT_EMEMORY;
 			return NULL;
+		}
 		memcpy(stmt->query, text, len);
 		stmt->query_len = len;
 	}
@@ -50,7 +54,7 @@ static int
 set_bind_query_array(tnt_stmt_t * stmt, tnt_bind_t * bnd)
 {
 	stmt->ibind = bnd;
-	return OK;	
+	return OK;
 }
 
 /*
@@ -149,6 +153,7 @@ free_stmt_cursor_mem(tnt_stmt_t *stmt)
 	if (stmt->reply) {
 		tnt_reply_free(stmt->reply);
 		tnt_mem_free(stmt->reply);
+		stmt->reply = NULL;
 	}
 	if (stmt->row)
 		tnt_mem_free(stmt->row);
@@ -173,6 +178,8 @@ tnt_stmt_close_cursor(tnt_stmt_t *stmt)
 		stmt->cur_row = 0;
 		stmt->nrows = 0;
 		stmt->qtype = 0;
+		stmt->error = 0;
+		stmt->reply_state = RBEGIN;
 	}
 }
 
@@ -490,10 +497,63 @@ tnt_filfull(struct tnt_stream *stream)
 	return stmt;
 }
 
+
+void
+clear_reply(tnt_stmt_t *stmt)
+{
+	if (stmt->reply) {
+		   if (stmt->reply->buf) {
+			   tnt_mem_free((void *)stmt->reply->buf);
+			   stmt->reply->buf = NULL;
+		   }
+		   memset(stmt->reply, 0, sizeof(struct tnt_reply));
+	}
+}
+
+ /* Read response from server. Should be called after tnt_execute and after fetch returns NO_DATA and we
+  * have chunked data.  
+  */ 
+
+static int
+read_chunk(tnt_stmt_t *stmt)
+{
+	for(;;) {
+		if (stmt->stream->read_reply(stmt->stream, stmt->reply) != OK)
+			return FAIL;
+		if (stmt->reply->sync != stmt->reqid) {
+			/* Now we should rise error if meet responses with alien requid but later 
+			   this is good point for yielding and multiplexing packets. */
+			clear_reply(stmt);
+			stmt->error = STMT_BADSYNC;
+			/* continue; */
+			return FAIL;
+		}
+		switch (tnt_stmt_code(stmt)) {
+		case TNT_PROTO_OK:
+			stmt->reply_state = REND;
+			break;
+		case TNT_PROTO_CHUNK:
+			stmt->reply_state = RCHUNK;
+			break;
+		default:
+			return FAIL;
+		}
+		
+		stmt->data = stmt->reply->data;
+		if (stmt->data)
+			stmt->nrows = mp_decode_array(&stmt->data);
+		else
+			stmt->nrows = 0;
+		break;
+	}
+	return OK;
+}
+
 static tnt_stmt_t *
 tnt_filfull_stmt(tnt_stmt_t *stmt)
 {
 	struct tnt_stream *stream = stmt->stream;
+	stmt->reply_state = RSENT;
 	if (tnt_flush(stream) == -1) {
 		return NULL;
 	}
@@ -502,20 +562,16 @@ tnt_filfull_stmt(tnt_stmt_t *stmt)
 		TNT_SNET_CAST(stream)->error = TNT_EMEMORY;
 		return NULL;
 	}
-	if (!tnt_reply_init(stmt->reply) || stmt->stream->read_reply(stmt->stream, stmt->reply) != 0) {
+	if (!tnt_reply_init(stmt->reply)) 
 		return NULL;
-	}
-	if (tnt_stmt_code(stmt) != 0) {
-		return NULL;
-	}
 
-	stmt->data = stmt->reply->data;
+	if (read_chunk(stmt)!=OK)
+		return NULL;
+		
 	if (stmt->data) {
 		tnt_fetch_fields(stmt);
-		stmt->nrows = mp_decode_array(&stmt->data);
 		stmt->qtype = SEL;
 	} else {
-		stmt->nrows = 0;
 		tnt_read_affected_rows(stmt);
 		stmt->qtype = DML;
 	}
@@ -724,15 +780,18 @@ tnt_fetch_binded_result(tnt_stmt_t * stmt)
 int
 tnt_fetch(tnt_stmt_t * stmt)
 {
-	if (!stmt->reply || stmt->reply->code != 0) {
-		/* set some error */
+	if (stmt->reply_state != REND && stmt->reply_state != RCHUNK) {
+		stmt->error = STMT_BADSTATE;
 		return FAIL;
 	}
-	if (stmt->nrows <= 0)
-		return NODATA;
-	
+	while (stmt->nrows <= 0) {
+		if (stmt->reply_state != RCHUNK) 
+			return NODATA;
+		if (read_chunk(stmt)!=OK)
+			return FAIL;
+	}	
 	if (mp_typeof(*stmt->data) != MP_ARRAY) {
-		/* set error */
+		stmt->error = STMT_BADPROTO;
 		return FAIL;
 	}
 	stmt->ncols = mp_decode_array(&stmt->data);
@@ -740,7 +799,7 @@ tnt_fetch(tnt_stmt_t * stmt)
 		tnt_mem_free(stmt->row);
 	stmt->row = (struct tnt_coldata *)tnt_mem_alloc(sizeof(struct tnt_coldata) * stmt->ncols);
 	if (!stmt->row) {
-		/* set error */
+		stmt->error = STMT_MEMORY;
 		return FAIL;
 	}
 	
@@ -748,7 +807,7 @@ tnt_fetch(tnt_stmt_t * stmt)
 	stmt->cur_row++;
 	for (int i = 0; i < stmt->ncols; i++) {
 		if (tnt_decode_col(stmt, &stmt->row[i])!=OK) {
-			/* set invalid stream data error */
+			stmt->error = STMT_BADPROTO;
 			return FAIL;
 		}
 	}
@@ -822,6 +881,7 @@ tnt_affected_rows(tnt_stmt_t * stmt)
 {
 	return stmt ? stmt->a_rows : 0;
 }
+
 /*
  * Returns status of last statement execution.
  **/
@@ -830,6 +890,8 @@ int
 tnt_stmt_code(tnt_stmt_t * stmt)
 {
 	if (stmt) {
+		if (stmt->error !=0)
+			return stmt->error; 
 		if (stmt->reply)
 			return stmt->reply->code;
 		else
@@ -837,6 +899,24 @@ tnt_stmt_code(tnt_stmt_t * stmt)
 	} else
 		return FAIL;
 }
+
+static const char *
+stmt_strerror(int e)
+{
+	switch (e) {
+	case STMT_BADSYNC:
+		return "Got repsonse with invalid sync";
+	case STMT_MEMORY:
+		return "Unable to allocate memory";
+	case STMT_BADPROTO:
+		return "Bad data read from server";
+	case STMT_BADSTATE:
+		return "Wrong call function sequence";
+	default:
+		return "Unknown error";
+	}
+}
+
 /*
  * Returns error string from network.
  **/
@@ -846,6 +926,10 @@ tnt_stmt_error(tnt_stmt_t * stmt, size_t * sz)
 {
 	if (!stmt)
 		return NULL;
+	
+	if (stmt->error != 0 )
+		return stmt_strerror(stmt->error);
+	
 	if (stmt->reply && stmt->reply->error) {
 		*sz = stmt->reply->error_end - stmt->reply->error;
 		return stmt->reply->error;
