@@ -512,11 +512,28 @@ odbc_disconnect (SQLHDBC conn)
 	return SQL_SUCCESS;
 }
 
-  
+
+/**
+ * Currently only autocommit mode is avalable so let's return SQL_SUCCESS for commit and
+ * SQL_ERROR for rollback. 
+ */
+
 SQLRETURN
 end_transact(SQLSMALLINT htype, SQLHANDLE hndl, SQLSMALLINT tran_type)
 {
-        return SQL_SUCCESS;
+	if (hndl == SQL_NULL_HDBC)
+                return SQL_INVALID_HANDLE;
+
+	if (tran_type == SQL_COMMIT)
+		return SQL_SUCCESS;
+	else if (htype == SQL_HANDLE_DBC) {
+		odbc_connect *con = (odbc_connect *)hndl;
+		set_connect_error(con, ODBC_HYC00_ERROR, "Optional feature not implemented", "*Transact");
+	} else if (htype == SQL_HANDLE_STMT) {
+		odbc_stmt *stmt = (odbc_stmt *)hndl;
+		set_stmt_error(stmt, ODBC_HYC00_ERROR, "Optional feature not implemented", "*Transact");
+	}
+	return SQL_ERROR;
 }
 
 #define TEST 1

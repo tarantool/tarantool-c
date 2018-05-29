@@ -334,7 +334,7 @@ static int test_connection()
 
 static int
 test_execute(char *uri) {
-	plan(262);
+	plan(263);
 	header();
 
 	struct tnt_reply reply;
@@ -440,10 +440,16 @@ test_execute(char *uri) {
 	if (result) {
 		const char* in="Hello";
 		tnt_bind_t param[1];
-		memset(&param[0],0,sizeof(param));
-		param[0].type=MP_STR;
-		param[0].buffer = (void*)in;
-		param[0].in_len = strlen(in);
+		
+		/* 
+		   memset(&param[0],0,sizeof(param));
+		   param[0].type=MP_STR;
+		   param[0].buffer = (void*)in;
+		   param[0].in_len = strlen(in);
+		*/
+
+		tnt_setup_bind_param(&param[0], MP_STR, in, strlen(in));
+		
 		is(tnt_bind_query(result,&param[0],1),OK,"Input bind array test");
 		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute test");
 		is(tnt_stmt_code(result),0,"checking code after table creation");
@@ -478,24 +484,30 @@ test_execute(char *uri) {
 	isnt(result,NULL,"2 vals statement prepare");
 	if (result) {
 		const char* in="Hello";
+		int val=666;
+		/* 
 		tnt_bind_t param[2];
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_STR;
 		param[0].buffer = (void*)in;
 		param[0].in_len = strlen(in);
-		int val=666;
+		
 		param[1].type=MP_INT;
 		param[1].buffer = (void*)&val;
 		param[1].in_len = sizeof(int);
-
-		is(tnt_bind_query(result,&param[0],2),OK,"Input bind 2 val array test");
+		*/
+		
+		is(tnt_bind_query_param(result, 0, MP_STR, in, strlen(in)), OK, "tnt_bind_query_param test");
+		is(tnt_bind_query_param(result, 1, MP_INT, &val, 0), OK, "tnt_bind_query_param test");
+		
+		
 		for(int i=0;i<10;++i) {
 			val +=i;
 			is(tnt_stmt_execute(result),OK,"tnt_stmt_execute 2 val bind  test");
 			is(tnt_stmt_code(result),0,"checking code after 2 val bind insert");
 			is(tnt_affected_rows(result),1,"checking affected rows after table 2 val bind insert ");
 		}
-		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute bind dublicate value test");
+		isnt(tnt_stmt_execute(result),OK,"tnt_stmt_execute bind dublicate value test");
 		isnt(tnt_stmt_code(result),0,"checking code after 2 val bind dublicate insert");
 		tnt_stmt_free(result);
 	}
@@ -622,7 +634,7 @@ test_execute(char *uri) {
 			is(tnt_stmt_code(result),0,"checking code after 2 val bind insert");
 			is(tnt_affected_rows(result),1,"checking affected rows after table 2 val bind insert ");
 		}
-		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute bind dublicate value test");
+		isnt(tnt_stmt_execute(result),OK,"tnt_stmt_execute bind dublicate value test");
 		isnt(tnt_stmt_code(result),0,"checking code after 2 val bind dublicate insert");
 
 		param[1].type=MP_STR;

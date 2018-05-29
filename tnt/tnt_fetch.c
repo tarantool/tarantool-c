@@ -96,6 +96,51 @@ tnt_bind_result(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters)
 	return OK;
 }
 
+static tnt_bind_t *
+realloc_bind_array(tnt_bind_t *binds, int num, int *count)
+{
+        if (num>(*count-1) || binds == NULL) {
+                tnt_bind_t *npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t)*(num+1));
+                if (!npar) {
+                        return NULL;
+                }
+                memset(npar, 0, sizeof(tnt_bind_t)*(num+1));
+                for(int i=0;i<*count;++i) {
+                        npar[i] = binds[i];
+                }
+                free(binds);
+		binds = npar;
+                *count = num+1;
+        }
+        return binds;
+}
+
+void
+tnt_setup_bind_param(tnt_bind_t *p, int type,const void *val_ptr, int len)
+{
+	if (val_ptr == NULL) {
+		p->type = MP_NIL;
+	} else
+		p->type = type;
+	
+	p->buffer = (void *)val_ptr;
+	p->in_len = len;
+	p->name = NULL;
+}
+
+
+int
+tnt_bind_query_param(tnt_stmt_t *stmt, int icol, int type, const void* val_ptr, int len)
+{
+	stmt->alloc_ibind = realloc_bind_array(stmt->alloc_ibind, icol, & (stmt->ibind_alloc_len));
+	if (!stmt->alloc_ibind)
+		return FAIL;
+
+	tnt_setup_bind_param(&stmt->alloc_ibind[icol], type, val_ptr, len);
+	return set_bind_query_array(stmt, stmt->alloc_ibind);
+}
+
+
 
 static void
 free_strings(const char **s, size_t n)
@@ -161,6 +206,12 @@ free_stmt_cursor_mem(tnt_stmt_t *stmt)
 		free_strings(stmt->field_names, stmt->ncols);
 		tnt_mem_free(stmt->field_names);
 	}
+	if (stmt->alloc_ibind)
+		free(stmt->alloc_ibind);
+
+	if (stmt->alloc_obind)
+		free(stmt->alloc_obind);
+	
 }
 
 
@@ -490,6 +541,7 @@ tnt_filfull(struct tnt_stream *stream)
 	stmt->stream = stream;
 	stmt->row = NULL;
 	stmt->a_rows = 0;
+	stmt->reqid = stmt->stream->reqid - 1;
 	if (!tnt_filfull_stmt(stmt)) {
 		tnt_stmt_free(stmt);
 		return NULL;
@@ -947,7 +999,7 @@ tnt_number_of_cols(tnt_stmt_t *stmt)
 }
 
 const char **
-tnt_cols_names(tnt_stmt_t *stmt)
+tnt_field_names(tnt_stmt_t *stmt)
 {
 	return stmt->field_names;
 }
@@ -955,7 +1007,7 @@ tnt_cols_names(tnt_stmt_t *stmt)
 const char *
 tnt_col_name(tnt_stmt_t *stmt,int icol)
 {
-	return stmt->field_names==NULL?"":stmt->field_names[icol];
+	return tnt_field_names(stmt)==NULL?"":tnt_field_names(stmt)[icol];
 }
 
 int

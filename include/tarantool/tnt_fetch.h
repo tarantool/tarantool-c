@@ -92,10 +92,15 @@ typedef struct tnt_stmt {
 	int32_t cur_row;
 	char *query;
 	int32_t query_len;
-	/* int32_t ibind_len; */
+	
+	int ibind_alloc_len;
 	tnt_bind_t *ibind;
-	/* int32_t obind_len */
+	tnt_bind_t *alloc_ibind;
+	
 	tnt_bind_t *obind;
+	tnt_bind_t *alloc_obind;
+	int obind_alloc_len;
+	
 	uint64_t reqid;
 	int reply_state; 
 	int qtype;
@@ -152,7 +157,7 @@ int64_t tnt_affected_rows(tnt_stmt_t *);
 /**
  * Returns array of field names of last executed query.
  */
-const char **tnt_cols_names(tnt_stmt_t *);
+const char **tnt_field_names(tnt_stmt_t *);
 
 
 /**
@@ -172,7 +177,21 @@ tnt_stmt_t *tnt_query(struct tnt_stream *s, const char *text, int32_t len);
  */
 int tnt_stmt_execute(tnt_stmt_t *);
 
+/**
+ * tnt_out_bind_parame fills tnt_bind_t structure with appropriate values
+ * It's better to use this function to set tnt_bin_t properly. 
+ */
 
+void
+tnt_setup_bind_param(tnt_bind_t *p, int type,const void* val_ptr, int len);
+
+/**
+ * tnt_bind_param is a safe version of binding input parameters it allocates and 
+ * manages bind parameters array themself.
+ */
+
+int
+tnt_bind_query_param(tnt_stmt_t *stmt, int icol, int type, const void* val_ptr, int len);
 
 /**
  * Associates input bind parameters array with the statement.
@@ -180,6 +199,7 @@ int tnt_stmt_execute(tnt_stmt_t *);
  * And clean up all .name members to Null for safety reason. If one want  to use named parameters 
  * please use tnt_bind_query_named() instead.
  */
+
 int
 tnt_bind_query(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters);
 
@@ -187,6 +207,7 @@ tnt_bind_query(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters);
  * This is function for associate binding paramters with statement.
  * Parameters can be named also.
  */
+
 int
 tnt_bind_query_named(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters);
 
