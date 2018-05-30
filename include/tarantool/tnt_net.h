@@ -43,7 +43,11 @@ extern "C" {
 #include <stdarg.h>
 
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/time.h>
+#else
+#include <time.h>
+#endif
 
 #include <tarantool/tnt_opt.h>
 #include <tarantool/tnt_iob.h>

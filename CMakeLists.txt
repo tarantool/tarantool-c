@@ -39,9 +39,14 @@ endif (NOT ENABLE_BUNDLED_MSGPUCK)
 # include_directories("${PROJECT_SOURCE_DIR}/tntnet")
 
 # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -std=gnu99 -D__USE_XOPEN")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=gnu99 -D__USE_XOPEN")
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -O0 -g3 -ggdb3")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -O2 -g")
+# Set default compile flags for GCC
+if(CMAKE_COMPILER_IS_GNUCXX)
+    message(STATUS "GCC detected, adding compile flags")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=gnu99 -D__USE_XOPEN")
+	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -O0 -g3 -ggdb3")
+	set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -O2 -g")
+endif(CMAKE_COMPILER_IS_GNUCXX)
+
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING
