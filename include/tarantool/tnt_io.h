@@ -30,7 +30,11 @@
  * SUCH DAMAGE.
  */
 
+#ifdef _WIN32
+#include <tnt_winsup.h>
+#else
 #include <sys/uio.h>
+#endif
 #include <tarantool/tnt_net.h>
 
 /**

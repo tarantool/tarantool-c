@@ -35,6 +35,12 @@
  * \brief Basic reply structure (parsing responses, e.t.c)
  */
 
+#ifdef _WIN32
+#include <tnt_winsup.h>
+#endif
+
+
+
 /**
  * \brief Size of iproto header
  */
@@ -50,7 +56,7 @@
  * \returns size of bytes written
  * \retval  -1 error
  */
-typedef ssize_t (*tnt_reply_t)(void *ptr, char *dst, ssize_t size);
+typedef ssize_t (*tnt_reply_t)(void *ptr, char *dst, ssize_t rsize);
 
 /*!
  * \brief basic reply structure

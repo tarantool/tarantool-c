@@ -30,7 +30,11 @@
  */
 
 #include <stddef.h>
+
+#ifndef _WIN32
 #include <netdb.h> /* NI_MAXHOST, NI_MAXSERV */
+#endif
+
 #include <limits.h> /* _POSIX_PATH_MAX */
 
 #if defined(__cplusplus)

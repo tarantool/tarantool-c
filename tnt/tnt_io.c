@@ -39,8 +39,10 @@
 #include <string.h>
 #include <stdbool.h>
 
+#ifdef _WIN32
+#include <tnt_winsup.h>
+#else
 #include <sys/time.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <netinet/in.h>
@@ -48,6 +50,12 @@
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <unistd.h>
+#endif
+
+
+#include <sys/types.h>
+
+
 #include <fcntl.h>
 #include <errno.h>
 
@@ -84,6 +92,7 @@ tnt_io_resolve(struct sockaddr_in *addr,
 static enum tnt_error
 tnt_io_nonblock(struct tnt_stream_net *s, int set)
 {
+#ifndef _WIN32
 	int flags = fcntl(s->fd, F_GETFL);
 	if (flags == -1) {
 		s->errno_ = errno;
@@ -98,6 +107,15 @@ tnt_io_nonblock(struct tnt_stream_net *s, int set)
 		return TNT_ESYSTEM;
 	}
 	return TNT_EOK;
+#else
+	unsigned long argp = set;
+	if (ioctlsocket(s->fd, FIONBIO, &argp) == NO_ERROR)
+		return TNT_EOK;
+	else {
+		s->errno_ = WSAGetLastError();
+		return TNT_ESYSTEM;
+	}
+#endif
 }
 
 static enum tnt_error
@@ -194,6 +212,7 @@ tnt_io_connect_tcp(struct tnt_stream_net *s, const char *host, int port)
 static enum tnt_error
 tnt_io_connect_unix(struct tnt_stream_net *s, const char *path)
 {
+#ifndef _WIN32
 	struct sockaddr_un addr;
 	memset(&addr, 0, sizeof(struct sockaddr_un));
 	addr.sun_family = AF_UNIX;
@@ -201,6 +220,9 @@ tnt_io_connect_unix(struct tnt_stream_net *s, const char *path)
 	if (connect(s->fd, (struct sockaddr*)&addr, sizeof(addr)) != -1)
 		return TNT_EOK;
 	s->errno_ = errno;
+#else
+	s->errno_ = ENOSYS;
+#endif
 	return TNT_ESYSTEM;
 }
 
@@ -515,3 +537,29 @@ int getiovmax()
 	#endif
 }
 
+#ifdef _WIN32
+/*
+ * Windows writev version
+*/
+int
+tnt_writev(int fd, const struct iovec *iov, int iovcnt)
+{
+	/* better to preallocte iovect but one needs to do it thread safe. Another way is to use alloca 
+	 or variable length array  but I considering these harmfull. */
+	WSABUF* win_buf = malloc(sizeof(WSABUF)*iovcnt);
+	if (!win_buf)
+		return -1;
+	int tot_len = 0;
+	for (int i = 0; i < iovcnt; ++i) {
+		win_buf[i].buf = iov[i].iov_base;
+		win_buf[i].len = iov[i].iov_len;
+		tot_len += iov[i].iov_len;
+	}
+
+	int rc = WSASend(fd, win_buf, iovcnt, 0, 0, 0, 0);
+	free(win_buf);
+
+	return  (rc == 0) ? tot_len : -1;
+}
+
+#endif

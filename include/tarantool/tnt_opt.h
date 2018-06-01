@@ -29,8 +29,11 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
+#ifdef _WIN32
+#include <winsock2.h>
+#else
 #include <sys/time.h>
+#endif
 
 /**
  * \file tnt_opt.h

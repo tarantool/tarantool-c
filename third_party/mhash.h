@@ -60,11 +60,21 @@
 #include <math.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+#define NO_INLINE __declspec(noinline)
+#else
+#define NO_INLINE __attribute__((noinline))
+#endif
+
 #define mh_cat(a, b) mh##a##_##b
 #define mh_ecat(a, b) mh_cat(a, b)
 #define _mh(x) mh_ecat(mh_name, x)
 
+#ifndef _MSC_VER
 #define mh_unlikely(x)  __builtin_expect((x),0)
+#else
+#define mh_unlikely(x) (x)
+#endif
 
 #ifndef   MH_CALLOC
 #define   MH_CALLOC calloc
@@ -111,38 +121,49 @@ struct _mh(t) {
 	struct _mh(t) *shadow;
 };
 
-#define mh_exist(h, i)		({ h->b[i >> 4] & (1 << (i % 16)); })
-#define mh_dirty(h, i)		({ h->b[i >> 4] & (1 << (i % 16 + 16)); })
+#define mh_exist(h, i)		( h->b[i >> 4] & (1 << (i % 16)))
+#define mh_dirty(h, i)		( h->b[i >> 4] & (1 << (i % 16 + 16)))
 
-#define mh_setfree(h, i)	({ h->b[i >> 4] &= ~(1 << (i % 16)); })
-#define mh_setexist(h, i)	({ h->b[i >> 4] |= (1 << (i % 16)); })
-#define mh_setdirty(h, i)	({ h->b[i >> 4] |= (1 << (i % 16 + 16)); })
+#define mh_setfree(h, i)	( h->b[i >> 4] &= ~(1 << (i % 16)))
+#define mh_setexist(h, i)	( h->b[i >> 4] |= (1 << (i % 16)))
+#define mh_setdirty(h, i)	( h->b[i >> 4] |= (1 << (i % 16 + 16)))
 
 #define mh_node(h, i)		((const mh_node_t *) &((h)->p[(i)]))
-#define mh_size(h)		({ (h)->size;		})
-#define mh_capacity(h)		({ (h)->n_buckets;	})
-#define mh_begin(h)		({ 0;			})
-#define mh_end(h)		({ (h)->n_buckets;	})
+#define mh_size(h)		( (h)->size	)
+#define mh_capacity(h)		( (h)->n_buckets)
+#define mh_begin(h)		(0)
+#define mh_end(h)		( (h)->n_buckets)
 
-#define mh_first(h) ({						\
-	mh_int_t i;						\
-	for (i = 0; i < mh_end(h); i++) {			\
-		if (mh_exist(h, i))				\
-			break;					\
-	}							\
-	i;							\
-})
 
-#define mh_next(h, i) ({					\
-	mh_int_t n = i;						\
-	if (n < mh_end(h)) {					\
-		for (n = i + 1; n < mh_end(h); n++) {		\
-			if (mh_exist(h, n))			\
-				break;				\
-		}						\
-	}							\
-	n;							\
-})
+static inline mh_int_t
+_mh(first)(struct _mh(t) *h)
+{
+		mh_int_t i;
+		for (i = 0; i < mh_end(h); i++) {
+				if (mh_exist(h, i))
+					break;
+		}							
+		return i;
+}
+
+
+static inline mh_int_t
+_mh(next)(struct _mh(t) *h, mh_int_t i) {					
+	mh_int_t n = i;
+	if (n < mh_end(h)) {
+		for (n = i + 1; n < mh_end(h); n++) {
+			if (mh_exist(h, n))
+				break;
+		}
+	}
+	return n;							
+}
+
+#define mh_first(h) \
+		mh##mh_name##_##first(h)
+
+#define mh_next(h) \
+		mh##mh_name##_##next(h)
 
 #define mh_foreach(h, i) \
 	for (i = mh_first(h); i < mh_end(h); i = mh_next(h, i))
@@ -157,7 +178,7 @@ int _mh(start_resize)(struct _mh(t) *h, mh_int_t buckets, mh_int_t batch,
 		      mh_arg_t arg);
 void _mh(reserve)(struct _mh(t) *h, mh_int_t size,
 		  mh_arg_t arg);
-void __attribute__((noinline)) _mh(del_resize)(struct _mh(t) *h, mh_int_t x,
+void NO_INLINE _mh(del_resize)(struct _mh(t) *h, mh_int_t x,
 					       mh_arg_t arg);
 size_t _mh(memsize)(struct _mh(t) *h);
 void _mh(dump)(struct _mh(t) *h);
@@ -194,9 +215,9 @@ _mh(find)(struct _mh(t) *h, mh_key_t key, mh_arg_t arg)
 	mh_int_t i = k % h->n_buckets;
 	mh_int_t inc = 1 + k % (h->n_buckets - 1);
 	for (;;) {
+
 		if ((mh_exist(h, i) && mh_eq_key(key, mh_node(h, i), arg)))
 			return i;
-
 		if (!mh_dirty(h, i))
 			return h->n_buckets;
 
@@ -368,7 +389,7 @@ _mh(remove)(struct _mh(t) *h, const mh_node_t *node,
 
 #ifdef MH_SOURCE
 
-void __attribute__((noinline))
+void NO_INLINE
 _mh(del_resize)(struct _mh(t) *h, mh_int_t x,
 		mh_arg_t arg)
 {

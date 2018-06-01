@@ -123,6 +123,7 @@ mp_dump (const char *addr, size_t len) {
 			mp_dump_hex(bin, bin_len);
 			break;
 		}
+	    
 		case (MP_ARRAY):
 			stack[stack_size++] = (struct mp_dump_stack){
 				.type = MP_ARRAY,

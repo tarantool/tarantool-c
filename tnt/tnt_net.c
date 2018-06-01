@@ -35,7 +35,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef _WIN32
+#include <tnt_winsup.h> 
+#else
 #include <sys/uio.h>
+#endif
 
 #include <uri.h>
 
@@ -52,7 +56,9 @@
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_io.h>
 
+#ifndef _WIN32
 #include "pmatomic.h"
+#endif
 
 static void tnt_net_free(struct tnt_stream *s) {
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);

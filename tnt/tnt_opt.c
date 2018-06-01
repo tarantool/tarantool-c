@@ -33,10 +33,14 @@
 #include <string.h>
 #include <stdbool.h>
 
+#ifndef _WIN32
 #include <sys/uio.h>
+#include <sys/time.h>
+#else
+#include <tnt_winsup.h>
+#endif
 
 #include <sys/types.h>
-#include <sys/time.h>
 
 #include <uri.h>
 
