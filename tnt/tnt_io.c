@@ -41,6 +41,9 @@
 
 #ifdef _WIN32
 #include <tnt_winsup.h>
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <stdint.h> // portable: uint64_t   MSVC: __int64 
 #else
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -181,7 +184,7 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 		int opt = 0;
 		socklen_t len = sizeof(opt);
 		if ((getsockopt(s->fd, SOL_SOCKET, SO_ERROR,
-				&opt, &len) == -1) || opt) {
+				(const void*)&opt, &len) == -1) || opt) {
 			s->errno_ = (opt) ? opt : errno;
 			return TNT_ESYSTEM;
 		}
@@ -233,7 +236,7 @@ static enum tnt_error tnt_io_xbufmax(struct tnt_stream_net *s, int opt, int min)
 	unsigned int avg = 0;
 	while (min <= max) {
 		avg = ((unsigned int)(min + max)) / 2;
-		if (setsockopt(s->fd, SOL_SOCKET, opt, &avg, sizeof(avg)) == 0)
+		if (setsockopt(s->fd, SOL_SOCKET, opt, (const void*)&avg, sizeof(avg)) == 0)
 			min = avg + 1;
 		else
 			max = avg - 1;
@@ -248,10 +251,10 @@ static enum tnt_error tnt_io_setopts(struct tnt_stream_net *s) {
 	tnt_io_xbufmax(s, SO_RCVBUF, s->opt.recv_buf);
 
 	if (setsockopt(s->fd, SOL_SOCKET, SO_SNDTIMEO,
-		       &s->opt.tmout_send, sizeof(s->opt.tmout_send)) == -1)
+		       (const void*)&s->opt.tmout_send, sizeof(s->opt.tmout_send)) == -1)
 		goto error;
 	if (setsockopt(s->fd, SOL_SOCKET, SO_RCVTIMEO,
-		       &s->opt.tmout_recv, sizeof(s->opt.tmout_recv)) == -1)
+		       (const void*)&s->opt.tmout_recv, sizeof(s->opt.tmout_recv)) == -1)
 		goto error;
 	return TNT_EOK;
 error:
@@ -560,6 +563,30 @@ tnt_writev(int fd, const struct iovec *iov, int iovcnt)
 	free(win_buf);
 
 	return  (rc == 0) ? tot_len : -1;
+}
+
+
+
+int 
+gettimeofday(struct timeval * tp, void *tzp)
+{
+	// Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
+	// This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
+	// until 00:00:00 January 1, 1970 
+	static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+
+	SYSTEMTIME  system_time;
+	FILETIME    file_time;
+	uint64_t    time;
+
+	GetSystemTime(&system_time);
+	SystemTimeToFileTime(&system_time, &file_time);
+	time = ((uint64_t)file_time.dwLowDateTime);
+	time += ((uint64_t)file_time.dwHighDateTime) << 32;
+
+	tp->tv_sec = (long)((time - EPOCH) / 10000000L);
+	tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
+	return 0;
 }
 
 #endif

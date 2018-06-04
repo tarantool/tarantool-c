@@ -33,6 +33,8 @@
 
 #ifndef _WIN32
 #include <netdb.h> /* NI_MAXHOST, NI_MAXSERV */
+#else
+#include <tnt_winsup.h>
 #endif
 
 #include <limits.h> /* _POSIX_PATH_MAX */

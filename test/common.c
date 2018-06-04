@@ -106,10 +106,10 @@ mp_dump (const char *addr, size_t len) {
 			mp_decode_nil(&addr);
 			break;
 		case (MP_UINT):
-			printf("%zd", mp_decode_uint(&addr));
+			printf("%"PRIu64, mp_decode_uint(&addr));
 			break;
 		case (MP_INT):
-			printf("%zd", mp_decode_int(&addr));
+			printf("%"PRId64, mp_decode_int(&addr));
 			break;
 		case (MP_STR): {
 			uint32_t str_len = 0;
