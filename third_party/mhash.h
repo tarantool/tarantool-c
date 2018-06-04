@@ -134,6 +134,31 @@ struct _mh(t) {
 #define mh_begin(h)		(0)
 #define mh_end(h)		( (h)->n_buckets)
 
+#ifdef __GNUC__
+
+#define mh_first(h) ({                                          \
+        mh_int_t i;                                             \
+        for (i = 0; i < mh_end(h); i++) {                       \
+                if (mh_exist(h, i))                             \
+                        break;                                  \
+        }                                                       \
+        i;                                                      \
+})
+
+#define mh_next(h, i) ({                                        \
+        mh_int_t n = i;                                         \
+        if (n < mh_end(h)) {                                    \
+                for (n = i + 1; n < mh_end(h); n++) {           \
+                        if (mh_exist(h, n))                     \
+                                break;                          \
+                }                                               \
+        }                                                       \
+        n;                                                      \
+})
+
+#else
+
+
 
 static inline mh_int_t
 _mh(first)(struct _mh(t) *h)
@@ -142,7 +167,7 @@ _mh(first)(struct _mh(t) *h)
 		for (i = 0; i < mh_end(h); i++) {
 				if (mh_exist(h, i))
 					break;
-		}							
+		}
 		return i;
 }
 
@@ -156,17 +181,34 @@ _mh(next)(struct _mh(t) *h, mh_int_t i) {
 				break;
 		}
 	}
-	return n;							
+	return n;
 }
+#endif
 
-#define mh_first(h) \
-		mh##mh_name##_##first(h)
 
-#define mh_next(h) \
-		mh##mh_name##_##next(h)
+
+/* Since expression statement is GNU C extension these are "reference" functions macro functions 
+ * wich are analogius of mh_first and mh_next. 
+ */ 
+
+#define mh_start(h,i)  do {						\
+        for (i = 0; i < mh_end(h); i++) {				\
+                if (mh_exist(h, i))                             \
+                        break;                                  \
+} while(0)
+
+#define mh_inc(h, n) do {                                        \
+        if (n < mh_end(h)) {                                    \
+                for (n = n + 1; n < mh_end(h); n++) {           \
+                        if (mh_exist(h, n))                     \
+                                break;                          \
+                }                                               \
+        }                                                       \
+} while(0)
+
 
 #define mh_foreach(h, i) \
-	for (i = mh_first(h); i < mh_end(h); i = mh_next(h, i))
+	for (i = mh_begin(h); i < mh_end(h); i++) if (mh_exist(h,i))
 
 #define MH_DENSITY 0.7
 
