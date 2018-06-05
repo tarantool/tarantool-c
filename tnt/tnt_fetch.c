@@ -515,7 +515,8 @@ tnt_stmt_execute(tnt_stmt_t* stmt)
 	if (!stmt->ibind) {
 		result = tnt_execute(stmt->stream, stmt->query, stmt->query_len, NULL);
 		/* reqid Overflow ? */
-		stmt->reqid = stmt->stream->reqid - 1;
+		stmt->reqid = tnt_stream_reqid(stmt->stream,0) - 1;
+		tnt_stream_reqid(stmt->stream, stmt->reqid + 1);
 	} else {
 		struct tnt_stream *args = bind2object(stmt);
 		if (args) {
