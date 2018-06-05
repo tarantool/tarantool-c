@@ -37,7 +37,7 @@
  */
 
 #ifdef _WIN32
-#include "tnt_winsup.h"
+#include <tnt_winsup.h>
 #endif
 
 typedef ssize_t (*tnt_iob_tx_t)(void *ptr, const char *buf, size_t size);

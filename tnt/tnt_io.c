@@ -184,7 +184,7 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 		int opt = 0;
 		socklen_t len = sizeof(opt);
 		if ((getsockopt(s->fd, SOL_SOCKET, SO_ERROR,
-				(const void*)&opt, &len) == -1) || opt) {
+				(void*)&opt, &len) == -1) || opt) {
 			s->errno_ = (opt) ? opt : errno;
 			return TNT_ESYSTEM;
 		}
