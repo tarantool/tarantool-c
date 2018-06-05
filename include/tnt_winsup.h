@@ -60,7 +60,10 @@ extern int tnt_writev(int fd, const struct iovec *iov, int iovcnt);
 extern int gettimeofday(struct timeval *tv, void *);
 
 #define _POSIX_PATH_MAX _MAX_PATH
+#ifndef PRId64
 #define PRId64 "I64d"
+#endif
+#ifndef PRIu64
 #define PRIu64 "I64u"
-
+#endif
 #endif

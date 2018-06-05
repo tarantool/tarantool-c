@@ -39,10 +39,10 @@
 #include <tarantool/tnt_reply.h>
 #include <tarantool/tnt_stream.h>
 
-uint32_t
-tnt_stream_reqid(struct tnt_stream *s, uint32_t reqid)
+uint64_t
+tnt_stream_reqid(struct tnt_stream *s, uint64_t reqid)
 {
-	uint32_t old = s->reqid;
+	uint64_t old = s->reqid;
 	s->reqid = reqid;
 	return old;
 }

@@ -75,6 +75,6 @@ void tnt_stream_free(struct tnt_stream *s);
  * \brief set reqid number. It's incremented at every request compilation.
  * default is 0
  */
-uint32_t tnt_stream_reqid(struct tnt_stream *s, uint32_t reqid);
+uint64_t tnt_stream_reqid(struct tnt_stream *s, uint64_t reqid);
 
 #endif /* TNT_STREAM_H_INCLUDED */

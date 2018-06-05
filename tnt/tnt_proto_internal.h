@@ -36,7 +36,7 @@ static inline char *
 mp_encode_luint32(char *data, uint64_t num) {
 	if (num <= UINT32_MAX) {
 		data = mp_store_u8(data, 0xce);
-		return mp_store_u32(data, num);
+		return mp_store_u32(data,(uint32_t) num);
 	}
 	data = mp_store_u8(data, 0xcf);
 	return mp_store_u64(data, num);

@@ -67,7 +67,7 @@ test_connect_tcp() {
 	snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:",
 		 getenv("PRIMARY_PORT"));
 
-	struct tnt_stream *s = NULL; s = tnt_net(NULL);
+	struct tnt_stream *s = tnt_net(NULL);
 	isnt(s, NULL, "Checking that stream is allocated");
 	is  (s->alloc, 1, "Checking s->alloc");
 	isnt(tnt_set(s, TNT_OPT_URI, uri), -1, "Setting URI");
@@ -242,7 +242,7 @@ test_request_01(char *uri) {
 	plan(5);
 	header();
 
-	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
+	struct tnt_stream *tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(tnt), -1, "Connecting");
@@ -341,7 +341,7 @@ test_execute(char *uri) {
 	char *query;
 	struct tnt_stream *args = NULL;
 
-	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
+	struct tnt_stream *tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(tnt), -1, "Connecting");

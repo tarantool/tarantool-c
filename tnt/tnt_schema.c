@@ -123,7 +123,7 @@ tnt_schema_add_space(struct mh_assoc_t *schema, const char **data)
 	memset(space, 0, sizeof(struct tnt_schema_sval));
 	if (mp_typeof(*tuple) != MP_UINT)
 		goto error;
-	space->number = mp_decode_uint(&tuple);
+	space->number = (uint32_t)mp_decode_uint(&tuple);
 	mp_next(&tuple); /* skip owner id */
 	if (mp_typeof(*tuple) != MP_STR)
 		goto error;

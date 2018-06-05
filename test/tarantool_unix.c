@@ -142,7 +142,7 @@ test_insert_replace_delete(char *uri) {
 	tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
-		uint32_t i = r->sync, str_len = 0;
+		uint64_t i = r->sync, str_len = 0;
 		char ex[128] = {0};
 		size_t ex_len = snprintf(ex, 128, "examplestr %d %d", i, i*i);
 		isnt(r->data, NULL, "check that we get answer");

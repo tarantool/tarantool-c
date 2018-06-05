@@ -71,7 +71,7 @@ int tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr) {
 		goto rollback;
 	if (mp_typeof(*length) != MP_UINT)
 		goto rollback;
-	size_t size = mp_decode_uint(&data);
+	size_t size = (size_t)mp_decode_uint(&data);
 	r->buf = tnt_mem_alloc(size);
 	r->buf_size = size;
 	if (r->buf == NULL)
@@ -113,7 +113,7 @@ tnt_reply_len(const char *buf, size_t size, size_t *len)
 	const char *p = buf;
 	if (mp_typeof(*p) != MP_UINT)
 		return -1;
-	size_t length = mp_decode_uint(&p);
+	size_t length = (uint64_t)mp_decode_uint(&p);
 	if (size < length + TNT_REPLY_IPROTO_HDR_SIZE) {
 		*len = (length + TNT_REPLY_IPROTO_HDR_SIZE) - size;
 		return 1;
@@ -136,7 +136,7 @@ tnt_reply_hdr0(struct tnt_reply *r, const char *buf, size_t size, size_t *off) {
 	while (n-- > 0) {
 		if (mp_typeof(*p) != MP_UINT)
 			return -1;
-		uint32_t key = mp_decode_uint(&p);
+		uint32_t key = (uint32_t)mp_decode_uint(&p);
 		if (mp_typeof(*p) != MP_UINT)
 			return -1;
 		switch (key) {
