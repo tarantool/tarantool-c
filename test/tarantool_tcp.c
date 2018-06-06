@@ -63,9 +63,11 @@ test_connect_tcp() {
 	plan(7);
 	header();
 
-	char uri[128] = {0};
-	snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:",
-		 getenv("PRIMARY_PORT"));
+
+
+	char uri[128] = { 0 };
+	snprintf(uri, 128, "%s%s%s", "test:test@",
+		getenv("PRIMARY_HOST") ? getenv("PRIMARY_HOST") : "localhost:", getenv("PRIMARY_PORT"));
 
 	struct tnt_stream *s = tnt_net(NULL);
 	isnt(s, NULL, "Checking that stream is allocated");
@@ -907,7 +909,7 @@ test_request_05(char *uri) {
 	struct tnt_iter it; tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
-		uint32_t i = r->sync, str_len = 0;
+		uint32_t i = (uint32_t)r->sync, str_len = 0;
 		char ex[128] = {0};
 		size_t ex_len = snprintf(ex, 128, "examplestr %d %d", i, i*i);
 		isnt(r->data, NULL, "check that we get answer");
@@ -956,7 +958,7 @@ test_request_05(char *uri) {
 	tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
-		uint32_t i = r->sync, str_len = 0;
+		uint32_t i = (uint32_t)r->sync, str_len = 0;
 		char ex[128] = {0};
 		size_t ex_len = 0;
 		ex_len = snprintf(ex, 128, "anotherexamplestr %d %d", i, i*i);
@@ -1005,7 +1007,7 @@ test_request_05(char *uri) {
 	while (arrsz-- > 0) {
 		is  (mp_decode_array(&data), 3, "And again (another)");
 		is  (mp_typeof(*data), MP_UINT, "check int");
-		uint32_t sz = mp_decode_uint(&data);
+		uint32_t sz = (uint32_t)mp_decode_uint(&data);
 		is  (mp_typeof(*data), MP_UINT, "check int");
 		uint32_t sz_z = sz + 10; if (sz < 5) sz_z -= 5;
 		is  (mp_decode_uint(&data), sz_z, "check int val");
@@ -1048,7 +1050,7 @@ test_request_05(char *uri) {
 	tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
-		uint32_t i = r->sync, str_len = 0;
+		uint32_t i = (uint32_t)r->sync, str_len = 0;
 		char ex[128] = {0};
 		size_t ex_len = 0;
 		if (i < 5)
@@ -1072,13 +1074,13 @@ test_request_05(char *uri) {
 		is  (mp_decode_array(&data), 3, "And again (another)");
 
 		is  (mp_typeof(*data), MP_UINT, "Check int");
-		uint32_t v=mp_decode_uint(&data);
+		uint32_t v=(uint32_t)mp_decode_uint(&data);
 		is  (v,i,"Check int val");
 
 		uint32_t sz_z = v + 10; if (v < 5) sz_z -= 5;
 
 		is  (mp_typeof(*data), MP_UINT, "Check int");
-		v=mp_decode_uint(&data);
+		v=(uint32_t)mp_decode_uint(&data);
 		is  (v,sz_z,"Check int val +5");
 
 		ok  (mp_typeof(*data) == MP_STR &&
@@ -1286,7 +1288,8 @@ int main() {
 	plan(11);
 
 	char uri[128] = {0};
-	snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:", getenv("PRIMARY_PORT"));
+	snprintf(uri, 128, "%s%s%s", "test:test@", 
+		getenv("PRIMARY_HOST")?getenv("PRIMARY_HOST"):"localhost:", getenv("PRIMARY_PORT"));
 
 
 	test_connect_tcp();

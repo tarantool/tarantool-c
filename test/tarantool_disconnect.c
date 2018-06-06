@@ -9,6 +9,23 @@
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_opt.h>
 
+#ifdef _WIN32
+#include <windows.h>
+
+void usleep(__int64 usec)
+{
+	HANDLE timer;
+	LARGE_INTEGER ft;
+
+	ft.QuadPart = -(10 * usec); // Convert to 100 nanosecond interval, negative value indicates relative time
+
+	timer = CreateWaitableTimer(NULL, TRUE, NULL);
+	SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+	WaitForSingleObject(timer, INFINITE);
+	CloseHandle(timer);
+}
+#endif
+
 int main() {
 	const char * uri = "localhost:3301";
 	struct tnt_stream * tnt = tnt_net(NULL); // Allocating stream

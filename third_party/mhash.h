@@ -456,7 +456,7 @@ _mh(new)()
 	if (!h->p) goto error;
 	h->b = (mh_int_t *) MH_CALLOC(h->n_buckets / 16 + 1, sizeof(mh_int_t));
 	if (!h->b) goto error;
-	h->upper_bound = h->n_buckets * MH_DENSITY;
+	h->upper_bound = (mh_int_t)(h->n_buckets * MH_DENSITY);
 	return h;
 error:
 	_mh(delete)(h);
@@ -470,7 +470,7 @@ _mh(clear)(struct _mh(t) *h)
 	h->prime = 0;
 	h->n_buckets = __ac_prime_list[h->prime];
 	h->p = (mh_node_t *) MH_CALLOC(h->n_buckets, sizeof(mh_node_t));
-	h->upper_bound = h->n_buckets * MH_DENSITY;
+	h->upper_bound = (mh_int_t)(h->n_buckets * MH_DENSITY);
 }
 
 void
@@ -560,7 +560,7 @@ _mh(start_resize)(struct _mh(t) *h, mh_int_t buckets, mh_int_t batch,
 	memcpy(s, h, sizeof(*h));
 	s->resize_position = 0;
 	s->n_buckets = __ac_prime_list[h->prime];
-	s->upper_bound = s->n_buckets * MH_DENSITY;
+	s->upper_bound = (mh_int_t)(s->n_buckets * MH_DENSITY);
 	s->n_dirty = 0;
 	s->p = (mh_node_t *) MH_CALLOC(s->n_buckets, sizeof(mh_node_t));
 	if (s->p == NULL)
@@ -580,7 +580,7 @@ void
 _mh(reserve)(struct _mh(t) *h, mh_int_t size,
 	     mh_arg_t arg)
 {
-	_mh(start_resize)(h, size/MH_DENSITY, h->size, arg);
+	_mh(start_resize)(h, (mh_int_t)(size/MH_DENSITY), h->size, arg);
 }
 
 #ifndef mh_stat

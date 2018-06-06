@@ -85,7 +85,7 @@ typedef struct tnt_stmt {
 	struct tnt_reply *reply;
 	const char *data;
 	struct tnt_coldata *row;
-	const char **field_names;
+	char **field_names;
 	int64_t a_rows; /* Affected rows */
 	int32_t nrows;
 	int32_t ncols;
