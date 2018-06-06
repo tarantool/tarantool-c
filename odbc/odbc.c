@@ -128,8 +128,8 @@ SQLDriverConnect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	start_measure(&tm);
 	SQLRETURN r = odbc_drv_connect(dbch, whndl, conn_s, slen, out_conn_s, buflen, out_len, drv_compl);
 	stop_measure(&tm);
-	LOG_TRACE(((odbc_connect*)dbch),"SQLDriverConnect() = [%s]  %ld Sec %ld uSec\n", r==SQL_SUCCESS? "OK" : "NOTOK" ,
-		 tm.sec, tm.usec);
+	LOG_TRACE(((odbc_connect*)dbch),"SQLDriverConnect() = [%s]  %ld Sec %ld uSec\n",
+		  r==SQL_SUCCESS? "OK" : "NOTOK", tm.sec, tm.usec);
 	return r;
 }
 
@@ -142,8 +142,8 @@ SQLConnect(SQLHDBC dbch, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 	start_measure(&tm);
 	SQLRETURN r = odbc_dbconnect(dbch, serv, serv_sz, user, user_sz, auth, auth_sz);
 	stop_measure(&tm);
-	LOG_TRACE(((odbc_connect*)dbch),"SQLConnect() = [%s] %ld Sec %ld uSec\n",  r==SQL_SUCCESS? "OK" : "NOTOK" ,
-		 tm.sec, tm.usec);
+	LOG_TRACE(((odbc_connect*)dbch),"SQLConnect() = [%s] %ld Sec %ld uSec\n",
+		  r==SQL_SUCCESS? "OK" : "NOTOK", tm.sec, tm.usec);
 	return r;
 }
 
@@ -180,8 +180,8 @@ SQLExecute(SQLHSTMT stmth)
 	start_measure(&tm);
 	SQLRETURN r = stmt_execute(stmth);
 	stop_measure(&tm);
-	LOG_TRACE(((odbc_stmt *)stmth), "SQLExecute = [%s] %ld Sec %ld uSec\n", r==SQL_SUCCESS? "OK" : "NOTOK" ,
-		 tm.sec, tm.usec);
+	LOG_TRACE(((odbc_stmt *)stmth), "SQLExecute = [%s] %ld Sec %ld uSec\n",
+		  r==SQL_SUCCESS? "OK" : "NOTOK", tm.sec, tm.usec);
 	return r;
 }
 
@@ -201,8 +201,8 @@ SQLExecDirect(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
 	start_measure(&tm);
 	r = stmt_execute(stmth);
 	stop_measure(&tm);
-	LOG_INFO(((odbc_stmt*)stmth),"SQLExecDirect = [%s] %ld Sec %ld uSec\n", r==SQL_SUCCESS? "OK": "NOTOK" ,
-		 tm.sec, tm.usec);
+	LOG_INFO(((odbc_stmt*)stmth),"SQLExecDirect = [%s] %ld Sec %ld uSec\n",
+		 r==SQL_SUCCESS? "OK": "NOTOK" , tm.sec, tm.usec);
 	return r;
 }
 
@@ -261,7 +261,8 @@ SQLFetchScroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset)
 
 
 SQLRETURN SQL_API
-SQLGetData(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER    val_ptr, SQLLEN in_len, SQLLEN *out_len)
+SQLGetData(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type, SQLPOINTER val_ptr,
+	   SQLLEN in_len, SQLLEN *out_len)
 {
 	return get_data(stmth,num,type,val_ptr,in_len,out_len);
 }
