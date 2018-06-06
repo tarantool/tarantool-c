@@ -137,23 +137,23 @@ struct _mh(t) {
 #ifdef __GNUC__
 
 #define mh_first(h) ({                                          \
-        mh_int_t i;                                             \
-        for (i = 0; i < mh_end(h); i++) {                       \
-                if (mh_exist(h, i))                             \
-                        break;                                  \
-        }                                                       \
-        i;                                                      \
+	mh_int_t i;                                             \
+	for (i = 0; i < mh_end(h); i++) {                       \
+		if (mh_exist(h, i))                             \
+			break;                                  \
+	}                                                       \
+	i;                                                      \
 })
 
 #define mh_next(h, i) ({                                        \
-        mh_int_t n = i;                                         \
-        if (n < mh_end(h)) {                                    \
-                for (n = i + 1; n < mh_end(h); n++) {           \
-                        if (mh_exist(h, n))                     \
-                                break;                          \
-                }                                               \
-        }                                                       \
-        n;                                                      \
+	mh_int_t n = i;                                         \
+	if (n < mh_end(h)) {                                    \
+		for (n = i + 1; n < mh_end(h); n++) {           \
+			if (mh_exist(h, n))                     \
+				break;                          \
+		}                                               \
+	}                                                       \
+	n;                                                      \
 })
 
 #else
@@ -173,7 +173,7 @@ _mh(first)(struct _mh(t) *h)
 
 
 static inline mh_int_t
-_mh(next)(struct _mh(t) *h, mh_int_t i) {					
+_mh(next)(struct _mh(t) *h, mh_int_t i) {
 	mh_int_t n = i;
 	if (n < mh_end(h)) {
 		for (n = i + 1; n < mh_end(h); n++) {
@@ -187,23 +187,23 @@ _mh(next)(struct _mh(t) *h, mh_int_t i) {
 
 
 
-/* Since expression statement is GNU C extension these are "reference" functions macro functions 
- * wich are analogius of mh_first and mh_next. 
- */ 
+/* Since expression statement is GNU C extension these are "reference"
+ * functions macro functions  wich are analogius of mh_first and mh_next.
+ */
 
 #define mh_start(h,i)  do {						\
-        for (i = 0; i < mh_end(h); i++) {				\
-                if (mh_exist(h, i))                             \
-                        break;                                  \
+	for (i = 0; i < mh_end(h); i++) {				\
+		if (mh_exist(h, i))                             \
+			break;                                  \
 } while(0)
 
 #define mh_inc(h, n) do {                                        \
-        if (n < mh_end(h)) {                                    \
-                for (n = n + 1; n < mh_end(h); n++) {           \
-                        if (mh_exist(h, n))                     \
-                                break;                          \
-                }                                               \
-        }                                                       \
+	if (n < mh_end(h)) {                                    \
+		for (n = n + 1; n < mh_end(h); n++) {           \
+			if (mh_exist(h, n))                     \
+				break;                          \
+		}                                               \
+	}                                                       \
 } while(0)
 
 

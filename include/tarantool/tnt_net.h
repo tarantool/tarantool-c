@@ -184,7 +184,7 @@ tnt_connect(struct tnt_stream *s);
  * \retval NULL error
  *
  * \code{.c}
- * struct tnt_stream *tnt = tnt_open(const char* host, const char* user, const char* password, int port) 
+ * struct tnt_stream *tnt = tnt_open(const char* host, const char* user, const char* password, int port)
  * assert(tnt);
  * assert(tnt_set(s, TNT_OPT_URI, "login:passw@localhost:3302") != -1);
  * ...
@@ -202,14 +202,14 @@ tnt_open(const char* host, const char* user, const char* password, int port);
  * \param username for authentification, maybe NULL
  * \param password username password for auth, maybe NULL
  * \param port port, maybe 0. If port is 0 then services ":service" uri part is not generated
- * 
+ *
  * If stream pointer is NULL, then new stream will be created.
  *
  * \returns stream pointer
  * \retval NULL error
  *
  * \code{.c}
- * struct tnt_stream *tnt = tnt_open(const char* host, const char* user, const char* password, int port) 
+ * struct tnt_stream *tnt = tnt_open(const char* host, const char* user, const char* password, int port)
  * assert(tnt);
  * assert(tnt_set(s, TNT_OPT_URI, "login:passw@localhost:3302") != -1);
  * ...

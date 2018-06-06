@@ -133,15 +133,15 @@ test_object() {
 
 	/*
 	 * {"menu": {
-  	 *    "popup": {
-    	 *      "menuitem": [
-      	 *        {"value": "New", "onclick": "CreateNewDoc()"},
-      	 *        {"value": "Open", "onclick": "OpenDoc()"},
-      	 *        {"value": "Close", "onclick": "CloseDoc()"}
-    	 *      ]
-  	 *    }
+	 *    "popup": {
+	 *      "menuitem": [
+	 *        {"value": "New", "onclick": "CreateNewDoc()"},
+	 *        {"value": "Open", "onclick": "OpenDoc()"},
+	 *        {"value": "Close", "onclick": "CloseDoc()"}
+	 *      ]
+	 *    }
 	 *    "id": "file",
-  	 *    "value": "File",
+	 *    "value": "File",
 	 * }}
 	 */
 
@@ -297,7 +297,7 @@ static int test_connection()
   struct tnt_stream* s = tnt_open("localhost","test","test",port);
   isnt(s,NULL,"test connection to localhost");
   if (s) tnt_stream_free(s);
-  
+
   s=tnt_open("invalid_host","test","test",port);
   is(s,NULL,"test connection to wrong host");
   if (s) tnt_stream_free(s);
@@ -389,7 +389,7 @@ test_execute(char *uri) {
 	isnt(tnt_flush(tnt), -1, "Send to server");
 	tnt_stream_free(args);
 
-	
+
 
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
@@ -405,7 +405,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: select no args");
 	/* isnt(tnt_flush(tnt), -1, "Send to server"); */
-       
+
 	tnt_stmt_t* result = tnt_filfull(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence");
 
@@ -421,7 +421,7 @@ test_execute(char *uri) {
 	}
 	tnt_stmt_free(result);
 
-	query = "CREATE TABLE str_table(id STRING, PRIMARY KEY (id))";	
+	query = "CREATE TABLE str_table(id STRING, PRIMARY KEY (id))";
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: create table");
 
@@ -432,16 +432,16 @@ test_execute(char *uri) {
 	  is(tnt_affected_rows(result),1,"checking affected rows after table creation");
 	  tnt_stmt_free(result);
 	}
-	
-	
+
+
 	char * ins_q="INSERT INTO str_table(id) VALUES (?)";
 	result = tnt_prepare(tnt,ins_q,strlen(ins_q));
 	isnt(result,NULL,"statement prepare");
 	if (result) {
 		const char* in="Hello";
 		tnt_bind_t param[1];
-		
-		/* 
+
+		/*
 		   memset(&param[0],0,sizeof(param));
 		   param[0].type=MP_STR;
 		   param[0].buffer = (void*)in;
@@ -449,15 +449,15 @@ test_execute(char *uri) {
 		*/
 
 		tnt_setup_bind_param(&param[0], MP_STR, in, strlen(in));
-		
+
 		is(tnt_bind_query(result,&param[0],1),OK,"Input bind array test");
 		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute test");
 		is(tnt_stmt_code(result),0,"checking code after table creation");
 		is(tnt_affected_rows(result),1,"checking affected rows after table creation");
 		tnt_stmt_free(result);
 	}
-	
-	query = "DROP TABLE str_table";	
+
+	query = "DROP TABLE str_table";
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
@@ -477,30 +477,30 @@ test_execute(char *uri) {
 	  is(tnt_affected_rows(result),1,"checking affected rows after table creation");
 	  tnt_stmt_free(result);
 	}
-	
-	
+
+
 	ins_q="INSERT INTO str_table(id,val) VALUES (?,?)";
 	result = tnt_prepare(tnt,ins_q,strlen(ins_q));
 	isnt(result,NULL,"2 vals statement prepare");
 	if (result) {
 		const char* in="Hello";
 		int val=666;
-		/* 
+		/*
 		tnt_bind_t param[2];
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_STR;
 		param[0].buffer = (void*)in;
 		param[0].in_len = strlen(in);
-		
+
 		param[1].type=MP_INT;
 		param[1].buffer = (void*)&val;
 		param[1].in_len = sizeof(int);
 		*/
-		
+
 		is(tnt_bind_query_param(result, 0, MP_STR, in, strlen(in)), OK, "tnt_bind_query_param test");
 		is(tnt_bind_query_param(result, 1, MP_INT, &val, 0), OK, "tnt_bind_query_param test");
-		
-		
+
+
 		for(int i=0;i<10;++i) {
 			val +=i;
 			is(tnt_stmt_execute(result),OK,"tnt_stmt_execute 2 val bind  test");
@@ -529,12 +529,12 @@ test_execute(char *uri) {
 		param[0].in_len = sizeof(out);
 		param[0].out_len=&len;
 		param[0].is_null=&nil;
-		
+
 		int64_t val;
 		param[1].type=MP_INT;
 		param[1].buffer = (void*)&val;
 		param[1].in_len = sizeof(int64_t);
-		
+
 		is(tnt_bind_result(result,&param[0],2),OK,"Output bind array test");
 		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute 2 val bind  select test");
 		is(tnt_stmt_code(result),0,"checking code after 2 val bind select");
@@ -545,7 +545,7 @@ test_execute(char *uri) {
 			ok(!nil,"Cheking for not null");
 			i++;
 		}
-		is(i,10,"Checking number of resulted rows"); 
+		is(i,10,"Checking number of resulted rows");
 		tnt_stmt_free(result);
 	}
 
@@ -575,8 +575,8 @@ test_execute(char *uri) {
 		param[0].in_len = sizeof(out);
 		param[0].out_len=&len;
 		param[0].is_null=&nil;
-		
-	
+
+
 		is(tnt_stmt_code(result),0,"checking code after tnt_query with select for null");
 		is(tnt_bind_result(result,&param[0],1),OK,"output bind result for null");
 
@@ -585,11 +585,11 @@ test_execute(char *uri) {
 			ok(nil,"Cheking result for null");
 			i++;
 		}
-		is(i,1,"Checking number of resulted rows"); 
+		is(i,1,"Checking number of resulted rows");
 		tnt_stmt_free(result);
 	}
 
-	query = "DROP TABLE str_table";	
+	query = "DROP TABLE str_table";
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
@@ -610,8 +610,8 @@ test_execute(char *uri) {
 	  is(tnt_affected_rows(result),1,"checking affected rows after table creation");
 	  tnt_stmt_free(result);
 	}
-	
-	
+
+
 	ins_q="INSERT INTO double_table(id,val) VALUES (?,?)";
 	result = tnt_prepare(tnt,ins_q,strlen(ins_q));
 	isnt(result,NULL,"2 vals statement prepare");
@@ -621,7 +621,7 @@ test_execute(char *uri) {
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_DOUBLE;
 		param[0].buffer = (void*)&in;
- 
+
 		int val=666;
 		param[1].type=MP_INT;
 		param[1].buffer = (void*)&val;
@@ -661,14 +661,14 @@ test_execute(char *uri) {
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_DOUBLE;
 		param[0].buffer = (void*)&out;
-       		param[0].out_len=&len;
+		param[0].out_len=&len;
 		param[0].is_null=&nil;
-		
+
 		int64_t val;
 		param[1].type=MP_INT;
 		param[1].buffer = (void*)&val;
 		param[1].in_len = sizeof(int64_t);
-		
+
 		is(tnt_bind_result(result,&param[0],2),OK,"Output double bind array test");
 		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute double 2 val bind  select test");
 		is(tnt_stmt_code(result),0,"checking code after double 2 val bind select");
@@ -712,7 +712,7 @@ test_execute(char *uri) {
 		tnt_stmt_free(result);
 	}
 
-	query = "DROP TABLE double_table";	
+	query = "DROP TABLE double_table";
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
@@ -771,7 +771,7 @@ test_request_02(char *uri) {
 	is  (tnt_request_set_index(req, 2), 0, "Set index");
 	is  (tnt_request_set_key(req, key), 0, "Set key");
 	isnt(tnt_request_compile(tnt, req), -1, "Compile request");
-	
+
 	isnt(tnt_flush(tnt), -1, "Send package to server");
 	tnt_request_free(req);
 	tnt_stream_free(key);
@@ -779,7 +779,7 @@ test_request_02(char *uri) {
 	struct tnt_reply reply;
 	isnt(tnt_reply_init(&reply), NULL, "Init reply");
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply");
-	
+
 	tnt_reply_free(&reply);
 
 	tnt_stream_free(tnt);
@@ -811,7 +811,7 @@ test_request_03(char *uri) {
 	is  (tnt_request_set_sindex(tnt, req, "name", 4), 0, "Set index");
 	is  (tnt_request_set_key(req, key), 0, "Set key");
 	isnt(tnt_request_compile(tnt, req), -1, "Compile request");
-	
+
 	isnt(tnt_flush(tnt), -1, "Send package to server");
 	tnt_request_free(req);
 	tnt_stream_free(key);
@@ -819,7 +819,7 @@ test_request_03(char *uri) {
 	struct tnt_reply reply;
 	isnt(tnt_reply_init(&reply), NULL, "Init reply");
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply");
-	
+
 	tnt_reply_free(&reply);
 
 	tnt_stream_free(tnt);
@@ -1043,7 +1043,7 @@ test_request_05(char *uri) {
 	}
 
 	isnt(tnt_flush(tnt), -1, "Send package to server");
-	
+
 	int j=0;
 	tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
@@ -1135,7 +1135,7 @@ test_msgpack_array_iter() {
 		sz += 1;
 	}
 
- 
+
 	tnt_iter_free(it);
 	tnt_stream_free(sa);
 
@@ -1303,4 +1303,3 @@ int main() {
 	test_execute(uri);
 	return check_plan();
 }
-

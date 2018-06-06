@@ -1,4 +1,4 @@
-#include <stdlib.h>  
+#include <stdlib.h>
 #include <sqlext.h>
 #include <stdio.h>
 #include <strings.h>
@@ -40,7 +40,7 @@ init_dbc(struct set_handles *st, const char *dsn)
 	st->level  = 0;
 	// Allocate environment handle
 	retcode = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &st->henv);
-       
+
 	// Set the ODBC version environment attribute
 	if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 		retcode = SQLSetEnvAttr(st->henv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
@@ -105,7 +105,7 @@ test_connect(const char *dsn) {
 		// Connect to data source
 		retcode = SQLConnect(st.hdbc, (SQLCHAR *)dsn, SQL_NTS,
 				     (SQLCHAR*) NULL, 0, NULL, 0);
-		
+
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 			ret_code = 1;
 			SQLDisconnect(st.hdbc);
@@ -137,7 +137,7 @@ test_driver_connect(const char *dsn) {
 					   sizeof(out_dsn), &out_len, SQL_DRIVER_NOPROMPT);
 		fprintf(stderr,"OUTDSN|%s|\n",out_dsn);
 
-		
+
 		// Allocate statement handle
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 			retcode = SQLAllocHandle(SQL_HANDLE_STMT, st.hdbc, &st.hstmt);
@@ -210,7 +210,7 @@ test_execrowcount(const char *dsn, const char *sql,int val) {
 		SQLLEN ar = -1;
 		if (retcode == SQL_SUCCESS  &&
 		    ((retcode=SQLRowCount(st.hstmt,&ar)) == SQL_SUCCESS)) {
-			if (ar == val) 							 
+			if (ar == val)
 				ret_code = 1;
 			else {
 				fprintf(stderr,"Affected row = %ld expected %d\n",ar,val);
@@ -246,8 +246,8 @@ test_inbind(const char *dsn, const char *sql,int p1,const char *p2) {
 		}
 
 		retcode = SQLBindParameter(st.hstmt, 2, SQL_PARAM_INPUT,
-					   SQL_C_LONG, SQL_INTEGER, 0, 0, &int_val, 0, 0); 
-			
+					   SQL_C_LONG, SQL_INTEGER, 0, 0, &int_val, 0, 0);
+
 		// Process data
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 			retcode = SQLExecute(st.hstmt);
@@ -373,7 +373,7 @@ do_fetchgetdata(struct set_handles *st, void *p)
 	long val;
 	SQLLEN val_len;
 	long *pars = (long*) par_ptr->args;
-	
+
 	while(row_cnt < 100) {
 		int code = SQLFetch(st->hstmt);
 		if (code == SQL_SUCCESS) {
@@ -388,11 +388,11 @@ do_fetchgetdata(struct set_handles *st, void *p)
 
 			code = SQLGetData(st->hstmt, 2, SQL_C_LONG, &long_val, 0, 0);
 			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
-			
+
 			code = SQLGetData(st->hstmt, 3, SQL_C_DOUBLE, &double_val, 0, 0);
 			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
 
-			
+
 			fprintf(stderr, "long_val is %ld match is %ld double_val %lf and str_val is %s\n",
 				long_val, pars[row_cnt], double_val, str_val);
 			if (long_val == pars[row_cnt])
@@ -419,7 +419,7 @@ do_fetchgetdata_stream(struct set_handles *st, void *p)
 	long val;
 	SQLLEN val_len;
 	long *pars = (long*) par_ptr->args;
-	
+
 	while(row_cnt < 100) {
 		int code = SQLFetch(st->hstmt);
 		if (code == SQL_SUCCESS) {
@@ -435,14 +435,14 @@ do_fetchgetdata_stream(struct set_handles *st, void *p)
 				if (code != SQL_SUCCESS_WITH_INFO)
 					break;
 				have_with_info = 1;
-			} while (1);			
+			} while (1);
 			if (code == SQL_SUCCESS) {
 				if (have_with_info)
 					matches ++;
 				code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val[0], 2, &str_len);
 				if (code != SQL_NO_DATA) {
 					fprintf(stderr, "no SQL_NO_DATA after success code %d row_count %d\n",
-						code, row_cnt); 
+						code, row_cnt);
 					show_error(SQL_HANDLE_STMT, st->hstmt);
 					return 0;
 				}
@@ -474,7 +474,7 @@ test_describecol(const char *dsn, const char *sql, int icol, int type, const cha
 		retcode = SQLPrepare(st.hstmt,(SQLCHAR*)sql, SQL_NTS);
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 			retcode = SQLExecute(st.hstmt);
-			if (retcode == SQL_SUCCESS) {				
+			if (retcode == SQL_SUCCESS) {
 				retcode = SQLFetch(st.hstmt);
 				if (retcode == SQL_SUCCESS) {
 					char colname[BUFSZ]="invalid";
@@ -523,7 +523,7 @@ test_fetch(const char *dsn, const char *sql,void* cnt, int (*fnc) (struct set_ha
 		retcode = SQLPrepare(st.hstmt,(SQLCHAR*)sql, SQL_NTS);
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 			retcode = SQLExecute(st.hstmt);
-			if (retcode == SQL_SUCCESS) {				
+			if (retcode == SQL_SUCCESS) {
 				ret_code = fnc(&st,cnt);
 			} else {
 				show_error(SQL_HANDLE_STMT, st.hstmt);
@@ -553,10 +553,10 @@ test_inbindbad(const char *dsn, const char *sql,int p1,const char *p2) {
 		SQLINTEGER int_val = p1;
 		SQLCHAR *str_val = (SQLCHAR *)p2;
 		retcode = SQLBindParameter(st.hstmt, 1, SQL_PARAM_INPUT,
-					   SQL_C_LONG, SQL_INTEGER, 0, 0, &int_val, 0, 0); 
+					   SQL_C_LONG, SQL_INTEGER, 0, 0, &int_val, 0, 0);
 		retcode = SQLBindParameter(st.hstmt, 2, SQL_PARAM_INPUT,
-					   SQL_C_CHAR, SQL_CHAR, 0, 0, str_val, SQL_NTS, 0); 
-			
+					   SQL_C_CHAR, SQL_CHAR, 0, 0, str_val, SQL_NTS, 0);
+
 		// Process data
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 			retcode = SQLExecute(st.hstmt);
@@ -632,7 +632,7 @@ main(int ac, char* av[])
 	fprintf(stderr, "next is good input binding\n");
 	test(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
 	testfail(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
-	
+
 	testfail(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
 	test(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
 	testfail(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
@@ -646,18 +646,18 @@ main(int ac, char* av[])
 
 	struct fetchbind_par par = {.cnt=5};
 	test(test_fetch(good_dsn, "select * from str_table",&par, do_fetchbind));
-	
+
 	long vals[] = {1 , 2 , 3 , 4 , 5 , 6 , 7 , 8, 9 , 10};
-        par.cnt = 5 ;
+	par.cnt = 5 ;
 	par.args = &vals[0];
 
 	test(test_fetch(good_dsn, "select * from str_table order by val",&par, do_fetchbindint));
-	
+
 	test(test_describecol(good_dsn, "select * from str_table", 2 , SQL_BIGINT, "val", SQL_NULLABLE_UNKNOWN));
 	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NULLABLE_UNKNOWN));
 
 	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NULLABLE));
-	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NO_NULLS));  
+	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NO_NULLS));
 
 	testfail(test_execrowcount(good_dsn,"drop table dbl",1));
 	test(test_execrowcount(good_dsn,"CREATE TABLE dbl(id STRING, val INTEGER, d DOUBLE, PRIMARY KEY (val))",1));
@@ -667,17 +667,16 @@ main(int ac, char* av[])
 	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('db', 4, 2332.293823)",1));
 	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES (NULL, 5, 3.99999999999999999)",1));
 	test(test_execrowcount(good_dsn,"INSERT INTO dbl(id,val,d) VALUES ('12345678abcdfghjkl;poieuwtgdskdsdsdsdsgdkhsg',"
-			       " 6, 3.1415926535897932384626433832795)",1));	
+			       " 6, 3.1415926535897932384626433832795)",1));
 
 
 	long vals2[] = {1 , 2 , 3 , 4 , 5 , 6 , 7 , 8, 9 , 10};
-        par.cnt = 6 ;
+	par.cnt = 6 ;
 	par.args = &vals2[0];
 
-	
+
 	test(test_fetch(good_dsn, "select * from dbl order by val",&par, do_fetchgetdata));
 	par.cnt = 44 ;
 	test(test_fetch(good_dsn, "select * from dbl where val=6", &par, do_fetchgetdata_stream));
 //	test(test_execrowcount(good_dsn,"drop table str_table",1));
-	
 }

@@ -46,7 +46,7 @@ void plan(int count);
 @brief check if plan is reached and print report
 */
 int check_plan(void);
-/* Ok there is no easy way to make common solution for portable __VA_OPT__. So let's 
+/* Ok there is no easy way to make common solution for portable __VA_OPT__. So let's
  * define here two sets of practically identical macros.
  */
 
@@ -93,6 +93,4 @@ int check_plan(void);
 #define fail(fmt, ...)		\
 	ok(0, fmt, ##__VA_ARGS__)
 
-
 #endif /* TEST_H_INCLUDED */
-

@@ -1,4 +1,5 @@
-
+#ifndef _ODBC_DRIVER_H
+#define _ODBC_DRIVER_H 1
 #include <stdint.h>
 #include <time.h>
 #include <inttypes.h>
@@ -30,7 +31,7 @@ enum ERROR_CODES {
 	ODBC_EMPTY_STATEMENT, /* ODBC statement without query/prepare */
 	ODBC_07005_ERROR, /* "Prepared statement not a cursor-specification" */
 	/* ODBC_22003_ERROR,  Bind parameters out of range */
-        ODBC_HY105_ERROR, /* Invalid bind parameters type */
+	ODBC_HY105_ERROR, /* Invalid bind parameters type */
 	/* ODBC_07009_ERROR,  Invalid parameter number */
 	ODBC_42000_ERROR, /* Sql execution error */
 	ODBC_07002_ERROR  /* Too many bind parameters */
@@ -109,7 +110,7 @@ typedef struct odbc_stmt_t {
 	tnt_stmt_t *tnt_statement;
 	tnt_bind_t * inbind_params;
 	tnt_bind_t * outbind_params;
-     
+
 	int inbind_items;
 	int outbind_items;
 
@@ -151,7 +152,7 @@ int
 tnt2odbc_error(int e);
 
 /*
- * Retrive tnt error string 
+ * Retrive tnt error string
  **/
 
 char*
@@ -252,3 +253,4 @@ SQLRETURN stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offs
 SQLRETURN param_info (SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 		      SQLULEN *out_len, SQLSMALLINT *out_dnum,
 		      SQLSMALLINT *is_null);
+#endif

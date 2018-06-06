@@ -27,7 +27,7 @@ SQLAllocStmt(SQLHDBC conn, SQLHSTMT *ostmt )
 }
 
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLAllocHandle(SQLSMALLINT handle_type, SQLHANDLE ihandle, SQLHANDLE *ohandle)
 {
 	switch (handle_type) {
@@ -61,7 +61,7 @@ SQLFreeStmt(SQLHSTMT stmt, SQLUSMALLINT option)
 	return free_stmt(stmt,option);
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLCloseCursor(SQLHSTMT stmt)
 {
 	return free_stmt(stmt,SQL_CLOSE);
@@ -119,16 +119,16 @@ SQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
 {
 	return get_connect_attr(hdbc,att,val,len,olen);
 }
-		
+
 SQLRETURN SQL_API
-SQLDriverConnect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,  
+SQLDriverConnect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,
 		 SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLUSMALLINT drv_compl)
 {
 	struct tmeasure tm;
 	start_measure(&tm);
 	SQLRETURN r = odbc_drv_connect(dbch, whndl, conn_s, slen, out_conn_s, buflen, out_len, drv_compl);
 	stop_measure(&tm);
-	LOG_TRACE(((odbc_connect*)dbch),"SQLDriverConnect() = [%s]  %ld Sec %ld uSec\n", r==SQL_SUCCESS? "OK" : "NOTOK" , 
+	LOG_TRACE(((odbc_connect*)dbch),"SQLDriverConnect() = [%s]  %ld Sec %ld uSec\n", r==SQL_SUCCESS? "OK" : "NOTOK" ,
 		 tm.sec, tm.usec);
 	return r;
 }
@@ -154,15 +154,15 @@ SQLDisconnect(SQLHDBC conn)
 }
 
 SQLRETURN SQL_API
-SQLBrowseConnect(SQLHDBC         hdbc,  
-		 SQLCHAR *       InConnectionString,  
-		 SQLSMALLINT     StringLength1,  
-		 SQLCHAR *       OutConnectionString,  
-		 SQLSMALLINT     BufferLength,  
+SQLBrowseConnect(SQLHDBC         hdbc,
+		 SQLCHAR *       InConnectionString,
+		 SQLSMALLINT     StringLength1,
+		 SQLCHAR *       OutConnectionString,
+		 SQLSMALLINT     BufferLength,
 		 SQLSMALLINT *   StringLength2Ptr)
 {
 	if (hdbc == SQL_NULL_HDBC)
-                return SQL_INVALID_HANDLE;
+		return SQL_INVALID_HANDLE;
 	return SQL_ERROR;
 
 }
@@ -170,7 +170,7 @@ SQLBrowseConnect(SQLHDBC         hdbc,
 SQLRETURN SQL_API
 SQLPrepare(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
 {
-        return stmt_prepare( stmth, query, query_len);
+	return stmt_prepare( stmth, query, query_len);
 }
 
 SQLRETURN SQL_API
@@ -178,7 +178,7 @@ SQLExecute(SQLHSTMT stmth)
 {
 	struct tmeasure tm;
 	start_measure(&tm);
-	SQLRETURN r = stmt_execute(stmth); 
+	SQLRETURN r = stmt_execute(stmth);
 	stop_measure(&tm);
 	LOG_TRACE(((odbc_stmt *)stmth), "SQLExecute = [%s] %ld Sec %ld uSec\n", r==SQL_SUCCESS? "OK" : "NOTOK" ,
 		 tm.sec, tm.usec);
@@ -188,7 +188,7 @@ SQLExecute(SQLHSTMT stmth)
 SQLRETURN SQL_API
 SQLExecDirect(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
 {
-	
+
 	if (stmth == NULL)
 		return SQL_INVALID_HANDLE;
 	int r = stmt_prepare( stmth, query, query_len);
@@ -196,10 +196,10 @@ SQLExecDirect(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
 		LOG_INFO(((odbc_stmt*)stmth),"SQLExecDirect = [NOTOK] 0 Sec %d uSec\n", 0);
 		return r;
 	}
-	
+
 	struct tmeasure tm;
 	start_measure(&tm);
-	r = stmt_execute(stmth); 
+	r = stmt_execute(stmth);
 	stop_measure(&tm);
 	LOG_INFO(((odbc_stmt*)stmth),"SQLExecDirect = [%s] %ld Sec %ld uSec\n", r==SQL_SUCCESS? "OK": "NOTOK" ,
 		 tm.sec, tm.usec);
@@ -209,7 +209,7 @@ SQLExecDirect(SQLHSTMT stmth, SQLCHAR  *query, SQLINTEGER  query_len)
 /*
  * Just copy original string since we do not preprocess query
  **/
-              
+
 SQLRETURN  SQL_API
 SQLNativeSql(SQLHDBC hdbc, SQLCHAR *inq, SQLINTEGER in_len, SQLCHAR *outq,
 	     SQLINTEGER out_len, SQLINTEGER *out_len_res)
@@ -343,7 +343,6 @@ SQLSetPos(HSTMT hstmt, SQLSETPOSIROW irow, SQLUSMALLINT fOption, SQLUSMALLINT fL
 {
     return SQL_ERROR;
 }
-
 
 SQLRETURN SQL_API
 SQLDescribeParam(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,

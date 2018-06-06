@@ -1,4 +1,3 @@
-
 /*
  * Redistribution and use in source and binary forms, with or
  * without modification, are permitted provided that the following
@@ -43,7 +42,7 @@
 #include <tnt_winsup.h>
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <stdint.h> // portable: uint64_t   MSVC: __int64 
+#include <stdint.h> // portable: uint64_t   MSVC: __int64
 #else
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -547,7 +546,7 @@ int getiovmax()
 int
 tnt_writev(int fd, const struct iovec *iov, int iovcnt)
 {
-	/* better to preallocte iovect but one needs to do it thread safe. Another way is to use alloca 
+	/* better to preallocte iovect but one needs to do it thread safe. Another way is to use alloca
 	 or variable length array  but I considering these harmfull. */
 	WSABUF* win_buf = malloc(sizeof(WSABUF)*iovcnt);
 	if (!win_buf)
@@ -567,12 +566,12 @@ tnt_writev(int fd, const struct iovec *iov, int iovcnt)
 
 
 
-int 
+int
 gettimeofday(struct timeval * tp, void *tzp)
 {
 	// Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
 	// This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
-	// until 00:00:00 January 1, 1970 
+	// until 00:00:00 January 1, 1970
 	static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
 
 	SYSTEMTIME  system_time;
@@ -588,5 +587,4 @@ gettimeofday(struct timeval * tp, void *tzp)
 	tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
 	return 0;
 }
-
 #endif

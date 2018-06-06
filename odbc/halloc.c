@@ -21,28 +21,28 @@ tnt2odbc_error(int e)
 	case TNT_EOK: /*!< Everything is OK */
 		r = ODBC_00000_ERROR;
 		break;
-        case TNT_EFAIL: /*!< Fail */
+	case TNT_EFAIL: /*!< Fail */
 		r = ODBC_HY000_ERROR;
 		break;
-        case TNT_EMEMORY: /*!< Memory allocation failed */
+	case TNT_EMEMORY: /*!< Memory allocation failed */
 		r = ODBC_HY001_ERROR;
 		break;
-        case TNT_ESYSTEM: /*!< System error */
+	case TNT_ESYSTEM: /*!< System error */
 		r = ODBC_08001_ERROR;
 	case TNT_ESIZE: /*!< Bad buffer size */
 	case TNT_EBIG: /*!< Buffer is too big */
 		r = ODBC_22003_ERROR;
 		break;
-        case TNT_ERESOLVE: /*!< gethostbyname(2) failed */
+	case TNT_ERESOLVE: /*!< gethostbyname(2) failed */
 		r = ODBC_08001_ERROR;
 		break;
-        case TNT_ETMOUT: /*!< Operation timeout */
+	case TNT_ETMOUT: /*!< Operation timeout */
 		r = ODBC_HYT00_ERROR;
 		break;
-        case TNT_EBADVAL: /*!< Bad argument (value) */
+	case TNT_EBADVAL: /*!< Bad argument (value) */
 		r = ODBC_07009_ERROR;
 		break;
-        case TNT_ELOGIN: /*!< Failed to login */
+	case TNT_ELOGIN: /*!< Failed to login */
 		r = ODBC_28000_ERROR;
 		break;
 	case ER_SQL_RANGE:
@@ -101,7 +101,7 @@ code2sqlstate(int code)
 		return "HY001";
 	case ODBC_HY010_ERROR:
 		return "HY010";
- 	case ODBC_HY003_ERROR:
+	case ODBC_HY003_ERROR:
 		return "HY003";
 	case ODBC_HY090_ERROR:
 		return "HY090";
@@ -160,7 +160,7 @@ set_error_len(struct error_holder *e, int code, const char* msg, int len)
 
 /*
  * Sets error message and code in connect structure.
- **/ 
+ **/
 
 
 void
@@ -170,7 +170,7 @@ set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len,
 	if (tcon) {
 		set_error_len(&(tcon->e),code,msg,len);
 		LOG_ERROR(tcon,"[%s][%s] %s\n", fname, code2sqlstate(code),
-			  tcon->e.message); 
+			  tcon->e.message);
 	}
 }
 
@@ -195,7 +195,7 @@ set_stmt_error_len(odbc_stmt *stmt, int code, const char* msg, int len, const ch
 {
 	if (stmt) {
 		set_error_len(&(stmt->e),code,msg,len);
-		LOG_ERROR(stmt,"[%s][%s] %s\n", fname, code2sqlstate(code), stmt->e.message); 		
+		LOG_ERROR(stmt,"[%s][%s] %s\n", fname, code2sqlstate(code), stmt->e.message);
 	}
 }
 
@@ -266,12 +266,12 @@ get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 	return SQL_SUCCESS;
 }
 
-SQLRETURN 
+SQLRETURN
 get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 	       SQLSMALLINT diag_id, SQLPOINTER ptr, SQLSMALLINT buflen,
 	       SQLSMALLINT * out_len)
 {
-	
+
 	if (rnum>1)
 		return SQL_NO_DATA;
 	if (!hndl)
@@ -302,7 +302,7 @@ get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 			*out_len = (SQLSMALLINT)strlen((char *)ptr);
 		return SQL_SUCCESS;
 	}
-		
+
 	switch (hndl_type) {
 	case SQL_HANDLE_STMT: {
 		odbc_stmt *stmt = (odbc_stmt *) hndl;
@@ -418,10 +418,10 @@ alloc_connect(SQLHENV env, SQLHDBC *hdbc)
 		/* Uncomment next line if con_end always have to point to */
 		/* the end */
 		/* env_ptr->con_end = *retcon; */
-		
+
 		(*retcon)->next = old_end->next;
 		old_end->next->prev = *retcon;
-		
+
 		old_end->next = *retcon;
 		(*retcon)->prev = old_end;
 	} else {
@@ -453,8 +453,8 @@ static uint64_t
 ainc_id_seq(uint64_t *v)
 {
 	/* Well, since we tackle with parallel execution here increment of "*v" should be
-	 * done under a lock. Since this lock happened only under structure creation and 
-	 * a structure creation needs a lock let's leave the increment unprotected.  
+	 * done under a lock. Since this lock happened only under structure creation and
+	 * a structure creation needs a lock let's leave the increment unprotected.
 	 */
 	(*v)++;
 	return *v;
@@ -470,7 +470,7 @@ hostid(char *b, int len)
 		return strncpy(b,"invalidhostname",len);
 }
 
-static char * 
+static char *
 gen_env_id(void)
 {
 	char buf[IBUFSIZ];
@@ -479,8 +479,8 @@ gen_env_id(void)
 		 hostid(host, HBUFSIZ), (uint64_t) time(0),
 		 ainc_id_seq(&env_sq));
 
-	snprintf(buf, IBUFSIZ, "%" PRIu64, fnv(buf)); 
-	
+	snprintf(buf, IBUFSIZ, "%" PRIu64, fnv(buf));
+
 	return strdup(buf);
 }
 
@@ -499,7 +499,7 @@ start_measure(struct tmeasure *tm)
 	gettimeofday(&tp, NULL);
 
 	tm->sec = tp.tv_sec;
-	tm->usec = tp.tv_usec; 
+	tm->usec = tp.tv_usec;
 }
 
 struct tmeasure*
@@ -512,7 +512,7 @@ stop_measure(struct tmeasure *t_start)
 	tp.tv_usec -= t_start->usec;
 	if (tp.tv_usec < 0) {
 		tp.tv_sec --;
-		tp.tv_usec += 1000000; 
+		tp.tv_usec += 1000000;
 	}
 	t_start->sec = tp.tv_sec;
 	t_start->usec = tp.tv_usec;
@@ -536,7 +536,7 @@ free_connect(SQLHDBC hdbc)
 	} else {
 		env->con_end = NULL;
 	}
-	while(ocon->stmt_end) 
+	while(ocon->stmt_end)
 		free_stmt(ocon->stmt_end,SQL_DROP);
 	free(ocon->e.message);
 	free(ocon->opt_timeout);
@@ -546,7 +546,7 @@ free_connect(SQLHDBC hdbc)
 }
 
 
-SQLRETURN 
+SQLRETURN
 alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 {
 	odbc_connect *con = (odbc_connect *)conn;
@@ -565,10 +565,10 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 
 	if (con->stmt_end) {
 		odbc_stmt *old_end = con->stmt_end;
-		
+
 		(*out)->next = old_end->next;
 		old_end->next->prev = *out;
-		
+
 		old_end->next = *out;
 		(*out)->prev = old_end;
 	} else {
@@ -591,7 +591,7 @@ mem_free_stmt(odbc_stmt *stmt)
 	free_stmt(stmt,SQL_UNBIND);
 	free(stmt->e.message);
 	free(stmt->id);
-	
+
 	odbc_connect *parent = stmt->connect;
 	if (stmt->next != stmt) {
 		stmt->prev->next = stmt->next;
@@ -600,7 +600,7 @@ mem_free_stmt(odbc_stmt *stmt)
 		if (parent->stmt_end == stmt)
 			parent->stmt_end = stmt->prev;
 	} else {
-		parent->stmt_end = NULL; 
+		parent->stmt_end = NULL;
 	}
 
 	free(stmt);
@@ -649,4 +649,3 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 		return SQL_ERROR;
 	}
 }
-

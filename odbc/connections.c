@@ -35,33 +35,33 @@ int
 getdsnattr(char *dsn, char* attr, char *val, int olen)
 {
 	char *p = dsn;
-	
+
 	while(*p) {
 		while(*p && (*p == ' ' || *p == '\t'))
 			++p;
 		if  (*p==';' || *p=='\n' || *p=='\0') {
-			while(*p && *p != '\n') 
+			while(*p && *p != '\n')
 				++p;
 			if (*p=='\n')
 				++p;
 			continue;
 		}
 		char *eq = strchr(p,'=');
-		if (!eq) 
+		if (!eq)
 			return -1;
-		
+
 		char *endp=eq-1;
 		while(endp>p && (*endp == ' ' || *endp == '\t'))
 			--endp;
 		if (strncasecmp(attr,p,(endp-p)+1)==0) {
-			
+
 			if (olen>0) {
 				eq++;
 				while (*eq == ' ' || *eq == '\t')
 					++eq;
 				p=eq;
 				char* op=val;
-				int i=0;	
+				int i=0;
 				while((i<(olen-1)) && *(eq+i)
 				      && *(eq+i)!='\n' && *(eq+i)!=';') {
 					*(op+i)=*(eq+i);
@@ -79,7 +79,7 @@ getdsnattr(char *dsn, char* attr, char *val, int olen)
 			if (*p=='\n')
 				++p;
 		}
-		
+
 	}
 	return -1;
 }
@@ -90,7 +90,7 @@ struct attributes {
 };
 
 struct keyval {
-	struct attributes *pairs; 
+	struct attributes *pairs;
 	char *buffer;
 	int size;
 };
@@ -120,7 +120,7 @@ load_attr(const char *dsn_str, int dsn_len)
 		keys->size = 0;
 	} else
 		goto error;
-	
+
 	while((attr = strsep(&p,";"))) {
 			char *val = strchr(attr,'=');
 			if (!val || (strlen(val)-1) > PARAMSZ)
@@ -257,11 +257,11 @@ set_connection_params(odbc_connect *tcon, SQLCHAR *user, SQLSMALLINT user_sz,
 	if (user) {
 		if (!copy_check(ret->user,(char *)user,user_sz))
 			goto error;
-	} 
+	}
 	if (password) {
 		if (!copy_check(ret->password,(char *)password,password_sz))
 			goto error;
-	} 
+	}
 	return ret;
 error:
 	set_connect_error(tcon,ODBC_HY090_ERROR, "Invalid string or buffer length", "*Connect");
@@ -273,25 +273,25 @@ odbc_read_dsn(odbc_connect *tcon, char *dsn, int dsn_sz)
 {
 	struct dsn *ret = tcon->dsn_params;
 	char port[PARAMSZ];
-	
+
 	if (dsn) {
 		if (!copy_check(ret->dsn,(char *)dsn,dsn_sz))
 			goto error;
 	}
-	
+
 	if (ret->host[0] == '\0')
 		SQLGetPrivateProfileString(ret->dsn, "HOST", "localhost", ret->host, PARAMSZ, ODBCINI );
 	if (ret->database[0] == '\0')
 		SQLGetPrivateProfileString(ret->dsn, "DATABASE", "", ret->database, PARAMSZ, ODBCINI );
 	if (ret->flag[0] == '\0')
 		SQLGetPrivateProfileString(ret->dsn, "FLAG", "0", ret->flag, PARAMSZ, ODBCINI );
-	
+
 	SQLGetPrivateProfileString(ret->dsn, "PORT","0", &port[0], PARAMSZ, ODBCINI );
 	ret->port = atoi(port);
 
 	SQLGetPrivateProfileString(ret->dsn, "TIMEOUT","0", &port[0], PARAMSZ, ODBCINI );
 	ret->timeout = atoi(port);
-	
+
 	if (ret->user[0] == '\0')
 		SQLGetPrivateProfileString(ret->dsn, "UID","", ret->user, PARAMSZ, ODBCINI );
 	if (ret->password[0] == '\0')
@@ -300,10 +300,10 @@ odbc_read_dsn(odbc_connect *tcon, char *dsn, int dsn_sz)
 	if (ret->log_filename[0] == '\0')
 		SQLGetPrivateProfileString(ret->dsn, "LOG_FILENAME","", ret->log_filename, PARAMSZ, ODBCINI );
 
-	
+
 	SQLGetPrivateProfileString(ret->dsn, "LOG_LEVEL","0", &port[0], PARAMSZ, ODBCINI );
 	ret->log_level = atoi(port);
-	
+
 	return ret;
 error:
 	set_connect_error(tcon, ODBC_HY090_ERROR, "Invalid string or buffer length", "*Connect");
@@ -342,7 +342,7 @@ real_connect(odbc_connect *tcon)
 }
 
 
-SQLRETURN 
+SQLRETURN
 odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,
 		 SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLUSMALLINT drv_compl)
 {
@@ -352,7 +352,7 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	odbc_connect *tcon = (odbc_connect *)dbch;
 	if (tcon->is_connected)
 		return SQL_SUCCESS_WITH_INFO;
-	
+
 	struct keyval *kv;
 	tcon->dsn_params = alloc_dsn();
 
@@ -364,11 +364,11 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	char * data_source = get_attr("DSN", kv);
 	if (!data_source)
 		data_source = "DEFAULT";
-    
+
 	/* Next we'll fill defaults with DSN system defaults using data source from string*/
 	odbc_read_dsn(tcon, data_source, strlen(data_source));
 
-	
+
 	/* And finally override all with supplied DSN string */
 	set_dsn_attr_string(tcon, kv);
 	free_keys(kv);
@@ -381,13 +381,13 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	LOG_TRACE(tcon,"SQLDriverConnect(host=%s,port=%d,user=%s)\n", tcon->dsn_params->host,
 		  tcon->dsn_params->port, tcon->dsn_params->user);
 
-	
-	switch( drv_compl) { 
-        case SQL_DRIVER_PROMPT:
-        case SQL_DRIVER_COMPLETE:
-        case SQL_DRIVER_COMPLETE_REQUIRED:
-        case SQL_DRIVER_NOPROMPT:
-        default:
+
+	switch( drv_compl) {
+	case SQL_DRIVER_PROMPT:
+	case SQL_DRIVER_COMPLETE:
+	case SQL_DRIVER_COMPLETE_REQUIRED:
+	case SQL_DRIVER_NOPROMPT:
+	default:
 		/* Don't do any Windows stuff for prompting user parameters */
 		break;
 	}
@@ -415,11 +415,11 @@ get_connect_attr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
 		  SQLINTEGER len, SQLINTEGER *olen)
 {
 	odbc_connect *ocon = (odbc_connect *)hdbc;
-        if (!ocon)
-                return SQL_ERROR;
-        switch (att) {
-        case SQL_ATTR_CONNECTION_TIMEOUT:
-                if (!ocon->opt_timeout) 
+	if (!ocon)
+		return SQL_ERROR;
+	switch (att) {
+	case SQL_ATTR_CONNECTION_TIMEOUT:
+		if (!ocon->opt_timeout)
 			return SQL_ERROR;
 		if (val)
 			*((int32_t*)val)=*ocon->opt_timeout;
@@ -445,7 +445,7 @@ set_connect_attr(SQLHDBC hdbc, SQLINTEGER att, SQLPOINTER val, SQLINTEGER len)
 			ocon->opt_timeout = (int32_t *)malloc(sizeof(int32_t));
 			if (!ocon->opt_timeout)
 				return SQL_ERROR;
-                        *(ocon->opt_timeout) = (int64_t) val;
+			*(ocon->opt_timeout) = (int64_t) val;
 		}
 		break;
 	default:
@@ -468,12 +468,12 @@ odbc_dbconnect (SQLHDBC dbch, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 	if (!tcon->dsn_params || !odbc_read_dsn(tcon, (char *)serv, serv_sz)
 	    || !set_connection_params(tcon, user, user_sz, auth, auth_sz))
 		return SQL_ERROR;
-	
+
 	if (tcon->dsn_params->log_filename && tcon->dsn_params->log_filename[0]!='\0') {
 		tcon->log = fopen(tcon->dsn_params->log_filename,"a");
 		tcon->log_level = tcon->dsn_params->log_level;
 	}
-	
+
 	LOG_TRACE(tcon,"SQLConnect(host=%s,port=%d,user=%s)\n", tcon->dsn_params->host,
 		  tcon->dsn_params->port, tcon->dsn_params->user);
 
@@ -494,10 +494,10 @@ odbc_disconnect (SQLHDBC conn)
 	 * open.
 	 **/
 	while(tcon->stmt_end) {
-                if (free_stmt(tcon->stmt_end,SQL_DROP) == SQL_ERROR)
+		if (free_stmt(tcon->stmt_end,SQL_DROP) == SQL_ERROR)
 			return SQL_ERROR;
 	}
-	
+
 	if (tcon->tnt_hndl)
 		tnt_close(tcon->tnt_hndl);
 	free_dsn(tcon->dsn_params);
@@ -515,14 +515,14 @@ odbc_disconnect (SQLHDBC conn)
 
 /**
  * Currently only autocommit mode is avalable so let's return SQL_SUCCESS for commit and
- * SQL_ERROR for rollback. 
+ * SQL_ERROR for rollback.
  */
 
 SQLRETURN
 end_transact(SQLSMALLINT htype, SQLHANDLE hndl, SQLSMALLINT tran_type)
 {
 	if (hndl == SQL_NULL_HDBC)
-                return SQL_INVALID_HANDLE;
+		return SQL_INVALID_HANDLE;
 
 	if (tran_type == SQL_COMMIT)
 		return SQL_SUCCESS;
@@ -567,12 +567,12 @@ main(int ac, char *av[])
 		printf("getdsnattr ok key=database sz=2 val=%s\n",val);
 	else
 		printf("getdsnattr fail sz=2 key=database\n");
-	
+
 	if (!getdsnattr(buf,"",val,2))
 		printf("getdsnattr ok key='' sz=2 val=%s\n",val);
 	else
 		printf("getdsnattr fail sz=2 key=''\n");
-	
+
 	if (!getdsnattr(buf,"DataBase",val,1024))
 		printf("getdsnattr ok key=DataBase sz=1024 val=%s\n",val);
 	else
@@ -610,7 +610,5 @@ main(int ac, char *av[])
 
 	return 0;
 }
-
-
 
 #endif

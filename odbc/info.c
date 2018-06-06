@@ -31,15 +31,15 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQL
 	static char drvname[] =
 		"libtnt_odbc.so";
 #endif
-	
-			
+
+
 
 	if (dbc == SQL_NULL_HDBC) {
 		return SQL_INVALID_HANDLE;
 	}
 
-	LOG_INFO (d, "SQLGetInfo(InfoType=%hu)\n", type); 
-	
+	LOG_INFO (d, "SQLGetInfo(InfoType=%hu)\n", type);
+
 	if (valMax) {
 		valMax--;
 	}
@@ -62,13 +62,13 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQL
 		strmak(val, "03.00", valMax, valLen);
 
 		break;
-	case SQL_ACTIVE_CONNECTIONS: // inf: max concurrent activiti  
+	case SQL_ACTIVE_CONNECTIONS: // inf: max concurrent activiti
 	case SQL_ACTIVE_STATEMENTS: // inf
 		*((SQLSMALLINT *) val) = 0;
 		*valLen = sizeof (SQLSMALLINT);
 		break;
 #ifdef SQL_ASYNC_MODE
-	case SQL_ASYNC_MODE: 
+	case SQL_ASYNC_MODE:
 		*((SQLUINTEGER *) val) = SQL_AM_NONE;
 		*valLen = sizeof (SQLUINTEGER);
 		break;
@@ -246,7 +246,7 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQL
 	case SQL_IDENTIFIER_QUOTE_CHAR:
 		strmak(val, "\"", valMax, valLen);
 		break;
-	case SQL_MAX_TABLE_NAME_LEN: // Tarantool 
+	case SQL_MAX_TABLE_NAME_LEN: // Tarantool
 	case SQL_MAX_COLUMN_NAME_LEN:
 		*((SQLSMALLINT *) val) = 255;
 		*valLen = sizeof (SQLSMALLINT);
@@ -255,7 +255,7 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQL
 		*((SWORD *) val) = 255;
 		*valLen = sizeof (SWORD);
 		break;
-	case SQL_MAX_PROCEDURE_NAME_LEN: // tarantool 
+	case SQL_MAX_PROCEDURE_NAME_LEN: // tarantool
 		*((SQLSMALLINT *) val) = 0;
 		break;
 	case SQL_MAX_QUALIFIER_NAME_LEN: // T - 0
@@ -480,7 +480,7 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQL
 	return SQL_SUCCESS;
 }
 
-/* Defines for SQLGetFunctions 
+/* Defines for SQLGetFunctions
 
    SQL-92 Functions.
 
@@ -535,19 +535,20 @@ SQL_API_SQLTABLES
 
 ODBC functions
 
-SQL_API_SQLBINDPARAMETER	
+SQL_API_SQLBINDPARAMETER
 SQL_API_SQLNATIVESQL
-SQL_API_SQLBROWSECONNECT	
+SQL_API_SQLBROWSECONNECT
 SQL_API_SQLNUMPARAMS
-SQL_API_SQLBULKOPERATIONS	
+SQL_API_SQLBULKOPERATIONS
 SQL_API_SQLPRIMARYKEYS
-SQL_API_SQLCOLUMNPRIVILEGES	
+SQL_API_SQLCOLUMNPRIVILEGES
 SQL_API_SQLPROCEDURECOLUMNS
-SQL_API_SQLDESCRIBEPARAM	
+SQL_API_SQLDESCRIBEPARAM
 SQL_API_SQLPROCEDURES
-SQL_API_SQLDRIVERCONNECT	
+SQL_API_SQLDRIVERCONNECT
 SQL_API_SQLSETPOS
-SQL_API_SQLFOREIGNKEYS	
+SQL_API_SQLFOREIGNKEYS
 SQL_API_SQLTABLEPRIVILEGES
 SQL_API_SQLMORERESULTS
-*/	
+
+*/

@@ -1,8 +1,8 @@
-[tarantoolTest] 
-Driver  = Tarantool 
-Description     = Tarantool test DSN 
+[tarantoolTest]
+Driver  = Tarantool
+Description     = Tarantool test DSN
 Trace   = Yes
-Server      = localhost 
+Server      = localhost
 Port      = 33000
 Database        = test
 Log_filename = ./tarantool_odbc.log

@@ -104,7 +104,7 @@ test_auth_call(char *uri) {
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
 	is  (reply.error, NULL, "Check error absence");
-	
+
 	tnt_stream_free(args);
 	tnt_reply_free(&reply);
 	tnt_stream_free(tnt);
@@ -142,9 +142,10 @@ test_insert_replace_delete(char *uri) {
 	tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
-		uint64_t i = r->sync, str_len = 0;
-		char ex[128] = {0};
-		size_t ex_len = snprintf(ex, 128, "examplestr %d %d", i, i*i);
+		uint64_t i = r->sync;
+		uint32_t str_len = 0;
+		char ex[128] = "";
+		uint32_t ex_len = snprintf(ex, 128, "examplestr %d %d", (int)i, (int)(i*i));
 		isnt(r->data, NULL, "check that we get answer");
 		const char *data = r->data;
 		is  (mp_typeof(*data), MP_ARRAY, "Check array");

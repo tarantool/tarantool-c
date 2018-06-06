@@ -69,4 +69,3 @@ __ok(int condition, const char *fmt, ...)
 	printf("\n");
 	return condition;
 }
-

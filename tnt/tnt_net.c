@@ -1,4 +1,3 @@
-
 /*
  * Redistribution and use in source and binary forms, with or
  * without modification, are permitted provided that the following
@@ -36,7 +35,7 @@
 #include <stdbool.h>
 
 #ifdef _WIN32
-#include <tnt_winsup.h> 
+#include <tnt_winsup.h>
 #else
 #include <sys/uio.h>
 #endif
@@ -293,7 +292,7 @@ tnt_reopen(struct tnt_stream* tnt, const char* host, const char* user, const cha
   }
   int ret=0;
 
-  if (user && user[0]!='\0') 
+  if (user && user[0]!='\0')
     ret +=snprintf(bufz,BUFSZ-ret,"%s:%s@",user,password?password:"");
   if (port==0)
     snprintf(bufz+ret,BUFSZ-ret,"%s",host);
@@ -305,7 +304,7 @@ tnt_reopen(struct tnt_stream* tnt, const char* host, const char* user, const cha
   if (ret==-1)
     return NULL;
 
-  return tnt_connect(tnt)==-1?NULL:tnt;  
+  return tnt_connect(tnt)==-1?NULL:tnt;
 }
 
 

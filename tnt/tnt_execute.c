@@ -26,7 +26,7 @@ tnt_execute_int(struct tnt_stream *s, const char *expr, size_t elen,
 
 ssize_t
 tnt_execute(struct tnt_stream *s, const char *expr, size_t elen,
-	    struct tnt_stream *params) 
+	    struct tnt_stream *params)
 {
 	if (params)
 		return tnt_execute_int(s,expr,elen,params);
@@ -59,7 +59,7 @@ tnt_execute_int(struct tnt_stream *s, const char *expr, size_t elen, struct tnt_
 	char body[64];
 	body_start = body;
 	data = body;
-	
+
 	data = mp_encode_map(data, 2);
 	data = mp_encode_uint(data, TNT_SQL_TEXT);
 	data = mp_encode_strl(data, elen);

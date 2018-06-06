@@ -61,7 +61,7 @@ set_bind_query_array(tnt_stmt_t * stmt, tnt_bind_t * bnd)
 /*
  * Associates input bind parameters array with statements.
  * This function assumes that all parameters are only numeric "?"
- * And clean up all .name members to Null for safety reason. If one want  to use named parameters 
+ * And clean up all .name members to Null for safety reason. If one want  to use named parameters
  * please use tnt_bind_query_named() instread.
  **/
 int
@@ -100,20 +100,20 @@ tnt_bind_result(tnt_stmt_t * stmt, tnt_bind_t * bnd, int number_of_parameters)
 static tnt_bind_t *
 realloc_bind_array(tnt_bind_t *binds, int num, int *count)
 {
-        if (num>(*count-1) || binds == NULL) {
-                tnt_bind_t *npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t)*(num+1));
-                if (!npar) {
-                        return NULL;
-                }
-                memset(npar, 0, sizeof(tnt_bind_t)*(num+1));
-                for(int i=0;i<*count;++i) {
-                        npar[i] = binds[i];
-                }
-                free(binds);
+	if (num>(*count-1) || binds == NULL) {
+		tnt_bind_t *npar = (tnt_bind_t *)malloc(sizeof(tnt_bind_t)*(num+1));
+		if (!npar) {
+			return NULL;
+		}
+		memset(npar, 0, sizeof(tnt_bind_t)*(num+1));
+		for(int i=0;i<*count;++i) {
+			npar[i] = binds[i];
+		}
+		free(binds);
 		binds = npar;
-                *count = num+1;
-        }
-        return binds;
+		*count = num+1;
+	}
+	return binds;
 }
 
 void
@@ -123,7 +123,7 @@ tnt_setup_bind_param(tnt_bind_t *p, int type,const void *val_ptr, int len)
 		p->type = MP_NIL;
 	} else
 		p->type = type;
-	
+
 	p->buffer = (void *)val_ptr;
 	p->in_len = len;
 	p->name = NULL;
@@ -212,7 +212,7 @@ free_stmt_cursor_mem(tnt_stmt_t *stmt)
 
 	if (stmt->alloc_obind)
 		free(stmt->alloc_obind);
-	
+
 }
 
 
@@ -253,8 +253,9 @@ tnt_query(struct tnt_stream *s, const char *text, int32_t len)
 }
 
 /**
- * Actually prepare should be executed on server so client shouldn't parse and count parameters. 
- * For now I have 2 choices: preparce for bind parameters and get user supplied one.
+ * Actually prepare should be executed on server so client shouldn't
+ * parse and count parameters. For now I have 2 choices: preparce for
+ * bind parameters and get user supplied one.
  */
 
 enum sql_state {
@@ -268,9 +269,9 @@ enum sql_state {
 	COMMENT2
 };
 
-/* This is simple and probably incorrect function for extracting number of parameners from the query
- * First incorrect point is that named (and numbered) parameters may be met  in query  more then ones as a 
- * backreference.
+/* This is simple and probably incorrect function for extracting number
+ * of parameters from the query First incorrect point is that named
+ * (and numbered) parameters may be met  in query  more then ones as a backreference.
  */
 
 int
@@ -309,7 +310,7 @@ get_query_num(const char *s,size_t len)
 			state = SQL;
 		} else if (state == QUOTE2 && *ptr == '\"') {
 			state = SQL;
-		} else if (state == COMMENT1) { 
+		} else if (state == COMMENT1) {
 			if (*ptr == '-')
 				break;
 			else
@@ -376,11 +377,11 @@ struct tnt_stream *
 bind2object(tnt_stmt_t* stmt)
 {
 	int npar = get_query_num(stmt->query,stmt->query_len);
-	struct tnt_stream *obj = tnt_object(NULL); 
-	if (!obj) 
+	struct tnt_stream *obj = tnt_object(NULL);
+	if (!obj)
 		return NULL;
 
-	
+
 	if ((tnt_object_type(obj, TNT_SBO_PACKED) == FAIL) || (tnt_object_add_array(obj, 0) == FAIL))
 		goto error;
 
@@ -397,22 +398,22 @@ bind2object(tnt_stmt_t* stmt)
 		switch(stmt->ibind[npar-i-1].type) {
 		case TNTC_NIL:
 			if (tnt_object_add_nil(obj) == FAIL)
-                                goto error;
+				goto error;
 			break;
 
 
 		case TNTC_SINT:
 		case TNTC_INT: {
 			int *v = (int *)stmt->ibind[npar-i-1].buffer;
-			if (tnt_object_add_int(obj,*v) == FAIL) 
-                                goto error;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+				goto error;
 			break;
 		}
 
 		case TNTC_UINT: {
 			unsigned *v = (unsigned *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
-                                goto error;
+				goto error;
 			break;
 		}
 
@@ -420,29 +421,29 @@ bind2object(tnt_stmt_t* stmt)
 		case TNTC_SHORT: {
 			short *v = (short *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
-                                goto error;
+				goto error;
 			break;
 		}
 
 		case TNTC_USHORT: {
 			unsigned short *v = (unsigned short *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
-                                goto error;
+				goto error;
 			break;
 		}
 
 		case TNTC_SLONG:
 		case TNTC_LONG: {
 			long *v = (long *)stmt->ibind[npar-i-1].buffer;
-			if (tnt_object_add_int(obj,*v) == FAIL) 
-                                goto error;
+			if (tnt_object_add_int(obj,*v) == FAIL)
+				goto error;
 			break;
 		}
 
 		case TNTC_ULONG: {
 			unsigned long *v = (unsigned long *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
-                                goto error;
+				goto error;
 			break;
 		}
 
@@ -451,14 +452,14 @@ bind2object(tnt_stmt_t* stmt)
 		case TNTC_BIGINT: {
 			int64_t *v = (int64_t *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
-                                goto error;
+				goto error;
 			break;
 		}
 
 		case TNTC_UBIGINT: {
 			uint64_t *v = (uint64_t *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
-                                goto error;
+				goto error;
 			break;
 		}
 
@@ -466,26 +467,26 @@ bind2object(tnt_stmt_t* stmt)
 		case TNTC_BOOL: {
 			bool *v = (bool *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_bool(obj,*v) == FAIL)
-                                goto error;
+				goto error;
 			break;
 		}
 		case TNTC_FLOAT: {
 			float *v = (float *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_float(obj,*v) == FAIL)
-                                goto error;
+				goto error;
 			break;
 		}
 		case TNTC_DOUBLE: {
 			double *v = (double *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_double(obj,*v) == FAIL)
-                                goto error;
+				goto error;
 			break;
 		}
 		case TNTC_CHAR:
 		case TNTC_BIN:
 			if (tnt_object_add_str(obj,stmt->ibind[npar-i-1].buffer,
 					       stmt->ibind[npar-i-1].in_len) == FAIL)
-                                goto error;
+				goto error;
 			break;
 		default:
 			goto error;
@@ -505,7 +506,7 @@ error:
 	return NULL;
 }
 
-static tnt_stmt_t* 
+static tnt_stmt_t*
 tnt_filfull_stmt(tnt_stmt_t *);
 
 int
@@ -564,9 +565,9 @@ clear_reply(tnt_stmt_t *stmt)
 	}
 }
 
- /* Read response from server. Should be called after tnt_execute and after fetch returns NO_DATA and we
-  * have chunked data.  
-  */ 
+ /* Read response from server. Should be called after tnt_execute and after
+  * fetch returns NO_DATA and we have chunked data.
+  */
 
 static int
 read_chunk(tnt_stmt_t *stmt)
@@ -575,7 +576,7 @@ read_chunk(tnt_stmt_t *stmt)
 		if (stmt->stream->read_reply(stmt->stream, stmt->reply) != OK)
 			return FAIL;
 		if (stmt->reply->sync != stmt->reqid) {
-			/* Now we should rise error if meet responses with alien requid but later 
+			/* Now we should rise error if meet responses with alien requid but later
 			   this is good point for yielding and multiplexing packets. */
 			clear_reply(stmt);
 			stmt->error = STMT_BADSYNC;
@@ -592,7 +593,7 @@ read_chunk(tnt_stmt_t *stmt)
 		default:
 			return FAIL;
 		}
-		
+
 		stmt->data = stmt->reply->data;
 		if (stmt->data)
 			stmt->nrows = mp_decode_array(&stmt->data);
@@ -616,12 +617,12 @@ tnt_filfull_stmt(tnt_stmt_t *stmt)
 		TNT_SNET_CAST(stream)->error = TNT_EMEMORY;
 		return NULL;
 	}
-	if (!tnt_reply_init(stmt->reply)) 
+	if (!tnt_reply_init(stmt->reply))
 		return NULL;
 
 	if (read_chunk(stmt)!=OK)
 		return NULL;
-		
+
 	if (stmt->data) {
 		tnt_fetch_fields(stmt);
 		stmt->qtype = SEL;
@@ -638,18 +639,18 @@ tnt_filfull_stmt(tnt_stmt_t *stmt)
 float
 double2float(double v,int *e)
 {
-        int exp;
-        frexp(v,&exp);
-        *e = 0;
+	int exp;
+	frexp(v,&exp);
+	*e = 0;
 
-        if (exp<FLT_MIN_EXP)
+	if (exp<FLT_MIN_EXP)
 		/* Do not threat lost precision as error */
-                return 0.0*copysign(1.0,v);
-        if (exp>FLT_MAX_EXP) {
-                *e = 1;
-                return FLT_MAX*copysign(1.0,v);
-        }
-        return v;
+		return 0.0*copysign(1.0,v);
+	if (exp>FLT_MAX_EXP) {
+		*e = 1;
+		return FLT_MAX*copysign(1.0,v);
+	}
+	return v;
 }
 
 
@@ -659,17 +660,17 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 	if (obind->is_null) {
 		*obind->is_null = (stmt->row[i].type == MP_NIL)?1:0;
 	}
-	
+
 	if (obind->out_len)
 		*obind->out_len = stmt->row[i].size;
-	
+
 	if (obind->error)
 		*obind->error = 0;
-	
-	if (obind->buffer == NULL) {		
+
+	if (obind->buffer == NULL) {
 		return;
 	}
-		
+
 	switch (stmt->row[i].type) {
 	case MP_INT:
 	case MP_UINT:
@@ -697,7 +698,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			unsigned int *v = obind->buffer;
 			*v = (unsigned int) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>UINT_MAX))
-				*obind->error = TRUNCATE;					
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_INT || obind->type == TNTC_SINT) {
 			int *v = obind->buffer;
 			*v = (int) stmt->row[i].v.i;
@@ -726,7 +727,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 				*(obind->error) = CONVERT;
 		}
 	break;
-		
+
 	case MP_DOUBLE:
 	case MP_FLOAT:
 		if (obind->type == TNTC_ULONG) {
@@ -753,7 +754,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			unsigned int *v = obind->buffer;
 			*v = (unsigned int) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>UINT_MAX))
-				*obind->error = TRUNCATE;					
+				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_INT || obind->type == TNTC_SINT) {
 			int *v = obind->buffer;
 			*v = (int) stmt->row[i].v.d;
@@ -781,7 +782,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			if (obind->error)
 				*(obind->error) = CONVERT;
 		}
-		break;		
+		break;
 	case MP_STR:
 	case MP_BIN:
 		if (obind->type != MP_STR && obind->type != MP_BIN) {
@@ -793,7 +794,8 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			/* XXX if the input buffer length is less
 			 * then column string size, last available
 			 * character will be 0. */
-			int32_t len = (obind->in_len < (stmt->row[i].size-off)) ? obind->in_len : stmt->row[i].size-off;
+			int32_t len = (obind->in_len < (stmt->row[i].size-off)) ?
+				obind->in_len : stmt->row[i].size-off;
 			memcpy(obind->buffer, ((const char*)stmt->row[i].v.p)+off, len);
 			if (stmt->row[i].type == MP_STR) {
 				if (len == obind->in_len)
@@ -839,11 +841,11 @@ tnt_fetch(tnt_stmt_t * stmt)
 		return FAIL;
 	}
 	while (stmt->nrows <= 0) {
-		if (stmt->reply_state != RCHUNK) 
+		if (stmt->reply_state != RCHUNK)
 			return NODATA;
 		if (read_chunk(stmt)!=OK)
 			return FAIL;
-	}	
+	}
 	if (mp_typeof(*stmt->data) != MP_ARRAY) {
 		stmt->error = STMT_BADPROTO;
 		return FAIL;
@@ -856,7 +858,7 @@ tnt_fetch(tnt_stmt_t * stmt)
 		stmt->error = STMT_MEMORY;
 		return FAIL;
 	}
-	
+
 	stmt->nrows--;
 	stmt->cur_row++;
 	for (int i = 0; i < stmt->ncols; i++) {
@@ -910,7 +912,7 @@ tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col)
 	case MP_STR:
 		col->type = MP_STR;
 		col->v.p = (void *)mp_decode_str(&stmt->data, &sz);
-		/* Does he need to check for overflow? */ 
+		/* Does he need to check for overflow? */
 		col->size=sz;
 		break;
 
@@ -945,7 +947,7 @@ tnt_stmt_code(tnt_stmt_t * stmt)
 {
 	if (stmt) {
 		if (stmt->error !=0)
-			return stmt->error; 
+			return stmt->error;
 		if (stmt->reply)
 			return stmt->reply->code;
 		else
@@ -980,17 +982,17 @@ tnt_stmt_error(tnt_stmt_t * stmt, size_t * sz)
 {
 	if (!stmt)
 		return NULL;
-	
+
 	if (stmt->error != 0 )
 		return stmt_strerror(stmt->error);
-	
+
 	if (stmt->reply && stmt->reply->error) {
 		*sz = stmt->reply->error_end - stmt->reply->error;
 		return stmt->reply->error;
 	}
 	if (stmt->stream)
 		return tnt_strerror(stmt->stream);
-	
+
 	return NULL;
 }
 

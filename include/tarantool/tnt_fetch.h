@@ -54,16 +54,16 @@ typedef struct tnt_bind {
 	int *error;		/* conversation result. O is OK */
 } tnt_bind_t;
 
-/* This error codes are related to statment level. */ 
+/* This error codes are related to statment level. */
 enum STMT_ERROR {
 	STMT_BADSYNC = TNT_LAST+1, /* have read response with invalid sync number */
 	STMT_MEMORY,  /* memory allocation error at statement level */
 	STMT_BADPROTO, /* invalid data read from network */
-	STMT_BADSTATE /* function called in bad sequence */ 
+	STMT_BADSTATE /* function called in bad sequence */
 };
 
 
-/* We should invent better way to share constants */ 
+/* We should invent better way to share constants */
 enum PROTO_CONSTANT {
 	TNT_PROTO_OK = 0,
 	TNT_PROTO_CHUNK = 128
@@ -92,17 +92,17 @@ typedef struct tnt_stmt {
 	int32_t cur_row;
 	char *query;
 	int32_t query_len;
-	
+
 	int ibind_alloc_len;
 	tnt_bind_t *ibind;
 	tnt_bind_t *alloc_ibind;
-	
+
 	tnt_bind_t *obind;
 	tnt_bind_t *alloc_obind;
 	int obind_alloc_len;
-	
+
 	uint64_t reqid;
-	int reply_state; 
+	int reply_state;
 	int qtype;
 	int error;
 } tnt_stmt_t;
@@ -167,7 +167,7 @@ const char **tnt_field_names(tnt_stmt_t *);
 tnt_stmt_t *tnt_prepare(struct tnt_stream *s, const char *text, int32_t len);
 
 /**
- * Shortcut for tnt_prepare and tnt_stmt_execute. Input bind variables free version. 
+ * Shortcut for tnt_prepare and tnt_stmt_execute. Input bind variables free version.
  */
 
 tnt_stmt_t *tnt_query(struct tnt_stream *s, const char *text, int32_t len);
@@ -179,14 +179,14 @@ int tnt_stmt_execute(tnt_stmt_t *);
 
 /**
  * tnt_out_bind_parame fills tnt_bind_t structure with appropriate values
- * It's better to use this function to set tnt_bin_t properly. 
+ * It's better to use this function to set tnt_bin_t properly.
  */
 
 void
 tnt_setup_bind_param(tnt_bind_t *p, int type,const void* val_ptr, int len);
 
 /**
- * tnt_bind_param is a safe version of binding input parameters it allocates and 
+ * tnt_bind_param is a safe version of binding input parameters it allocates and
  * manages bind parameters array themself.
  */
 
@@ -196,7 +196,7 @@ tnt_bind_query_param(tnt_stmt_t *stmt, int icol, int type, const void* val_ptr, 
 /**
  * Associates input bind parameters array with the statement.
  * This function assumes that all parameters are only numeric "?"
- * And clean up all .name members to Null for safety reason. If one want  to use named parameters 
+ * And clean up all .name members to Null for safety reason. If one want  to use named parameters
  * please use tnt_bind_query_named() instead.
  */
 
@@ -226,7 +226,7 @@ tnt_stmt_t *tnt_filfull(struct tnt_stream *);
 
 /**
  * rewinds to next row from already executed result set.
- * 
+ *
 */
 int tnt_fetch(tnt_stmt_t *);
 
