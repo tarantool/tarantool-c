@@ -69,7 +69,10 @@ install (TARGETS ${PROJECT_NAME}
 ## Shared library
 project(tnt_shared)
 add_library(${PROJECT_NAME} SHARED ${TNT_SOURCES})
-target_link_libraries(${PROJECT_NAME} ${MSGPUCK_LIBRARIES})
+if(WIN32)
+	set(WS2 wsock32 ws2_32)
+endif(WIN32)
+target_link_libraries(${PROJECT_NAME} ${MSGPUCK_LIBRARIES} ${WS2})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION   ${LIBTNT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${LIBTNT_SOVERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "tarantool")

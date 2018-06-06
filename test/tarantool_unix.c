@@ -178,7 +178,7 @@ test_insert_replace_delete(char *uri) {
 	tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
-		uint32_t i = r->sync, str_len = 0;
+		uint32_t i = (uint32_t)r->sync, str_len = 0;
 		char ex[128] = {0};
 		size_t ex_len;
 		ex_len = snprintf(ex, 128, "anotherexamplestr %d %d", i, i*i);
@@ -218,10 +218,10 @@ test_insert_replace_delete(char *uri) {
 	while (arrsz-- > 0) {
 		is  (mp_decode_array(&data), 3, "And again (another)");
 		is  (mp_typeof(*data), MP_UINT, "check int");
-		uint32_t sz = mp_decode_uint(&data);
+		uint32_t sz = (uint32_t)mp_decode_uint(&data);
 		is  (mp_typeof(*data), MP_UINT, "check int");
 		uint32_t sz_z = sz + 10; if (sz < 5) sz_z -= 5;
-		uint32_t vsz = mp_decode_uint(&data);
+		uint32_t vsz = (uint32_t)mp_decode_uint(&data);
 		is  (vsz, sz_z, "check int val");
 		char ex[128] = {0};
 		size_t ex_len = 0;
@@ -251,7 +251,7 @@ test_insert_replace_delete(char *uri) {
 	tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
 		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
-		uint32_t i = r->sync, str_len = 0, nlen = (i < 5 ? i + 5 : i + 10);
+		uint32_t i = (uint32_t)r->sync, str_len = 0, nlen = (i < 5 ? i + 5 : i + 10);
 		char ex[128] = {0};
 		size_t ex_len = 0;
 		if (i < 5)

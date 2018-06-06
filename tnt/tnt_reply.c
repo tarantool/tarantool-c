@@ -113,7 +113,7 @@ tnt_reply_len(const char *buf, size_t size, size_t *len)
 	const char *p = buf;
 	if (mp_typeof(*p) != MP_UINT)
 		return -1;
-	size_t length = (uint64_t)mp_decode_uint(&p);
+	size_t length = (size_t)mp_decode_uint(&p);
 	if (size < length + TNT_REPLY_IPROTO_HDR_SIZE) {
 		*len = (length + TNT_REPLY_IPROTO_HDR_SIZE) - size;
 		return 1;
@@ -180,7 +180,7 @@ tnt_reply_body0(struct tnt_reply *r, const char *buf, size_t size, size_t *off) 
 	uint64_t bitmap = 0;
 	uint32_t n = mp_decode_map(&p);
 	while (n-- > 0) {
-		uint32_t key = mp_decode_uint(&p);
+		uint32_t key = (uint32_t)mp_decode_uint(&p);
 		switch (key) {
 		case TNT_ERROR: {
 			if (mp_typeof(*p) != MP_STR)

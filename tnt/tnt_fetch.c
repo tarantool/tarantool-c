@@ -174,7 +174,7 @@ tnt_fetch_fields(tnt_stmt_t * stmt)
 			stmt->ncols = mp_decode_array(&metadata);
 			if (stmt->ncols) {
 				int n = stmt->ncols;
-				stmt->field_names = (const char **)tnt_mem_alloc(sizeof(const char *) * n);
+				stmt->field_names = (char **)tnt_mem_alloc(sizeof(const char *) * n);
 				while (n-- > 0) {
 					mp_decode_map(&metadata);	/* == 1 */
 					mp_decode_uint(&metadata);	/* == IPROTO_FIELD_NAME */
@@ -645,12 +645,12 @@ double2float(double v,int *e)
 
 	if (exp<FLT_MIN_EXP)
 		/* Do not threat lost precision as error */
-		return 0.0*copysign(1.0,v);
+		return (float)(0.0*copysign(1.0,v));
 	if (exp>FLT_MAX_EXP) {
 		*e = 1;
-		return FLT_MAX*copysign(1.0,v);
+		return (float)(FLT_MAX*copysign(1.0,v));
 	}
-	return v;
+	return (float)v;
 }
 
 
@@ -710,10 +710,10 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			*v = stmt->row[i].v.i;
 		} else if (obind->type == MP_DOUBLE) {
 			double *v = obind->buffer;
-			*v = stmt->row[i].v.i;
+			*v = (double)stmt->row[i].v.i;
 		} else if (obind->type == MP_FLOAT) {
 			float *v = obind->buffer;
-			*v = stmt->row[i].v.i;
+			*v = (float)stmt->row[i].v.i;
 			if (obind->error)
 				*(obind->error) = 1;
 		} else if (obind->type == MP_STR) {
@@ -762,7 +762,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_BIGINT || obind->type == TNTC_UBIGINT) {
 			int64_t *v = obind->buffer;
-			*v = stmt->row[i].v.d;
+			*v = (int64_t)stmt->row[i].v.d;
 		} else if (obind->type == MP_DOUBLE) {
 			double *v = obind->buffer;
 			*v = stmt->row[i].v.d;
@@ -949,7 +949,7 @@ tnt_stmt_code(tnt_stmt_t * stmt)
 		if (stmt->error !=0)
 			return stmt->error;
 		if (stmt->reply)
-			return stmt->reply->code;
+			return (int)stmt->reply->code;
 		else
 			return TNT_SNET_CAST(stmt->stream)->error;
 	} else
@@ -1058,5 +1058,5 @@ tnt_col_double(tnt_stmt_t * stmt, int icol)
 float
 tnt_col_float(tnt_stmt_t * stmt, int icol)
 {
-	return stmt->row[icol].v.d;
+	return (float)stmt->row[icol].v.d;
 }

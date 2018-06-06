@@ -133,8 +133,8 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 		return TNT_EOK;
 	if (errno == EINPROGRESS) {
 		/** waiting for connection while handling signal events */
-		const int64_t micro = 1000000;
-		int64_t tmout_usec = s->opt.tmout_connect.tv_sec * micro;
+		const long micro = 1000000;
+		long tmout_usec = s->opt.tmout_connect.tv_sec * micro;
 		/* get start connect time */
 		struct timeval start_connect;
 		if (gettimeofday(&start_connect, NULL) == -1) {
@@ -158,9 +158,9 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 						return TNT_ESYSTEM;
 					}
 					/* calculate timeout last time */
-					int64_t passd_usec = (curr.tv_sec - start_connect.tv_sec) * micro +
+					long passd_usec = (curr.tv_sec - start_connect.tv_sec) * micro +
 						(curr.tv_usec - start_connect.tv_usec);
-					int64_t curr_tmeout = passd_usec - tmout_usec;
+					long curr_tmeout = passd_usec - tmout_usec;
 					if (curr_tmeout <= 0) {
 						/* timeout */
 						return TNT_ETMOUT;
@@ -318,7 +318,7 @@ out:
 	tnt_io_close(s);
 	return result;
 }
-
+extern int close(int);
 void tnt_io_close(struct tnt_stream_net *s)
 {
 	if (s->fd > 0) {

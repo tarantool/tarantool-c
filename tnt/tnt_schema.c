@@ -187,7 +187,7 @@ tnt_schema_add_index(struct mh_assoc_t *schema, const char **data) {
 	if (mp_typeof(*tuple) != MP_ARRAY)
 		goto error;
 	int64_t tuple_len = mp_decode_array(&tuple); (void )tuple_len;
-	uint32_t space_number = mp_decode_uint(&tuple);
+	uint32_t space_number = (uint32_t)mp_decode_uint(&tuple);
 	if (mp_typeof(*tuple) != MP_UINT)
 		goto error;
 	struct assoc_key space_key = {
@@ -204,7 +204,7 @@ tnt_schema_add_index(struct mh_assoc_t *schema, const char **data) {
 	memset(index, 0, sizeof(struct tnt_schema_ival));
 	if (mp_typeof(*tuple) != MP_UINT)
 		goto error;
-	index->number = mp_decode_uint(&tuple);
+	index->number = (uint32_t)mp_decode_uint(&tuple);
 	if (mp_typeof(*tuple) != MP_STR)
 		goto error;
 	const char *name_tmp = mp_decode_str(&tuple, &index->name_len);
