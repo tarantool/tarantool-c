@@ -144,7 +144,7 @@ tnt_bind_query_param(tnt_stmt_t *stmt, int icol, int type, const void* val_ptr, 
 
 
 static void
-free_strings(const char **s, size_t n)
+free_strings(char **s, size_t n)
 {
 	for (size_t i = 0; i < n; ++i) {
 		free((void *)s[i]);
@@ -1002,7 +1002,7 @@ tnt_number_of_cols(tnt_stmt_t *stmt)
 	return stmt->ncols;
 }
 
-const char **
+char **
 tnt_field_names(tnt_stmt_t *stmt)
 {
 	return stmt->field_names;

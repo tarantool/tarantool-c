@@ -157,7 +157,7 @@ int64_t tnt_affected_rows(tnt_stmt_t *);
 /**
  * Returns array of field names of last executed query.
  */
-const char **tnt_field_names(tnt_stmt_t *);
+char **tnt_field_names(tnt_stmt_t *);
 
 
 /**
