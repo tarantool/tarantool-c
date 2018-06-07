@@ -43,6 +43,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <stdint.h> // portable: uint64_t   MSVC: __int64
+#define sys_errno (win_error())
 #else
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -52,6 +53,7 @@
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <unistd.h>
+#define sys_errno errno
 #endif
 
 
@@ -97,7 +99,7 @@ tnt_io_nonblock(struct tnt_stream_net *s, int set)
 #ifndef _WIN32
 	int flags = fcntl(s->fd, F_GETFL);
 	if (flags == -1) {
-		s->errno_ = errno;
+		s->errno_ = sys_errno;
 		return TNT_ESYSTEM;
 	}
 	if (set)
@@ -105,7 +107,7 @@ tnt_io_nonblock(struct tnt_stream_net *s, int set)
 	else
 		flags &= ~O_NONBLOCK;
 	if (fcntl(s->fd, F_SETFL, flags) == -1) {
-		s->errno_ = errno;
+		s->errno_ = sys_errno;
 		return TNT_ESYSTEM;
 	}
 	return TNT_EOK;
@@ -114,7 +116,7 @@ tnt_io_nonblock(struct tnt_stream_net *s, int set)
 	if (ioctlsocket(s->fd, FIONBIO, &argp) == NO_ERROR)
 		return TNT_EOK;
 	else {
-		s->errno_ = WSAGetLastError();
+		s->errno_ = sys_errno;
 		return TNT_ESYSTEM;
 	}
 #endif
@@ -131,14 +133,14 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 
 	if (connect(s->fd, (struct sockaddr*)addr, addr_size) != -1)
 		return TNT_EOK;
-	if (errno == EINPROGRESS) {
+	if (sys_errno == EINPROGRESS) {
 		/** waiting for connection while handling signal events */
 		const long micro = 1000000;
 		long tmout_usec = s->opt.tmout_connect.tv_sec * micro;
 		/* get start connect time */
 		struct timeval start_connect;
 		if (gettimeofday(&start_connect, NULL) == -1) {
-			s->errno_ = errno;
+			s->errno_ = sys_errno;
 			return TNT_ESYSTEM;
 		}
 		/* set initial timer */
@@ -150,11 +152,11 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 			FD_SET(s->fd, &fds);
 			int ret = select(s->fd + 1, NULL, &fds, NULL, &tmout);
 			if (ret == -1) {
-				if (errno == EINTR || errno == EAGAIN) {
+				if (sys_errno == EINTR || sys_errno == EAGAIN) {
 					/* get current time */
 					struct timeval curr;
 					if (gettimeofday(&curr, NULL) == -1) {
-						s->errno_ = errno;
+						s->errno_ = sys_errno;
 						return TNT_ESYSTEM;
 					}
 					/* calculate timeout last time */
@@ -168,7 +170,7 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 					tmout.tv_sec = curr_tmeout / micro;
 					tmout.tv_usec = curr_tmeout % micro;
 				} else {
-					s->errno_ = errno;
+					s->errno_ = sys_errno;
 					return TNT_ESYSTEM;
 				}
 			} else if (ret == 0) {
@@ -184,11 +186,11 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 		socklen_t len = sizeof(opt);
 		if ((getsockopt(s->fd, SOL_SOCKET, SO_ERROR,
 				(void*)&opt, &len) == -1) || opt) {
-			s->errno_ = (opt) ? opt : errno;
+			s->errno_ = (opt) ? opt : sys_errno;
 			return TNT_ESYSTEM;
 		}
 	} else {
-		s->errno_ = errno;
+		s->errno_ = sys_errno;
 		return TNT_ESYSTEM;
 	}
 
@@ -221,7 +223,7 @@ tnt_io_connect_unix(struct tnt_stream_net *s, const char *path)
 	strcpy(addr.sun_path, path);
 	if (connect(s->fd, (struct sockaddr*)&addr, sizeof(addr)) != -1)
 		return TNT_EOK;
-	s->errno_ = errno;
+	s->errno_ = sys_errno;
 #else
 	s->errno_ = ENOSYS;
 #endif
@@ -257,7 +259,7 @@ static enum tnt_error tnt_io_setopts(struct tnt_stream_net *s) {
 		goto error;
 	return TNT_EOK;
 error:
-	s->errno_ = errno;
+	s->errno_ = sys_errno;
 	return TNT_ESYSTEM;
 }
 
@@ -281,7 +283,7 @@ tnt_io_connect(struct tnt_stream_net *s)
 	struct uri *uri = s->opt.uri;
 	s->fd = socket(tnt_io_htopf(uri->host_hint), SOCK_STREAM, 0);
 	if (s->fd < 0) {
-		s->errno_ = errno;
+		s->errno_ = sys_errno;
 		return TNT_ESYSTEM;
 	}
 	enum tnt_error result = tnt_io_setopts(s);
@@ -349,11 +351,11 @@ tnt_io_send_raw(struct tnt_stream_net *s, const char *buf, size_t size, int all)
 		} else {
 			do {
 				r = send(s->fd, buf + off, size - off, 0);
-			} while (r == -1 && (errno == EINTR));
+			} while (r == -1 && (sys_errno == EINTR));
 		}
 		if (r <= 0) {
 			s->error = TNT_ESYSTEM;
-			s->errno_ = errno;
+			s->errno_ = sys_errno;
 			return -1;
 		}
 		off += r;
@@ -372,11 +374,11 @@ tnt_io_sendv_raw(struct tnt_stream_net *s, struct iovec *iov, int count, int all
 		} else {
 			do {
 				r = writev(s->fd, iov, count);
-			} while (r == -1 && (errno == EINTR));
+			} while (r == -1 && (sys_errno == EINTR));
 		}
 		if (r <= 0) {
 			s->error = TNT_ESYSTEM;
-			s->errno_ = errno;
+			s->errno_ = sys_errno;
 			return -1;
 		}
 		total += r;
@@ -466,11 +468,11 @@ tnt_io_recv_raw(struct tnt_stream_net *s, char *buf, size_t size, int all)
 		} else {
 			do {
 				r = recv(s->fd, buf + off, size - off, 0);
-			} while (r == -1 && (errno == EINTR));
+			} while (r == -1 && (sys_errno == EINTR));
 		}
 		if (r <= 0) {
 			s->error = TNT_ESYSTEM;
-			s->errno_ = errno;
+			s->errno_ = sys_errno;
 			return -1;
 		}
 		off += r;
@@ -501,7 +503,7 @@ tnt_io_recv(struct tnt_stream_net *s, char *buf, size_t size)
 		s->rbuf.off = 0;
 		ssize_t top = tnt_io_recv_raw(s, s->rbuf.buf, s->rbuf.size, 0);
 		if (top <= 0) {
-			s->errno_ = errno;
+			s->errno_ = sys_errno;
 			s->error = TNT_ESYSTEM;
 			return -1;
 		}
@@ -539,6 +541,9 @@ int getiovmax()
 	#endif
 }
 
+
+/* This should go to separate source file. 
+ */
 #ifdef _WIN32
 /*
  * Windows writev version
@@ -587,4 +592,26 @@ gettimeofday(struct timeval * tp, void *tzp)
 	tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
 	return 0;
 }
+int
+win_init(void)
+{
+	static int inited = 0;
+	/* Should be mutex here*/
+	if (!inited) {
+		inited = 1;
+		WSADATA wsaData;
+		return WSAStartup(MAKEWORD(2, 2), &wsaData);
+	}
+	return 0;
+}
+
+int 
+win_error(void) 
+{
+	int err = WSAGetLastError();
+	if (err == WSAEWOULDBLOCK)
+		err = EINPROGRESS;
+	return err;
+}
+
 #endif
