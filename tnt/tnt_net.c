@@ -151,6 +151,9 @@ int tnt_set(struct tnt_stream *s, int opt, ...) {
 }
 
 int tnt_init(struct tnt_stream *s) {
+#ifdef _WIN32
+	win_init();
+#endif
 	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
 	if ((sn->schema = tnt_schema_new(NULL)) == NULL) {
 		sn->error = TNT_EMEMORY;

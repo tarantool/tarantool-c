@@ -66,8 +66,9 @@ test_connect_tcp() {
 
 
 	char uri[128] = { 0 };
-	snprintf(uri, 128, "%s%s%s", "test:test@",
-		getenv("PRIMARY_HOST") ? getenv("PRIMARY_HOST") : "localhost:", getenv("PRIMARY_PORT"));
+	snprintf(uri, 128, "%s%s:%s", "test:test@",
+		getenv("PRIMARY_HOST") ? getenv("PRIMARY_HOST") : "localhost", getenv("PRIMARY_PORT"));
+
 
 	struct tnt_stream *s = tnt_net(NULL);
 	isnt(s, NULL, "Checking that stream is allocated");
@@ -94,6 +95,8 @@ static int
 test_object() {
 	plan(102);
 	header();
+
+
 
 	struct tnt_stream *s = NULL; s = tnt_object(NULL);
 
@@ -293,10 +296,11 @@ static int test_connection()
   plan(8);
   header();
 
-  //snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:", getenv("PRIMARY_PORT"));
+  //snprintf(uri, 128, "%s%s:%s", "test:test@", "localhost", getenv("PRIMARY_PORT"));
   int port = atoi(getenv("PRIMARY_PORT"));
 
-  struct tnt_stream* s = tnt_open("localhost","test","test",port);
+  struct tnt_stream* s = tnt_open(getenv("PRIMARY_HOST")? getenv("PRIMARY_HOST"):"localhost",
+									"test","test",port);
   isnt(s,NULL,"test connection to localhost");
   if (s) tnt_stream_free(s);
 
@@ -1287,9 +1291,12 @@ test_msgpack_mapa_iter() {
 int main() {
 	plan(11);
 
+	putenv("PRIMARY_PORT=33000");
+	putenv("PRIMARY_HOST=100.96.161.41");
+
 	char uri[128] = {0};
-	snprintf(uri, 128, "%s%s%s", "test:test@", 
-		getenv("PRIMARY_HOST")?getenv("PRIMARY_HOST"):"localhost:", getenv("PRIMARY_PORT"));
+	snprintf(uri, 128, "%s%s:%s", "test:test@",
+		getenv("PRIMARY_HOST")?getenv("PRIMARY_HOST"):"localhost", getenv("PRIMARY_PORT"));
 
 
 	test_connect_tcp();
