@@ -44,6 +44,7 @@
 #include <Windows.h>
 #include <stdint.h> // portable: uint64_t   MSVC: __int64
 #define sys_errno (win_error())
+#define sock_close(a) closesocket(a)
 #else
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -54,6 +55,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #define sys_errno errno
+#define sock_close(a) close(a)
 #endif
 
 
@@ -320,11 +322,11 @@ out:
 	tnt_io_close(s);
 	return result;
 }
-extern int close(int);
+
 void tnt_io_close(struct tnt_stream_net *s)
 {
 	if (s->fd > 0) {
-		close(s->fd);
+		sock_close(s->fd);
 		s->fd = -1;
 	}
 	s->connected = 0;
