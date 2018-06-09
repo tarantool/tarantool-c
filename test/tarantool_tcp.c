@@ -298,9 +298,9 @@ static int test_connection()
 
   //snprintf(uri, 128, "%s%s:%s", "test:test@", "localhost", getenv("PRIMARY_PORT"));
   int port = atoi(getenv("PRIMARY_PORT"));
+  char *host = getenv("PRIMARY_HOST") ? getenv("PRIMARY_HOST") : "localhost";
 
-  struct tnt_stream* s = tnt_open(getenv("PRIMARY_HOST")? getenv("PRIMARY_HOST"):"localhost",
-									"test","test",port);
+  struct tnt_stream* s = tnt_open(host, "test", "test", port);
   isnt(s,NULL,"test connection to localhost");
   if (s) tnt_stream_free(s);
 
@@ -308,24 +308,24 @@ static int test_connection()
   is(s,NULL,"test connection to wrong host");
   if (s) tnt_stream_free(s);
 
-  s=tnt_open("localhost","test","test",7980);
+  s=tnt_open(host,"test","test",7980);
   is(s,NULL,"test connection to wrong port");
   if (s) tnt_stream_free(s);
 
-  s=tnt_open("localhost","","test",port);
+  s=tnt_open(host,"","test",port);
   isnt(s,NULL,"test connection without auth");
   if (s) tnt_stream_free(s);
 
-  s=tnt_open("localhost",NULL,"test",port);
+  s=tnt_open(host,NULL,"test",port);
   isnt(s,NULL,"test connection without auth");
   if (s) tnt_stream_free(s);
 
-  s=tnt_reopen(NULL,"localhost","test","test",port);
+  s=tnt_reopen(NULL, host, "test", "test", port);
   isnt(s,NULL,"test reopen with first NULL");
   if (s) tnt_stream_free(s);
 
   s = tnt_net(NULL);
-  struct tnt_stream* s2 =tnt_reopen(s,"localhost","test","test",port);
+  struct tnt_stream* s2 =tnt_reopen(s, host, "test","test",port);
   is(s,s2,"test tnt_reopen using existing stream");
   if (s) tnt_stream_free(s);
 
@@ -504,7 +504,7 @@ test_execute(char *uri) {
 		*/
 
 		is(tnt_bind_query_param(result, 0, MP_STR, in, strlen(in)), OK, "tnt_bind_query_param test");
-		is(tnt_bind_query_param(result, 1, MP_INT, &val, 0), OK, "tnt_bind_query_param test");
+		is(tnt_bind_query_param(result, 1, TNTC_INT, &val, 0), OK, "tnt_bind_query_param test");
 
 
 		for(int i=0;i<10;++i) {
