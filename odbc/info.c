@@ -1,6 +1,14 @@
-#include <unistd.h>
-#include <stdlib.h>
+
+#ifdef _WIN32
+#include <tnt_winsup.h>
+#else
 #include <sys/time.h>
+#include <unistd.h>
+#endif
+
+
+#include <stdlib.h>
+
 #include <tarantool/tarantool.h>
 #include <tarantool/tnt_fetch.h>
 #include <sql.h>
@@ -8,15 +16,35 @@
 #include <odbcinst.h>
 #include "driver.h"
 
-#define min(a,b) (a<b?a:b)
+#define tnt_min(a,b) (a<b?a:b)
 
 #define strmak(dst, src, max, lenp) { \
     int len = strlen(src); \
-    int cnt = min(len + 1, max); \
+    int cnt = tnt_min(len + 1, max); \
     strncpy(dst, src, cnt); \
     *lenp = (cnt > len) ? len : cnt; \
 }
 
+#ifdef _WIN32
+static HINSTANCE NEAR hModule;
+
+int __stdcall
+DllMain(HANDLE hinst, DWORD reason, LPVOID reserved)
+{
+	static int initialized = 0;
+
+	switch (reason) {
+	case DLL_PROCESS_ATTACH:
+		if (!initialized++) {
+			hModule = hinst;
+		}
+		break;
+	default:
+		break;
+	}
+	return 1;
+}
+#endif
 
 /* plain copy from sqlite odbc driver */
 SQLRETURN

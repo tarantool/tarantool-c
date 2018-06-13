@@ -1,9 +1,25 @@
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <stdlib.h>
 #include <sqlext.h>
 #include <stdio.h>
-#include <strings.h>
+#include <ctype.h>
+#include <string.h>
+
+static inline int 
+m_strcasecmp(const char *s1, const char *s2)
+{
+	while (*s1 != 0 && *s2 != 0 && (tolower(*s1) - tolower(*s2)) == 0) {
+		s1++; s2++;
+	}
+	return tolower(*s1) - tolower(*s2);
+}
 
 #define BUFSZ 255
+
 
 
 void
@@ -12,7 +28,7 @@ show_error(SQLSMALLINT ht, SQLHANDLE hndl)
 	SQLCHAR       SqlState[6], Msg[SQL_MAX_MESSAGE_LENGTH];
 	SQLINTEGER    NativeError;
 	SQLSMALLINT   i, MsgLen;
-	SQLRETURN     rc1, rc2;
+	SQLRETURN     rc2;
 	SQLLEN numRecs = 0;
 	SQLGetDiagField(ht, hndl, 0 , SQL_DIAG_NUMBER, &numRecs, 0, 0);
 	// Get the status records.
@@ -490,7 +506,7 @@ test_describecol(const char *dsn, const char *sql, int icol, int type, const cha
 					} else {
 						fprintf (stderr, "describecol(colname='%s'(%s),type=%d(%d), is_null=%d(%d))\n",
 							 colname, cname, ret_type, type, is_null, null_type);
-						if (strcasecmp(colname,cname) == 0 &&
+						if (m_strcasecmp(colname,cname) == 0 &&
 						    ret_type == type &&
 						    is_null == null_type)
 							ret_code = 1;

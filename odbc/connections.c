@@ -1,8 +1,16 @@
 /* -*- C -*- */
 #include <string.h>
-#include <sys/time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
+
+
+#ifdef _WIN32
+#include <tnt_winsup.h>
+#else
+#include <sys/time.h>
+#endif
+
 #include <odbcinst.h>
 #include <sql.h>
 #include <sqlext.h>
@@ -13,6 +21,47 @@
 #include "driver.h"
 
 #define PARAMSZ  1024
+
+
+static inline int
+m_strncasecmp(const char *s1, const char *s2, size_t n)
+{
+	if (n == 0)
+		return 0;
+	else
+		n--;
+	while (n && *s1 != 0 && *s2 != 0 && (tolower(*s1) - tolower(*s2)) == 0) {
+		s1++; s2++; n--;
+	}
+	return tolower(*s1) - tolower(*s2);
+}
+
+
+#ifdef _WIN32
+static incline char* 
+strsep(char **p, const char *delim)
+{
+	if (*p == NULL)
+		return NULL;
+	unsigned char hash[256] = { 0 };
+	for (const char *d = delim; *d; d++)
+		hash[((unsigned)(*d)) & 0xff] = 1;
+	char * start_p = *p;
+	for (;;) {
+		if (**p == '\0') {
+			*p = NULL;
+			break;
+		} else if (hash[((unsigned)**p) & 0xff]) {
+			**p = '\0';
+			(*p)++;
+			break;
+		}
+		(*p)++;
+	}
+	return start_p;
+}
+#endif
+
 
 void
 free_dsn(struct dsn *dsn)
@@ -53,7 +102,7 @@ getdsnattr(char *dsn, char* attr, char *val, int olen)
 		char *endp=eq-1;
 		while(endp>p && (*endp == ' ' || *endp == '\t'))
 			--endp;
-		if (strncasecmp(attr,p,(endp-p)+1)==0) {
+		if (m_strncasecmp(attr,p,(endp-p)+1)==0) {
 
 			if (olen>0) {
 				eq++;

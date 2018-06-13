@@ -85,6 +85,7 @@ message(STATUS "------------------------------------------------")
 
 add_subdirectory (include)
 add_subdirectory (tnt)
+add_subdirectory (odbc)
 #add_subdirectory(tntrpl)
 
 if   (NOT DEFINED TARANTOOL_C_EMBEDDED)

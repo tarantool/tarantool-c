@@ -26,6 +26,7 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+#include <stddef.h>
 #include "base64.h"
 /*
  * This is part of the libb64 project, and has been placed in the
@@ -127,7 +128,7 @@ base64_encode_block(const char *in_bin, int in_len,
 	return out_pos - out_base64;
 }
 
-static int
+static ptrdiff_t
 base64_encode_blockend(char *out_base64, int out_len,
 		       struct base64_encodestate *state)
 {

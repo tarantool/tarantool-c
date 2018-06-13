@@ -629,7 +629,7 @@ test_execute(char *uri) {
 		param[0].buffer = (void*)&in;
 
 		int val=666;
-		param[1].type=MP_INT;
+		param[1].type=TNTC_INT;
 		param[1].buffer = (void*)&val;
 		param[1].in_len = sizeof(int);
 

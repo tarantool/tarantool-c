@@ -1,5 +1,9 @@
 /* -*- C -*- */
 
+#ifdef _WIN32
+#include <tnt_winsup.h>
+#endif
+
 #include <sql.h>
 #include <sqlext.h>
 #include <odbcinst.h>

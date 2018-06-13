@@ -4,6 +4,7 @@
 
 
 #include <msgpuck.h>
+#include <stddef.h>
 #include <tarantool/tarantool.h>
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_opt.h>
@@ -24,7 +25,7 @@ enum QUERY_TYPE {
 	SEL = 2
 };
 
-typedef long tnt_size_t;
+typedef ptrdiff_t tnt_size_t;
 
 /**
  * Structure for holding column values from result row.

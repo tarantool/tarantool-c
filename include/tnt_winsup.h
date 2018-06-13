@@ -4,26 +4,28 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <stdlib.h>
+#if 0
+/* atomic operation is not supported yet*/
+#include <stdatomic.h>
+#endif
 
 static inline long
 pm_atomic_load(volatile long *val)
 {
-	/* should be windows atomic function or mutex lock here */
-	return *val;
+	
+	return InterlockedOr(val, 0);
 }
 
 static inline void
 pm_atomic_fetch_add(volatile long *val, int operand)
 {
-		/* should be windows atomic function or mutex lock here */
-	*val += operand;
+	InterlockedExchangeAdd(val, operand);
 }
 
 static inline void
 pm_atomic_fetch_sub(volatile long *val, int operand)
 {
-	/* should be windows atomic function or mutex lock here */
-	*val -= operand;
+	InterlockedExchangeAdd(val, -operand);
 }
 
 static inline size_t

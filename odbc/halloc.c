@@ -1,9 +1,13 @@
 /* -*- C -*- */
 
-
+#ifndef _WIN32
 #include <unistd.h>
-#include <stdlib.h>
 #include <sys/time.h>
+#else
+#include <tnt_winsup.h>
+#endif
+
+#include <stdlib.h>
 #include <tarantool/tarantool.h>
 #include <tarantool/tnt_fetch.h>
 #include <sql.h>
@@ -148,11 +152,12 @@ set_error_len(struct error_holder *e, int code, const char* msg, int len)
 		if (e->message)
 			free(e->message);
 		if (msg) {
-			if (len==-1)
+			if (len == -1)
 				e->message = strdup(msg);
 			else
-				e->message = strndup(msg,len);
-		} else
+				e->message = strndup(msg, len);
+		}
+		else
 			e->message = NULL;
 	}
 }
@@ -165,12 +170,12 @@ set_error_len(struct error_holder *e, int code, const char* msg, int len)
 
 void
 set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len,
-		      const char *fname)
+	const char *fname)
 {
 	if (tcon) {
-		set_error_len(&(tcon->e),code,msg,len);
-		LOG_ERROR(tcon,"[%s][%s] %s\n", fname, code2sqlstate(code),
-			  tcon->e.message);
+		set_error_len(&(tcon->e), code, msg, len);
+		LOG_ERROR(tcon, "[%s][%s] %s\n", fname, code2sqlstate(code),
+			tcon->e.message);
 	}
 }
 
@@ -181,7 +186,7 @@ set_connect_error_len(odbc_connect *tcon, int code, const char* msg, int len,
 
 void
 set_connect_error(odbc_connect *tcon, int code, const char* msg,
-		  const char* fname)
+	const char* fname)
 {
 	set_connect_error_len(tcon, code, msg, -1, fname);
 }
@@ -194,8 +199,8 @@ void
 set_stmt_error_len(odbc_stmt *stmt, int code, const char* msg, int len, const char *fname)
 {
 	if (stmt) {
-		set_error_len(&(stmt->e),code,msg,len);
-		LOG_ERROR(stmt,"[%s][%s] %s\n", fname, code2sqlstate(code), stmt->e.message);
+		set_error_len(&(stmt->e), code, msg, len);
+		LOG_ERROR(stmt, "[%s][%s] %s\n", fname, code2sqlstate(code), stmt->e.message);
 	}
 }
 
@@ -213,13 +218,13 @@ set_stmt_error(odbc_stmt *stmt, int code, const char* msg, const char *fname)
 void
 set_env_error_len(odbc_env *env, int code, const char* msg, int len)
 {
-		if (env)
-			set_error_len(&(env->e),code,msg,len);
+	if (env)
+		set_error_len(&(env->e), code, msg, len);
 }
 
 
 struct error_holder *
-get_error(SQLSMALLINT hndl_type, SQLHANDLE hndl)
+	get_error(SQLSMALLINT hndl_type, SQLHANDLE hndl)
 {
 	switch (hndl_type) {
 	case SQL_HANDLE_DBC:
@@ -239,22 +244,22 @@ get_error(SQLSMALLINT hndl_type, SQLHANDLE hndl)
 
 SQLRETURN
 get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
-	     SQLCHAR *state, SQLINTEGER *errno_ptr, SQLCHAR *txt,
-	     SQLSMALLINT buflen, SQLSMALLINT *out_len)
+	SQLCHAR *state, SQLINTEGER *errno_ptr, SQLCHAR *txt,
+	SQLSMALLINT buflen, SQLSMALLINT *out_len)
 {
-	if (rnum>1)
+	if (rnum > 1)
 		return SQL_NO_DATA;
 	if (!hndl)
 		return SQL_ERROR;
 
 	if (errno_ptr)
-		*errno_ptr = get_error(hndl_type,hndl)->native;
+		*errno_ptr = get_error(hndl_type, hndl)->native;
 
-	char * etxt = get_error(hndl_type,hndl)->message;
+	char * etxt = get_error(hndl_type, hndl)->message;
 	if (etxt == NULL)
 		etxt = "";
 	if (txt)
-		strncpy((char*)txt,etxt,buflen);
+		strncpy((char*)txt, etxt, buflen);
 	if (out_len) {
 		if (!txt)
 			*out_len = (SQLSMALLINT)strlen(etxt);
@@ -262,17 +267,17 @@ get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 			*out_len = (SQLSMALLINT)strlen((char*)txt);
 	}
 	if (state)
-		strncpy((char *)state,code2sqlstate(get_error(hndl_type,hndl)->code),5);
+		strncpy((char *)state, code2sqlstate(get_error(hndl_type, hndl)->code), 5);
 	return SQL_SUCCESS;
 }
 
 SQLRETURN
 get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
-	       SQLSMALLINT diag_id, SQLPOINTER ptr, SQLSMALLINT buflen,
-	       SQLSMALLINT * out_len)
+	SQLSMALLINT diag_id, SQLPOINTER ptr, SQLSMALLINT buflen,
+	SQLSMALLINT * out_len)
 {
 
-	if (rnum>1)
+	if (rnum > 1)
 		return SQL_NO_DATA;
 	if (!hndl)
 		return SQL_ERROR;
@@ -289,15 +294,15 @@ get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 		ptr = "";
 		return SQL_SUCCESS;
 	case SQL_DIAG_NATIVE:
-		*(SQLINTEGER *)ptr = get_error(hndl_type,hndl)->native;
+		*(SQLINTEGER *)ptr = get_error(hndl_type, hndl)->native;
 		return SQL_SUCCESS;
 	case SQL_DIAG_MESSAGE_TEXT:
-		ptr = get_error(hndl_type,hndl)->message;
+		ptr = get_error(hndl_type, hndl)->message;
 		if (out_len)
 			*out_len = (SQLSMALLINT)strlen((char *)ptr);
 		return SQL_SUCCESS;
 	case SQL_DIAG_SQLSTATE:
-		ptr = (char*)code2sqlstate(get_error(hndl_type,hndl)->code);
+		ptr = (char*)code2sqlstate(get_error(hndl_type, hndl)->code);
 		if (out_len)
 			*out_len = (SQLSMALLINT)strlen((char *)ptr);
 		return SQL_SUCCESS;
@@ -305,7 +310,7 @@ get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 
 	switch (hndl_type) {
 	case SQL_HANDLE_STMT: {
-		odbc_stmt *stmt = (odbc_stmt *) hndl;
+		odbc_stmt *stmt = (odbc_stmt *)hndl;
 		switch (diag_id) {
 		case SQL_DIAG_CURSOR_ROW_COUNT:
 			if (stmt->tnt_statement)
@@ -345,9 +350,9 @@ set_env_error(odbc_env *env, int code, const char *msg)
 static char * gen_env_id(void);
 static char * gen_next_id(const char *, uint64_t *);
 
-static uint64_t env_sq=1;
-static uint64_t con_sq=1;
-static uint64_t stmt_sq=1;
+static uint64_t env_sq = 1;
+static uint64_t con_sq = 1;
+static uint64_t stmt_sq = 1;
 
 
 SQLRETURN
@@ -356,10 +361,10 @@ alloc_env(SQLHENV *oenv)
 	odbc_env **retenv = (odbc_env **)oenv;
 	if (retenv == NULL)
 		return SQL_INVALID_HANDLE;
-	*retenv = (odbc_env*) malloc(sizeof(odbc_env));
+	*retenv = (odbc_env*)malloc(sizeof(odbc_env));
 	if (*retenv == NULL)
 		return SQL_ERROR;
-	memset(*retenv,0,sizeof(odbc_env));
+	memset(*retenv, 0, sizeof(odbc_env));
 	(*retenv)->id = gen_env_id();
 	return SQL_SUCCESS;
 }
@@ -384,16 +389,16 @@ env_set_attr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len)
 	/* HYC00	Optional feature not implemented*/
 	/* SQL_ATTR_ODBC_VERSION */
 	/* SQL_ATTR_OUTPUT_NTS */
-	 switch (attr) {
-	 case SQL_ATTR_ODBC_VERSION:
-		 return SQL_SUCCESS;
-	 }
+	switch (attr) {
+	case SQL_ATTR_ODBC_VERSION:
+		return SQL_SUCCESS;
+	}
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
 env_get_attr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val,
-	     SQLINTEGER in_len, SQLINTEGER *out_len)
+	SQLINTEGER in_len, SQLINTEGER *out_len)
 {
 	odbc_env *env_ptr = (odbc_env *)ehndl;
 	return SQL_ERROR;
@@ -405,10 +410,10 @@ alloc_connect(SQLHENV env, SQLHDBC *hdbc)
 	odbc_connect **retcon = (odbc_connect **)hdbc;
 	if (retcon == NULL)
 		return SQL_INVALID_HANDLE;
-	*retcon = (odbc_connect*) malloc(sizeof(odbc_connect));
+	*retcon = (odbc_connect*)malloc(sizeof(odbc_connect));
 	if (*retcon == NULL)
 		return SQL_ERROR;
-	memset(*retcon,0,sizeof(odbc_connect));
+	memset(*retcon, 0, sizeof(odbc_connect));
 
 	odbc_env *env_ptr = (odbc_env *)env;
 	(*retcon)->env = env_ptr;
@@ -424,7 +429,8 @@ alloc_connect(SQLHENV env, SQLHDBC *hdbc)
 
 		old_end->next = *retcon;
 		(*retcon)->prev = old_end;
-	} else {
+	}
+	else {
 		env_ptr->con_end = *retcon;
 		(*retcon)->next = (*retcon)->prev = *retcon;
 	}
@@ -436,10 +442,10 @@ static uint64_t
 fnv(const char* t)
 {
 	uint64_t prime = 0x100000001b3;
-	uint64_t hash  = 0xcbf29ce484222325;
+	uint64_t hash = 0xcbf29ce484222325;
 	while (*t) {
 		hash *= prime;
-		hash ^= (unsigned char) *t++;
+		hash ^= (unsigned char)*t++;
 	}
 	return hash;
 }
@@ -464,10 +470,10 @@ static const char *
 hostid(char *b, int len)
 {
 	/* Should be something similar for windows */
-	if (gethostname(b,len)==0)
+	if (gethostname(b, len) == 0)
 		return b;
 	else
-		return strncpy(b,"invalidhostname",len);
+		return strncpy(b, "invalidhostname", len);
 }
 
 static char *
@@ -476,8 +482,8 @@ gen_env_id(void)
 	char buf[IBUFSIZ];
 	char host[HBUFSIZ];
 	snprintf(buf, IBUFSIZ, "%s" "%" PRIu64 "%" PRIu64,
-		 hostid(host, HBUFSIZ), (uint64_t) time(0),
-		 ainc_id_seq(&env_sq));
+		hostid(host, HBUFSIZ), (uint64_t)time(0),
+		ainc_id_seq(&env_sq));
 
 	snprintf(buf, IBUFSIZ, "%" PRIu64, fnv(buf));
 
@@ -488,7 +494,7 @@ static char *
 gen_next_id(const char *env_id, uint64_t *seq)
 {
 	char buf[IBUFSIZ];
-	snprintf(buf,IBUFSIZ, "%s-%" PRIu64, env_id, ainc_id_seq(seq));
+	snprintf(buf, IBUFSIZ, "%s-%" PRIu64, env_id, ainc_id_seq(seq));
 	return strdup(buf);
 }
 
@@ -503,7 +509,7 @@ start_measure(struct tmeasure *tm)
 }
 
 struct tmeasure*
-stop_measure(struct tmeasure *t_start)
+	stop_measure(struct tmeasure *t_start)
 {
 	struct timeval tp;
 	gettimeofday(&tp, NULL);
@@ -511,7 +517,7 @@ stop_measure(struct tmeasure *t_start)
 	tp.tv_sec -= t_start->sec;
 	tp.tv_usec -= t_start->usec;
 	if (tp.tv_usec < 0) {
-		tp.tv_sec --;
+		tp.tv_sec--;
 		tp.tv_usec += 1000000;
 	}
 	t_start->sec = tp.tv_sec;
@@ -524,7 +530,7 @@ SQLRETURN
 free_connect(SQLHDBC hdbc)
 {
 	odbc_connect *ocon = (odbc_connect *)hdbc;
-	LOG_INFO (ocon, "SQLDisconnect(%s)\n", "");
+	LOG_INFO(ocon, "SQLDisconnect(%s)\n", "");
 	if (ocon->tnt_hndl)
 		tnt_stream_free(ocon->tnt_hndl);
 	odbc_env *env = ocon->env;
@@ -533,11 +539,12 @@ free_connect(SQLHDBC hdbc)
 		ocon->next->prev = ocon->prev;
 		if (env->con_end == ocon)
 			env->con_end = ocon->prev;
-	} else {
+	}
+	else {
 		env->con_end = NULL;
 	}
-	while(ocon->stmt_end)
-		free_stmt(ocon->stmt_end,SQL_DROP);
+	while (ocon->stmt_end)
+		free_stmt(ocon->stmt_end, SQL_DROP);
 	free(ocon->e.message);
 	free(ocon->opt_timeout);
 	free(ocon->id);
@@ -547,20 +554,20 @@ free_connect(SQLHDBC hdbc)
 
 
 SQLRETURN
-alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
+alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt)
 {
 	odbc_connect *con = (odbc_connect *)conn;
 	odbc_stmt **out = (odbc_stmt **)ostmt;
 	if (!con || !out)
 		return SQL_INVALID_HANDLE;
 
-	*out = (odbc_stmt*) malloc(sizeof(odbc_stmt));
+	*out = (odbc_stmt*)malloc(sizeof(odbc_stmt));
 	if (*out == NULL) {
-		set_connect_error(con,ODBC_MEM_ERROR,
-				  "Unable to allocate memory for statement", "SQLStatement");
+		set_connect_error(con, ODBC_MEM_ERROR,
+			"Unable to allocate memory for statement", "SQLStatement");
 		return SQL_ERROR;
 	}
-	memset(*out,0,sizeof(odbc_stmt));
+	memset(*out, 0, sizeof(odbc_stmt));
 	(*out)->connect = con;
 
 	if (con->stmt_end) {
@@ -571,7 +578,8 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt )
 
 		old_end->next = *out;
 		(*out)->prev = old_end;
-	} else {
+	}
+	else {
 		con->stmt_end = *out;
 		(*out)->next = (*out)->prev = *out;
 	}
@@ -586,9 +594,9 @@ mem_free_stmt(odbc_stmt *stmt)
 {
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
-	free_stmt(stmt,SQL_CLOSE);
-	free_stmt(stmt,SQL_RESET_PARAMS);
-	free_stmt(stmt,SQL_UNBIND);
+	free_stmt(stmt, SQL_CLOSE);
+	free_stmt(stmt, SQL_RESET_PARAMS);
+	free_stmt(stmt, SQL_UNBIND);
 	free(stmt->e.message);
 	free(stmt->id);
 
@@ -599,7 +607,8 @@ mem_free_stmt(odbc_stmt *stmt)
 
 		if (parent->stmt_end == stmt)
 			parent->stmt_end = stmt->prev;
-	} else {
+	}
+	else {
 		parent->stmt_end = NULL;
 	}
 
@@ -615,7 +624,7 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 		return SQL_INVALID_HANDLE;
 	switch (option) {
 	case SQL_CLOSE:
-		LOG_INFO (stmt, "SQLFreeStatement(%s)\n", "SQL_CLOSE");
+		LOG_INFO(stmt, "SQLFreeStatement(%s)\n", "SQL_CLOSE");
 		stmt->state = CLOSED;
 		if (!stmt->tnt_statement)
 			return SQL_SUCCESS_WITH_INFO;
@@ -625,7 +634,7 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 		}
 		return SQL_SUCCESS;
 	case SQL_RESET_PARAMS:
-		LOG_INFO (stmt, "SQLFreeStatement(%s)\n", "SQL_RESET_PARAMS");
+		LOG_INFO(stmt, "SQLFreeStatement(%s)\n", "SQL_RESET_PARAMS");
 		if (!stmt->tnt_statement || !stmt->inbind_params)
 			return SQL_SUCCESS_WITH_INFO;
 		else {
@@ -634,7 +643,7 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 		}
 		return SQL_SUCCESS;
 	case SQL_UNBIND:
-		LOG_INFO (stmt, "SQLFreeStatement(%s)\n", "SQL_UNBIND");
+		LOG_INFO(stmt, "SQLFreeStatement(%s)\n", "SQL_UNBIND");
 		if (!stmt->tnt_statement || !stmt->outbind_params)
 			return SQL_SUCCESS_WITH_INFO;
 		else {
@@ -643,7 +652,7 @@ free_stmt(SQLHSTMT stmth, SQLUSMALLINT option)
 		}
 		return SQL_SUCCESS;
 	case SQL_DROP:
-		LOG_INFO (stmt, "SQLFreeStatement(%s)\n", "SQL_DROP");
+		LOG_INFO(stmt, "SQLFreeStatement(%s)\n", "SQL_DROP");
 		return mem_free_stmt(stmt);
 	default:
 		return SQL_ERROR;

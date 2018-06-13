@@ -1,11 +1,17 @@
 /* -*- C -*- */
-#include <string.h>
+#ifdef _WIN32
+#include <tnt_winsup.h>
+#else
 #include <sys/time.h>
+#endif
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <odbcinst.h>
 #include <sqlext.h>
+#ifndef _WIN32
 #include <odbcinstext.h>
+#endif
 
 #include <tarantool/tarantool.h>
 #include <tarantool/tnt_net.h>
