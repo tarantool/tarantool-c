@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "test.h"
 #include <string.h>
 #include <stdlib.h>
@@ -28,7 +29,7 @@ int
 tnt_request_set_sspacez(struct tnt_stream *s, struct tnt_request *req,
 			const char *space)
 {
-	return tnt_request_set_sspace(s, req, space, strlen(space));
+	return tnt_request_set_sspace(s, req, space, (uint32_t)strlen(space));
 }
 
 int
@@ -44,7 +45,7 @@ int
 tnt_request_set_sindexz(struct tnt_stream *s, struct tnt_request *req,
 			const char *index)
 {
-	return tnt_request_set_sindex(s, req, index, strlen(index));
+	return tnt_request_set_sindex(s, req, index, (uint32_t)strlen(index));
 }
 
 /*
@@ -102,7 +103,7 @@ test_object() {
 
 
 	char str1[] = "I'm totaly duck, i can quack";
-	ssize_t str1_len = strlen(str1);
+	ssize_t str1_len = (ssize_t)strlen(str1);
 
 	isnt(s, NULL, "Checking that object is allocated");
 	is  (s->alloc, 1, "Checking s->alloc");
@@ -454,7 +455,7 @@ test_execute(char *uri) {
 		   param[0].in_len = strlen(in);
 		*/
 
-		tnt_setup_bind_param(&param[0], MP_STR, in, strlen(in));
+		tnt_setup_bind_param(&param[0], MP_STR, in, (int)strlen(in));
 
 		is(tnt_bind_query(result,&param[0],1),OK,"Input bind array test");
 		is(tnt_stmt_execute(result),OK,"tnt_stmt_execute test");
@@ -503,7 +504,7 @@ test_execute(char *uri) {
 		param[1].in_len = sizeof(int);
 		*/
 
-		is(tnt_bind_query_param(result, 0, MP_STR, in, strlen(in)), OK, "tnt_bind_query_param test");
+		is(tnt_bind_query_param(result, 0, MP_STR, in, (int)strlen(in)), OK, "tnt_bind_query_param test");
 		is(tnt_bind_query_param(result, 1, TNTC_INT, &val, 0), OK, "tnt_bind_query_param test");
 
 
@@ -533,7 +534,7 @@ test_execute(char *uri) {
 		param[0].type=MP_STR;
 		param[0].buffer = (void*)out;
 		param[0].in_len = sizeof(out);
-		param[0].out_len=&len;
+		param[0].out_len=(tnt_size_t *)&len;
 		param[0].is_null=&nil;
 
 		int64_t val;
@@ -579,7 +580,7 @@ test_execute(char *uri) {
 		param[0].type=MP_STR;
 		param[0].buffer = (void*)out;
 		param[0].in_len = sizeof(out);
-		param[0].out_len=&len;
+		param[0].out_len=(tnt_size_t*)&len;
 		param[0].is_null=&nil;
 
 
@@ -667,7 +668,7 @@ test_execute(char *uri) {
 		memset(&param[0],0,sizeof(param));
 		param[0].type=MP_DOUBLE;
 		param[0].buffer = (void*)&out;
-		param[0].out_len=&len;
+		param[0].out_len=(tnt_size_t*)&len;
 		param[0].is_null=&nil;
 
 		int64_t val;
@@ -692,7 +693,7 @@ test_execute(char *uri) {
 		char double_str[100];
 		param[0].type=MP_STR;
 		param[0].buffer = (void*)&double_str;
-		param[0].out_len=&len;
+		param[0].out_len=(tnt_size_t*)&len;
 		param[0].is_null=&nil;
 		param[0].in_len = sizeof(double_str);
 

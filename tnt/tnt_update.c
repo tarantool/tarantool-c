@@ -160,7 +160,7 @@ tnt_update_op(struct tnt_stream *ops, char op, uint32_t fieldno,
 	v[1].iov_base = (void *)opdata;
 	v[1].iov_len  = opdata_len;
 
-	return ops->writev(ops, v, v_sz);
+	return ops->writev(ops, v, (int)v_sz);
 }
 
 ssize_t
@@ -234,13 +234,13 @@ tnt_update_splice(struct tnt_stream *ops, uint32_t fieldno,
 		  const char *buffer, size_t buffer_len) {
 	size_t buf_size = mp_sizeof_uint(position) +
 		          mp_sizeof_uint(offset) +
-			  mp_sizeof_str(buffer_len);
+			  mp_sizeof_str((uint32_t)buffer_len);
 	char *buf = tnt_mem_alloc(buf_size), *data = NULL;
 	if (!buf) return -1;
 	data = buf;
 	data = mp_encode_uint(data, position);
 	data = mp_encode_uint(data, offset);
-	data = mp_encode_str(data, buffer, buffer_len);
+	data = mp_encode_str(data, buffer, (uint32_t)buffer_len);
 	ssize_t retval = tnt_update_op(ops, ':', fieldno, buf, buf_size);
 	tnt_mem_free(buf);
 	return retval;

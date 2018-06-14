@@ -231,8 +231,8 @@ tnt_authenticate(struct tnt_stream *s)
 	if (!sn->connected || pm_atomic_load(&s->wrcnt) != 0)
 		return -1;
 	struct uri *uri = sn->opt.uri;
-	tnt_auth(s, uri->login, uri->login_len, uri->password,
-		 uri->password_len);
+	tnt_auth(s, uri->login, (int)uri->login_len, uri->password,
+		 (int)uri->password_len);
 	tnt_flush(s);
 	struct tnt_reply rep;
 	tnt_reply_init(&rep);
@@ -379,12 +379,12 @@ int tnt_get_spaceno(struct tnt_stream *s, const char *space,
 		    size_t space_len)
 {
 	struct tnt_schema *sch = (TNT_SNET_CAST(s))->schema;
-	return tnt_schema_stosid(sch, space, space_len);
+	return tnt_schema_stosid(sch, space, (uint32_t)space_len);
 }
 
 int tnt_get_indexno(struct tnt_stream *s, int spaceno, const char *index,
 		    size_t index_len)
 {
 	struct tnt_schema *sch = TNT_SNET_CAST(s)->schema;
-	return tnt_schema_stoiid(sch, spaceno, index, index_len);
+	return tnt_schema_stoiid(sch, spaceno, index, (uint32_t)index_len);
 }

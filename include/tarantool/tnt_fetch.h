@@ -165,13 +165,13 @@ char **tnt_field_names(tnt_stmt_t *);
  * Creates statement structure with prepared SQL statement.
  * One can bind parameters and execute it multiple times.
  */
-tnt_stmt_t *tnt_prepare(struct tnt_stream *s, const char *text, int32_t len);
+tnt_stmt_t *tnt_prepare(struct tnt_stream *s, const char *text, size_t len);
 
 /**
  * Shortcut for tnt_prepare and tnt_stmt_execute. Input bind variables free version.
  */
 
-tnt_stmt_t *tnt_query(struct tnt_stream *s, const char *text, int32_t len);
+tnt_stmt_t *tnt_query(struct tnt_stream *s, const char *text, size_t len);
 
 /**
  * Sends prepared statement to server. Next stage is to call tnt_fetch.
@@ -269,7 +269,7 @@ const char *tnt_col_name(tnt_stmt_t *, int col);
  * Returns the length of column 'col' in current result row.
  * It's actual for binary and strings.
  */
-int tnt_col_len(tnt_stmt_t *, int col);
+tnt_size_t tnt_col_len(tnt_stmt_t *, int col);
 
 /**
  * Returns value of column 'col' in current result row as a pointer to string.

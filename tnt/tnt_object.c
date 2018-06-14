@@ -141,8 +141,8 @@ tnt_object_add_str (struct tnt_stream *s, const char *str, uint32_t len)
 ssize_t
 tnt_object_add_strz (struct tnt_stream *s, const char *strz)
 {
-	uint32_t len = strlen(strz);
-	return tnt_object_add_str(s, strz, len);
+	size_t len = strlen(strz);
+	return tnt_object_add_str(s, strz, (uint32_t)len);
 }
 
 ssize_t
@@ -280,16 +280,16 @@ tnt_object_container_close (struct tnt_stream *s)
 		return 0;
 	} else if (sbo->type == TNT_SBO_SPARSE) {
 		if (type == MP_MAP)
-			mp_encode_map32(lenp, size/2);
+			mp_encode_map32(lenp,(uint32_t) size/2);
 		else
-			mp_encode_array32(lenp, size);
+			mp_encode_array32(lenp, (uint32_t)size);
 		return 0;
 	} else if (sbo->type == TNT_SBO_PACKED) {
 		size_t sz = 0;
 		if (type == MP_MAP)
-			sz = mp_sizeof_map(size/2);
+			sz = mp_sizeof_map((uint32_t)(size/2));
 		else
-			sz = mp_sizeof_array(size);
+			sz = mp_sizeof_array((uint32_t)size);
 		if (sz > 1) {
 			if (!sb->resize(s, sz - 1))
 				return -1;
@@ -297,9 +297,9 @@ tnt_object_container_close (struct tnt_stream *s)
 			memmove(lenp + sz, lenp + 1, sb->size - offset - 1);
 		}
 		if (type == MP_MAP) {
-			mp_encode_map(sb->data + offset, size/2);
+			mp_encode_map(sb->data + offset, (uint32_t)(size/2));
 		} else {
-			mp_encode_array(sb->data + offset, size);
+			mp_encode_array(sb->data + offset, (uint32_t)size);
 		}
 		sb->size += (sz - 1);
 		return 0;

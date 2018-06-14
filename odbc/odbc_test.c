@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdint.h>
 
 static inline int 
 m_strcasecmp(const char *s1, const char *s2)
@@ -229,7 +230,7 @@ test_execrowcount(const char *dsn, const char *sql,int val) {
 			if (ar == val)
 				ret_code = 1;
 			else {
-				fprintf(stderr,"Affected row = %ld expected %d\n",ar,val);
+				fprintf(stderr,"Affected row = %ld expected %d\n",(long)ar,val);
 				ret_code = 0;
 			}
 		} else {
@@ -290,7 +291,7 @@ do_fetch(struct set_handles *st, void *cnt)
 			row_cnt ++ ;
 		} else if (code == SQL_NO_DATA) {
 			fprintf(stderr, "fetched good %d rows\n", row_cnt);
-			return row_cnt == (int)cnt;
+			return row_cnt == (int)(int64_t)cnt;
 		} else {
 			fprintf(stderr, "fetched good %d rows\n", row_cnt);
 			show_error(SQL_HANDLE_STMT, st->hstmt);
@@ -326,7 +327,7 @@ do_fetchbind(struct set_handles *st, void *p)
 	while(1) {
 		code = SQLFetch(st->hstmt);
 		if (code == SQL_SUCCESS) {
-			fprintf(stderr, "val is %ld is null/rel len %ld\n", val, val_len);
+			fprintf(stderr, "val is %ld is null/rel len %ld\n", val, (long)val_len);
 			row_cnt ++ ;
 		} else if (code == SQL_NO_DATA) {
 			fprintf(stderr, "fetched good %d rows\n", row_cnt);
@@ -386,8 +387,7 @@ do_fetchgetdata(struct set_handles *st, void *p)
 	struct fetchbind_par *par_ptr = p;
 	int row_cnt = 0;
 	int matches = 0;
-	long val;
-	SQLLEN val_len;
+
 	long *pars = (long*) par_ptr->args;
 
 	while(row_cnt < 100) {
@@ -410,7 +410,7 @@ do_fetchgetdata(struct set_handles *st, void *p)
 
 
 			fprintf(stderr, "long_val is %ld match is %ld double_val %lf and str_val is %s\n",
-				long_val, pars[row_cnt], double_val, str_val);
+				(long)long_val, pars[row_cnt], double_val, str_val);
 			if (long_val == pars[row_cnt])
 				matches ++;
 			row_cnt ++ ;
@@ -432,15 +432,11 @@ do_fetchgetdata_stream(struct set_handles *st, void *p)
 	struct fetchbind_par *par_ptr = p;
 	int row_cnt = 0;
 	int matches = 0;
-	long val;
-	SQLLEN val_len;
 	long *pars = (long*) par_ptr->args;
 
 	while(row_cnt < 100) {
 		int code = SQLFetch(st->hstmt);
 		if (code == SQL_SUCCESS) {
-			SQLBIGINT long_val;
-			SQLDOUBLE  double_val;
 			SQLCHAR str_val[2] = "";
 
 			SQLLEN str_len;
@@ -604,7 +600,7 @@ test(int t)
 void
 testfail(int i)
 {
-	return test(!i);
+	test(!i);
 }
 
 int

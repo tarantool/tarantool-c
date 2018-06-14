@@ -1,11 +1,12 @@
 #ifndef TNT_WINSUP_H
 #define TNT_WINSUP_H 1
-
+#define _CRT_SECURE_NO_WARNINGS 1
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <stdlib.h>
+
 #if 0
-/* atomic operation is not supported yet*/
+/* atomic operation has not supported yet */
 #include <stdatomic.h>
 #endif
 
@@ -42,7 +43,7 @@ static inline char*
 strndup(const char* source, size_t n)
 {
 	size_t len = strnlen(source, n);
-	char *dest = malloc(len + 1);
+	char *dest = (char*)malloc(len + 1);
 	if (dest) {
 		memcpy(dest, source, len);
 		dest[len] = '\0';
@@ -56,7 +57,7 @@ struct iovec {
 	size_t iov_len;    /* Length. */
 };
 typedef int socklen_t;
-extern int tnt_writev(int fd, const struct iovec *iov, int iovcnt);
+extern ssize_t tnt_writev(int fd, const struct iovec *iov, int iovcnt);
 #define writev tnt_writev
 
 extern int gettimeofday(struct timeval *tv, void *);
@@ -66,10 +67,12 @@ extern int win_error(void);
 
 
 #define _POSIX_PATH_MAX _MAX_PATH
+#if 0
 #ifndef PRId64
 #define PRId64 "I64d"
 #endif
 #ifndef PRIu64
 #define PRIu64 "I64u"
+#endif
 #endif
 #endif

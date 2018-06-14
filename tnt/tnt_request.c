@@ -267,12 +267,12 @@ tnt_request_writeout(struct tnt_stream *s, struct tnt_request *req,
 		switch (tp) {
 		case TNT_OP_EVAL:
 			pos = mp_encode_uint(pos, TNT_EXPRESSION);          /* 1 */
-			pos = mp_encode_strl(pos, req->key_end - req->key); /* 5 */
+			pos = mp_encode_strl(pos, (uint32_t)(req->key_end - req->key)); /* 5 */
 			break;
 		case TNT_OP_CALL_16:
 		case TNT_OP_CALL:
 			pos = mp_encode_uint(pos, TNT_FUNCTION);            /* 1 */
-			pos = mp_encode_strl(pos, req->key_end - req->key); /* 5 */
+			pos = mp_encode_strl(pos, (uint32_t)(req->key_end - req->key)); /* 5 */
 			break;
 		case TNT_OP_SELECT:
 		case TNT_OP_UPDATE:
@@ -306,12 +306,12 @@ tnt_request_writeout(struct tnt_stream *s, struct tnt_request *req,
 		pos = mp_encode_uint(pos, req->index_base); /* 1 */
 		nd += 1;
 	}
-	assert(mp_sizeof_map(nd) == 1);
+	assert(mp_sizeof_map((uint32_t)nd) == 1);
 	if (pos != begin) {
 		v[v_sz].iov_base  = begin;
 		v[v_sz++].iov_len = pos - begin;
 	}
-	mp_encode_map(map, nd);
+	mp_encode_map(map, (uint32_t)nd);
 
 	size_t plen = 0;
 	for (int i = 1; i < v_sz; ++i) plen += v[i].iov_len;

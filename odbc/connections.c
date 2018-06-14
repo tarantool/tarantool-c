@@ -1,15 +1,16 @@
 /* -*- C -*- */
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
-
 
 #ifdef _WIN32
 #include <tnt_winsup.h>
 #else
 #include <sys/time.h>
 #endif
+
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+
 
 #include <odbcinst.h>
 #include <sql.h>
@@ -38,27 +39,29 @@ m_strncasecmp(const char *s1, const char *s2, size_t n)
 
 
 #ifdef _WIN32
-static incline char* 
+/* It's a plan N*N strsep implementation.
+*/
+static inline char *
 strsep(char **p, const char *delim)
 {
-	if (*p == NULL)
+	char *s;
+	if ((s = *p) == NULL)
 		return NULL;
-	unsigned char hash[256] = { 0 };
-	for (const char *d = delim; *d; d++)
-		hash[((unsigned)(*d)) & 0xff] = 1;
-	char * start_p = *p;
+	unsigned c;
+	const char *d;
 	for (;;) {
-		if (**p == '\0') {
-			*p = NULL;
-			break;
-		} else if (hash[((unsigned)**p) & 0xff]) {
-			**p = '\0';
-			(*p)++;
-			break;
-		}
-		(*p)++;
+		c = *(*p)++;
+		d = delim;
+		do {
+			if (*d == c) {
+				if (c == 0)
+					*p = NULL;
+				else
+					(*p)[-1] = '\0';
+				return s;
+			}
+		} while (*d++);
 	}
-	return start_p;
 }
 #endif
 
@@ -158,7 +161,7 @@ static struct keyval*
 load_attr(const char *dsn_str, int dsn_len)
 {
 	if (dsn_len == SQL_NTS)
-		dsn_len = strlen(dsn_str);
+		dsn_len = (int)strlen(dsn_str);
 	char *dsn_copy = strndup(dsn_str,dsn_len);
 	char *p = dsn_copy;
 	char *attr;
@@ -415,7 +418,7 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 		data_source = "DEFAULT";
 
 	/* Next we'll fill defaults with DSN system defaults using data source from string*/
-	odbc_read_dsn(tcon, data_source, strlen(data_source));
+	odbc_read_dsn(tcon, data_source, (int)strlen(data_source));
 
 
 	/* And finally override all with supplied DSN string */
@@ -494,7 +497,7 @@ set_connect_attr(SQLHDBC hdbc, SQLINTEGER att, SQLPOINTER val, SQLINTEGER len)
 			ocon->opt_timeout = (int32_t *)malloc(sizeof(int32_t));
 			if (!ocon->opt_timeout)
 				return SQL_ERROR;
-			*(ocon->opt_timeout) = (int64_t) val;
+			*(ocon->opt_timeout) = (int32_t)(int64_t)val;
 		}
 		break;
 	default:
@@ -601,7 +604,7 @@ main(int ac, char *av[])
 	char* buf = (char*) malloc(sz+1);
 	if (!buf)
 		return -1;
-	printf("%lu bytes readed from %s\n",fread(buf,1,sz+1,ini),av[1]);
+	printf("%lu bytes readed from %s\n",(unsigned long)fread(buf,1,sz+1,ini),av[1]);
 	buf[sz]='\0';
 
 	char *val= malloc(1024);

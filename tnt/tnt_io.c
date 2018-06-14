@@ -283,7 +283,7 @@ enum tnt_error
 tnt_io_connect(struct tnt_stream_net *s)
 {
 	struct uri *uri = s->opt.uri;
-	s->fd = socket(tnt_io_htopf(uri->host_hint), SOCK_STREAM, 0);
+	s->fd = (int)socket(tnt_io_htopf(uri->host_hint), SOCK_STREAM, 0);
 	if (s->fd < 0) {
 		s->errno_ = sys_errno;
 		return TNT_ESYSTEM;
@@ -352,7 +352,7 @@ tnt_io_send_raw(struct tnt_stream_net *s, const char *buf, size_t size, int all)
 			r = s->sbuf.tx(&s->sbuf, buf + off, size - off);
 		} else {
 			do {
-				r = send(s->fd, buf + off, size - off, 0);
+				r = send(s->fd, buf + off, (int)(size - off), 0);
 			} while (r == -1 && (sys_errno == EINTR));
 		}
 		if (r <= 0) {
@@ -362,7 +362,7 @@ tnt_io_send_raw(struct tnt_stream_net *s, const char *buf, size_t size, int all)
 		}
 		off += r;
 	} while (off != size && all);
-	return off;
+	return (ssize_t)off;
 }
 
 ssize_t
@@ -392,13 +392,13 @@ tnt_io_sendv_raw(struct tnt_stream_net *s, struct iovec *iov, int count, int all
 				iov->iov_len -= r;
 				break;
 			} else {
-				r -= iov->iov_len;
+				r -= (ssize_t)iov->iov_len;
 				iov++;
 				count--;
 			}
 		}
 	}
-	return total;
+	return (ssize_t)total;
 }
 
 ssize_t
@@ -413,14 +413,14 @@ tnt_io_send(struct tnt_stream_net *s, const char *buf, size_t size)
 	if ((s->sbuf.off + size) <= s->sbuf.size) {
 		memcpy(s->sbuf.buf + s->sbuf.off, buf, size);
 		s->sbuf.off += size;
-		return size;
+		return (ssize_t)size;
 	}
 	ssize_t r = tnt_io_send_raw(s, s->sbuf.buf, s->sbuf.off, 1);
 	if (r == -1)
 		return -1;
 	s->sbuf.off = size;
 	memcpy(s->sbuf.buf, buf, size);
-	return size;
+	return (ssize_t)size;
 }
 
 inline static void
@@ -439,10 +439,10 @@ tnt_io_sendv(struct tnt_stream_net *s, struct iovec *iov, int count)
 {
 	if (s->sbuf.buf == NULL)
 		return tnt_io_sendv_raw(s, iov, count, 1);
-	size_t size = 0;
+	ssize_t size = 0;
 	int i;
 	for (i = 0 ; i < count ; i++)
-		size += iov[i].iov_len;
+		size += (ssize_t)iov[i].iov_len;
 	if (size > s->sbuf.size) {
 		s->error = TNT_EBIG;
 		return -1;
@@ -469,7 +469,7 @@ tnt_io_recv_raw(struct tnt_stream_net *s, char *buf, size_t size, int all)
 			r = s->rbuf.tx(&s->rbuf, buf + off, size - off);
 		} else {
 			do {
-				r = recv(s->fd, buf + off, size - off, 0);
+				r = recv(s->fd, buf + off, (int)(size - off), 0);
 			} while (r == -1 && (sys_errno == EINTR));
 		}
 		if (r <= 0) {
@@ -479,7 +479,7 @@ tnt_io_recv_raw(struct tnt_stream_net *s, char *buf, size_t size, int all)
 		}
 		off += r;
 	} while (off != size && all);
-	return off;
+	return (ssize_t)off;
 }
 
 ssize_t
@@ -492,7 +492,7 @@ tnt_io_recv(struct tnt_stream_net *s, char *buf, size_t size)
 		if ((s->rbuf.off + left) <= s->rbuf.top) {
 			memcpy(buf + off, s->rbuf.buf + s->rbuf.off, left);
 			s->rbuf.off += left;
-			return size;
+			return (ssize_t)size;
 		}
 
 		lv = s->rbuf.top - s->rbuf.off;
@@ -514,7 +514,7 @@ tnt_io_recv(struct tnt_stream_net *s, char *buf, size_t size)
 		if (rv <= s->rbuf.top) {
 			memcpy(buf + off, s->rbuf.buf, rv);
 			s->rbuf.off = rv;
-			return size;
+			return (ssize_t)size;
 		}
 		left -= lv;
 	}
@@ -550,7 +550,7 @@ int getiovmax()
 /*
  * Windows writev version
 */
-int
+ssize_t
 tnt_writev(int fd, const struct iovec *iov, int iovcnt)
 {
 	/* better to preallocte iovect but one needs to do it thread safe. Another way is to use alloca
@@ -558,11 +558,11 @@ tnt_writev(int fd, const struct iovec *iov, int iovcnt)
 	WSABUF* win_buf = malloc(sizeof(WSABUF)*iovcnt);
 	if (!win_buf)
 		return -1;
-	int tot_len = 0;
+	ssize_t tot_len = 0;
 	for (int i = 0; i < iovcnt; ++i) {
 		win_buf[i].buf = iov[i].iov_base;
-		win_buf[i].len = iov[i].iov_len;
-		tot_len += iov[i].iov_len;
+		win_buf[i].len = (ULONG)iov[i].iov_len;
+		tot_len += (ssize_t)iov[i].iov_len;
 	}
 
 	int rc = WSASend(fd, win_buf, iovcnt, 0, 0, 0, 0);

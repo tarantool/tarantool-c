@@ -35,7 +35,7 @@ stmt_prepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
 	free_stmt(stmth, SQL_CLOSE);
 
 	if (query_len == SQL_NTS)
-		query_len = strlen((char *)query);
+		query_len = (SQLINTEGER)strlen((char *)query);
 	stmt->tnt_statement = tnt_prepare(stmt->connect->tnt_hndl,(char *)query, query_len);
 
 	if (stmt->tnt_statement) {
@@ -73,7 +73,7 @@ stmt_execute(SQLHSTMT stmth)
 		if (!error) {
 			error = "Unknown error state";
 		}
-		set_stmt_error_len(stmt,tnt2odbc_error(tnt_stmt_code(stmt->tnt_statement)),error,sz, "Execute");
+		set_stmt_error_len(stmt,tnt2odbc_error(tnt_stmt_code(stmt->tnt_statement)),error,(int)sz, "Execute");
 		return SQL_ERROR;
 	}
 
@@ -153,8 +153,8 @@ realloc_params(int num,int *old_num, tnt_bind_t **params)
 
 SQLRETURN
 stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT ctype, SQLSMALLINT sqltype,
-		 SQLUINTEGER col_len, SQLSMALLINT scale, SQLPOINTER buf,
-		 SQLINTEGER buf_len, SQLLEN *len_ind)
+		 SQLULEN col_len, SQLSMALLINT scale, SQLPOINTER buf,
+		 SQLLEN buf_len, SQLLEN *len_ind)
 {
 
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
@@ -387,7 +387,7 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type,
 		return SQL_SUCCESS;
 	}
 
-	stmt->last_col_sofar += *out_len;
+	stmt->last_col_sofar += (int)*out_len;
 	if (stmt->last_col_sofar >= tnt_col_len(stmt->tnt_statement,num)) {
 		return SQL_SUCCESS;
 	} else {
@@ -483,7 +483,7 @@ column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname,
 		}
 	}
 	if (name_len) {
-		*name_len = strlen(tnt_col_name(stmt->tnt_statement,ncol));
+		*name_len = (SQLSMALLINT)strlen(tnt_col_name(stmt->tnt_statement,ncol));
 	}
 	if (type) {
 		*type = tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol));
@@ -542,7 +542,7 @@ len_strncpy(SQLPOINTER char_p, const char *d, SQLSMALLINT buflen,
 	if (char_p) {
 		strncpy((char*)char_p, d, buflen );
 		if (out_len)
-			*out_len = strlen((char *)char_p);
+			*out_len = (SQLSMALLINT)strlen((char *)char_p);
 	}
 }
 
@@ -602,7 +602,7 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id,
 		len_strncpy( char_p, "" , buflen, out_len);
 		break;
 	case SQL_DESC_LENGTH:
-		val = tnt_col_len(stmt->tnt_statement,ncol);
+		val = (int)tnt_col_len(stmt->tnt_statement,ncol);
 		break;
 	case SQL_DESC_LITERAL_PREFIX:
 		len_strncpy( char_p, "" , buflen, out_len);

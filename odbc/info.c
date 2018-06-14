@@ -19,10 +19,10 @@
 #define tnt_min(a,b) (a<b?a:b)
 
 #define strmak(dst, src, max, lenp) { \
-    int len = strlen(src); \
-    int cnt = tnt_min(len + 1, max); \
+    size_t len = strlen(src); \
+    size_t cnt = tnt_min(len + 1, max); \
     strncpy(dst, src, cnt); \
-    *lenp = (cnt > len) ? len : cnt; \
+    *lenp = (cnt > len) ? (SQLSMALLINT)len : (SQLSMALLINT)cnt; \
 }
 
 #ifdef _WIN32

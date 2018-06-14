@@ -76,7 +76,7 @@ int tnt_reply_from(struct tnt_reply *r, tnt_reply_t rcv, void *ptr) {
 	r->buf_size = size;
 	if (r->buf == NULL)
 		goto rollback;
-	if(rcv(ptr, (char *)r->buf, size) == -1)
+	if(rcv(ptr, (char *)r->buf, (ssize_t)size) == -1)
 		goto rollback;
 	size_t hdr_length;
 	if (tnt_reply_hdr0(r, r->buf, r->buf_size, &hdr_length) != 0)

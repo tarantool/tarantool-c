@@ -50,18 +50,18 @@ static void tnt_buf_free(struct tnt_stream *s) {
 
 static ssize_t
 tnt_buf_read(struct tnt_stream *s, char *buf, size_t size) {
-	ptrdiff_t sz = size;
+	size_t sz = (ssize_t)size;
 	struct tnt_stream_buf *sb = TNT_SBUF_CAST(s);
 	if (sb->data == NULL)
 		return 0;
 	if (sb->size == sb->rdoff)
 		return 0;
-	ptrdiff_t avail = sb->size - sb->rdoff;
+	size_t avail = sb->size - sb->rdoff;
 	if (sz > avail)
 		sz = avail;
 	memcpy(sb->data + sb->rdoff, buf, sz);
 	sb->rdoff += sz;
-	return sz;
+	return (ssize_t)sz;
 }
 
 static char* tnt_buf_resize(struct tnt_stream *s, size_t size) {
@@ -87,7 +87,7 @@ tnt_buf_write(struct tnt_stream *s, const char *buf, size_t size) {
 	memcpy(p, buf, size);
 	TNT_SBUF_CAST(s)->size += size;
 	s->wrcnt++;
-	return size;
+	return (ssize_t)size;
 }
 
 static ssize_t
@@ -106,7 +106,7 @@ tnt_buf_writev(struct tnt_stream *s, struct iovec *iov, int count) {
 	}
 	TNT_SBUF_CAST(s)->size += size;
 	s->wrcnt++;
-	return size;
+	return (ssize_t)size;
 }
 
 static int

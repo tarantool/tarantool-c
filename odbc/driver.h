@@ -85,7 +85,7 @@ typedef struct odbc_connect_t {
 #define INFO (3)
 
 #define LOG(a, l, format, ...) do { if ( a->log && a->log_level >= l) \
-		{ fprintf(a->log, "%ld|%s " format, time(0), a->id,  __VA_ARGS__);} } while(0)
+		{ fprintf(a->log, "%ld|%s " format, (long)time(0), a->id,  __VA_ARGS__);} } while(0)
 #define LOG_TRACE(a, format, ...) LOG(a, TRACE , format, __VA_ARGS__)
 #define LOG_ERROR(a, format, ...) LOG(a, ERR , format, __VA_ARGS__)
 #define LOG_INFO(a, format, ...) LOG(a, INFO , format, __VA_ARGS__)
@@ -221,8 +221,8 @@ SQLRETURN odbc_disconnect(SQLHDBC);
 SQLRETURN stmt_prepare(SQLHSTMT ,SQLCHAR  *, SQLINTEGER);
 SQLRETURN stmt_execute(SQLHSTMT);
 SQLRETURN  stmt_in_bind(SQLHSTMT, SQLUSMALLINT, SQLSMALLINT, SQLSMALLINT,
-			SQLSMALLINT ,SQLUINTEGER, SQLSMALLINT, SQLPOINTER,
-			SQLINTEGER, SQLLEN *);
+			SQLSMALLINT ,SQLULEN, SQLSMALLINT, SQLPOINTER,
+			SQLLEN, SQLLEN *);
 SQLRETURN stmt_out_bind(SQLHSTMT ,SQLUSMALLINT, SQLSMALLINT, SQLPOINTER,
 			SQLLEN, SQLLEN *);
 SQLRETURN stmt_fetch(SQLHSTMT);

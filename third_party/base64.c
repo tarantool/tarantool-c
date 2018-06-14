@@ -84,7 +84,7 @@ base64_encode_block(const char *in_bin, int in_len,
 			if (in_pos == in_end || out_pos >= out_end) {
 				state->result = result;
 				state->step = step_A;
-				return out_pos - out_base64;
+				return (int)(out_pos - out_base64);
 			}
 			fragment = *in_pos++;
 			result = (fragment & 0x0fc) >> 2;
@@ -94,7 +94,7 @@ base64_encode_block(const char *in_bin, int in_len,
 			if (in_pos == in_end || out_pos >= out_end) {
 				state->result = result;
 				state->step = step_B;
-				return out_pos - out_base64;
+				return (int)(out_pos - out_base64);
 			}
 			fragment = *in_pos++;
 			result |= (fragment & 0x0f0) >> 4;
@@ -104,7 +104,7 @@ base64_encode_block(const char *in_bin, int in_len,
 			if (in_pos == in_end || out_pos + 2 >= out_end) {
 				state->result = result;
 				state->step = step_C;
-				return out_pos - out_base64;
+				return (int)(out_pos - out_base64);
 			}
 			fragment = *in_pos++;
 			result |= (fragment & 0x0c0) >> 6;
@@ -118,14 +118,14 @@ base64_encode_block(const char *in_bin, int in_len,
 			 */
 			if (++state->stepcount * 4 == BASE64_CHARS_PER_LINE) {
 				if (out_pos >= out_end)
-					return out_pos - out_base64;
+					return (int)(out_pos - out_base64);
 				*out_pos++ = '\n';
 				state->stepcount = 0;
 			}
 		}
 	}
 	/* control should not reach here */
-	return out_pos - out_base64;
+	return (int)(out_pos - out_base64);
 }
 
 static ptrdiff_t
@@ -172,8 +172,8 @@ base64_encode(const char *in_bin, int in_len,
 	base64_encodestate_init(&state);
 	int res = base64_encode_block(in_bin, in_len, out_base64,
 				      out_len, &state);
-	return res + base64_encode_blockend(out_base64 + res, out_len - res,
-					    &state);
+	return (int)(res + base64_encode_blockend(out_base64 + res, out_len - res,
+					    &state));
 }
 
 /* }}} */
@@ -238,7 +238,7 @@ base64_decode_block(const char *in_base64, int in_len,
 				{
 					state->step = step_a;
 					state->result = *out_pos;
-					return out_pos - out_bin;
+					return (int)(out_pos - out_bin);
 				}
 				fragment = base64_decode_value(*in_pos++);
 			} while (fragment < 0);
@@ -249,7 +249,7 @@ base64_decode_block(const char *in_base64, int in_len,
 				{
 					state->step = step_b;
 					state->result = *out_pos;
-					return out_pos - out_bin;
+					return (int)(out_pos - out_bin);
 				}
 				fragment = base64_decode_value(*in_pos++);
 			} while (fragment < 0);
@@ -262,7 +262,7 @@ base64_decode_block(const char *in_base64, int in_len,
 				{
 					state->step = step_c;
 					state->result = *out_pos;
-					return out_pos - out_bin;
+					return (int)(out_pos - out_bin);
 				}
 				fragment = base64_decode_value(*in_pos++);
 			} while (fragment < 0);
@@ -275,7 +275,7 @@ base64_decode_block(const char *in_base64, int in_len,
 				{
 					state->step = step_d;
 					state->result = *out_pos;
-					return out_pos - out_bin;
+					return (int)(out_pos - out_bin);
 				}
 				fragment = base64_decode_value(*in_pos++);
 			} while (fragment < 0);
@@ -283,7 +283,7 @@ base64_decode_block(const char *in_base64, int in_len,
 		}
 	}
 	/* control should not reach here */
-	return out_pos - out_bin;
+	return (int)(out_pos - out_bin);
 }
 
 

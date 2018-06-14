@@ -33,7 +33,7 @@ tnt_stmt_new(struct tnt_stream *s)
  **/
 
 tnt_stmt_t *
-tnt_prepare(struct tnt_stream *s, const char *text, int32_t len)
+tnt_prepare(struct tnt_stream *s, const char *text, size_t len)
 {
 	tnt_stmt_t *stmt = tnt_stmt_new(s);
 	if (!stmt)
@@ -46,7 +46,7 @@ tnt_prepare(struct tnt_stream *s, const char *text, int32_t len)
 			return NULL;
 		}
 		memcpy(stmt->query, text, len);
-		stmt->query_len = len;
+		stmt->query_len = (int32_t)len;
 	}
 	return stmt;
 }
@@ -245,7 +245,7 @@ tnt_stmt_free(tnt_stmt_t *stmt)
 }
 
 tnt_stmt_t *
-tnt_query(struct tnt_stream *s, const char *text, int32_t len)
+tnt_query(struct tnt_stream *s, const char *text, size_t len)
 {
 	if (s && (tnt_execute(s,text,len,NULL)!=FAIL))
 		return tnt_filfull(s);
@@ -484,7 +484,7 @@ bind2object(tnt_stmt_t* stmt)
 		}
 		case TNTC_CHAR:
 		case TNTC_BIN:
-			if (tnt_object_add_str(obj,stmt->ibind[npar-i-1].buffer,
+			if (tnt_object_add_str(obj,stmt->ibind[npar-i-1].buffer, (uint32_t)
 					       stmt->ibind[npar-i-1].in_len) == FAIL)
 				goto error;
 			break;
@@ -794,7 +794,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			/* XXX if the input buffer length is less
 			 * then column string size, last available
 			 * character will be 0. */
-			int32_t len = (obind->in_len < (stmt->row[i].size-off)) ?
+			tnt_size_t len = (obind->in_len < (stmt->row[i].size-off)) ?
 				obind->in_len : stmt->row[i].size-off;
 			memcpy(obind->buffer, ((const char*)stmt->row[i].v.p)+off, len);
 			if (stmt->row[i].type == MP_STR) {
@@ -1026,7 +1026,7 @@ tnt_col_type(tnt_stmt_t *stmt, int icol)
 	return stmt->row[icol].type;
 }
 
-int
+tnt_size_t
 tnt_col_len(tnt_stmt_t *stmt, int icol)
 {
 	return stmt->row[icol].size;
