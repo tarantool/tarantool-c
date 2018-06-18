@@ -124,7 +124,9 @@ code2sqlstate(int code)
 	case ODBC_07005_ERROR:
 		return "07005";
 	case ODBC_HY106_ERROR:
-		return "07005";
+		return "HY106";
+	case ODBC_HY092_ERROR:
+		return "HY092";
 	default:
 		return "HY000";
 	}

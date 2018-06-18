@@ -307,6 +307,8 @@ SQLNumParams(SQLHSTMT stmth, SQLSMALLINT *cnt)
 	return num_params(stmth,cnt);
 }
 
+
+
 SQLRETURN SQL_API
 SQLGetDiagRec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 	      SQLCHAR *state, SQLINTEGER *errno_ptr,SQLCHAR *txt,
@@ -633,3 +635,31 @@ SQLSpecialColumns(
 	return SQL_ERROR;
 }
 
+SQLRETURN SQL_API 
+SQLForeignKeys(
+	SQLHSTMT       StatementHandle,
+	SQLCHAR *      PKCatalogName,
+	SQLSMALLINT    NameLength1,
+	SQLCHAR *      PKSchemaName,
+	SQLSMALLINT    NameLength2,
+	SQLCHAR *      PKTableName,
+	SQLSMALLINT    NameLength3,
+	SQLCHAR *      FKCatalogName,
+	SQLSMALLINT    NameLength4,
+	SQLCHAR *      FKSchemaName,
+	SQLSMALLINT    NameLength5,
+	SQLCHAR *      FKTableName,
+	SQLSMALLINT    NameLength6)
+{
+	return SQL_ERROR;
+}
+
+SQLRETURN   SQL_API 
+SQLError(SQLHENV henv,
+	SQLHDBC hdbc, SQLHSTMT hstmt,
+	SQLCHAR *szSqlState, SQLINTEGER *pfNativeError,
+	SQLCHAR *szErrorMsg, SQLSMALLINT cbErrorMsgMax,
+	SQLSMALLINT *pcbErrorMsg)
+{
+	return SQL_ERROR;
+}

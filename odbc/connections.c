@@ -494,6 +494,7 @@ set_connect_attr(SQLHDBC hdbc, SQLINTEGER att, SQLPOINTER val, SQLINTEGER len)
 		return SQL_ERROR;
 	switch (att) {
 	case SQL_ATTR_CONNECTION_TIMEOUT:
+	case SQL_ATTR_LOGIN_TIMEOUT:	
 		if (!ocon->opt_timeout) {
 			ocon->opt_timeout = (int32_t *)malloc(sizeof(int32_t));
 			if (!ocon->opt_timeout)
@@ -501,7 +502,25 @@ set_connect_attr(SQLHDBC hdbc, SQLINTEGER att, SQLPOINTER val, SQLINTEGER len)
 			*(ocon->opt_timeout) = (int32_t)(int64_t)val;
 		}
 		break;
+	case SQL_ATTR_CURRENT_CATALOG:
+		/* This attribute is Database name actually*/
+	case SQL_ATTR_ACCESS_MODE:
+	case SQL_ATTR_ASYNC_ENABLE:
+	case SQL_ATTR_AUTO_IPD:
+	case SQL_ATTR_AUTOCOMMIT:
+	case SQL_ATTR_CONNECTION_DEAD:
+	case SQL_ATTR_METADATA_ID:
+	case SQL_ATTR_ODBC_CURSORS:
+	case SQL_ATTR_PACKET_SIZE:
+	case SQL_ATTR_QUIET_MODE:
+	case SQL_ATTR_TRACE:
+	case SQL_ATTR_TRACEFILE:
+	case SQL_ATTR_TRANSLATE_LIB:
+	case SQL_ATTR_TRANSLATE_OPTION:
+	case SQL_ATTR_TXN_ISOLATION:
+		break;
 	default:
+		set_connect_error(ocon, ODBC_HY092_ERROR, "Unsupported attribute", "SQLSetConnectAttr");
 		return SQL_ERROR;
 	}
 	return SQL_SUCCESS;

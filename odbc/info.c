@@ -87,7 +87,7 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQL
 		strmak(val, "", valMax, valLen); // Should be session user
 		break;
 	case SQL_DRIVER_ODBC_VER:
-		strmak(val, "03.00", valMax, valLen);
+		strmak(val, "03.80", valMax, valLen);
 
 		break;
 	case SQL_ACTIVE_CONNECTIONS: // inf: max concurrent activiti

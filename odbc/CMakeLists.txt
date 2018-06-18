@@ -9,7 +9,7 @@ else(WIN32)
 endif(WIN32)
 
 include_directories(../include)
-add_library(tnt_odbc  SHARED connections.c halloc.c odbc.c statement.c info.c)
+add_library(tnt_odbc  SHARED connections.c halloc.c odbc.c statement.c info.c tnt_odbc.def)
 add_executable(odbc_test odbc_test.c)
 target_link_libraries(tnt_odbc  PRIVATE tnt ${ODBC} ${WS2})
 target_link_libraries(odbc_test ${ODBC})
