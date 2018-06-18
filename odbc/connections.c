@@ -445,7 +445,8 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	}
 	SQLRETURN ret = real_connect(tcon);
 
-	if (out_conn_s || out_len) {
+	if ((ret == SQL_SUCCESS || ret == SQL_SUCCESS_WITH_INFO) 
+		&& ( out_conn_s || out_len)) {
 		char buff[PARAMSZ];
 		int len = make_connect_string(buff,tcon);
 		if (out_conn_s) {

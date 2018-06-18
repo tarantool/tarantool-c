@@ -491,7 +491,7 @@ column_info(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLCHAR *colname,
 	return status;
 }
 
-SQLRETURN SQL_API
+SQLRETURN
 num_cols(SQLHSTMT stmth, SQLSMALLINT *ncols)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
@@ -689,7 +689,7 @@ num_params(SQLHSTMT stmth, SQLSMALLINT *cnt)
 	return SQL_SUCCESS;
 }
 
-SQLRETURN SQL_API
+SQLRETURN
 param_info(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 	   SQLULEN *out_len, SQLSMALLINT *out_dnum,
 		 SQLSMALLINT *is_null)

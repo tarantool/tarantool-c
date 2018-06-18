@@ -382,7 +382,7 @@ free_env(SQLHENV env)
 	return SQL_SUCCESS;
 }
 
-SQLRETURN  SQL_API
+SQLRETURN
 env_set_attr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len)
 {
 	odbc_env *env_ptr = (odbc_env *)ehndl;
@@ -396,7 +396,7 @@ env_set_attr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len)
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API
+SQLRETURN
 env_get_attr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val,
 	SQLINTEGER in_len, SQLINTEGER *out_len)
 {

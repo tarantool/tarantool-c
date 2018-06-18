@@ -120,6 +120,9 @@ test_connect(const char *dsn) {
 
 	if (init_dbc(&st,NULL)) {
 		// Connect to data source
+#ifdef SQLConnect
+#error SQLConnect
+#endif
 		retcode = SQLConnect(st.hdbc, (SQLCHAR *)dsn, SQL_NTS,
 				     (SQLCHAR*) NULL, 0, NULL, 0);
 
@@ -152,7 +155,7 @@ test_driver_connect(const char *dsn) {
 		// Connect to data source
 		retcode = SQLDriverConnect(st.hdbc, 0, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)out_dsn,
 					   sizeof(out_dsn), &out_len, SQL_DRIVER_NOPROMPT);
-		fprintf(stderr,"OUTDSN|%s|\n",out_dsn);
+		
 
 
 		// Allocate statement handle
@@ -613,8 +616,9 @@ main(int ac, char* av[])
 	test(test_driver_connect("DSN=tarantoolTest;PORT=33000"));
 	testfail(test_driver_connect("DSN=tarantoolTest;PORT=33003"));
 	testfail(test_driver_connect("DSN=tarantoolTest;UID=test;PWD=wrongpwd;PORT=33000;UID=test;PWD=test"));
-	const char *good_dsn = "DSN=tarantoolTest;UID=test;PWD=test;PORT=33000;UID=test;PWD=test"
-		";LOG_FILENAME=./odbc.log;LOG_LEVEL=5";
+	const char *good_dsn = "DRIVER=Tarantool;SERVER=100.96.161.41;"
+		"UID=test;PWD=test;PORT=33000;"
+		"LOG_FILENAME=./odbc.log;LOG_LEVEL=5";
 	test(test_driver_connect(good_dsn));
 	test(test_prepare(good_dsn,"select * from test"));
 	/* next test is ok since we don't check sql text at prepare stage */
