@@ -219,7 +219,7 @@ set_dsn_attr_string(odbc_connect *tcon, struct keyval *kv)
 	if ((v=get_attr("PWD",kv))) {
 		strcpy(ret->password,v);
 	}
-	if ((v=get_attr("HOST",kv))) {
+	if ((v=get_attr("SERVER",kv))) {
 		strcpy(ret->host,v);
 	}
 	if ((v=get_attr("DATABASE",kv))) {
@@ -248,7 +248,7 @@ int
 make_connect_string(char *buf, odbc_connect *dbc)
 {
 	struct dsn *d = dbc->dsn_params;
-	return snprintf(buf, PARAMSZ, "DSN=%s;UID=%s;PWD=%s;HOST=%s;DATABASE=%s;"
+	return snprintf(buf, PARAMSZ, "DSN=%s;UID=%s;PWD=%s;SERVER=%s;DATABASE=%s;"
 			"FLAGS=%s;PORT=%d;TIMEOUT=%d;LOG_FILENAME=%s;LOG_LEVEL=%d",
 			d->dsn, d->user, d->password, d->host, d->database, d->flag, d->port,
 			d->timeout, d->log_filename, d->log_level);
@@ -332,7 +332,7 @@ odbc_read_dsn(odbc_connect *tcon, char *dsn, int dsn_sz)
 	}
 
 	if (ret->host[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "HOST", "localhost", ret->host, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, "SERVER", "localhost", ret->host, PARAMSZ, ODBCINI );
 	if (ret->database[0] == '\0')
 		SQLGetPrivateProfileString(ret->dsn, "DATABASE", "", ret->database, PARAMSZ, ODBCINI );
 	if (ret->flag[0] == '\0')
@@ -404,7 +404,7 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	odbc_connect *tcon = (odbc_connect *)dbch;
 	if (tcon->is_connected)
 		return SQL_SUCCESS_WITH_INFO;
-
+	//MessageBox(0, "Text", conn_s, MB_OK);
 	struct keyval *kv;
 	tcon->dsn_params = alloc_dsn();
 
@@ -428,6 +428,9 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	if (tcon->dsn_params->log_filename && tcon->dsn_params->log_filename[0]!='\0') {
 		tcon->log = fopen(tcon->dsn_params->log_filename,"a");
 		tcon->log_level = tcon->dsn_params->log_level;
+		/* Maybe to turn on buffering here?*/
+		if(tcon->log)
+			setvbuf(tcon->log, NULL, _IONBF, 0);
 	}
 
 	LOG_TRACE(tcon,"SQLDriverConnect(host=%s,port=%d,user=%s)\n", tcon->dsn_params->host,
@@ -471,6 +474,7 @@ get_connect_attr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
 	if (!ocon)
 		return SQL_ERROR;
 	switch (att) {
+	case SQL_ATTR_LOGIN_TIMEOUT:
 	case SQL_ATTR_CONNECTION_TIMEOUT:
 		if (!ocon->opt_timeout)
 			return SQL_ERROR;
@@ -478,6 +482,19 @@ get_connect_attr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
 			*((int32_t*)val)=*ocon->opt_timeout;
 		if (olen)
 			*olen = sizeof(int32_t);
+		break;
+	case SQL_ATTR_CURRENT_CATALOG:
+		int slen = 0;
+		if (val) {
+			if (ocon->database) {
+				slen = strlen(ocon->database);
+				int cp_len = (len < (slen + 1))? len: slen + 1;
+				strncpy((char*)val, ocon->database, cp_len);
+				((char*)val)[cp_len-1] = 0;
+			}
+		}
+		if (olen)
+			*olen = (SQLINTEGER)slen;
 		break;
 	default:
 		return SQL_ERROR;
@@ -503,7 +520,9 @@ set_connect_attr(SQLHDBC hdbc, SQLINTEGER att, SQLPOINTER val, SQLINTEGER len)
 		}
 		break;
 	case SQL_ATTR_CURRENT_CATALOG:
+		ocon->database = strndup((char *)val, len);
 		/* This attribute is Database name actually*/
+		break;
 	case SQL_ATTR_ACCESS_MODE:
 	case SQL_ATTR_ASYNC_ENABLE:
 	case SQL_ATTR_AUTO_IPD:

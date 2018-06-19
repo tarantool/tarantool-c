@@ -72,11 +72,12 @@ typedef struct odbc_connect_t {
 	struct odbc_env_t *env;
 	struct odbc_stmt_t* stmt_end;
 	int is_connected;
-	struct dsn* dsn_params;
+	struct dsn *dsn_params;
 	struct tnt_stream *tnt_hndl;
 	int32_t *opt_timeout;
 	struct error_holder e;
 	int log_level;
+	char *database;
 	FILE *log;
 	char *id;
 } odbc_connect;

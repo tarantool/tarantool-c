@@ -273,6 +273,20 @@ get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 	return SQL_SUCCESS;
 }
 
+int
+safe_copy(char *dst, const char *src, int dstlen)
+{
+	if (dstlen == 0)
+		return 0;
+	int len = strlen(src) + 1;
+	if (dstlen < len)
+		len = dstlen;
+	strncpy(dst, src, len);
+	dst[len - 1] = '\0';
+	return len-1;
+}
+
+
 SQLRETURN
 get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 	SQLSMALLINT diag_id, SQLPOINTER ptr, SQLSMALLINT buflen,
@@ -288,9 +302,18 @@ get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 	case SQL_DIAG_NUMBER:
 		*(SQLINTEGER *)ptr = 1;
 		return SQL_SUCCESS;
+	case SQL_DIAG_CLASS_ORIGIN:
+		int len = safe_copy((char*)ptr,
+			strncmp(code2sqlstate(get_error(hndl_type, hndl)->code), "im", 2) ?
+			"ISO 9075": "ODBC 3.0", buflen);
+		if (out_len)
+			*out_len = (SQLSMALLINT) len;
+		return SQL_SUCCESS;
 	case SQL_DIAG_CONNECTION_NAME:
 	case SQL_DIAG_SERVER_NAME:
 	case SQL_DIAG_SUBCLASS_ORIGIN:
+		if (buflen > 0)
+			((char*)ptr)[0] = '\0';
 		if (out_len)
 			*out_len = 0;
 		ptr = "";
@@ -550,6 +573,7 @@ free_connect(SQLHDBC hdbc)
 	free(ocon->e.message);
 	free(ocon->opt_timeout);
 	free(ocon->id);
+	free(ocon->database);
 	free(ocon);
 	return SQL_SUCCESS;
 }

@@ -618,8 +618,16 @@ main(int ac, char* av[])
 	testfail(test_driver_connect("DSN=tarantoolTest;UID=test;PWD=wrongpwd;PORT=33000;UID=test;PWD=test"));
 	const char *good_dsn = "DRIVER=Tarantool;SERVER=100.96.161.41;"
 		"UID=test;PWD=test;PORT=33000;"
-		"LOG_FILENAME=./odbc.log;LOG_LEVEL=5";
+		"LOG_FILENAME=C:\\Users\\alexey.gadzhiev\\ODBC.LOG;LOG_LEVEL=5";
+
+	const char *bad_dsn = "DRIVER=Tarantool;SERVER=localhost;"
+		"UID=test;PWD=test;PORT=33000;"
+		"LOG_FILENAME=C:\\Users\\alexey.gadzhiev\\ODBC.LOG;LOG_LEVEL=5";
+
 	test(test_driver_connect(good_dsn));
+
+	test(test_driver_connect(bad_dsn));
+
 	test(test_prepare(good_dsn,"select * from test"));
 	/* next test is ok since we don't check sql text at prepare stage */
 	test(test_prepare(good_dsn,"wrong wrong wrong * from test"));
