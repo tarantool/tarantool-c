@@ -555,6 +555,8 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id,
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
 
+	LOG_INFO (stmt, "SQLColAttribute(Attribute=%hu, ColNumber=%hu)\n", id, ncol);
+
 	--ncol;
 
 	if (!stmt->tnt_statement) {

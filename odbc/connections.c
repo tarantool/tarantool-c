@@ -40,7 +40,9 @@ m_strncasecmp(const char *s1, const char *s2, size_t n)
 
 #ifdef _WIN32
 /* It's a plan N*N strsep implementation.
-*/
+ * It's easy to implement O(N) strsep but it needs some context pointer to
+ * store hash table  between releted calls.
+ */
 static inline char *
 strsep(char **p, const char *delim)
 {
@@ -65,12 +67,16 @@ strsep(char **p, const char *delim)
 }
 #endif
 
+/* TODO: implement FILEDSN and all staff connected with it */
+
+
 
 void
 free_dsn(struct dsn *dsn)
 {
 	if(dsn) {
 		free(dsn->dsn);
+		free(dsn->driver);
 		free(dsn->database);
 		free(dsn->host);
 		free(dsn->flag);
@@ -216,6 +222,9 @@ set_dsn_attr_string(odbc_connect *tcon, struct keyval *kv)
 	if ((v=get_attr("UID",kv))) {
 		strcpy(ret->user,v);
 	}
+	if ((v=get_attr("DRIVER",kv))) {
+		strcpy(ret->driver,v);
+	}
 	if ((v=get_attr("PWD",kv))) {
 		strcpy(ret->password,v);
 	}
@@ -248,10 +257,14 @@ int
 make_connect_string(char *buf, odbc_connect *dbc)
 {
 	struct dsn *d = dbc->dsn_params;
-	return snprintf(buf, PARAMSZ, "DSN=%s;UID=%s;PWD=%s;SERVER=%s;DATABASE=%s;"
-			"FLAGS=%s;PORT=%d;TIMEOUT=%d;LOG_FILENAME=%s;LOG_LEVEL=%d",
-			d->dsn, d->user, d->password, d->host, d->database, d->flag, d->port,
-			d->timeout, d->log_filename, d->log_level);
+	char driver_str[256+8]="";
+	if ((d->driver)[0]!='\0') {
+		snprintf(driver_str, sizeof(driver_str), "DRIVER=%s;", d->driver);
+	}
+	return snprintf(buf, PARAMSZ, "%sUID=%s;PWD=%s;SERVER=%s;DATABASE=%s;"
+			"FLAGS=%s;PORT=%d;TIMEOUT=%d;LOG_FILENAME=%s;LOG_LEVEL=%d;DSN=%s", driver_str,
+			d->user, d->password, d->host, d->database, d->flag, d->port,
+			d->timeout, d->log_filename, d->log_level,d->dsn);
 }
 
 
@@ -282,6 +295,7 @@ alloc_dsn(void)
 	    alloc_z(&ret->flag) &&
 	    alloc_z(&ret->user) &&
 	    alloc_z(&ret->password) &&
+	    alloc_z(&ret->driver) &&
 	    alloc_z(&ret->log_filename))
 		return ret;
 	else
@@ -393,6 +407,17 @@ real_connect(odbc_connect *tcon)
 	return SQL_SUCCESS;
 }
 
+void
+open_log(odbc_connect *tcon)
+{
+	if (tcon->dsn_params->log_filename && tcon->dsn_params->log_filename[0]!='\0') {
+		tcon->log = fopen(tcon->dsn_params->log_filename,"a");
+		tcon->log_level = tcon->dsn_params->log_level;
+		/* Maybe to turn on buffering here?*/
+		if(tcon->log)
+			setvbuf(tcon->log, NULL, _IONBF, 0);
+	}
+}
 
 SQLRETURN
 odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,
@@ -425,13 +450,7 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	set_dsn_attr_string(tcon, kv);
 	free_keys(kv);
 
-	if (tcon->dsn_params->log_filename && tcon->dsn_params->log_filename[0]!='\0') {
-		tcon->log = fopen(tcon->dsn_params->log_filename,"a");
-		tcon->log_level = tcon->dsn_params->log_level;
-		/* Maybe to turn on buffering here?*/
-		if(tcon->log)
-			setvbuf(tcon->log, NULL, _IONBF, 0);
-	}
+	open_log(tcon);
 
 	LOG_TRACE(tcon,"SQLDriverConnect(host=%s,port=%d,user=%s)\n", tcon->dsn_params->host,
 		  tcon->dsn_params->port, tcon->dsn_params->user);
@@ -473,6 +492,9 @@ get_connect_attr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
 	odbc_connect *ocon = (odbc_connect *)hdbc;
 	if (!ocon)
 		return SQL_ERROR;
+
+	LOG_INFO (ocon, "SQLGetConnectAttr(Attribute=%d)\n", (int)att);
+
 	switch (att) {
 	case SQL_ATTR_LOGIN_TIMEOUT:
 	case SQL_ATTR_CONNECTION_TIMEOUT:
@@ -561,10 +583,7 @@ odbc_dbconnect (SQLHDBC dbch, SQLCHAR *serv, SQLSMALLINT serv_sz, SQLCHAR *user,
 	    || !set_connection_params(tcon, user, user_sz, auth, auth_sz))
 		return SQL_ERROR;
 
-	if (tcon->dsn_params->log_filename && tcon->dsn_params->log_filename[0]!='\0') {
-		tcon->log = fopen(tcon->dsn_params->log_filename,"a");
-		tcon->log_level = tcon->dsn_params->log_level;
-	}
+	open_log(tcon);
 
 	LOG_TRACE(tcon,"SQLConnect(host=%s,port=%d,user=%s)\n", tcon->dsn_params->host,
 		  tcon->dsn_params->port, tcon->dsn_params->user);

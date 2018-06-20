@@ -58,6 +58,7 @@ struct dsn {
 	char *flag;
 	int log_level;
 	char *log_filename;
+	char *driver;
 };
 
 struct error_holder {
