@@ -159,7 +159,8 @@ tnt_read_affected_rows(tnt_stmt_t * stmt)
 		mp_decode_uint(&stmt->reply->sqlinfo);	/* ==
 							 * IPROTO_SQL_ROW_COUNT */
 		stmt->a_rows = mp_decode_uint(&stmt->reply->sqlinfo);
-	}
+	} else
+		stmt->a_rows = -1;
 }
 
 
@@ -395,7 +396,10 @@ bind2object(tnt_stmt_t* stmt)
 				goto error;
 			close_map = 1;
 		}
-		switch(stmt->ibind[npar-i-1].type) {
+		int tp = (stmt->ibind[npar-i-1].is_null &&
+			  *(stmt->ibind[npar-i-1].is_null))? TNTC_NIL:
+			stmt->ibind[npar-i-1].type;
+		switch(tp) {
 		case TNTC_NIL:
 			if (tnt_object_add_nil(obj) == FAIL)
 				goto error;
@@ -626,6 +630,7 @@ tnt_filfull_stmt(tnt_stmt_t *stmt)
 	if (stmt->data) {
 		tnt_fetch_fields(stmt);
 		stmt->qtype = SEL;
+		stmt->a_rows = -1;
 	} else {
 		tnt_read_affected_rows(stmt);
 		stmt->qtype = DML;
@@ -935,7 +940,7 @@ tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col)
 int64_t
 tnt_affected_rows(tnt_stmt_t * stmt)
 {
-	return stmt ? stmt->a_rows : 0;
+	return stmt ? stmt->a_rows : -1;
 }
 
 /*

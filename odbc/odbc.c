@@ -359,7 +359,7 @@ SQLDescribeParam(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 }
 
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLExtendedFetch(
 	SQLHSTMT         StatementHandle,
 	SQLUSMALLINT     FetchOrientation,
@@ -386,7 +386,7 @@ SQLSetCursorName(
 {
 	return SQL_ERROR;
 }
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLColumns(
 	SQLHSTMT       StatementHandle,
 	SQLCHAR *      CatalogName,
@@ -401,7 +401,7 @@ SQLColumns(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLGetTypeInfo(
 	SQLHSTMT      StatementHandle,
 	SQLSMALLINT   DataType)
@@ -409,7 +409,7 @@ SQLGetTypeInfo(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLParamData(
 	SQLHSTMT       StatementHandle,
 	SQLPOINTER *   ValuePtrPtr)
@@ -417,7 +417,7 @@ SQLParamData(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLPutData(
 	SQLHSTMT     StatementHandle,
 	SQLPOINTER   DataPtr,
@@ -426,7 +426,7 @@ SQLPutData(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLStatistics(
 	SQLHSTMT        StatementHandle,
 	SQLCHAR *       CatalogName,
@@ -441,7 +441,7 @@ SQLStatistics(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLTables(
 	SQLHSTMT       StatementHandle,
 	SQLCHAR *      CatalogName,
@@ -456,7 +456,7 @@ SQLTables(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLColumnPrivileges(
 	SQLHSTMT      StatementHandle,
 	SQLCHAR *     CatalogName,
@@ -471,7 +471,7 @@ SQLColumnPrivileges(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLPrimaryKeys(
 	SQLHSTMT       StatementHandle,
 	SQLCHAR *      CatalogName,
@@ -485,7 +485,7 @@ SQLPrimaryKeys(
 }
 
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLProcedureColumns(
 	SQLHSTMT      StatementHandle,
 	SQLCHAR *     CatalogName,
@@ -500,7 +500,7 @@ SQLProcedureColumns(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLProcedures(
 	SQLHSTMT       StatementHandle,
 	SQLCHAR *      CatalogName,
@@ -513,7 +513,7 @@ SQLProcedures(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLTablePrivileges(
 	SQLHSTMT      StatementHandle,
 	SQLCHAR *     CatalogName,
@@ -526,7 +526,7 @@ SQLTablePrivileges(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLCopyDesc(
 	SQLHDESC     SourceDescHandle,
 	SQLHDESC     TargetDescHandle)
@@ -546,7 +546,7 @@ SQLGetDescField(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLGetDescRec(
 	SQLHDESC        DescriptorHandle,
 	SQLSMALLINT     RecNumber,
@@ -563,7 +563,7 @@ SQLGetDescRec(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLGetStmtAttr(
 	SQLHSTMT        StatementHandle,
 	SQLINTEGER      Attribute,
@@ -574,7 +574,7 @@ SQLGetStmtAttr(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLSetDescField(
 	SQLHDESC      DescriptorHandle,
 	SQLSMALLINT   RecNumber,
@@ -585,7 +585,7 @@ SQLSetDescField(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLSetDescRec(
 	SQLHDESC      DescriptorHandle,
 	SQLSMALLINT   RecNumber,
@@ -601,7 +601,7 @@ SQLSetDescRec(
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLSetStmtAttr(
 	SQLHSTMT      StatementHandle,
 	SQLINTEGER    Attribute,
@@ -614,28 +614,28 @@ SQLSetStmtAttr(
 SQLRETURN SQL_API
 SQLBulkOperations(
 	SQLHSTMT       StatementHandle,
-	SQLUSMALLINT   Operation)
+	SQLSMALLINT   Operation)
 {
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLSpecialColumns(
 	SQLHSTMT      StatementHandle,
-	SQLSMALLINT   IdentifierType,
+	SQLUSMALLINT   IdentifierType,
 	SQLCHAR *     CatalogName,
 	SQLSMALLINT   NameLength1,
 	SQLCHAR *     SchemaName,
 	SQLSMALLINT   NameLength2,
 	SQLCHAR *     TableName,
 	SQLSMALLINT   NameLength3,
-	SQLSMALLINT   Scope,
-	SQLSMALLINT   Nullable)
+	SQLUSMALLINT   Scope,
+	SQLUSMALLINT   Nullable)
 {
 	return SQL_ERROR;
 }
 
-SQLRETURN SQL_API 
+SQLRETURN SQL_API
 SQLForeignKeys(
 	SQLHSTMT       StatementHandle,
 	SQLCHAR *      PKCatalogName,
@@ -654,7 +654,7 @@ SQLForeignKeys(
 	return SQL_ERROR;
 }
 
-SQLRETURN   SQL_API 
+SQLRETURN   SQL_API
 SQLError(SQLHENV henv,
 	SQLHDBC hdbc, SQLHSTMT hstmt,
 	SQLCHAR *szSqlState, SQLINTEGER *pfNativeError,

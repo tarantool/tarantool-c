@@ -13,7 +13,7 @@
 static inline long
 pm_atomic_load(volatile long *val)
 {
-	
+
 	return InterlockedOr(val, 0);
 }
 

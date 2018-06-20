@@ -448,7 +448,7 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 	}
 	SQLRETURN ret = real_connect(tcon);
 
-	if ((ret == SQL_SUCCESS || ret == SQL_SUCCESS_WITH_INFO) 
+	if ((ret == SQL_SUCCESS || ret == SQL_SUCCESS_WITH_INFO)
 		&& ( out_conn_s || out_len)) {
 		char buff[PARAMSZ];
 		int len = make_connect_string(buff,tcon);
@@ -483,18 +483,19 @@ get_connect_attr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
 		if (olen)
 			*olen = sizeof(int32_t);
 		break;
-	case SQL_ATTR_CURRENT_CATALOG:
-		int slen = 0;
+	case SQL_ATTR_CURRENT_CATALOG: {
+		int dlen = 0;
 		if (val) {
 			if (ocon->database) {
-				slen = strlen(ocon->database);
-				int cp_len = (len < (slen + 1))? len: slen + 1;
+				dlen = strlen(ocon->database);
+				int cp_len = (len < (dlen + 1))? len: dlen + 1;
 				strncpy((char*)val, ocon->database, cp_len);
 				((char*)val)[cp_len-1] = 0;
 			}
 		}
 		if (olen)
-			*olen = (SQLINTEGER)slen;
+			*olen = (SQLINTEGER)dlen;
+	}
 		break;
 	default:
 		return SQL_ERROR;
@@ -511,7 +512,7 @@ set_connect_attr(SQLHDBC hdbc, SQLINTEGER att, SQLPOINTER val, SQLINTEGER len)
 		return SQL_ERROR;
 	switch (att) {
 	case SQL_ATTR_CONNECTION_TIMEOUT:
-	case SQL_ATTR_LOGIN_TIMEOUT:	
+	case SQL_ATTR_LOGIN_TIMEOUT:
 		if (!ocon->opt_timeout) {
 			ocon->opt_timeout = (int32_t *)malloc(sizeof(int32_t));
 			if (!ocon->opt_timeout)

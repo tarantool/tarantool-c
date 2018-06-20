@@ -15,8 +15,9 @@
 #define NODATA (-2)
 
 enum CONV_ERROR {
-	TRUNCATE = 2,
-	CONVERT = 1
+	NOERROR = 0,
+	CONVERT = 1,
+	TRUNCATE = 2
 };
 
 enum QUERY_TYPE {
@@ -47,12 +48,13 @@ struct tnt_coldata {
  */
 typedef struct tnt_bind {
 	char *name;
-	int32_t type;
+	int type;
 	void *buffer;
 	tnt_size_t in_len;
 	tnt_size_t *out_len;
 	int *is_null;
-	int *error;		/* conversation result. O is OK */
+	int *error; /* conversion result. O is OK, 1 - convert error, 2 - truncate error,
+		   See CONV_ERROR enum.*/
 } tnt_bind_t;
 
 /* This error codes are related to statment level. */

@@ -1,4 +1,3 @@
-
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -10,7 +9,7 @@
 #include <string.h>
 #include <stdint.h>
 
-static inline int 
+static inline int
 m_strcasecmp(const char *s1, const char *s2)
 {
 	while (*s1 != 0 && *s2 != 0 && (tolower(*s1) - tolower(*s2)) == 0) {
@@ -155,7 +154,7 @@ test_driver_connect(const char *dsn) {
 		// Connect to data source
 		retcode = SQLDriverConnect(st.hdbc, 0, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)out_dsn,
 					   sizeof(out_dsn), &out_len, SQL_DRIVER_NOPROMPT);
-		
+
 
 
 		// Allocate statement handle
