@@ -103,7 +103,9 @@ enum statement_state {
 	PREPARED,
 	EXECUTED
 };
-
+struct descriptor {
+	int type;
+};
 typedef struct odbc_stmt_t {
 	struct odbc_stmt_t *next;
 	struct odbc_stmt_t *prev;
@@ -123,6 +125,10 @@ typedef struct odbc_stmt_t {
 	int log_level;
 	FILE *log;
 	char *id;
+	struct descriptor *apd;
+	struct descriptor *ipd;
+	struct descriptor *ard;
+	struct descriptor *ird;
 } odbc_stmt;
 
 typedef struct odbc_env_t {

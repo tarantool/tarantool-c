@@ -565,13 +565,13 @@ SQLGetDescRec(
 
 SQLRETURN SQL_API
 SQLGetStmtAttr(
-	SQLHSTMT        StatementHandle,
-	SQLINTEGER      Attribute,
-	SQLPOINTER      ValuePtr,
-	SQLINTEGER      BufferLength,
-	SQLINTEGER *    StringLengthPtr)
+	SQLHSTMT        stmth,
+	SQLINTEGER      att,
+	SQLPOINTER      ptr,
+	SQLINTEGER      buflen,
+	SQLINTEGER *    olen)
 {
-	return SQL_ERROR;
+	return stmt_get_attr(stmth, att, ptr, buflen, olen);
 }
 
 SQLRETURN SQL_API

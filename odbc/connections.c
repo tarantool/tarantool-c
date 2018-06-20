@@ -509,7 +509,7 @@ get_connect_attr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
 		int dlen = 0;
 		if (val) {
 			if (ocon->database) {
-				dlen = strlen(ocon->database);
+				dlen = (int)strlen(ocon->database);
 				int cp_len = (len < (dlen + 1))? len: dlen + 1;
 				strncpy((char*)val, ocon->database, cp_len);
 				((char*)val)[cp_len-1] = 0;

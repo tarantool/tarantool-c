@@ -705,3 +705,95 @@ param_info(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 		       "SQLDescribeParam");
 	return SQL_ERROR;
 }
+
+stmt_set_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER val,
+	SQLINTEGER vallen)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+	if (!stmt)
+		return SQL_INVALID_HANDLE;
+
+	LOG_INFO(stmt, "SQLSetStmtAttr(att=%d)\n", att);	
+
+	switch (att) {
+	case SQL_ATTR_NOSCAN:
+		/* TODO */
+		return SQL_SUCCESS;
+	case SQL_ATTR_METADATA_ID:
+		/* TODO */
+		return SQL_SUCCESS;
+	case SQL_ATTR_APP_ROW_DESC:
+	case SQL_ATTR_APP_PARAM_DESC:
+	case SQL_ATTR_CURSOR_SCROLLABLE:
+	case SQL_ATTR_CURSOR_SENSITIVITY:
+	case SQL_ATTR_ASYNC_ENABLE:
+	case SQL_ATTR_CONCURRENCY:
+	case SQL_ATTR_CURSOR_TYPE:          /// Libreoffice Base
+	case SQL_ATTR_ENABLE_AUTO_IPD:
+	case SQL_ATTR_FETCH_BOOKMARK_PTR:
+	case SQL_ATTR_KEYSET_SIZE:
+	case SQL_ATTR_MAX_LENGTH:
+	case SQL_ATTR_MAX_ROWS:
+	case SQL_ATTR_PARAM_BIND_OFFSET_PTR:
+	case SQL_ATTR_PARAM_BIND_TYPE:
+	case SQL_ATTR_PARAM_OPERATION_PTR:
+	case SQL_ATTR_PARAM_STATUS_PTR:
+	case SQL_ATTR_PARAMS_PROCESSED_PTR:
+	case SQL_ATTR_PARAMSET_SIZE:
+	case SQL_ATTR_QUERY_TIMEOUT:
+	case SQL_ATTR_RETRIEVE_DATA:
+	case SQL_ATTR_ROW_NUMBER:
+	case SQL_ATTR_ROW_OPERATION_PTR:
+	case SQL_ATTR_ROW_STATUS_PTR:       /// Libreoffice Base
+	case SQL_ATTR_ROWS_FETCHED_PTR:
+	case SQL_ATTR_ROW_ARRAY_SIZE:
+	case SQL_ATTR_SIMULATE_CURSOR:
+	case SQL_ATTR_USE_BOOKMARKS:
+		return SQL_SUCCESS;
+
+	case SQL_ATTR_IMP_ROW_DESC:     /* 10012 (read-only) */
+	case SQL_ATTR_IMP_PARAM_DESC:       /* 10013 (read-only) */
+		return SQL_ERROR;
+
+	case SQL_ATTR_ROW_BIND_OFFSET_PTR:
+	case SQL_ATTR_ROW_BIND_TYPE:
+	default:
+		set_stmt_error(stmt, ODBC_IM001_ERROR,
+			"Driver does not support this statment attribute",
+			"SQLSetStmtAttr");
+		return SQL_ERROR;
+	}
+}
+
+SQLRETURN
+stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr, 
+	SQLINTEGER buflen, SQLINTEGER *olen)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+	if (!stmt)
+		return SQL_INVALID_HANDLE;
+	LOG_INFO(stmt, "SQLGetStmtAttr(att=%d)\n", att);
+
+	*(int*)ptr = 0;	
+	switch (att) {
+	case SQL_ATTR_APP_ROW_DESC:             /* 10010 */
+		*(int*)ptr = (SQLPOINTER)stmt->ard;
+		break;
+	case SQL_ATTR_APP_PARAM_DESC:   /* 10011 */
+		*(int*)ptr = (SQLPOINTER)stmt->apd;
+		break;
+	case SQL_ATTR_IMP_ROW_DESC:             /* 10012 */
+		*(int*)ptr = (SQLPOINTER)stmt->ird;
+		break;
+	case SQL_ATTR_IMP_PARAM_DESC:   /* 10013 */
+		*(int*)ptr = (SQLPOINTER)stmt->ipd;
+		break;
+	}
+	if (*(int*)ptr) {
+		if (olen)
+			*olen = sizeof(SQLPOINTER);
+		return SQL_SUCCESS;
+	}
+
+	return SQL_ERROR;
+}

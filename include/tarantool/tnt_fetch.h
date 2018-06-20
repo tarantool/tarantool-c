@@ -15,7 +15,7 @@
 #define NODATA (-2)
 
 enum CONV_ERROR {
-	NOERROR = 0,
+	NOERR = 0,
 	CONVERT = 1,
 	TRUNCATE = 2
 };

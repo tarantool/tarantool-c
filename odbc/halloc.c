@@ -278,7 +278,7 @@ safe_copy(char *dst, const char *src, int dstlen)
 {
 	if (dstlen == 0)
 		return 0;
-	int len = strlen(src) + 1;
+	int len = (int)strlen(src) + 1;
 	if (dstlen < len)
 		len = dstlen;
 	strncpy(dst, src, len);
@@ -590,11 +590,27 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt)
 
 	*out = (odbc_stmt*)malloc(sizeof(odbc_stmt));
 	if (*out == NULL) {
+mem_error:	
 		set_connect_error(con, ODBC_MEM_ERROR,
 			"Unable to allocate memory for statement", "SQLStatement");
 		return SQL_ERROR;
 	}
 	memset(*out, 0, sizeof(odbc_stmt));
+	
+	(*out)->apd = (struct descriptor*) malloc(sizeof(struct descriptor));
+	(*out)->ipd = (struct descriptor*) malloc(sizeof(struct descriptor));
+	(*out)->ard = (struct descriptor*) malloc(sizeof(struct descriptor));
+	(*out)->ird = (struct descriptor*) malloc(sizeof(struct descriptor));
+
+	if (!(*out)->apd || !(*out)->ipd || !(*out)->ard || !(*out)->ird) {
+		free((*out)->apd);
+		free((*out)->ipd);
+		free((*out)->ard);
+		free((*out)->ird);
+		free(*out);
+		goto mem_error;
+	}
+
 	(*out)->connect = con;
 
 	if (con->stmt_end) {
@@ -613,6 +629,7 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt)
 	(*out)->log = con->log;
 	(*out)->log_level = con->log_level;
 	(*out)->id = gen_next_id(con->id, &stmt_sq);
+	
 	return SQL_SUCCESS;
 }
 
@@ -624,8 +641,14 @@ mem_free_stmt(odbc_stmt *stmt)
 	free_stmt(stmt, SQL_CLOSE);
 	free_stmt(stmt, SQL_RESET_PARAMS);
 	free_stmt(stmt, SQL_UNBIND);
+
 	free(stmt->e.message);
 	free(stmt->id);
+	free(stmt->apd);
+	free(stmt->ipd);
+	free(stmt->ard);
+	free(stmt->ird);
+
 
 	odbc_connect *parent = stmt->connect;
 	if (stmt->next != stmt) {

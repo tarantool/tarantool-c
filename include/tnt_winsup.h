@@ -1,6 +1,10 @@
 #ifndef TNT_WINSUP_H
 #define TNT_WINSUP_H 1
+
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS 1
+#endif
+
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <stdlib.h>
