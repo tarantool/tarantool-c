@@ -11,6 +11,10 @@ if(POLICY CMP0037)
     cmake_policy(SET CMP0037 OLD) # don't blame custom target names
 endif(POLICY CMP0037)
 
+if(POLICY CMP0002)
+    cmake_policy(SET CMP0002 OLD) # allow submodules with same target names
+endif(POLICY CMP0002)
+
 set(ENABLE_BUNDLED_MSGPUCK_DEFAULT OFF)
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/msgpuck/CMakeLists.txt)
     set(ENABLE_BUNDLED_MSGPUCK_DEFAULT ON)
