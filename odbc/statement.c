@@ -197,7 +197,6 @@ stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT
 	return SQL_SUCCESS;
 }
 
-
 SQLRETURN
 stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER val, SQLLEN in_len, SQLLEN *out_len)
 {
@@ -713,7 +712,7 @@ stmt_set_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER val,
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
 
-	LOG_INFO(stmt, "SQLSetStmtAttr(att=%d)\n", att);	
+	LOG_INFO(stmt, "SQLSetStmtAttr(att=%d)\n", att);
 
 	switch (att) {
 	case SQL_ATTR_NOSCAN:
@@ -728,7 +727,7 @@ stmt_set_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER val,
 	case SQL_ATTR_CURSOR_SENSITIVITY:
 	case SQL_ATTR_ASYNC_ENABLE:
 	case SQL_ATTR_CONCURRENCY:
-	case SQL_ATTR_CURSOR_TYPE:          
+	case SQL_ATTR_CURSOR_TYPE:
 	case SQL_ATTR_ENABLE_AUTO_IPD:
 	case SQL_ATTR_FETCH_BOOKMARK_PTR:
 	case SQL_ATTR_KEYSET_SIZE:
@@ -744,15 +743,15 @@ stmt_set_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER val,
 	case SQL_ATTR_RETRIEVE_DATA:
 	case SQL_ATTR_ROW_NUMBER:
 	case SQL_ATTR_ROW_OPERATION_PTR:
-	case SQL_ATTR_ROW_STATUS_PTR:       
+	case SQL_ATTR_ROW_STATUS_PTR:
 	case SQL_ATTR_ROWS_FETCHED_PTR:
 	case SQL_ATTR_ROW_ARRAY_SIZE:
 	case SQL_ATTR_SIMULATE_CURSOR:
 	case SQL_ATTR_USE_BOOKMARKS:
 		return SQL_SUCCESS;
 
-	case SQL_ATTR_IMP_ROW_DESC:     
-	case SQL_ATTR_IMP_PARAM_DESC:      
+	case SQL_ATTR_IMP_ROW_DESC:
+	case SQL_ATTR_IMP_PARAM_DESC:
 		return SQL_ERROR;
 
 	case SQL_ATTR_ROW_BIND_OFFSET_PTR:
@@ -768,7 +767,7 @@ stmt_set_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER val,
 
 
 SQLRETURN
-stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr, 
+stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr,
 	SQLINTEGER buflen, SQLINTEGER *olen)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
@@ -776,7 +775,7 @@ stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr,
 		return SQL_INVALID_HANDLE;
 	LOG_INFO(stmt, "SQLGetStmtAttr(att=%d)\n", att);
 
-	*(void**)ptr = 0;	
+	*(void**)ptr = 0;
 	switch (att) {
 	case SQL_ATTR_APP_ROW_DESC:             /* 10010 */
 		*(void**)ptr = (SQLPOINTER)stmt->ard;
@@ -800,11 +799,11 @@ stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr,
 #define SET_LEN(t) do {if (olen) *olen = sizeof(t);} while(0)
 
 	switch (att) {
-	case SQL_ATTR_CURSOR_SCROLLABLE: 
+	case SQL_ATTR_CURSOR_SCROLLABLE:
 		*(SQLULEN*)ptr = (SQLULEN) SQL_NONSCROLLABLE;
 		SET_LEN(SQLULEN);
 		break;
-	case SQL_ATTR_CURSOR_SENSITIVITY: 
+	case SQL_ATTR_CURSOR_SENSITIVITY:
 		*(SQLULEN*)ptr = (SQLULEN)SQL_INSENSITIVE;
 		SET_LEN(SQLULEN);
 		break;
@@ -812,7 +811,7 @@ stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr,
 		*(SQLULEN*)ptr = (SQLULEN)SQL_ASYNC_ENABLE_OFF;
 		SET_LEN(SQLULEN);
 		break;
-	case SQL_ATTR_CONCURRENCY: 
+	case SQL_ATTR_CONCURRENCY:
 		*(SQLULEN*)ptr = (SQLULEN)SQL_CONCUR_READ_ONLY;
 		SET_LEN(SQLULEN);
 		break;
@@ -828,11 +827,11 @@ stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr,
 		*(SQLULEN*)ptr = (SQLULEN)0;
 		SET_LEN(SQLULEN);
 		break;
-	case SQL_ATTR_MAX_ROWS: 
+	case SQL_ATTR_MAX_ROWS:
 		*(SQLULEN*)ptr = (SQLULEN)0;
 		SET_LEN(SQLULEN);
 		break;
-	case SQL_ATTR_METADATA_ID: 
+	case SQL_ATTR_METADATA_ID:
 		*(SQLULEN*)ptr = (SQLULEN)SQL_FALSE;
 		SET_LEN(SQLULEN);
 		break;
@@ -857,7 +856,7 @@ stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr,
 		*(SQLULEN*)ptr = (SQLULEN)SQL_UB_OFF;
 		SET_LEN(SQLULEN);
 		break;
-	case SQL_ATTR_ROW_BIND_TYPE: 
+	case SQL_ATTR_ROW_BIND_TYPE:
 		*(SQLULEN*)ptr = (SQLULEN)SQL_BIND_TYPE_DEFAULT;
 		SET_LEN(SQLULEN);
 		break;
