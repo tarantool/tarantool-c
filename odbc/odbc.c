@@ -603,12 +603,12 @@ SQLSetDescRec(
 
 SQLRETURN SQL_API
 SQLSetStmtAttr(
-	SQLHSTMT      StatementHandle,
-	SQLINTEGER    Attribute,
-	SQLPOINTER    ValuePtr,
-	SQLINTEGER    StringLength)
+	SQLHSTMT      stmth,
+	SQLINTEGER    att,
+	SQLPOINTER    ptr,
+	SQLINTEGER    plen)
 {
-	return SQL_ERROR;
+	return stmt_set_attr(stmth, att, ptr, plen);
 }
 
 SQLRETURN SQL_API

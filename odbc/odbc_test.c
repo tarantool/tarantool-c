@@ -183,7 +183,7 @@ test_prepare(const char *dsn, const char *sql) {
 	SQLRETURN retcode;
 
 	if (init_dbc(&st,dsn)) {
-		retcode = SQLPrepare(st.hstmt, (SQLCHAR*)sql, strlen(sql));
+		retcode = SQLPrepare(st.hstmt, (SQLCHAR*)sql, SQL_NTS);
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 			ret_code = 1;
 		} else {

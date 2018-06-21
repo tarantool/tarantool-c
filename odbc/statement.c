@@ -728,7 +728,7 @@ stmt_set_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER val,
 	case SQL_ATTR_CURSOR_SENSITIVITY:
 	case SQL_ATTR_ASYNC_ENABLE:
 	case SQL_ATTR_CONCURRENCY:
-	case SQL_ATTR_CURSOR_TYPE:          /// Libreoffice Base
+	case SQL_ATTR_CURSOR_TYPE:          
 	case SQL_ATTR_ENABLE_AUTO_IPD:
 	case SQL_ATTR_FETCH_BOOKMARK_PTR:
 	case SQL_ATTR_KEYSET_SIZE:
@@ -744,26 +744,28 @@ stmt_set_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER val,
 	case SQL_ATTR_RETRIEVE_DATA:
 	case SQL_ATTR_ROW_NUMBER:
 	case SQL_ATTR_ROW_OPERATION_PTR:
-	case SQL_ATTR_ROW_STATUS_PTR:       /// Libreoffice Base
+	case SQL_ATTR_ROW_STATUS_PTR:       
 	case SQL_ATTR_ROWS_FETCHED_PTR:
 	case SQL_ATTR_ROW_ARRAY_SIZE:
 	case SQL_ATTR_SIMULATE_CURSOR:
 	case SQL_ATTR_USE_BOOKMARKS:
 		return SQL_SUCCESS;
 
-	case SQL_ATTR_IMP_ROW_DESC:     /* 10012 (read-only) */
-	case SQL_ATTR_IMP_PARAM_DESC:       /* 10013 (read-only) */
+	case SQL_ATTR_IMP_ROW_DESC:     
+	case SQL_ATTR_IMP_PARAM_DESC:      
 		return SQL_ERROR;
 
 	case SQL_ATTR_ROW_BIND_OFFSET_PTR:
 	case SQL_ATTR_ROW_BIND_TYPE:
 	default:
 		set_stmt_error(stmt, ODBC_IM001_ERROR,
-			"Driver does not support this statment attribute",
+			"Driver does not support the statment attribute",
 			"SQLSetStmtAttr");
 		return SQL_ERROR;
 	}
 }
+
+
 
 SQLRETURN
 stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr, 
@@ -774,26 +776,110 @@ stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr,
 		return SQL_INVALID_HANDLE;
 	LOG_INFO(stmt, "SQLGetStmtAttr(att=%d)\n", att);
 
-	*(int*)ptr = 0;	
+	*(void**)ptr = 0;	
 	switch (att) {
 	case SQL_ATTR_APP_ROW_DESC:             /* 10010 */
-		*(int*)ptr = (SQLPOINTER)stmt->ard;
+		*(void**)ptr = (SQLPOINTER)stmt->ard;
 		break;
 	case SQL_ATTR_APP_PARAM_DESC:   /* 10011 */
-		*(int*)ptr = (SQLPOINTER)stmt->apd;
+		*(void**)ptr = (SQLPOINTER)stmt->apd;
 		break;
 	case SQL_ATTR_IMP_ROW_DESC:             /* 10012 */
-		*(int*)ptr = (SQLPOINTER)stmt->ird;
+		*(void**)ptr = (SQLPOINTER)stmt->ird;
 		break;
 	case SQL_ATTR_IMP_PARAM_DESC:   /* 10013 */
-		*(int*)ptr = (SQLPOINTER)stmt->ipd;
+		*(void**)ptr = (SQLPOINTER)stmt->ipd;
 		break;
 	}
-	if (*(int*)ptr) {
+	if (*(void**)ptr) {
 		if (olen)
 			*olen = sizeof(SQLPOINTER);
 		return SQL_SUCCESS;
 	}
 
-	return SQL_ERROR;
+#define SET_LEN(t) do {if (olen) *olen = sizeof(t);} while(0)
+
+	switch (att) {
+	case SQL_ATTR_CURSOR_SCROLLABLE: 
+		*(SQLULEN*)ptr = (SQLULEN) SQL_NONSCROLLABLE;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_CURSOR_SENSITIVITY: 
+		*(SQLULEN*)ptr = (SQLULEN)SQL_INSENSITIVE;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_ASYNC_ENABLE:
+		*(SQLULEN*)ptr = (SQLULEN)SQL_ASYNC_ENABLE_OFF;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_CONCURRENCY: 
+		*(SQLULEN*)ptr = (SQLULEN)SQL_CONCUR_READ_ONLY;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_CURSOR_TYPE:
+		*(SQLULEN*)ptr = (SQLULEN)SQL_CURSOR_FORWARD_ONLY;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_ENABLE_AUTO_IPD:
+		*(SQLULEN*)ptr = (SQLULEN)SQL_FALSE;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_MAX_LENGTH:
+		*(SQLULEN*)ptr = (SQLULEN)0;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_MAX_ROWS: 
+		*(SQLULEN*)ptr = (SQLULEN)0;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_METADATA_ID: 
+		*(SQLULEN*)ptr = (SQLULEN)SQL_FALSE;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_NOSCAN:
+		*(SQLULEN*)ptr = (SQLULEN)SQL_NOSCAN_ON;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_QUERY_TIMEOUT:
+		*(SQLULEN*)ptr = (SQLULEN)0;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_RETRIEVE_DATA:
+		*(SQLULEN*)ptr = (SQLULEN)SQL_RD_ON;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_ROW_NUMBER:
+		/* XXX: It's a place for row number in a result set.*/
+		*(SQLULEN*)ptr = (SQLULEN)0;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_USE_BOOKMARKS:
+		*(SQLULEN*)ptr = (SQLULEN)SQL_UB_OFF;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_ROW_BIND_TYPE: 
+		*(SQLULEN*)ptr = (SQLULEN)SQL_BIND_TYPE_DEFAULT;
+		SET_LEN(SQLULEN);
+		break;
+	case SQL_ATTR_FETCH_BOOKMARK_PTR:
+	case SQL_ATTR_KEYSET_SIZE:
+	case SQL_ATTR_PARAM_BIND_OFFSET_PTR:
+	case SQL_ATTR_PARAM_BIND_TYPE:
+	case SQL_ATTR_PARAM_OPERATION_PTR:
+	case SQL_ATTR_PARAM_STATUS_PTR:
+	case SQL_ATTR_PARAMS_PROCESSED_PTR:
+	case SQL_ATTR_PARAMSET_SIZE:
+	case SQL_ATTR_ROW_BIND_OFFSET_PTR:
+	case SQL_ATTR_ROW_OPERATION_PTR:
+	case SQL_ATTR_ROW_STATUS_PTR:
+	case SQL_ATTR_ROWS_FETCHED_PTR:
+	case SQL_ATTR_ROW_ARRAY_SIZE:
+	case SQL_ATTR_SIMULATE_CURSOR:
+	default:
+		set_stmt_error(stmt, ODBC_IM001_ERROR,
+			"Driver does not support the statment attribute",
+			"SQLGetStmtAttr");
+		return SQL_ERROR;
+	}
+	return SQL_SUCCESS;
 }
