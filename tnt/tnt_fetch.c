@@ -681,8 +681,8 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 	case MP_UINT:
 		if (obind->type == TNTC_ULONG) {
 			unsigned long *v = obind->buffer;
-			*v = (unsigned long) stmt->row[i].v.i;
-			if (obind->error && (stmt->row[i].v.u>ULONG_MAX))
+			*v = (unsigned long) stmt->row[i].v.u;
+			if (obind->error && (stmt->row[i].v.u > ULONG_MAX))
 				*obind->error = TRUNCATE;
 		} else if (obind->type == TNTC_LONG || obind->type == TNTC_SLONG) {
 			long *v = obind->buffer;
@@ -709,10 +709,14 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			*v = (int) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>INT_MAX || stmt->row[i].v.i<INT_MIN))
 				*obind->error = TRUNCATE;
-		} else if (obind->type == TNTC_BIGINT || obind->type == TNTC_UBIGINT) {
+		}
+		else if (obind->type == TNTC_BIGINT || obind->type == TNTC_SBIGINT) {
 			/* TNTC_BIGINT ~~ MP_INT */
 			int64_t *v = obind->buffer;
 			*v = stmt->row[i].v.i;
+		} else if (obind->type == TNTC_UBIGINT) {
+			uint64_t *v = obind->buffer;
+			*v = stmt->row[i].v.u;
 		} else if (obind->type == MP_DOUBLE) {
 			double *v = obind->buffer;
 			*v = (double)stmt->row[i].v.i;
@@ -765,9 +769,13 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			*v = (int) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>INT_MAX || stmt->row[i].v.d<INT_MIN))
 				*obind->error = TRUNCATE;
-		} else if (obind->type == TNTC_BIGINT || obind->type == TNTC_UBIGINT) {
+		}
+		else if (obind->type == TNTC_BIGINT || obind->type == TNTC_SBIGINT) {
 			int64_t *v = obind->buffer;
 			*v = (int64_t)stmt->row[i].v.d;
+		} else if (obind->type == TNTC_UBIGINT) {
+			uint64_t *v = obind->buffer;
+			*v = (uint64_t)stmt->row[i].v.d;
 		} else if (obind->type == MP_DOUBLE) {
 			double *v = obind->buffer;
 			*v = stmt->row[i].v.d;
@@ -895,7 +903,7 @@ static int
 tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col)
 {
 	uint32_t sz = 0;
-	col->size = 0;
+	memset(col, 0, sizeof(struct tnt_coldata));
 	int tp = mp_typeof(*stmt->data);
 	switch (tp) {
 	case MP_UINT:
@@ -1052,6 +1060,12 @@ int64_t
 tnt_col_int(tnt_stmt_t *stmt, int icol)
 {
 	return stmt->row[icol].v.i;
+}
+
+uint64_t
+tnt_col_uint(tnt_stmt_t *stmt, int icol)
+{
+	return stmt->row[icol].v.u;
 }
 
 double

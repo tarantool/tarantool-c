@@ -395,7 +395,7 @@ do_fetchgetdata(struct set_handles *st, void *p)
 	while(row_cnt < 100) {
 		int code = SQLFetch(st->hstmt);
 		if (code == SQL_SUCCESS) {
-			SQLBIGINT long_val;
+			SQLBIGINT long_val=0;
 			SQLDOUBLE  double_val;
 			SQLCHAR str_val[BUFSIZ] = "";
 
@@ -411,8 +411,10 @@ do_fetchgetdata(struct set_handles *st, void *p)
 			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
 
 
-			fprintf(stderr, "long_val is %ld match is %ld double_val %lf and str_val is %s\n",
-				(long)long_val, pars[row_cnt], double_val, str_val);
+			fprintf(stderr, "long_val is %lld match is %ld double_val %lf and str_val is %s\n",
+				/* (long)*/ long_val, pars[row_cnt], double_val, str_val);
+			fprintf(stderr, "(long_val == pars[row_cnt])=%d\n",
+				(int)(((long)long_val) == pars[row_cnt]));
 			if (long_val == pars[row_cnt])
 				matches ++;
 			row_cnt ++ ;
@@ -701,5 +703,9 @@ main(int ac, char* av[])
 	test(test_fetch(good_dsn, "select * from dbl order by val",&par, do_fetchgetdata));
 	par.cnt = 44 ;
 	test(test_fetch(good_dsn, "select * from dbl where val=6", &par, do_fetchgetdata_stream));
+
+	fprintf(stderr, "sizeof(long)=%zu, sizeof(long long)=%zu\n", 
+		sizeof(long), sizeof(long long));
+
 //	test(test_execrowcount(good_dsn,"drop table str_table",1));
 }

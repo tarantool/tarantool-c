@@ -253,6 +253,10 @@ int tnt_col_type(tnt_stmt_t *, int col);
 int64_t tnt_col_int(tnt_stmt_t *, int col);
 
 /**
+* Returns value of column 'col' in current result row as a Unsigned Integer
+*/
+uint64_t tnt_col_uint(tnt_stmt_t *, int col);
+/**
  * Returns value of column 'col' in current result row as a Double
  */
 double tnt_col_double(tnt_stmt_t *, int col);
