@@ -253,7 +253,7 @@ test_inbind(const char *dsn, const char *sql,int p1,const char *p2) {
 
 	if (init_dbc(&st,dsn)) {
 		retcode = SQLPrepare(st.hstmt,(SQLCHAR*)sql, SQL_NTS);
-		SQLINTEGER int_val = p1;
+		long int_val = p1;
 		SQLCHAR *str_val = (SQLCHAR *)p2;
 		if (p2)
 			retcode = SQLBindParameter(st.hstmt, 1, SQL_PARAM_INPUT,
@@ -646,7 +646,7 @@ main(int ac, char* av[])
 
 	fprintf(stderr,"SQLRowCount next is ok: create table.\n");
 	test(test_execrowcount(good_dsn,"CREATE TABLE str_table(id STRING, val INTEGER,PRIMARY KEY (val))",1));
-	fprintf(stderr,"SQLRowCount next is ok: insert.\n");
+	fprintf(stderr,"[bad start] SQLRowCount next is ok: insert.\n");
 	test(test_execrowcount(good_dsn,"INSERT INTO str_table(id,val) VALUES ('aa',1)",1));
 	fprintf(stderr,"SQLRowCount next is fail: duplicate insert.\n");
 	testfail(test_execrowcount(good_dsn,"INSERT INTO str_table(id,val) VALUES ('aa',1)",0));
@@ -659,12 +659,16 @@ main(int ac, char* av[])
 	testfail(test_inbind(good_dsn,"INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
 
 	testfail(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",3,"Hello World"));
+	fprintf(stderr,"Start of 3 similar insert\n");
 	test(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
 	testfail(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
 	testfail(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",4,"Hello World"));
+	fprintf(stderr,"End of 3 similar insert\n");
 	fprintf(stderr, "next is good insert binding NULL\n");
+	fprintf(stderr,"Start of 2 similar insert\n");
 	test(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",5,NULL));
 	test(test_inbind(good_dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",5,NULL));
+	fprintf(stderr,"Start of 2 similar insert\n");
 	test(test_fetch(good_dsn, "select * from str_table", (void*)4, do_fetch));
 	test(test_fetch(good_dsn,"select id from str_table where val=100", 0, do_fetch));
 
@@ -683,6 +687,8 @@ main(int ac, char* av[])
 
 	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NULLABLE));
 	test(test_describecol(good_dsn, "select * from str_table", 1 , SQL_VARCHAR, "id", SQL_NO_NULLS));
+
+	fprintf(stderr, "end of bad code\n");
 
 	testfail(test_execrowcount(good_dsn,"drop table dbl",1));
 	test(test_execrowcount(good_dsn,"CREATE TABLE dbl(id STRING, val INTEGER, d DOUBLE, PRIMARY KEY (val))",1));
