@@ -73,7 +73,9 @@ stmt_execute(SQLHSTMT stmth)
 		if (!error) {
 			error = "Unknown error state";
 		}
-		set_stmt_error_len(stmt,tnt2odbc_error(tnt_stmt_code(stmt->tnt_statement)),error,(int)sz, "Execute");
+		set_stmt_error_len(stmt,tnt2odbc_error
+				   (tnt_stmt_code(stmt->tnt_statement)),
+				   error, (int)sz, "Execute");
 		return SQL_ERROR;
 	}
 
@@ -705,6 +707,7 @@ param_info(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 	return SQL_ERROR;
 }
 
+SQLRETURN
 stmt_set_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER val,
 	SQLINTEGER vallen)
 {

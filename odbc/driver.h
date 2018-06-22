@@ -254,12 +254,19 @@ SQLRETURN get_connect_attr(SQLHDBC hdbc, SQLINTEGER  att, SQLPOINTER val,
 SQLRETURN set_connect_attr(SQLHDBC hdbc, SQLINTEGER att, SQLPOINTER val,
 			   SQLINTEGER len);
 SQLRETURN end_transact(SQLSMALLINT htype, SQLHANDLE hndl, SQLSMALLINT tran_type);
-SQLRETURN get_info(SQLHDBC hndl, SQLUSMALLINT tp, SQLPOINTER iptr, SQLSMALLINT in_len, SQLSMALLINT * out_len);
-SQLRETURN  odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,
-			    SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLUSMALLINT drv_compl);
+SQLRETURN get_info(SQLHDBC hndl, SQLUSMALLINT tp, SQLPOINTER iptr, SQLSMALLINT in_len,
+		   SQLSMALLINT * out_len);
+SQLRETURN  odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
+			    SQLCHAR *out_conn_s, SQLSMALLINT buflen, SQLSMALLINT *out_len,
+			    SQLUSMALLINT drv_compl);
 SQLRETURN stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset);
 
 SQLRETURN param_info (SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 		      SQLULEN *out_len, SQLSMALLINT *out_dnum,
 		      SQLSMALLINT *is_null);
+
+SQLRETURN stmt_set_attr(SQLHSTMT stmth,	SQLINTEGER att,	SQLPOINTER ptr,	SQLINTEGER plen);
+SQLRETURN stmt_get_attr(SQLHSTMT stmth,	SQLINTEGER att,	SQLPOINTER ptr,	SQLINTEGER plen,
+			SQLINTEGER * olen);
+
 #endif
