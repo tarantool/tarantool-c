@@ -25,25 +25,9 @@
 }
 
 #ifdef _WIN32
-static HINSTANCE NEAR hModule;
-
-int __stdcall
-DllMain(HANDLE hinst, DWORD reason, LPVOID reserved)
-{
-	static int initialized = 0;
-
-	switch (reason) {
-	case DLL_PROCESS_ATTACH:
-		if (!initialized++) {
-			hModule = hinst;
-		}
-		break;
-	default:
-		break;
-	}
-	return 1;
-}
+extern HINSTANCE hModule;
 #endif
+
 
 /* plain copy from sqlite odbc driver */
 SQLRETURN

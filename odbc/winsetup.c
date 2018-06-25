@@ -17,7 +17,33 @@ struct dsn_attr {
 	THCAR logfile[RLEN];
 	TCHAR loglevel[RLEN];
 	TCHAR database[RLEN];
+	/* Function call parameters*/
+	LPCTSTR	driver_name;
+	WORD	cmd;
+	int is_default;
 };
+
+
+
+HINSTANCE hModule;
+
+int __stdcall
+DllMain(HANDLE hinst, DWORD reason, LPVOID reserved)
+{
+	static int initialized = 0;
+
+	switch (reason) {
+	case DLL_PROCESS_ATTACH:
+		if (!initialized++) {
+			hModule = hinst;
+		}
+		break;
+	default:
+		break;
+	}
+	return 1;
+}
+
 
 LPCTSTR
 windex(LPCTSTR dst, TCHAR c)
@@ -45,14 +71,24 @@ clen(LPCTSTR s)
 	return l;
 }
 
+TCHAR
+tol(TCHAR c)
+{
+	if (c >= 'A' && C <= 'Z') {
+		return c + ('a' - 'Z');
+	}
+	return c;
+}
+
 int
 keycmp(LPCTSTR l, int llen, LPCTSTR r)
 {
-	rlen = clen(r);
-	if (rlen != llen)
-		return 1;
-
-
+	while (--llen >= 0 && *r) {
+		int c = tol(*l++) - tol(*r++);
+		if (c != 0)
+			return c;
+	}
+	return (*r);
 }
 
 LPCTSTR
@@ -85,9 +121,11 @@ find_key(struct dsn_attr *da, LPCTSTR key, int len)
 	return 0;
 }
 
-parse_attr(LPCTSTR attr)
+#define RLEN  512
+
+void
+parse_attr(LPCTSTR attr, struct dsn_attr *da)
 {
-	dsn_attr da;
 	LPCTSTR ptr = attr;
 	TCHAR key[RLEN];
 	TCHAR val[RLEN];
@@ -95,7 +133,7 @@ parse_attr(LPCTSTR attr)
 		LPCTCSTR p = windex(ptr, '=');
 		if (p == 0)
 			break;
-		LPCTSTR val = find_key(&da, ptr, (char*)p - (char*)ptr);
+		LPCTSTR val = find_key(da, ptr, (char*)p - (char*)ptr);
 		if (val) {
 			p++;
 			ptr = copys(val, p);	
@@ -108,10 +146,45 @@ parse_attr(LPCTSTR attr)
 }
 
 BOOL
-ConfigDSN(HWND hwnd, WORD rq, LPCTSTR drv, LPCTSTR att)
+mod_dsn(HWND hwnd, struct dsn_attr* da)
 {
+	if (hwnd == 0) {
+		if (!da->dsn[0])
+			return TRUE;
+	} else if (DialogBoxParam(hModule, MAKEINTRESOURCE(CH_DLG),
+				hwnd, config_cb, (LPARAM)da)!= IDOK) {
+			MessageBox(NULL, TEXT("Unable to setup DSN", "Error", MB_OK);
+			return FALSE;	
+	}	
+	return set_attr(hwnd, da);
+}
 
+BOOL
+ConfigDSN(HWND hwnd, WORD rq, LPCTSTR drv, LPCTSTR iattr)
+{
+	struct dsn_attr *attr = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, 
+			sizeof(struct dsn_attr));
+	if (!attr)
+		return FALSE;
+	struct dsn_attr *da = (struct dsn_attr *)GlobalLock(attr);
+	if (iattr)
+		parse_attr(iattr, da);
+	BOOL ret_status;
+	switch (rq) {
+	case ODBC_REMOVE_DSN:
+		ret_status = da->dsn[0] && SQLRemoveDSNFromIni(da->dsn);
+		break;
+	case ODBC_ADD_DSN:
+	case ODBC_CONFIG_DSN:
+		da->cmd = rq;
+		da->driver_name = drv;
+		da->is_default = keycmp(da->dsn, clen(da->dsn), TEXT("Default"));
+		ret_status = mod_dsn(hwnd, da);
+		break;
+	}
 
+	GlobalUnlock(da);
+	GlobalFree(attr);
 
-
+	return ret_status;
 }
