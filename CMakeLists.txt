@@ -66,6 +66,25 @@ else()
     find_package(MsgPuck)
 endif()
 
+option(ENABLE_ODBC "Build ODBC driver together with the libtarantool" ON)
+if (ENABLE_ODBC)
+   if (UNIX)
+      find_program(ODBC_CONFIG
+      NAMES odbc_config iodbc-config
+      DOC "Path to unixODBC or iODBC config program")
+      mark_as_advanced(ODBC_CONFIG)
+      if (ODBC_CONFIG)
+      	 message(STATUS "Found ODBC program ${ODBC_CONFIG}")
+      else ()
+      	 message(STATUS "Unable to find ODBC program")
+      endif()
+    endif()
+    if (NOT ODBC_CONFIG)
+       set(ENABLE_ODBC OFF)
+    endif()
+endif()
+      
+
 include_directories("${MSGPUCK_INCLUDE_DIRS}")
 include_directories("${PROJECT_SOURCE_DIR}/third_party")
 include_directories("${PROJECT_SOURCE_DIR}/include")
@@ -74,6 +93,8 @@ if (ENABLE_BUNDLED_DOCS)
     add_subdirectory(doc)
 endif(ENABLE_BUNDLED_DOCS)
 
+
+
 message(STATUS "------------------------------------------------")
 message(STATUS "        Tarantool library configuration:        ")
 message(STATUS "------------------------------------------------")
@@ -81,11 +102,15 @@ message(STATUS "  CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  PREFIX: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "  C_COMPILER: ${CMAKE_C_COMPILER}")
 message(STATUS "  C_FLAGS:${CMAKE_C_FLAGS}")
+message(STATUS "  ENABLE_ODBC:${ENABLE_ODBC}")
 message(STATUS "------------------------------------------------")
 
 add_subdirectory (include)
 add_subdirectory (tnt)
-add_subdirectory (odbc)
+
+if(ENABLE_ODBC)
+	add_subdirectory (odbc)
+endif()
 #add_subdirectory(tntrpl)
 
 if   (NOT DEFINED TARANTOOL_C_EMBEDDED)
