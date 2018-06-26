@@ -7,6 +7,7 @@
 
 struct dsn_attr {
 	TCHAR dsn[RLEN];
+	TCHAR old_dsn[RLEN];
 	TCHAR desc[RLEN];
 	TCHAR driver[RLEN];
 	TCHAR uid[RLEN];
@@ -103,10 +104,11 @@ find_key(struct dsn_attr *da, LPCTSTR key, int len)
 		return da->desc;
 	else if (keycomp(key, len, TEXT("Server")) == 0)
 		return da->server;
-	else if (keycomp(key, len, TEXT("UID")) == 0)
-		return da->server;
+	else if (keycomp(key, len, TEXT("UID")) == 0 ||
+		 keycomp(key, len, TEXT("Username")) == 0)
+		return da->uid;
 	else if (keycomp(key, len, TEXT("Password")) == 0 ||
-				keycomp(key, len, TEXT("Pwd")) == 0)
+		 keycomp(key, len, TEXT("Pwd")) == 0)
 		return da->pwd;
 	else if (keycomp(key, len, TEXT("Port")) == 0)
 		return da->port;
@@ -145,6 +147,159 @@ parse_attr(LPCTSTR attr, struct dsn_attr *da)
 	} while (*ptr);
 }
 
+
+void
+write_dsn(struct dsn_attr *da)
+{
+	LPCTSTR dsn = da->dsn;
+	
+     	SQLWritePrivateProfileString(DSN, TEXT("Driver"), da->driver, ODBC_INI);
+	SQLWritePrivateProfileString(DSN, TEXT("Server"), da->server, ODBC_INI);
+	SQLWritePrivateProfileString(DSN, TEXT("UID"), da->uid, ODBC_INI);
+	SQLWritePrivateProfileString(DSN, TEXT("PWD"), da->pwd, ODBC_INI);
+	SQLWritePrivateProfileString(DSN, TEXT("Port"), da->port, ODBC_INI);
+	SQLWritePrivateProfileString(DSN, TEXT("Timeout"), da->timeout, ODBC_INI);
+	SQLWritePrivateProfileString(DSN, TEXT("Log_filename"), da->logfile, ODBC_INI);
+        SQLWritePrivateProfileString(DSN, TEXT("Log_level"), da->loglevel, ODBC_INI);
+	SQLWritePrivateProfileString(DSN, TEXT("Database"), da->desc, ODBC_INI);
+	SQLWritePrivateProfileString(DSN, TEXT("Description"), da->desc, ODBC_INI);
+}
+	
+
+
+BOOL
+set_attr(HWND hwnd, struct dsn_attr *da)
+{
+	if (!da->dsn[0] && !SQLValidDSN(da->dsn))
+		return FALSE;
+	/* First write dsn name */
+	if (!SQLWriteDSNToIni(ds->dsn, da->driver_name)) {
+		DWORD   err = SQL_ERROR;
+		TCHAR   msg[SQL_MAX_MESSAGE_LENGTH];
+		
+		if (hwnd && SQLInstallerError(1, &err, msg, sizeof(msg), NULL) != SQL_SUCCESS) {
+			MessageBox(hwnd, msg, TEXT("Unable to write DSN"),
+				   MB_ICONEXCLAMATION | MB_OK);
+		}
+		return FALSE;
+	}
+
+	/* Then write dsn data */
+	write_dsn(da);
+
+	/* If the data source name has changed, remove the old name */
+	if (keycmp(da->dsn, clen(da->dsn), da->old_dsn)!=0)
+		SQLRemoveDSNFromIni(da->old_dsn);
+	return TRUE;
+}
+
+
+/* I have no idea what is this code about */
+	
+void INTFUNC
+center_win(HWND hdlg)
+{
+    HWND    hwndFrame;
+    RECT    rcDlg;
+    RECT    rcScr;
+    RECT    rcFrame;
+    int     cx;
+    int     cy;
+
+    hwndFrame = GetParent(hdlg);
+
+    GetWindowRect(hdlg, &rcDlg);
+    cx = rcDlg.right - rcDlg.left;
+    cy = rcDlg.bottom - rcDlg.top;
+
+    GetClientRect(hwndFrame, &rcFrame);
+    ClientToScreen(hwndFrame, (LPPOINT)(&rcFrame.left));
+    ClientToScreen(hwndFrame, (LPPOINT)(&rcFrame.right));
+    rcDlg.top = rcFrame.top + (((rcFrame.bottom - rcFrame.top) - cy) >> 1);
+    rcDlg.left = rcFrame.left + (((rcFrame.right - rcFrame.left) - cx) >> 1);
+    rcDlg.bottom = rcDlg.top + cy;
+    rcDlg.right = rcDlg.left + cx;
+
+    GetWindowRect(GetDesktopWindow(), &rcScr);
+       if (rcDlg.bottom > rcScr.bottom)
+    {
+        rcDlg.bottom = rcScr.bottom;
+        rcDlg.top = rcDlg.bottom - cy;
+    }
+    if (rcDlg.right > rcScr.right)
+    {
+        rcDlg.right = rcScr.right;
+        rcDlg.left = rcDlg.right - cx;
+    }
+
+    if (rcDlg.left < 0)
+        rcDlg.left = 0;
+    if (rcDlg.top < 0)
+        rcDlg.top = 0;
+
+    MoveWindow(hdlg, rcDlg.left, rcDlg.top, cx, cy, TRUE);
+    return;
+}
+
+
+INT_PTR CALLBACK
+config_cb(HWND hdlg, UINT wMsg, WPARAM wParam, LPARAM lParam)
+{
+	struct dsn_attr *da;
+
+	switch (wMsg) {
+        case WM_INITDIALOG: {
+            da = (struct dsn_attr *)lParam;
+	    
+            SetWindowLongPtr(hdlg, DWLP_USER, lParam);
+	    center_win(hdlg); /* Center dialog */
+
+	    read_dsn(da);
+
+            SetDlgItemText(hdlg, IDC_DSN_NAME, da->dsn);
+            SetDlgItemText(hdlg, IDC_DESCRIPTION, da->desc);
+            SetDlgItemText(hdlg, IDC_SERVER_HOST, da->server);
+            SetDlgItemText(hdlg, IDC_SERVER_PORT, da->port);
+            SetDlgItemText(hdlg, IDC_DATABASE, da->database);
+            SetDlgItemText(hdlg, IDC_USER, da->uid);
+            SetDlgItemText(hdlg, IDC_PASSWORD, da->pwd);
+	    SetDlgItemText(hdlg, IDC_TIMEOUT, da->timeout);
+            SetDlgItemText(hdlg, IDC_LOG_LEVEL, da->loglevel);
+	    SetDlgItemText(hdlg, IDC_LOG_FILENAME, da->logfile);
+
+            return TRUE;                /* Focus was not set */
+        }
+
+        case WM_COMMAND:
+            switch (const DWORD cmd = LOWORD(wParam))
+            {
+                case IDOK:
+                    da = (struct dsn_attr *)GetWindowLongPtr(hdlg, DWLP_USER);
+                
+                    GetDlgItemText(hdlg, IDC_DSN_NAME, da->dsn, sizeof(da->dsn));
+                    GetDlgItemText(hdlg, IDC_DESCRIPTION, da->desc, sizeof(ci->desc));
+                    GetDlgItemText(hdlg, IDC_SERVER_HOST, da->server, sizeof(ci->server));
+                    GetDlgItemText(hdlg, IDC_SERVER_PORT, da->port, sizeof(ci->port));
+                    GetDlgItemText(hdlg, IDC_DATABASE, da->database, sizeof(ci->database));
+                    GetDlgItemText(hdlg, IDC_USER, da->uid, sizeof(ci->uid));
+                    GetDlgItemText(hdlg, IDC_PASSWORD, da->pwd, sizeof(da->pwd));
+                    GetDlgItemText(hdlg, IDC_TIMEOUT, da->timeout, sizeof(da->timeout));
+                    GetDlgItemText(hdlg, IDC_LOG_LEVEL, da->loglevel, sizeof(da->loglevel));
+		    GetDlgItemText(hdlg, IDC_LOG_FILENAME, da->logfile, sizeof(da->logfile));
+
+                    /* Return to caller */
+                case IDCANCEL:
+                    EndDialog(hdlg, cmd);
+                    return TRUE;
+            }
+            break;
+    }
+
+    /* Message not processed */
+    return FALSE;
+}
+
+
 BOOL
 mod_dsn(HWND hwnd, struct dsn_attr* da)
 {
@@ -158,6 +313,8 @@ mod_dsn(HWND hwnd, struct dsn_attr* da)
 	}	
 	return set_attr(hwnd, da);
 }
+
+
 
 BOOL
 ConfigDSN(HWND hwnd, WORD rq, LPCTSTR drv, LPCTSTR iattr)
@@ -179,8 +336,11 @@ ConfigDSN(HWND hwnd, WORD rq, LPCTSTR drv, LPCTSTR iattr)
 		da->cmd = rq;
 		da->driver_name = drv;
 		da->is_default = keycmp(da->dsn, clen(da->dsn), TEXT("Default"));
+		copys(da->old_dsn, da->dsn);
 		ret_status = mod_dsn(hwnd, da);
 		break;
+	default:
+		ret_status = FALSE;
 	}
 
 	GlobalUnlock(da);
