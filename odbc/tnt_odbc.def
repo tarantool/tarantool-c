@@ -2,6 +2,7 @@ LIBRARY tnt_odbc
 EXPORTS
 
 DllMain
+ConfigDSN
 SQLAllocEnv
 SQLAllocConnect
 SQLAllocStmt

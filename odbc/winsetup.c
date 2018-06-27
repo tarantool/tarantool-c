@@ -1,13 +1,17 @@
 
+#include <windows.h>
 #include <sql.h>
 #include <sqlext.h>
 #include <sqltypes.h>
 #include <odbcinst.h>
-#include <windows.h>
+
+#include "resource.h"
+
 
 
 #define ODBC_INI           TEXT("ODBC.INI")
 #define ODBCINST_INI       TEXT("ODBCINST.INI")
+#define RLEN 512
 
 struct dsn_attr {
 	TCHAR dsn[RLEN];
@@ -16,10 +20,10 @@ struct dsn_attr {
 	TCHAR driver[RLEN];
 	TCHAR uid[RLEN];
 	TCHAR pwd[RLEN];
-	THCAR server[RLEN];
-	THCAR port[RLEN];
-	THCAR timeout[RLEN];
-	THCAR logfile[RLEN];
+	TCHAR server[RLEN];
+	TCHAR port[RLEN];
+	TCHAR timeout[RLEN];
+	TCHAR logfile[RLEN];
 	TCHAR loglevel[RLEN];
 	TCHAR database[RLEN];
 	/* Function call parameters*/
@@ -59,10 +63,10 @@ windex(LPCTSTR dst, TCHAR c)
 }
 
 LPCTSTR
-copys(LPCTSTR dst, LPCTSTR src)
+copys(LPTSTR dst, LPCTSTR src)
 {
 	while (*src)
-		*dst++ = src++;
+		*dst++ = *src++;
 	*dst = 0;
 	return src;
 }
@@ -79,14 +83,14 @@ clen(LPCTSTR s)
 TCHAR
 tol(TCHAR c)
 {
-	if (c >= 'A' && C <= 'Z') {
+	if (c >= 'A' && c <= 'Z') {
 		return c + ('a' - 'Z');
 	}
 	return c;
 }
 
 int
-keycmp(LPCTSTR l, int llen, LPCTSTR r)
+keycmp(LPCTSTR l, ptrdiff_t llen, LPCTSTR r)
 {
 	while (--llen >= 0 && *r) {
 		int c = tol(*l++) - tol(*r++);
@@ -96,33 +100,33 @@ keycmp(LPCTSTR l, int llen, LPCTSTR r)
 	return (*r);
 }
 
-LPCTSTR
-find_key(struct dsn_attr *da, LPCTSTR key, int len)
+LPTSTR
+find_key(struct dsn_attr *da, LPCTSTR key, ptrdiff_t len)
 {
 	/* Should be hash here */
 	if (keycmp(key, len, TEXT("DSN")) == 0)
 		return da->dsn;
 	else if (keycmp(key, len, TEXT("Driver")) == 0)
 		return da->driver;
-	else if (keycomp(key, len, TEXT("Description")) == 0)
+	else if (keycmp(key, len, TEXT("Description")) == 0)
 		return da->desc;
-	else if (keycomp(key, len, TEXT("Server")) == 0)
+	else if (keycmp(key, len, TEXT("Server")) == 0)
 		return da->server;
-	else if (keycomp(key, len, TEXT("UID")) == 0 ||
-		 keycomp(key, len, TEXT("Username")) == 0)
+	else if (keycmp(key, len, TEXT("UID")) == 0 ||
+		 keycmp(key, len, TEXT("Username")) == 0)
 		return da->uid;
-	else if (keycomp(key, len, TEXT("Password")) == 0 ||
-		 keycomp(key, len, TEXT("Pwd")) == 0)
+	else if (keycmp(key, len, TEXT("Password")) == 0 ||
+		 keycmp(key, len, TEXT("Pwd")) == 0)
 		return da->pwd;
-	else if (keycomp(key, len, TEXT("Port")) == 0)
+	else if (keycmp(key, len, TEXT("Port")) == 0)
 		return da->port;
-	else if (keycomp(key, len, TEXT("Timeout")) == 0)
+	else if (keycmp(key, len, TEXT("Timeout")) == 0)
 		return da->timeout;
-	else if (keycomp(key, len, TEXT("Log_filename")) == 0)
+	else if (keycmp(key, len, TEXT("Log_filename")) == 0)
 		return da->logfile;
-	else if (keycomp(key, len, TEXT("Log_level")) == 0)
+	else if (keycmp(key, len, TEXT("Log_level")) == 0)
 		return da->loglevel;
-	else if (keycomp(key, len, TEXT("Database")) == 0)
+	else if (keycmp(key, len, TEXT("Database")) == 0)
 		return da->database;
 	return 0;
 }
@@ -133,13 +137,11 @@ void
 parse_attr(LPCTSTR attr, struct dsn_attr *da)
 {
 	LPCTSTR ptr = attr;
-	TCHAR key[RLEN];
-	TCHAR val[RLEN];
 	do {
-		LPCTCSTR p = windex(ptr, '=');
+		LPCTSTR p = windex(ptr, '=');
 		if (p == 0)
 			break;
-		LPCTSTR val = find_key(da, ptr, (char*)p - (char*)ptr);
+		LPTSTR val = find_key(da, ptr, (TCHAR*)p - (TCHAR*)ptr);
 		if (val) {
 			p++;
 			ptr = copys(val, p);	
@@ -153,20 +155,37 @@ parse_attr(LPCTSTR attr, struct dsn_attr *da)
 
 
 void
+read_dsn(struct dsn_attr *da)
+{
+	LPCTSTR dsn = da->dsn;
+#define GET_PRF(a, b) SQLGetPrivateProfileString(dsn, TEXT(a), TEXT(""), \
+						 b, sizeof(b), ODBC_INI);
+	GET_PRF("Driver", da->driver);
+	GET_PRF("Server", da->server);
+	GET_PRF("UID", da->uid);
+	GET_PRF("PWD", da->pwd);
+	GET_PRF("Port", da->port);
+	GET_PRF("Timeout", da->timeout);
+	GET_PRF("Log_filename", da->logfile);
+	GET_PRF("Log_level", da->loglevel);
+	GET_PRF("Database", da->desc);
+	GET_PRF("Description", da->desc);
+}
+void
 write_dsn(struct dsn_attr *da)
 {
 	LPCTSTR dsn = da->dsn;
 	
-    SQLWritePrivateProfileString(DSN, TEXT("Driver"), da->driver, ODBC_INI);
-	SQLWritePrivateProfileString(DSN, TEXT("Server"), da->server, ODBC_INI);
-	SQLWritePrivateProfileString(DSN, TEXT("UID"), da->uid, ODBC_INI);
-	SQLWritePrivateProfileString(DSN, TEXT("PWD"), da->pwd, ODBC_INI);
-	SQLWritePrivateProfileString(DSN, TEXT("Port"), da->port, ODBC_INI);
-	SQLWritePrivateProfileString(DSN, TEXT("Timeout"), da->timeout, ODBC_INI);
-	SQLWritePrivateProfileString(DSN, TEXT("Log_filename"), da->logfile, ODBC_INI);
-    SQLWritePrivateProfileString(DSN, TEXT("Log_level"), da->loglevel, ODBC_INI);
-	SQLWritePrivateProfileString(DSN, TEXT("Database"), da->desc, ODBC_INI);
-	SQLWritePrivateProfileString(DSN, TEXT("Description"), da->desc, ODBC_INI);
+    SQLWritePrivateProfileString(dsn, TEXT("Driver"), da->driver, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT("Server"), da->server, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT("UID"), da->uid, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT("PWD"), da->pwd, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT("Port"), da->port, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT("Timeout"), da->timeout, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT("Log_filename"), da->logfile, ODBC_INI);
+    SQLWritePrivateProfileString(dsn, TEXT("Log_level"), da->loglevel, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT("Database"), da->desc, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT("Description"), da->desc, ODBC_INI);
 }
 	
 
@@ -177,7 +196,7 @@ set_attr(HWND hwnd, struct dsn_attr *da)
 	if (!da->dsn[0] && !SQLValidDSN(da->dsn))
 		return FALSE;
 	/* First write dsn name */
-	if (!SQLWriteDSNToIni(ds->dsn, da->driver_name)) {
+	if (!SQLWriteDSNToIni(da->dsn, da->driver_name)) {
 		DWORD   err = SQL_ERROR;
 		TCHAR   msg[SQL_MAX_MESSAGE_LENGTH];
 		
@@ -200,7 +219,7 @@ set_attr(HWND hwnd, struct dsn_attr *da)
 
 /* I have no idea what is this code about */
 	
-void INTFUNC
+void __stdcall
 center_win(HWND hdlg)
 {
     HWND    hwndFrame;
@@ -225,13 +244,11 @@ center_win(HWND hdlg)
     rcDlg.right = rcDlg.left + cx;
 
     GetWindowRect(GetDesktopWindow(), &rcScr);
-       if (rcDlg.bottom > rcScr.bottom)
-    {
+    if (rcDlg.bottom > rcScr.bottom) {
         rcDlg.bottom = rcScr.bottom;
         rcDlg.top = rcDlg.bottom - cy;
     }
-    if (rcDlg.right > rcScr.right)
-    {
+    if (rcDlg.right > rcScr.right) {
         rcDlg.right = rcScr.right;
         rcDlg.left = rcDlg.right - cx;
     }
@@ -246,57 +263,59 @@ center_win(HWND hdlg)
 }
 
 
-INT_PTR CALLBACK
+INT_PTR __stdcall
 config_cb(HWND hdlg, UINT wMsg, WPARAM wParam, LPARAM lParam)
 {
 	struct dsn_attr *da;
 
 	switch (wMsg) {
         case WM_INITDIALOG: {
-            da = (struct dsn_attr *)lParam;
+        da = (struct dsn_attr *)lParam;
 	    
-            SetWindowLongPtr(hdlg, DWLP_USER, lParam);
+        SetWindowLongPtr(hdlg, DWLP_USER, lParam);
 	    center_win(hdlg); /* Center dialog */
 
 	    read_dsn(da);
 
-            SetDlgItemText(hdlg, IDC_DSN_NAME, da->dsn);
-            SetDlgItemText(hdlg, IDC_DESCRIPTION, da->desc);
-            SetDlgItemText(hdlg, IDC_SERVER_HOST, da->server);
-            SetDlgItemText(hdlg, IDC_SERVER_PORT, da->port);
-            SetDlgItemText(hdlg, IDC_DATABASE, da->database);
-            SetDlgItemText(hdlg, IDC_USER, da->uid);
-            SetDlgItemText(hdlg, IDC_PASSWORD, da->pwd);
-	    SetDlgItemText(hdlg, IDC_TIMEOUT, da->timeout);
-            SetDlgItemText(hdlg, IDC_LOG_LEVEL, da->loglevel);
-	    SetDlgItemText(hdlg, IDC_LOG_FILENAME, da->logfile);
+         SetDlgItemText(hdlg, IDC_DSN_NAME, da->dsn);
+         SetDlgItemText(hdlg, IDC_DESCRIPTION, da->desc);
+         SetDlgItemText(hdlg, IDC_SERVER, da->server);
+         SetDlgItemText(hdlg, IDC_PORT, da->port);
+         SetDlgItemText(hdlg, IDC_DATABASE, da->database);
+         SetDlgItemText(hdlg, IDC_USER, da->uid);
+         SetDlgItemText(hdlg, IDC_PASSWORD, da->pwd);
+	     SetDlgItemText(hdlg, IDC_TIMEOUT, da->timeout);
+         SetDlgItemText(hdlg, IDC_LOG_LEVEL, da->loglevel);
+	     SetDlgItemText(hdlg, IDC_LOG_FILENAME, da->logfile);
 
             return TRUE;                /* Focus was not set */
         }
 
-        case WM_COMMAND:
-            switch (const DWORD cmd = LOWORD(wParam))
-            {
-                case IDOK:
-                    da = (struct dsn_attr *)GetWindowLongPtr(hdlg, DWLP_USER);
-                
-                    GetDlgItemText(hdlg, IDC_DSN_NAME, da->dsn, sizeof(da->dsn));
-                    GetDlgItemText(hdlg, IDC_DESCRIPTION, da->desc, sizeof(ci->desc));
-                    GetDlgItemText(hdlg, IDC_SERVER_HOST, da->server, sizeof(ci->server));
-                    GetDlgItemText(hdlg, IDC_SERVER_PORT, da->port, sizeof(ci->port));
-                    GetDlgItemText(hdlg, IDC_DATABASE, da->database, sizeof(ci->database));
-                    GetDlgItemText(hdlg, IDC_USER, da->uid, sizeof(ci->uid));
-                    GetDlgItemText(hdlg, IDC_PASSWORD, da->pwd, sizeof(da->pwd));
-                    GetDlgItemText(hdlg, IDC_TIMEOUT, da->timeout, sizeof(da->timeout));
-                    GetDlgItemText(hdlg, IDC_LOG_LEVEL, da->loglevel, sizeof(da->loglevel));
-					GetDlgItemText(hdlg, IDC_LOG_FILENAME, da->logfile, sizeof(da->logfile));
+		case WM_COMMAND: {
+			DWORD cmd = LOWORD(wParam);
+			switch (cmd)
+			{
+			case IDOK:
+				da = (struct dsn_attr *)GetWindowLongPtr(hdlg, DWLP_USER);
 
-                    /* Return to caller */
-                case IDCANCEL:
-                    EndDialog(hdlg, cmd);
-                    return TRUE;
-            }
-            break;
+				GetDlgItemText(hdlg, IDC_DSN_NAME, da->dsn, sizeof(da->dsn));
+				GetDlgItemText(hdlg, IDC_DESCRIPTION, da->desc, sizeof(da->desc));
+				GetDlgItemText(hdlg, IDC_SERVER, da->server, sizeof(da->server));
+				GetDlgItemText(hdlg, IDC_PORT, da->port, sizeof(da->port));
+				GetDlgItemText(hdlg, IDC_DATABASE, da->database, sizeof(da->database));
+				GetDlgItemText(hdlg, IDC_USER, da->uid, sizeof(da->uid));
+				GetDlgItemText(hdlg, IDC_PASSWORD, da->pwd, sizeof(da->pwd));
+				GetDlgItemText(hdlg, IDC_TIMEOUT, da->timeout, sizeof(da->timeout));
+				GetDlgItemText(hdlg, IDC_LOG_LEVEL, da->loglevel, sizeof(da->loglevel));
+				GetDlgItemText(hdlg, IDC_LOG_FILENAME, da->logfile, sizeof(da->logfile));
+
+				/* Return to caller */
+			case IDCANCEL:
+				EndDialog(hdlg, cmd);
+				return TRUE;
+			}
+		}
+        break;
     }
 
     /* Message not processed */
@@ -310,9 +329,9 @@ mod_dsn(HWND hwnd, struct dsn_attr* da)
 	if (hwnd == 0) {
 		if (!da->dsn[0])
 			return TRUE;
-	} else if (DialogBoxParam(hModule, MAKEINTRESOURCE(CH_DLG),
+	} else if (DialogBoxParam(hModule, MAKEINTRESOURCE(IDD_DIALOG1),
 				hwnd, config_cb, (LPARAM)da)!= IDOK) {
-			MessageBox(NULL, TEXT("Unable to setup DSN", "Error", MB_OK);
+			MessageBox(NULL, TEXT("Unable to setup DSN"), TEXT("Error"), MB_OK);
 			return FALSE;	
 	}	
 	return set_attr(hwnd, da);

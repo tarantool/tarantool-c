@@ -68,7 +68,7 @@ endif()
 
 option(ENABLE_ODBC "Build ODBC driver together with the libtarantool" ON)
 if (ENABLE_ODBC)
-   if (UNIX)
+   if (NOT WIN32)
       find_program(ODBC_CONFIG
       NAMES odbc_config iodbc-config
       DOC "Path to unixODBC or iODBC config program")
@@ -78,9 +78,9 @@ if (ENABLE_ODBC)
       else ()
       	 message(STATUS "Unable to find ODBC program")
       endif()
-    endif()
-    if (NOT ODBC_CONFIG)
-       set(ENABLE_ODBC OFF)
+	  if (NOT ODBC_CONFIG)
+        set(ENABLE_ODBC OFF)
+      endif()
     endif()
 endif()
       
