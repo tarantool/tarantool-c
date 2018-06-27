@@ -5,6 +5,10 @@
 #include <odbcinst.h>
 #include <windows.h>
 
+
+#define ODBC_INI           TEXT("ODBC.INI")
+#define ODBCINST_INI       TEXT("ODBCINST.INI")
+
 struct dsn_attr {
 	TCHAR dsn[RLEN];
 	TCHAR old_dsn[RLEN];
@@ -153,14 +157,14 @@ write_dsn(struct dsn_attr *da)
 {
 	LPCTSTR dsn = da->dsn;
 	
-     	SQLWritePrivateProfileString(DSN, TEXT("Driver"), da->driver, ODBC_INI);
+    SQLWritePrivateProfileString(DSN, TEXT("Driver"), da->driver, ODBC_INI);
 	SQLWritePrivateProfileString(DSN, TEXT("Server"), da->server, ODBC_INI);
 	SQLWritePrivateProfileString(DSN, TEXT("UID"), da->uid, ODBC_INI);
 	SQLWritePrivateProfileString(DSN, TEXT("PWD"), da->pwd, ODBC_INI);
 	SQLWritePrivateProfileString(DSN, TEXT("Port"), da->port, ODBC_INI);
 	SQLWritePrivateProfileString(DSN, TEXT("Timeout"), da->timeout, ODBC_INI);
 	SQLWritePrivateProfileString(DSN, TEXT("Log_filename"), da->logfile, ODBC_INI);
-        SQLWritePrivateProfileString(DSN, TEXT("Log_level"), da->loglevel, ODBC_INI);
+    SQLWritePrivateProfileString(DSN, TEXT("Log_level"), da->loglevel, ODBC_INI);
 	SQLWritePrivateProfileString(DSN, TEXT("Database"), da->desc, ODBC_INI);
 	SQLWritePrivateProfileString(DSN, TEXT("Description"), da->desc, ODBC_INI);
 }
@@ -285,7 +289,7 @@ config_cb(HWND hdlg, UINT wMsg, WPARAM wParam, LPARAM lParam)
                     GetDlgItemText(hdlg, IDC_PASSWORD, da->pwd, sizeof(da->pwd));
                     GetDlgItemText(hdlg, IDC_TIMEOUT, da->timeout, sizeof(da->timeout));
                     GetDlgItemText(hdlg, IDC_LOG_LEVEL, da->loglevel, sizeof(da->loglevel));
-		    GetDlgItemText(hdlg, IDC_LOG_FILENAME, da->logfile, sizeof(da->logfile));
+					GetDlgItemText(hdlg, IDC_LOG_FILENAME, da->logfile, sizeof(da->logfile));
 
                     /* Return to caller */
                 case IDCANCEL:
