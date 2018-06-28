@@ -4,6 +4,7 @@
 #include <sqlext.h>
 #include <sqltypes.h>
 #include <odbcinst.h>
+#include <stdio.h>
 
 #include "resource.h"
 
@@ -63,9 +64,9 @@ windex(LPCTSTR dst, TCHAR c)
 }
 
 LPCTSTR
-copys(LPTSTR dst, LPCTSTR src)
+copys(LPTSTR dst, LPCTSTR src, int max_dst_len)
 {
-	while (*src)
+	while (*src && --max_dst_len)
 		*dst++ = *src++;
 	*dst = 0;
 	return src;
@@ -89,6 +90,16 @@ tol(TCHAR c)
 	return c;
 }
 
+int
+casecmp(LPCTSTR l, LPCTSTR r)
+{
+	while (*l && *r) {
+		int c = tol(*l++) - tol(*r++);
+		if (c != 0)
+			return c;
+	}
+	return tol(*l) - tol(*r);
+}
 int
 keycmp(LPCTSTR l, ptrdiff_t llen, LPCTSTR r)
 {
@@ -144,7 +155,7 @@ parse_attr(LPCTSTR attr, struct dsn_attr *da)
 		LPTSTR val = find_key(da, ptr, (TCHAR*)p - (TCHAR*)ptr);
 		if (val) {
 			p++;
-			ptr = copys(val, p);	
+			ptr = copys(val, p, RLEN);	
 		} else {
 			while (*ptr)
 				ptr++;
@@ -168,7 +179,7 @@ read_dsn(struct dsn_attr *da)
 	GET_PRF("Timeout", da->timeout);
 	GET_PRF("Log_filename", da->logfile);
 	GET_PRF("Log_level", da->loglevel);
-	GET_PRF("Database", da->desc);
+	GET_PRF("Database", da->database);
 	GET_PRF("Description", da->desc);
 }
 void
@@ -184,7 +195,7 @@ write_dsn(struct dsn_attr *da)
 	SQLWritePrivateProfileString(dsn, TEXT("Timeout"), da->timeout, ODBC_INI);
 	SQLWritePrivateProfileString(dsn, TEXT("Log_filename"), da->logfile, ODBC_INI);
     SQLWritePrivateProfileString(dsn, TEXT("Log_level"), da->loglevel, ODBC_INI);
-	SQLWritePrivateProfileString(dsn, TEXT("Database"), da->desc, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT("Database"), da->database, ODBC_INI);
 	SQLWritePrivateProfileString(dsn, TEXT("Description"), da->desc, ODBC_INI);
 }
 	
@@ -196,13 +207,13 @@ set_attr(HWND hwnd, struct dsn_attr *da)
 	if (!da->dsn[0] && !SQLValidDSN(da->dsn))
 		return FALSE;
 	/* First write dsn name */
-	if (!SQLWriteDSNToIni(da->dsn, da->driver_name)) {
+	if (SQLWriteDSNToIni(da->dsn, da->driver_name) == FALSE) {
 		DWORD   err = SQL_ERROR;
 		TCHAR   msg[SQL_MAX_MESSAGE_LENGTH];
 		
-		if (hwnd && SQLInstallerError(1, &err, msg, sizeof(msg), NULL) != SQL_SUCCESS) {
-			MessageBox(hwnd, msg, TEXT("Unable to write DSN"),
-				   MB_ICONEXCLAMATION | MB_OK);
+		if (hwnd && SQLInstallerError(1, &err, msg, sizeof(msg), NULL) != SQL_ERROR) {
+				MessageBox(hwnd, msg, TEXT("Unable to write DSN (invalid dsn or driver)"),
+					MB_ICONEXCLAMATION | MB_OK);
 		}
 		return FALSE;
 	}
@@ -211,8 +222,9 @@ set_attr(HWND hwnd, struct dsn_attr *da)
 	write_dsn(da);
 
 	/* If the data source name has changed, remove the old name */
-	if (keycmp(da->dsn, clen(da->dsn), da->old_dsn)!=0)
+	if (casecmp(da->dsn, da->old_dsn) != 0) {
 		SQLRemoveDSNFromIni(da->old_dsn);
+	}
 	return TRUE;
 }
 
@@ -326,12 +338,17 @@ config_cb(HWND hdlg, UINT wMsg, WPARAM wParam, LPARAM lParam)
 BOOL
 mod_dsn(HWND hwnd, struct dsn_attr* da)
 {
+	TCHAR b[100];
 	if (hwnd == 0) {
 		if (!da->dsn[0])
 			return TRUE;
 	} else if (DialogBoxParam(hModule, MAKEINTRESOURCE(IDD_DIALOG1),
 				hwnd, config_cb, (LPARAM)da)!= IDOK) {
-			MessageBox(NULL, TEXT("Unable to setup DSN"), TEXT("Error"), MB_OK);
+			int e = GetLastError();
+			if (e != 0) {
+				snprintf(b, 100, "Ecode %d", e);
+				MessageBox(NULL, TEXT("Unable to setup DSN"), b, MB_OK);
+			}
 			return FALSE;	
 	}	
 	return set_attr(hwnd, da);
@@ -359,7 +376,7 @@ ConfigDSN(HWND hwnd, WORD rq, LPCTSTR drv, LPCTSTR iattr)
 		da->cmd = rq;
 		da->driver_name = drv;
 		da->is_default = keycmp(da->dsn, clen(da->dsn), TEXT("Default"));
-		copys(da->old_dsn, da->dsn);
+		copys(da->old_dsn, da->dsn, RLEN);
 		ret_status = mod_dsn(hwnd, da);
 		break;
 	default:
