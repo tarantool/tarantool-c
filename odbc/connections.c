@@ -23,7 +23,14 @@
 
 #define PARAMSZ  1024
 
-
+static inline int
+m_strcasecmp(const char *s1, const char *s2)
+{
+	while (*s1 != 0 && *s2 != 0 && (tolower(*s1) - tolower(*s2)) == 0) {
+		s1++; s2++;
+	}
+	return tolower(*s1) - tolower(*s2);
+}
 static inline int
 m_strncasecmp(const char *s1, const char *s2, size_t n)
 {
@@ -203,7 +210,7 @@ get_attr(const char *name,const struct keyval* items)
 {
 	if (items && items->pairs) {
 		for(int sz = items->size; sz ; sz--)
-			if (strcmp(items->pairs[items->size-sz].name,name)==0)
+			if (m_strcasecmp(items->pairs[items->size-sz].name,name)==0)
 				return items->pairs[items->size-sz].value;
 	}
 	return NULL;
@@ -288,6 +295,7 @@ alloc_dsn(void)
 	if (!ret)
 		return NULL;
 	memset(ret,0,sizeof(struct dsn));
+	ret->log_level = -1;
 
 	if (alloc_z(&ret->dsn) &&
 	    alloc_z(&ret->database) &&
@@ -346,29 +354,31 @@ odbc_read_dsn(odbc_connect *tcon, char *dsn, int dsn_sz)
 	}
 
 	if (ret->host[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "SERVER", "localhost", ret->host, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, "Server", "localhost", ret->host, PARAMSZ, ODBCINI );
+	MessageBox(0, ret->dsn, ret->host, MB_OK);
 	if (ret->database[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "DATABASE", "", ret->database, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, "Database", "", ret->database, PARAMSZ, ODBCINI );
 	if (ret->flag[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "FLAG", "0", ret->flag, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, "Flag", "0", ret->flag, PARAMSZ, ODBCINI );
 
-	SQLGetPrivateProfileString(ret->dsn, "PORT","0", &port[0], PARAMSZ, ODBCINI );
+	SQLGetPrivateProfileString(ret->dsn, "Port","0", &port[0], PARAMSZ, ODBCINI );
 	ret->port = atoi(port);
 
-	SQLGetPrivateProfileString(ret->dsn, "TIMEOUT","0", &port[0], PARAMSZ, ODBCINI );
+	SQLGetPrivateProfileString(ret->dsn, "Timeout","0", &port[0], PARAMSZ, ODBCINI );
 	ret->timeout = atoi(port);
 
 	if (ret->user[0] == '\0')
 		SQLGetPrivateProfileString(ret->dsn, "UID","", ret->user, PARAMSZ, ODBCINI );
 	if (ret->password[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "PASSWORD","", ret->password, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, "PWD","", ret->password, PARAMSZ, ODBCINI );
 
 	if (ret->log_filename[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "LOG_FILENAME","", ret->log_filename, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, "Log_filename","", ret->log_filename, PARAMSZ, ODBCINI );
 
-
-	SQLGetPrivateProfileString(ret->dsn, "LOG_LEVEL","0", &port[0], PARAMSZ, ODBCINI );
-	ret->log_level = atoi(port);
+	if (ret->log_level == -1) {
+		SQLGetPrivateProfileString(ret->dsn, "Log_level", "0", &port[0], PARAMSZ, ODBCINI);
+		ret->log_level = atoi(port);
+	}
 
 	return ret;
 error:

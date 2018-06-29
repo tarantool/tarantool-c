@@ -119,9 +119,7 @@ test_connect(const char *dsn) {
 
 	if (init_dbc(&st,NULL)) {
 		// Connect to data source
-#ifdef SQLConnect
-#error SQLConnect
-#endif
+
 		retcode = SQLConnect(st.hdbc, (SQLCHAR *)dsn, SQL_NTS,
 				     (SQLCHAR*) NULL, 0, NULL, 0);
 
@@ -610,7 +608,8 @@ testfail(int i)
 int
 main(int ac, char* av[])
 {
-	test(test_connect("tarantoolTest"));
+	test(test_connect("Taran"));
+	test(test_connect("SystemT"));
 	testfail(test_connect("wrong dsn"));
 	testfail(test_driver_connect("DSN=invalid"));
 	test(test_driver_connect("DSN=tarantoolTest"));

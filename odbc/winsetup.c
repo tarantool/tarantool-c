@@ -27,6 +27,7 @@ struct dsn_attr {
 	TCHAR logfile[RLEN];
 	TCHAR loglevel[RLEN];
 	TCHAR database[RLEN];
+	TCHAR flag[RLEN];
 	/* Function call parameters*/
 	LPCTSTR	driver_name;
 	WORD	cmd;
@@ -139,6 +140,8 @@ find_key(struct dsn_attr *da, LPCTSTR key, ptrdiff_t len)
 		return da->loglevel;
 	else if (keycmp(key, len, TEXT("Database")) == 0)
 		return da->database;
+	else if (keycmp(key, len, TEXT("Flag")) == 0)
+		return da->flag;
 	return 0;
 }
 
@@ -169,13 +172,15 @@ void
 read_dsn(struct dsn_attr *da)
 {
 	LPCTSTR dsn = da->dsn;
-#define GET_PRF(a, b) SQLGetPrivateProfileString(dsn, TEXT(a), TEXT(""), \
-						 b, sizeof(b), ODBC_INI);
+#define GET_PRF(a, b) if (b[0]==0) \
+							SQLGetPrivateProfileString(dsn, TEXT(a), TEXT(""), \
+							b, sizeof(b), ODBC_INI);
 	GET_PRF("Driver", da->driver);
 	GET_PRF("Server", da->server);
 	GET_PRF("UID", da->uid);
 	GET_PRF("PWD", da->pwd);
 	GET_PRF("Port", da->port);
+	GET_PRF("Flag", da->flag);
 	GET_PRF("Timeout", da->timeout);
 	GET_PRF("Log_filename", da->logfile);
 	GET_PRF("Log_level", da->loglevel);
@@ -186,8 +191,10 @@ void
 write_dsn(struct dsn_attr *da)
 {
 	LPCTSTR dsn = da->dsn;
-	
-    SQLWritePrivateProfileString(dsn, TEXT("Driver"), da->driver, ODBC_INI);
+	if (da->driver[0])
+		SQLWritePrivateProfileString(dsn, TEXT("Driver"), da->driver, ODBC_INI);
+	if (da->flag[0])
+		SQLWritePrivateProfileString(dsn, TEXT("Flag"), da->flag, ODBC_INI);
 	SQLWritePrivateProfileString(dsn, TEXT("Server"), da->server, ODBC_INI);
 	SQLWritePrivateProfileString(dsn, TEXT("UID"), da->uid, ODBC_INI);
 	SQLWritePrivateProfileString(dsn, TEXT("PWD"), da->pwd, ODBC_INI);
