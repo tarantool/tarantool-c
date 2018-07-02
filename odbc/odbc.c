@@ -443,17 +443,18 @@ SQLStatistics(
 
 SQLRETURN SQL_API
 SQLTables(
-	SQLHSTMT       StatementHandle,
-	SQLCHAR *      CatalogName,
-	SQLSMALLINT    NameLength1,
-	SQLCHAR *      SchemaName,
-	SQLSMALLINT    NameLength2,
-	SQLCHAR *      TableName,
-	SQLSMALLINT    NameLength3,
-	SQLCHAR *      TableType,
-	SQLSMALLINT    NameLength4)
+	SQLHSTMT       stmth,
+	SQLCHAR *      cat,
+	SQLSMALLINT    catlen,
+	SQLCHAR *      schema,
+	SQLSMALLINT    schemlen,
+	SQLCHAR *      table,
+	SQLSMALLINT    tablelen,
+	SQLCHAR *      tabletype,
+	SQLSMALLINT    tabletypelen)
 {
-	return SQL_ERROR;
+	return info_tables(stmth, cat, catlen, schema, schemlen, table, 
+		tablelen, tabletype, tabletypelen);
 }
 
 SQLRETURN SQL_API

@@ -268,5 +268,8 @@ SQLRETURN param_info (SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 SQLRETURN stmt_set_attr(SQLHSTMT stmth,	SQLINTEGER att,	SQLPOINTER ptr,	SQLINTEGER plen);
 SQLRETURN stmt_get_attr(SQLHSTMT stmth,	SQLINTEGER att,	SQLPOINTER ptr,	SQLINTEGER plen,
 			SQLINTEGER * olen);
+SQLRETURN info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
+	SQLSMALLINT schemlen, SQLCHAR * table, SQLSMALLINT tablelen,
+	SQLCHAR * tabletype, SQLSMALLINT tabletypelen);
 
 #endif
