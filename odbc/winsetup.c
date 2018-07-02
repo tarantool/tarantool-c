@@ -1,5 +1,7 @@
 
-#include <windows.h>
+#include "tnt_winsup.h"
+
+
 #include <sql.h>
 #include <sqlext.h>
 #include <sqltypes.h>
@@ -10,8 +12,7 @@
 
 
 
-#define ODBC_INI           TEXT("ODBC.INI")
-#define ODBCINST_INI       TEXT("ODBCINST.INI")
+
 #define RLEN 512
 
 struct dsn_attr {
@@ -116,31 +117,31 @@ LPTSTR
 find_key(struct dsn_attr *da, LPCTSTR key, ptrdiff_t len)
 {
 	/* Should be hash here */
-	if (keycmp(key, len, TEXT("DSN")) == 0)
+	if (keycmp(key, len, TEXT(KEY_DSN)) == 0)
 		return da->dsn;
-	else if (keycmp(key, len, TEXT("Driver")) == 0)
+	else if (keycmp(key, len, TEXT(KEY_DRIVER)) == 0)
 		return da->driver;
-	else if (keycmp(key, len, TEXT("Description")) == 0)
+	else if (keycmp(key, len, TEXT(KEY_DESC)) == 0)
 		return da->desc;
-	else if (keycmp(key, len, TEXT("Server")) == 0)
+	else if (keycmp(key, len, TEXT(KEY_SERVER)) == 0)
 		return da->server;
-	else if (keycmp(key, len, TEXT("UID")) == 0 ||
+	else if (keycmp(key, len, TEXT(KEY_USER)) == 0 ||
 		 keycmp(key, len, TEXT("Username")) == 0)
 		return da->uid;
 	else if (keycmp(key, len, TEXT("Password")) == 0 ||
-		 keycmp(key, len, TEXT("Pwd")) == 0)
+		 keycmp(key, len, TEXT(KEY_PASSWORD)) == 0)
 		return da->pwd;
-	else if (keycmp(key, len, TEXT("Port")) == 0)
+	else if (keycmp(key, len, TEXT(KEY_PORT)) == 0)
 		return da->port;
-	else if (keycmp(key, len, TEXT("Timeout")) == 0)
+	else if (keycmp(key, len, TEXT(KEY_TIMEOUT)) == 0)
 		return da->timeout;
-	else if (keycmp(key, len, TEXT("Log_filename")) == 0)
+	else if (keycmp(key, len, TEXT(KEY_LOGFILENAME)) == 0)
 		return da->logfile;
-	else if (keycmp(key, len, TEXT("Log_level")) == 0)
+	else if (keycmp(key, len, TEXT(KEY_LOGLEVEL)) == 0)
 		return da->loglevel;
-	else if (keycmp(key, len, TEXT("Database")) == 0)
+	else if (keycmp(key, len, TEXT(KEY_DATABASE)) == 0)
 		return da->database;
-	else if (keycmp(key, len, TEXT("Flag")) == 0)
+	else if (keycmp(key, len, TEXT(KEY_FLAG)) == 0)
 		return da->flag;
 	return 0;
 }
@@ -175,35 +176,35 @@ read_dsn(struct dsn_attr *da)
 #define GET_PRF(a, b) if (b[0]==0) \
 							SQLGetPrivateProfileString(dsn, TEXT(a), TEXT(""), \
 							b, sizeof(b), ODBC_INI);
-	GET_PRF("Driver", da->driver);
-	GET_PRF("Server", da->server);
-	GET_PRF("UID", da->uid);
-	GET_PRF("PWD", da->pwd);
-	GET_PRF("Port", da->port);
-	GET_PRF("Flag", da->flag);
-	GET_PRF("Timeout", da->timeout);
-	GET_PRF("Log_filename", da->logfile);
-	GET_PRF("Log_level", da->loglevel);
-	GET_PRF("Database", da->database);
-	GET_PRF("Description", da->desc);
+	GET_PRF(KEY_DRIVER, da->driver);
+	GET_PRF(KEY_SERVER, da->server);
+	GET_PRF(KEY_USER, da->uid);
+	GET_PRF(KEY_PASSWORD, da->pwd);
+	GET_PRF(KEY_PORT, da->port);
+	GET_PRF(KEY_FLAG, da->flag);
+	GET_PRF(KEY_TIMEOUT, da->timeout);
+	GET_PRF(KEY_LOGFILENAME, da->logfile);
+	GET_PRF(KEY_LOGLEVEL, da->loglevel);
+	GET_PRF(KEY_DATABASE, da->database);
+	GET_PRF(KEY_DESC, da->desc);
 }
 void
 write_dsn(struct dsn_attr *da)
 {
 	LPCTSTR dsn = da->dsn;
 	if (da->driver[0])
-		SQLWritePrivateProfileString(dsn, TEXT("Driver"), da->driver, ODBC_INI);
+		SQLWritePrivateProfileString(dsn, TEXT(KEY_DRIVER), da->driver, ODBC_INI);
 	if (da->flag[0])
-		SQLWritePrivateProfileString(dsn, TEXT("Flag"), da->flag, ODBC_INI);
-	SQLWritePrivateProfileString(dsn, TEXT("Server"), da->server, ODBC_INI);
-	SQLWritePrivateProfileString(dsn, TEXT("UID"), da->uid, ODBC_INI);
-	SQLWritePrivateProfileString(dsn, TEXT("PWD"), da->pwd, ODBC_INI);
-	SQLWritePrivateProfileString(dsn, TEXT("Port"), da->port, ODBC_INI);
-	SQLWritePrivateProfileString(dsn, TEXT("Timeout"), da->timeout, ODBC_INI);
-	SQLWritePrivateProfileString(dsn, TEXT("Log_filename"), da->logfile, ODBC_INI);
-    SQLWritePrivateProfileString(dsn, TEXT("Log_level"), da->loglevel, ODBC_INI);
-	SQLWritePrivateProfileString(dsn, TEXT("Database"), da->database, ODBC_INI);
-	SQLWritePrivateProfileString(dsn, TEXT("Description"), da->desc, ODBC_INI);
+		SQLWritePrivateProfileString(dsn, TEXT(KEY_FLAG), da->flag, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT(KEY_SERVER), da->server, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT(KEY_USER), da->uid, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT(KEY_PASSWORD), da->pwd, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT(KEY_PORT), da->port, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT(KEY_TIMEOUT), da->timeout, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT(KEY_LOGFILENAME), da->logfile, ODBC_INI);
+    SQLWritePrivateProfileString(dsn, TEXT(KEY_LOGLEVEL), da->loglevel, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT(KEY_DATABASE), da->database, ODBC_INI);
+	SQLWritePrivateProfileString(dsn, TEXT(KEY_DESC), da->desc, ODBC_INI);
 }
 	
 

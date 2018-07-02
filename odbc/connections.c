@@ -21,6 +21,12 @@
 #include <tarantool/tnt_net.h>
 #include "driver.h"
 
+
+#ifdef ODBC_INI
+#define ODBCINI ODBC_INI
+#else
+#define ODBCINI "ODBC.INI"
+#endif
 #define PARAMSZ  1024
 
 static inline int
@@ -311,14 +317,17 @@ alloc_dsn(void)
 }
 
 
-#define ODBCINI "odbc.ini"
+
 
 int
 copy_check(char *d, const char *s, int sz)
 {
-	if (( sz == SQL_NTS && strlen((char *)s)>PARAMSZ) || sz > PARAMSZ)
-		return 0;;
-	strcpy(d,s);
+	if (sz == SQL_NTS)
+		sz = strlen(s);
+	if (sz + 1 > PARAMSZ)
+		return 0;
+	strcpy(d,s,sz);
+	d[sz] = '\0';
 	return 1;
 }
 
@@ -354,29 +363,29 @@ odbc_read_dsn(odbc_connect *tcon, char *dsn, int dsn_sz)
 	}
 
 	if (ret->host[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "Server", "localhost", ret->host, PARAMSZ, ODBCINI );
-	MessageBox(0, ret->dsn, ret->host, MB_OK);
+		SQLGetPrivateProfileString(ret->dsn, KEY_SERVER, "localhost", ret->host, PARAMSZ, ODBCINI );
+	
 	if (ret->database[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "Database", "", ret->database, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, KEY_DATABASE, "", ret->database, PARAMSZ, ODBCINI );
 	if (ret->flag[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "Flag", "0", ret->flag, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, KEY_FLAG, "0", ret->flag, PARAMSZ, ODBCINI );
 
-	SQLGetPrivateProfileString(ret->dsn, "Port","0", &port[0], PARAMSZ, ODBCINI );
+	SQLGetPrivateProfileString(ret->dsn, KEY_PORT, "0", &port[0], PARAMSZ, ODBCINI );
 	ret->port = atoi(port);
 
-	SQLGetPrivateProfileString(ret->dsn, "Timeout","0", &port[0], PARAMSZ, ODBCINI );
+	SQLGetPrivateProfileString(ret->dsn, KEY_TIMEOUT, "0", &port[0], PARAMSZ, ODBCINI );
 	ret->timeout = atoi(port);
 
 	if (ret->user[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "UID","", ret->user, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, KEY_USER, "", ret->user, PARAMSZ, ODBCINI );
 	if (ret->password[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "PWD","", ret->password, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, KEY_PASSWORD, "", ret->password, PARAMSZ, ODBCINI );
 
 	if (ret->log_filename[0] == '\0')
-		SQLGetPrivateProfileString(ret->dsn, "Log_filename","", ret->log_filename, PARAMSZ, ODBCINI );
+		SQLGetPrivateProfileString(ret->dsn, KEY_LOGFILENAME, "", ret->log_filename, PARAMSZ, ODBCINI );
 
 	if (ret->log_level == -1) {
-		SQLGetPrivateProfileString(ret->dsn, "Log_level", "0", &port[0], PARAMSZ, ODBCINI);
+		SQLGetPrivateProfileString(ret->dsn, KEY_LOGLEVEL, "0", &port[0], PARAMSZ, ODBCINI);
 		ret->log_level = atoi(port);
 	}
 
