@@ -8,6 +8,10 @@
 #include <odbcinst.h>
 #include <stdio.h>
 
+#include <tarantool/tarantool.h>
+#include <tarantool/tnt_net.h>
+#include "driver.h"
+
 #include "resource.h"
 
 
