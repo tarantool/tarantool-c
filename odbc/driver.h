@@ -88,10 +88,10 @@ typedef struct odbc_connect_t {
 #define INFO (3)
 
 #define LOG(a, l, format, ...) do { if ( a->log && a->log_level >= l) \
-		{ fprintf(a->log, "%ld|%s " format, (long)time(0), a->id,  __VA_ARGS__);} } while(0)
-#define LOG_TRACE(a, format, ...) LOG(a, TRACE , format, __VA_ARGS__)
-#define LOG_ERROR(a, format, ...) LOG(a, ERR , format, __VA_ARGS__)
-#define LOG_INFO(a, format, ...) LOG(a, INFO , format, __VA_ARGS__)
+		{ fprintf(a->log, "%ld|%s " format, (long)time(0), a->id,  ##__VA_ARGS__);} } while(0)
+#define LOG_TRACE(a, format, ...) LOG(a, TRACE , format, ##__VA_ARGS__)
+#define LOG_ERROR(a, format, ...) LOG(a, ERR , format, ##__VA_ARGS__)
+#define LOG_INFO(a, format, ...) LOG(a, INFO , format, ##__VA_ARGS__)
 
 
 typedef struct odbc_desc_t {

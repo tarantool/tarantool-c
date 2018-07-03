@@ -513,8 +513,9 @@ info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	char b[256];
-	LOG_INFO(stmt, print_info(b,sizeof(b), cat, catlen, schema, schemlen, 
-				table, tablelen, tabletype, tabletypelen));
+	char *buf = print_info(b, sizeof(b), cat, catlen, schema, schemlen,
+		table, tablelen, tabletype, tabletypelen);
+	LOG_INFO(stmt, buf);
 	return SQL_ERROR;
 }
 
