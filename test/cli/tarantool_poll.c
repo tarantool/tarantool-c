@@ -25,8 +25,7 @@ test_poll() {
 	int ok = 1;
 
 	char uri[128] = {0};
-	snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:",
-		 getenv("PRIMARY_PORT"));
+	snprintf(uri, 128, "test:test@%s", getenv("LISTEN"));
 
 	struct tnt_stream *streams[STREAM_COUNT];
 	memset(streams, 0, sizeof(struct tnt_stream *) * STREAM_COUNT);
