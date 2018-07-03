@@ -326,7 +326,7 @@ copy_check(char *d, const char *s, int sz)
 		sz = strlen(s);
 	if (sz + 1 > PARAMSZ)
 		return 0;
-	strcpy(d,s,sz);
+	strncpy(d,s,sz);
 	d[sz] = '\0';
 	return 1;
 }
@@ -364,7 +364,7 @@ odbc_read_dsn(odbc_connect *tcon, char *dsn, int dsn_sz)
 
 	if (ret->host[0] == '\0')
 		SQLGetPrivateProfileString(ret->dsn, KEY_SERVER, "localhost", ret->host, PARAMSZ, ODBCINI );
-	
+
 	if (ret->database[0] == '\0')
 		SQLGetPrivateProfileString(ret->dsn, KEY_DATABASE, "", ret->database, PARAMSZ, ODBCINI );
 	if (ret->flag[0] == '\0')

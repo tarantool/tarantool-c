@@ -387,18 +387,12 @@ SQLSetCursorName(
 	return SQL_ERROR;
 }
 SQLRETURN SQL_API
-SQLColumns(
-	SQLHSTMT       StatementHandle,
-	SQLCHAR *      CatalogName,
-	SQLSMALLINT    NameLength1,
-	SQLCHAR *      SchemaName,
-	SQLSMALLINT    NameLength2,
-	SQLCHAR *      TableName,
-	SQLSMALLINT    NameLength3,
-	SQLCHAR *      ColumnName,
-	SQLSMALLINT    NameLength4)
+SQLColumns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
+	   SQLSMALLINT schemalen, SQLCHAR *table, SQLSMALLINT tablelen,
+	   SQLCHAR *col, SQLSMALLINT collen)
 {
-	return SQL_ERROR;
+	return info_columns(stmth, cat, catlen, schema, schemalen,
+			    table, tablelen, col, collen);
 }
 
 SQLRETURN SQL_API
@@ -442,18 +436,11 @@ SQLStatistics(
 }
 
 SQLRETURN SQL_API
-SQLTables(
-	SQLHSTMT       stmth,
-	SQLCHAR *      cat,
-	SQLSMALLINT    catlen,
-	SQLCHAR *      schema,
-	SQLSMALLINT    schemlen,
-	SQLCHAR *      table,
-	SQLSMALLINT    tablelen,
-	SQLCHAR *      tabletype,
-	SQLSMALLINT    tabletypelen)
+SQLTables(SQLHSTMT stmth, SQLCHAR *cat,	SQLSMALLINT catlen, SQLCHAR *schema,
+	  SQLSMALLINT schemlen,	SQLCHAR *table,	SQLSMALLINT tablelen, SQLCHAR *tabletype,
+	  SQLSMALLINT tabletypelen)
 {
-	return info_tables(stmth, cat, catlen, schema, schemlen, table, 
+	return info_tables(stmth, cat, catlen, schema, schemlen, table,
 		tablelen, tabletype, tabletypelen);
 }
 

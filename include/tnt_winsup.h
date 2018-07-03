@@ -14,19 +14,6 @@
 #define ODBC_INI           TEXT("ODBC.INI")
 #define ODBCINST_INI       TEXT("ODBCINST.INI")
 
-#define KEY_DSN "DSN"
-#define KEY_DRIVER "Driver"
-#define KEY_DESC "Description"
-#define KEY_SERVER "Server"
-#define KEY_PORT "Port"
-#define KEY_USER "UID"
-#define KEY_PASSWORD "PWD"
-#define KEY_FLAG "Flag"
-#define KEY_TIMEOUT "Timeout"
-#define KEY_LOGLEVEL "Log_level"
-#define KEY_LOGFILENAME "Log_filename"
-#define KEY_DATABASE "Database"
-
 #if 0
 /* atomic operation has not supported yet */
 #include <stdatomic.h>

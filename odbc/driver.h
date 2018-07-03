@@ -137,12 +137,30 @@ typedef struct odbc_env_t {
 	char *id;
 } odbc_env;
 
+/*
+ * These are kye difinitions for ODBC.INI files or registry.
+ */
+
+#define KEY_DSN "DSN"
+#define KEY_DRIVER "Driver"
+#define KEY_DESC "Description"
+#define KEY_SERVER "Server"
+#define KEY_PORT "Port"
+#define KEY_USER "UID"
+#define KEY_PASSWORD "PWD"
+#define KEY_FLAG "Flag"
+#define KEY_TIMEOUT "Timeout"
+#define KEY_LOGLEVEL "Log_level"
+#define KEY_LOGFILENAME "Log_filename"
+#define KEY_DATABASE "Database"
+
 
 
 struct tmeasure {
 	long sec;
 	long usec;
 };
+
 
 /* This two functions is for time measure */
 void start_measure (struct tmeasure *tm);
@@ -269,7 +287,10 @@ SQLRETURN stmt_set_attr(SQLHSTMT stmth,	SQLINTEGER att,	SQLPOINTER ptr,	SQLINTEG
 SQLRETURN stmt_get_attr(SQLHSTMT stmth,	SQLINTEGER att,	SQLPOINTER ptr,	SQLINTEGER plen,
 			SQLINTEGER * olen);
 SQLRETURN info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
-	SQLSMALLINT schemlen, SQLCHAR * table, SQLSMALLINT tablelen,
-	SQLCHAR * tabletype, SQLSMALLINT tabletypelen);
+		      SQLSMALLINT schemlen, SQLCHAR * table, SQLSMALLINT tablelen,
+		      SQLCHAR * tabletype, SQLSMALLINT tabletypelen);
+SQLRETURN info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
+		       SQLSMALLINT schemalen, SQLCHAR *table, SQLSMALLINT tablelen,
+		       SQLCHAR *col, SQLSMALLINT collen);
 
 #endif

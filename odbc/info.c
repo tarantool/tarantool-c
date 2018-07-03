@@ -494,30 +494,57 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQL
 
 
 static char*
-print_info(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
+print_info_tables(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	SQLSMALLINT schemlen, SQLCHAR * table, SQLSMALLINT tablelen,
 	SQLCHAR * tabletype, SQLSMALLINT tabletypelen)
 {
 	char frm[100];
 	snprintf(frm, 100, "SQLTables( cat='%%.%hds', schema='%%.%hds' "
-		"table='%%.hds' tabletype='%%.%hds')", catlen, schemlen, tablelen, tabletypelen);
+		"table='%%.%hds' tabletype='%%.%hds')", catlen, schemlen, tablelen, tabletypelen);
 
 	snprintf(b, blen, frm, cat, schema, table, tabletype);
 	return b;
 }
 
-SQLRETURN 
+SQLRETURN
 info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	SQLSMALLINT schemlen, SQLCHAR * table, SQLSMALLINT tablelen,
 	SQLCHAR * tabletype, SQLSMALLINT tabletypelen)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	char b[256];
-	char *buf = print_info(b, sizeof(b), cat, catlen, schema, schemlen,
-		table, tablelen, tabletype, tabletypelen);
-	LOG_INFO(stmt, buf);
+	LOG_INFO(stmt,"%s", print_info_tables(b, sizeof(b), cat, catlen, schema, schemlen,
+		table, tablelen, tabletype, tabletypelen));
 	return SQL_ERROR;
 }
+
+static char*
+print_info_columns(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
+		   SQLSMALLINT schemlen, SQLCHAR *table, SQLSMALLINT tablelen,
+		   SQLCHAR *col, SQLSMALLINT collen)
+{
+	char frm[100];
+	snprintf(frm, 100, "SQLColumns( cat='%%.%hds', schema='%%.%hds' "
+		"table='%%.%hds' column='%%.%hds')", catlen, schemlen,
+		 tablelen, collen);
+
+	snprintf(b, blen, frm, cat, schema, table, collen);
+	return b;
+}
+
+
+SQLRETURN
+info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
+		       SQLSMALLINT schemalen, SQLCHAR *table, SQLSMALLINT tablelen,
+		       SQLCHAR *col, SQLSMALLINT collen)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+	char b[256];
+	LOG_INFO(stmt,"%s", print_info_columns(b, sizeof(b), cat, catlen, schema, schemalen,
+					       table, tablelen, col, collen));
+	return SQL_ERROR;
+}
+
 
 /* Defines for SQLGetFunctions
 
