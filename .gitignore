@@ -11,7 +11,6 @@ install_manifest.txt
 .DS_Store
 
 output
-test/cli/tarantool-*
 test/tarantool-*
 test/test
 *.xlog
@@ -28,3 +27,9 @@ latex
 
 deploy_key
 deploy_key.pub
+
+tarantool-tcp
+tarantool-poll
+tarantool-cli
+tarantool-call
+test/var/

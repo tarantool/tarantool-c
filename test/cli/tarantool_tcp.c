@@ -72,7 +72,7 @@ test_connect_tcp(const char *uri) {
 	tnt_close(s);
 	tnt_stream_free(s);
 
-	struct tnt_stream sa = {0}; tnt_net(&sa);
+	struct tnt_stream sa; memset(&sa, 0, sizeof(struct tnt_stream)); tnt_net(&sa);
 	is  (sa.alloc, 0, "Checking sa.alloc");
 	isnt(tnt_set(&sa, TNT_OPT_URI, uri), -1, "Setting URI");
 	isnt(tnt_connect(&sa), -1, "Connecting");
@@ -305,7 +305,7 @@ test_request_02(char *uri) {
 	is  (tnt_request_set_index(req, 2), 0, "Set index");
 	is  (tnt_request_set_key(req, key), 0, "Set key");
 	isnt(tnt_request_compile(tnt, req), -1, "Compile request");
-	
+
 	isnt(tnt_flush(tnt), -1, "Send package to server");
 	tnt_request_free(req);
 	tnt_stream_free(key);
@@ -313,7 +313,7 @@ test_request_02(char *uri) {
 	struct tnt_reply reply;
 	isnt(tnt_reply_init(&reply), NULL, "Init reply");
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply");
-	
+
 	tnt_reply_free(&reply);
 
 	tnt_stream_free(tnt);
@@ -345,7 +345,7 @@ test_request_03(char *uri) {
 	is  (tnt_request_set_sindex(tnt, req, "name", 4), 0, "Set index");
 	is  (tnt_request_set_key(req, key), 0, "Set key");
 	isnt(tnt_request_compile(tnt, req), -1, "Compile request");
-	
+
 	isnt(tnt_flush(tnt), -1, "Send package to server");
 	tnt_request_free(req);
 	tnt_stream_free(key);
@@ -353,7 +353,7 @@ test_request_03(char *uri) {
 	struct tnt_reply reply;
 	isnt(tnt_reply_init(&reply), NULL, "Init reply");
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply");
-	
+
 	tnt_reply_free(&reply);
 
 	tnt_stream_free(tnt);
@@ -577,7 +577,7 @@ test_request_05(char *uri) {
 	}
 
 	isnt(tnt_flush(tnt), -1, "Send package to server");
-	
+
 	int j=0;
 	tnt_iter_reply(&it, tnt);
 	while (tnt_next(&it)) {
@@ -838,8 +838,7 @@ int main() {
 	plan(10);
 
 	char uri[128] = {0};
-	snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:",
-		 getenv("PRIMARY_PORT"));
+	snprintf(uri, 128, "test:test@%s", getenv("LISTEN"));
 
 	test_connect_tcp(uri);
 	test_object();
