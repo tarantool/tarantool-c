@@ -499,11 +499,8 @@ print_info_tables(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *
 	SQLCHAR * tabletype, SQLSMALLINT tabletypelen)
 {
 	char frm[100];
-	snprintf(frm, 100, "SQLTables(cat='%%.%hds', schema='%%.%hds', "
-		"table='%%.%hds', tabletype='%%.%hds')", catlen == SQL_NTS? (short)strlen(cat): catlen, 
-		schemlen == SQL_NTS? (short)strlen(schema): schemlen, 
-		tablelen == SQL_NTS? (short)strlen(table): tablelen, 
-		tabletypelen == SQL_NTS? (short)strlen(tabletype): tabletypelen);
+	snprintf(frm, 100, "SQLTables( cat='%%.%hds', schema='%%.%hds' "
+		"table='%%.%hds' tabletype='%%.%hds')", catlen, schemlen, tablelen, tabletypelen);
 
 	snprintf(b, blen, frm, cat, schema, table, tabletype);
 	return b;
@@ -516,31 +513,8 @@ info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	char b[256];
-	LOG_INFO(stmt,"%s\n", print_info_tables(b, sizeof(b), cat, catlen, schema, schemlen,
+	LOG_INFO(stmt,"%s", print_info_tables(b, sizeof(b), cat, catlen, schema, schemlen,
 		table, tablelen, tabletype, tabletypelen));
-
-	/* 
-	 * Ignoring all ODBC parameters except table - table name 
-	 * Since we don't have database/catalog and schemas. 
-	 */
-	const char *table_request = "select '' AS TABLE_CAT, "
-		"'' AS TABLE_SCHEM, \"name\" AS TABLE_NAME, "
-		"'TABLE' AS TABLE_TYPE, "
-		"'' AS REMARKS from \"_space\"";
-
-	if (table && table[0] != 0) {
-		char regex[128];
-		size_t len = tabletypelen == SQL_NTS? strlen(table) : tablelen;
-		if (len > 127)
-			len = 127;
-		strncpy(regex, table, len);
-		regex[len] = 0;
-		snprintf(b, sizeof(b), "%s where \"name\" like '%s'", table_request, regex);
-	} else {
-		snprintf(b, sizeof(b), "%s", table_request);
-	}
-	if (stmt_prepare(stmth, b, SQL_NTS) != SQL_ERROR)
-		return stmt_execute(stmth);
 	return SQL_ERROR;
 }
 
@@ -550,8 +524,8 @@ print_info_columns(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR 
 		   SQLCHAR *col, SQLSMALLINT collen)
 {
 	char frm[100];
-	snprintf(frm, 100, "SQLColumns(cat='%%.%hds', schema='%%.%hds', "
-		"table='%%.%hds', column='%%.%hds')", catlen, schemlen,
+	snprintf(frm, 100, "SQLColumns( cat='%%.%hds', schema='%%.%hds' "
+		"table='%%.%hds' column='%%.%hds')", catlen, schemlen,
 		 tablelen, collen);
 
 	snprintf(b, blen, frm, cat, schema, table, collen);
@@ -566,7 +540,7 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	char b[256];
-	LOG_INFO(stmt,"%s\n", print_info_columns(b, sizeof(b), cat, catlen, schema, schemalen,
+	LOG_INFO(stmt,"%s", print_info_columns(b, sizeof(b), cat, catlen, schema, schemalen,
 					       table, tablelen, col, collen));
 	return SQL_ERROR;
 }
