@@ -226,7 +226,7 @@ set_env_error_len(odbc_env *env, int code, const char* msg, int len)
 
 
 struct error_holder *
-	get_error(SQLSMALLINT hndl_type, SQLHANDLE hndl)
+get_error(SQLSMALLINT hndl_type, SQLHANDLE hndl)
 {
 	switch (hndl_type) {
 	case SQL_HANDLE_DBC:
@@ -242,6 +242,30 @@ struct error_holder *
 	}
 }
 
+SQLRETURN
+copy_buf( SQLPOINTER ptr, const char* src, SQLSMALLINT buflen,
+	SQLSMALLINT *out_len)
+{
+	SQLRETURN status = SQL_SUCCESS;
+	if (!src)
+		src = "";
+	SQLSMALLINT slen = (SQLSMALLINT)strlen(src);
+	if (out_len)
+		*out_len = (SQLSMALLINT)slen;
+
+	if (buflen == 0 || !ptr)
+		status = SQL_SUCCESS_WITH_INFO;
+	else {
+		buflen--;
+		if (buflen >= slen)
+			buflen = slen;
+		else
+			status = SQL_SUCCESS_WITH_INFO;
+		memcpy(ptr, src, buflen);
+		((char*)ptr)[buflen] = 0;
+	}
+	return status;
+}
 
 
 SQLRETURN
@@ -257,20 +281,41 @@ get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 	if (errno_ptr)
 		*errno_ptr = get_error(hndl_type, hndl)->native;
 
-	char * etxt = get_error(hndl_type, hndl)->message;
-	if (etxt == NULL)
-		etxt = "";
-	if (txt)
-		strncpy((char*)txt, etxt, buflen);
-	if (out_len) {
-		if (!txt)
-			*out_len = (SQLSMALLINT)strlen(etxt);
-		else
-			*out_len = (SQLSMALLINT)strlen((char*)txt);
-	}
+	
+	
 	if (state)
-		strncpy((char *)state, code2sqlstate(get_error(hndl_type, hndl)->code), 5);
-	return SQL_SUCCESS;
+		strncpy((char *)state, 
+				code2sqlstate(get_error(hndl_type, hndl)->code), 5);
+	return copy_buf(txt, get_error(hndl_type, hndl)->message, 
+		buflen, out_len);
+}
+
+SQLRETURN
+old_error(SQLHENV henv, SQLHDBC hdbc, SQLHSTMT hstmt,
+	SQLCHAR *state, SQLINTEGER *native,
+	SQLCHAR *out_msg, SQLSMALLINT blen,
+	SQLSMALLINT *olen)
+{
+	struct error_holder *eh;
+
+	if (henv != SQL_NULL_HENV)
+		eh = get_error(SQL_HANDLE_ENV, henv);
+	else if (hdbc != SQL_NULL_HDBC)
+		eh = get_error(SQL_HANDLE_DBC, hdbc);
+	else if (hstmt != SQL_NULL_HSTMT)
+		eh = get_error(SQL_HANDLE_STMT, hstmt);
+	else
+		return SQL_ERROR;
+	if (!eh)
+		return SQL_ERROR;
+
+	if (native)
+		*native = eh->native;
+
+	if (state)
+		strncpy((char *)state, code2sqlstate(eh->code), 5);
+
+	return copy_buf(out_msg, eh->message, blen, olen);
 }
 
 int
@@ -317,20 +362,19 @@ get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 			((char*)ptr)[0] = '\0';
 		if (out_len)
 			*out_len = 0;
-		ptr = "";
 		return SQL_SUCCESS;
 	case SQL_DIAG_NATIVE:
 		*(SQLINTEGER *)ptr = get_error(hndl_type, hndl)->native;
 		return SQL_SUCCESS;
-	case SQL_DIAG_MESSAGE_TEXT:
-		ptr = get_error(hndl_type, hndl)->message;
-		if (out_len)
-			*out_len = (SQLSMALLINT)strlen((char *)ptr);
-		return SQL_SUCCESS;
+	case SQL_DIAG_MESSAGE_TEXT: {
+		return copy_buf(ptr, get_error(hndl_type, hndl)->message,
+						buflen, out_len);
+	}
 	case SQL_DIAG_SQLSTATE:
-		ptr = (char*)code2sqlstate(get_error(hndl_type, hndl)->code);
+		if (ptr)
+			strncpy((char *)ptr, code2sqlstate(get_error(hndl_type, hndl)->code), 5);
 		if (out_len)
-			*out_len = (SQLSMALLINT)strlen((char *)ptr);
+			*out_len = 5;
 		return SQL_SUCCESS;
 	}
 

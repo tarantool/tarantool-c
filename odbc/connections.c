@@ -323,7 +323,7 @@ int
 copy_check(char *d, const char *s, int sz)
 {
 	if (sz == SQL_NTS)
-		sz = strlen(s);
+		sz = (int)strlen(s);
 	if (sz + 1 > PARAMSZ)
 		return 0;
 	strncpy(d,s,sz);

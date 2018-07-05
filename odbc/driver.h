@@ -292,5 +292,12 @@ SQLRETURN info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR 
 SQLRETURN info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 		       SQLSMALLINT schemalen, SQLCHAR *table, SQLSMALLINT tablelen,
 		       SQLCHAR *col, SQLSMALLINT collen);
-
+SQLRETURN   old_error(SQLHENV henv, SQLHDBC hdbc, SQLHSTMT hstmt,
+				SQLCHAR *szSqlState, SQLINTEGER *pfNativeError,
+				SQLCHAR *szErrorMsg, SQLSMALLINT cbErrorMsgMax,
+				SQLSMALLINT *pcbErrorMsg);
+SQLRETURN special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
+	SQLSMALLINT catlen, SQLCHAR *schema, SQLSMALLINT schemalen,
+	SQLCHAR *table, SQLSMALLINT tablelen,
+	SQLUSMALLINT scope, SQLUSMALLINT nullable);
 #endif

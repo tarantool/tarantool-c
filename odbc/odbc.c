@@ -608,19 +608,13 @@ SQLBulkOperations(
 }
 
 SQLRETURN SQL_API
-SQLSpecialColumns(
-	SQLHSTMT      StatementHandle,
-	SQLUSMALLINT   IdentifierType,
-	SQLCHAR *     CatalogName,
-	SQLSMALLINT   NameLength1,
-	SQLCHAR *     SchemaName,
-	SQLSMALLINT   NameLength2,
-	SQLCHAR *     TableName,
-	SQLSMALLINT   NameLength3,
-	SQLUSMALLINT   Scope,
-	SQLUSMALLINT   Nullable)
+SQLSpecialColumns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
+	SQLSMALLINT catlen, SQLCHAR *schema, SQLSMALLINT schemalen,
+	SQLCHAR *table, SQLSMALLINT tablelen,
+	SQLUSMALLINT scope, SQLUSMALLINT nullable)
 {
-	return SQL_ERROR;
+	return special_columns(stmth, itype, cat, catlen,schema, schemalen, 
+							table, tablelen, scope, nullable);
 }
 
 SQLRETURN SQL_API
@@ -649,5 +643,7 @@ SQLError(SQLHENV henv,
 	SQLCHAR *szErrorMsg, SQLSMALLINT cbErrorMsgMax,
 	SQLSMALLINT *pcbErrorMsg)
 {
-	return SQL_ERROR;
+	return old_error(henv, hdbc, hstmt, szSqlState, 
+						pfNativeError, szErrorMsg, 
+						cbErrorMsgMax, pcbErrorMsg);
 }
