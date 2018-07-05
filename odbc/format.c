@@ -1,13 +1,5 @@
 #include <string>
 
-enum value_type {
-	STRING,
-	NUMBER,
-	OBJECT,
-	ARRAY,
-	BOOL,
-	NIL
-};
 
 struct column_def {
 	int id;
@@ -22,9 +14,23 @@ struct format {
 	struct column_def *items;
 };
 
+enum keys_id {
+	TYPE=0,
+	ISNULL,
+	NAME,
+
+};
+
+struct keys_pairs {
+	const char *name;
+	int val;
+};
+
 int
 read_pair(const char** data, struct column_def *col, const char* key, size_t len)
 {
+	for(const char **name = keys; *name; name++) {
+	}
 
 }
 
