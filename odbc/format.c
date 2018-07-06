@@ -1,12 +1,12 @@
 #include <string>
-
+#include "driver.h"
 
 struct column_def {
 	int id;
 	int type;
 	int is_nullable;
 	char *name;
-	int index_type;
+	int is_pk;
 };
 
 struct format {

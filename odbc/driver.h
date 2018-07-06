@@ -137,6 +137,17 @@ typedef struct odbc_env_t {
 	char *id;
 } odbc_env;
 
+#define NAMEMAX 32
+
+struct column_def {
+	int id;
+	int type;
+	int is_nullable;
+	char *name;
+	int is_pk;
+};
+
+
 /*
  * These are kye difinitions for ODBC.INI files or registry.
  */

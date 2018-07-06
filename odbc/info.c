@@ -492,22 +492,40 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQL
 	return SQL_SUCCESS;
 }
 
+#define NLEN 128
 
 static char*
 print_info_tables(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	SQLSMALLINT schemlen, SQLCHAR * table, SQLSMALLINT tablelen,
 	SQLCHAR * tabletype, SQLSMALLINT tabletypelen)
 {
-	char frm[100];
-	snprintf(frm, 100, "SQLTables(cat='%%.%hds', schema='%%.%hds', "
-		"table='%%.%hds', tabletype='%%.%hds')", catlen == SQL_NTS? (short)strlen(cat): catlen, 
-		schemlen == SQL_NTS? (short)strlen(schema): schemlen, 
-		tablelen == SQL_NTS? (short)strlen(table): tablelen, 
+	char frm[NLEN];
+	snprintf(frm, NLEN, "SQLTables(cat='%%.%hds', schema='%%.%hds', "
+		"table='%%.%hds', tabletype='%%.%hds')", catlen == SQL_NTS? (short)strlen(cat): catlen,
+		schemlen == SQL_NTS? (short)strlen(schema): schemlen,
+		tablelen == SQL_NTS? (short)strlen(table): tablelen,
 		tabletypelen == SQL_NTS? (short)strlen(tabletype): tabletypelen);
 
 	snprintf(b, blen, frm, cat, schema, table, tabletype);
 	return b;
 }
+
+static char*
+makez(char *dst, size_t dstlen, const char* src, SQLSMALLINT srclen)
+{
+	/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	 *!! HERE SHOULD BE QUOTING TEST!!!!!!
+	 *!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	 */
+	if (srclen == SQL_NTS)
+		srclen = strlen(src);
+	if (dstlen < strlen + 1)
+		srclen = dstlen - 1;
+	memcpy(dst, src, srclen);
+	dst[srclen] = '\0';
+	return dst;
+}
+
 
 SQLRETURN
 info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
@@ -515,13 +533,13 @@ info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	SQLCHAR * tabletype, SQLSMALLINT tabletypelen)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
-	char b[256];
+	char b[2*NLEN];
 	LOG_INFO(stmt,"%s\n", print_info_tables(b, sizeof(b), cat, catlen, schema, schemlen,
 		table, tablelen, tabletype, tabletypelen));
 
-	/* 
-	 * Ignoring all ODBC parameters except table - table name 
-	 * Since we don't have database/catalog and schemas. 
+	/*
+	 * Ignoring all ODBC parameters except table - table name
+	 * Since we don't have database/catalog and schemas.
 	 */
 	const char *table_request = "select '' AS TABLE_CAT, "
 		"'' AS TABLE_SCHEM, \"name\" AS TABLE_NAME, "
@@ -529,13 +547,8 @@ info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 		"'' AS REMARKS from \"_space\"";
 
 	if (table && table[0] != 0) {
-		char regex[128];
-		size_t len = tabletypelen == SQL_NTS? strlen(table) : tablelen;
-		if (len > 127)
-			len = 127;
-		strncpy(regex, table, len);
-		regex[len] = 0;
-		snprintf(b, sizeof(b), "%s where \"name\" like '%s'", table_request, regex);
+		snprintf(b, sizeof(b), "%s where \"name\" like '%s'", table_request,
+			 makez(regex, sizeof(regex), table, tablelen));
 	} else {
 		snprintf(b, sizeof(b), "%s", table_request);
 	}
@@ -549,7 +562,7 @@ print_info_columns(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR 
 		   SQLSMALLINT schemlen, SQLCHAR *table, SQLSMALLINT tablelen,
 		   SQLCHAR *col, SQLSMALLINT collen)
 {
-	char frm[100];
+	char frm[NLEN];
 	snprintf(frm, 100, "SQLColumns(cat='%%.%hds', schema='%%.%hds', "
 		"table='%%.%hds', column='%%.%hds')", catlen, schemlen,
 		 tablelen, collen);
@@ -565,11 +578,66 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 		       SQLCHAR *col, SQLSMALLINT collen)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
-	char b[256];
+	char b[2*NLEN];
 	LOG_INFO(stmt,"%s\n", print_info_columns(b, sizeof(b), cat, catlen, schema, schemalen,
 					       table, tablelen, col, collen));
 	return SQL_ERROR;
 }
+
+struct column_def **
+read_columns_rows(odbc_stmt *stmt, struct column_def *col)
+{
+	int capacity = 2;
+	struct column_def ** cols = (struct column_def **) malloc (sizeof(struct column_def *)*capacity);
+	if (!cols)
+		return NULL;
+	int row_count = 0;
+	while(stmt_fetch(stmt) == SQL_SUCCESS) {
+		row_count ++ ;
+		while (capacity < row_count) {
+			capacity *=2;
+			void *p = realloc (cols, (sizeof(struct column_def *)*capacity));
+			if (!p)
+				goto error;
+			cols = (struct column_def **) p;
+		}
+	}
+}
+
+SQLRETURN
+special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
+	SQLSMALLINT catlen, SQLCHAR *schema, SQLSMALLINT schemalen,
+	SQLCHAR *table, SQLSMALLINT tablelen,
+	SQLUSMALLINT scope, SQLUSMALLINT nullable)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+	if (!stmt)
+		return SQL_INVALID_HANDLE;
+	/* Since Tarantool do not have catalog and scheme just ignoring those. */
+	char tname[NLEN];
+	char q[2*NLEN];
+
+	snprintf(q, sizeof(q), "pragma table_info(%s)", makez(tname, sizeof(tname), table, tablelen));
+
+	if (stmt_prepare(stmth, q, SQL_NTS) != SQL_SUCCESS
+	    || stmt_execute(stmth) != SQL_SUCCESS)
+		return SQL_ERROR;
+
+	/* SQL_SCOPE_SESSION
+	   SQL_PC_NOT_PSEUDO */
+	struct column_def ** col = read_columns_rows(stmt);
+	setup_pseudo_resultset(stmt);
+	if (itype == SQL_BEST_ROWID)
+		while(*col) {
+			if ((*col)->is_pk && (nullable == SQL_NULLABLE
+					      || (nullable == SQL_NO_NULLS && !(*col)->is_nullable)))
+				add_pseudo_colifo_row(stmt, *col);
+			(*col)++;
+		}
+	return SQL_SUCCESS;
+}
+
+
 
 
 /* Defines for SQLGetFunctions

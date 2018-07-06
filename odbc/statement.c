@@ -707,20 +707,6 @@ param_info(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 	return SQL_ERROR;
 }
 
-SQLRETURN
-special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
-	SQLSMALLINT catlen, SQLCHAR *schema, SQLSMALLINT schemalen,
-	SQLCHAR *table, SQLSMALLINT tablelen,
-	SQLUSMALLINT scope, SQLUSMALLINT nullable)
-{
-	odbc_stmt *stmt = (odbc_stmt *)stmth;
-	if (!stmt)
-		return SQL_INVALID_HANDLE;
-	set_stmt_error(stmt, ODBC_IM001_ERROR,
-		"Driver does not support this function",
-		"SQLSpecialColumns");
-	return SQL_ERROR;
-}
 
 
 SQLRETURN
