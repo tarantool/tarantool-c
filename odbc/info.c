@@ -7,7 +7,7 @@
 
 
 #include <stdlib.h>
-
+#include <limits.h>
 #include <tarantool/tarantool.h>
 #include <tarantool/tnt_fetch.h>
 #include <sql.h>
@@ -501,10 +501,10 @@ print_info_tables(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *
 {
 	char frm[NLEN];
 	snprintf(frm, NLEN, "SQLTables(cat='%%.%hds', schema='%%.%hds', "
-		"table='%%.%hds', tabletype='%%.%hds')", catlen == SQL_NTS? (short)strlen(cat): catlen,
-		schemlen == SQL_NTS? (short)strlen(schema): schemlen,
-		tablelen == SQL_NTS? (short)strlen(table): tablelen,
-		tabletypelen == SQL_NTS? (short)strlen(tabletype): tabletypelen);
+		 "table='%%.%hds', tabletype='%%.%hds')",(short) (catlen == SQL_NTS? (short)strlen((char*)cat): catlen),
+		 (short)(schemlen == SQL_NTS? (short)strlen((char*)schema): schemlen),
+		 (short)(tablelen == SQL_NTS? (short)strlen((char*)table): tablelen),
+		 (short)(tabletypelen == SQL_NTS? (short)strlen((char*)tabletype): tabletypelen));
 
 	snprintf(b, blen, frm, cat, schema, table, tabletype);
 	return b;
@@ -519,7 +519,7 @@ makez(char *dst, size_t dstlen, const char* src, SQLSMALLINT srclen)
 	 */
 	if (srclen == SQL_NTS)
 		srclen = strlen(src);
-	if (dstlen < strlen + 1)
+	if (dstlen < srclen + 1)
 		srclen = dstlen - 1;
 	memcpy(dst, src, srclen);
 	dst[srclen] = '\0';
@@ -547,12 +547,13 @@ info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 		"'' AS REMARKS from \"_space\"";
 
 	if (table && table[0] != 0) {
+		char regex[NLEN];
 		snprintf(b, sizeof(b), "%s where \"name\" like '%s'", table_request,
-			 makez(regex, sizeof(regex), table, tablelen));
+			 makez(regex, sizeof(regex), (char *)table, tablelen));
 	} else {
 		snprintf(b, sizeof(b), "%s", table_request);
 	}
-	if (stmt_prepare(stmth, b, SQL_NTS) != SQL_ERROR)
+	if (stmt_prepare(stmth, (SQLCHAR *)b, SQL_NTS) != SQL_ERROR)
 		return stmt_execute(stmth);
 	return SQL_ERROR;
 }
@@ -584,8 +585,37 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	return SQL_ERROR;
 }
 
+int
+coltype2odbc(const char * tnt_type, size_t len)
+{
+	static char *types_names[] = {"integer", "scalar", "real",
+				      "float", "double", "string",
+				      "char", "varchar", "binary",
+				      NULL };
+	static int types[] = {SQL_BIGINT, SQL_VARCHAR, SQL_REAL,
+			      SQL_REAL, SQL_DOUBLE, SQL_VARCHAR,
+			      SQL_CHAR, SQL_VARCHAR, SQL_BINARY,
+			      0};
+	for(int i=0; types_names[i]; ++i) {
+		if (m_strncasecmp(tnt_type, types_names[i], len)==0)
+			return types[i];
+	}
+	return SQL_VARCHAR;
+}
+
+void
+free_columns_info( struct column_def ** cols)
+{
+	struct column_def **it = cols;
+	while (it && *it) {
+		free((*it)->name);
+		free(*it++);
+	}
+	free(cols);
+}
+
 struct column_def **
-read_columns_rows(odbc_stmt *stmt, struct column_def *col)
+read_columns_rows(odbc_stmt *stmt)
 {
 	int capacity = 2;
 	struct column_def ** cols = (struct column_def **) malloc (sizeof(struct column_def *)*capacity);
@@ -594,46 +624,82 @@ read_columns_rows(odbc_stmt *stmt, struct column_def *col)
 	int row_count = 0;
 	while(stmt_fetch(stmt) == SQL_SUCCESS) {
 		row_count ++ ;
-		while (capacity < row_count) {
+		while (capacity < row_count && capacity < INT_MAX) {
 			capacity *=2;
 			void *p = realloc (cols, (sizeof(struct column_def *)*capacity));
 			if (!p)
 				goto error;
 			cols = (struct column_def **) p;
 		}
+		cols[row_count] = NULL;
+		cols[row_count - 1] = (struct column_def*) malloc(sizeof(struct column_def));
+		if (!cols[row_count-1])
+			goto error;
+		/* Actually it's a bad thing to mix tnt API and ODBC layer.
+		 * So it's better to change tnt_* calls in the future.
+		 */
+		cols[row_count - 1]->id = tnt_col_int(stmt->tnt_statement, 0);
+		cols[row_count - 1]->name = strndup(tnt_col_str(stmt->tnt_statement, 1),
+						    tnt_col_len(stmt->tnt_statement, 1));
+		cols[row_count - 1]->is_nullable = !tnt_col_int(stmt->tnt_statement, 3);
+		cols[row_count - 1]->is_pk  = tnt_col_int(stmt->tnt_statement, 5);
+		cols[row_count - 1]->type = coltype2odbc(tnt_col_str(stmt->tnt_statement, 2),
+							 tnt_col_len(stmt->tnt_statement, 2));
+
+	}
+	return cols;
+error:
+	free_columns_info(cols);
+	return NULL;
+}
+
+void
+setup_pseudo_resultset(odbc_stmt *stmt)
+{
+
+}
+void
+add_pseudo_colifo_row(odbc_stmt *stmt,struct column_def *col)
+{
+	if (col) {
+		fprintf (stderr, "col name: %s, is null: %d, type: %d, is pk: %d\n", col->name, col->is_nullable,
+			col->type, col->is_pk);
 	}
 }
 
 SQLRETURN
 special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
-	SQLSMALLINT catlen, SQLCHAR *schema, SQLSMALLINT schemalen,
-	SQLCHAR *table, SQLSMALLINT tablelen,
-	SQLUSMALLINT scope, SQLUSMALLINT nullable)
+		SQLSMALLINT catlen, SQLCHAR *schema, SQLSMALLINT schemalen,
+		SQLCHAR *table, SQLSMALLINT tablelen,
+		SQLUSMALLINT scope, SQLUSMALLINT nullable)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
-	/* Since Tarantool do not have catalog and scheme just ignoring those. */
+
+	/* Since Tarantool do not have catalog and scheme just ignoring these. */
 	char tname[NLEN];
 	char q[2*NLEN];
 
-	snprintf(q, sizeof(q), "pragma table_info(%s)", makez(tname, sizeof(tname), table, tablelen));
+	snprintf(q, sizeof(q), "pragma table_info(%s)", makez(tname, sizeof(tname), (char*)table, tablelen));
 
-	if (stmt_prepare(stmth, q, SQL_NTS) != SQL_SUCCESS
+	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) != SQL_SUCCESS
 	    || stmt_execute(stmth) != SQL_SUCCESS)
 		return SQL_ERROR;
 
 	/* SQL_SCOPE_SESSION
 	   SQL_PC_NOT_PSEUDO */
 	struct column_def ** col = read_columns_rows(stmt);
+	struct column_def ** col_p = col;
 	setup_pseudo_resultset(stmt);
 	if (itype == SQL_BEST_ROWID)
 		while(*col) {
 			if ((*col)->is_pk && (nullable == SQL_NULLABLE
 					      || (nullable == SQL_NO_NULLS && !(*col)->is_nullable)))
 				add_pseudo_colifo_row(stmt, *col);
-			(*col)++;
+			col++;
 		}
+	free_columns_info(col_p);
 	return SQL_SUCCESS;
 }
 

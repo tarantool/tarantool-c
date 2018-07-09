@@ -410,7 +410,7 @@ do_fetchgetdata(struct set_handles *st, void *p)
 
 
 			fprintf(stderr, "long_val is %lld match is %ld double_val %lf and str_val is %s\n",
-				/* (long)*/ long_val, pars[row_cnt], double_val, str_val);
+				(long long) long_val, pars[row_cnt], double_val, str_val);
 			fprintf(stderr, "(long_val == pars[row_cnt])=%d\n",
 				(int)(((long)long_val) == pars[row_cnt]));
 			if (long_val == pars[row_cnt])
@@ -549,6 +549,49 @@ test_fetch(const char *dsn, const char *sql,void* cnt, int (*fnc) (struct set_ha
 	return ret_code;
 }
 
+int
+test_metadata_table(const char *dsn, const char *table)
+{
+	int ret_code = 0;
+
+	struct set_handles st;
+	SQLRETURN retcode;
+
+	if (init_dbc(&st,dsn)) {
+		retcode = SQLSpecialColumns(st.hstmt, SQL_BEST_ROWID, (SQLCHAR *)"", 0,(SQLCHAR *) "", 0,
+					    (SQLCHAR*)table, SQL_NTS, SQL_SCOPE_SESSION, SQL_NULLABLE);
+		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
+			while(SQLFetch(st.hstmt) == SQL_SUCCESS) {
+			SQLBIGINT long_val = 0;
+			SQLSMALLINT short_val = 0;
+			SQLDOUBLE  double_val;
+			SQLCHAR str_val[BUFSIZ] = "";
+			SQLCHAR str_typ[BUFSIZ] = "";
+
+			SQLLEN str_len;
+
+			int code = SQLGetData(st.hstmt, 3, SQL_C_CHAR, &str_val[0], BUFSIZ, &str_len);
+			CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
+
+			code = SQLGetData(st.hstmt, 3, SQL_C_SHORT, &short_val, 0, 0);
+			CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
+
+			code = SQLGetData(st.hstmt, 4, SQL_C_CHAR, &str_typ, BUFSIZ, &str_len);
+			CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
+
+
+			fprintf(stderr, "type val %hd, type str %s, and name is %s\n",
+				/* (long)*/ short_val, str_typ, str_val);
+
+			}
+		} else {
+			    show_error(SQL_HANDLE_STMT, st.hstmt);
+			    ret_code = 0;
+		}
+		close_set(&st);
+	}
+	return ret_code;
+}
 
 
 
@@ -709,7 +752,9 @@ main(int ac, char* av[])
 	par.cnt = 44 ;
 	test(test_fetch(good_dsn, "select * from dbl where val=6", &par, do_fetchgetdata_stream));
 
-	fprintf(stderr, "sizeof(long)=%zu, sizeof(long long)=%zu\n", 
+	test(test_metadata_table(good_dsn, "dbl"));
+
+	fprintf(stderr, "sizeof(long)=%zu, sizeof(long long)=%zu\n",
 		sizeof(long), sizeof(long long));
 
 //	test(test_execrowcount(good_dsn,"drop table str_table",1));

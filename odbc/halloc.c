@@ -281,12 +281,12 @@ get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 	if (errno_ptr)
 		*errno_ptr = get_error(hndl_type, hndl)->native;
 
-	
-	
+
+
 	if (state)
-		strncpy((char *)state, 
+		strncpy((char *)state,
 				code2sqlstate(get_error(hndl_type, hndl)->code), 5);
-	return copy_buf(txt, get_error(hndl_type, hndl)->message, 
+	return copy_buf(txt, get_error(hndl_type, hndl)->message,
 		buflen, out_len);
 }
 
@@ -296,25 +296,27 @@ old_error(SQLHENV henv, SQLHDBC hdbc, SQLHSTMT hstmt,
 	SQLCHAR *out_msg, SQLSMALLINT blen,
 	SQLSMALLINT *olen)
 {
-	struct error_holder *eh;
+	struct error_holder *eh = NULL;
 
-	if (henv != SQL_NULL_HENV)
-		eh = get_error(SQL_HANDLE_ENV, henv);
+	if (hstmt != SQL_NULL_HSTMT)
+		eh = get_error(SQL_HANDLE_STMT, hstmt);
 	else if (hdbc != SQL_NULL_HDBC)
 		eh = get_error(SQL_HANDLE_DBC, hdbc);
-	else if (hstmt != SQL_NULL_HSTMT)
-		eh = get_error(SQL_HANDLE_STMT, hstmt);
-	else
-		return SQL_ERROR;
-	if (!eh)
-		return SQL_ERROR;
+	else if (henv != SQL_NULL_HENV)
+		eh = get_error(SQL_HANDLE_ENV, henv);
+
+	if (!eh || eh->reported) {
+		if (state)
+			strncpy((char *)state, "00000", 5);
+		return SQL_NO_DATA_FOUND;
+	}
 
 	if (native)
 		*native = eh->native;
 
 	if (state)
 		strncpy((char *)state, code2sqlstate(eh->code), 5);
-
+	eh->reported = 1;
 	return copy_buf(out_msg, eh->message, blen, olen);
 }
 
@@ -634,13 +636,13 @@ alloc_stmt(SQLHDBC conn, SQLHSTMT *ostmt)
 
 	*out = (odbc_stmt*)malloc(sizeof(odbc_stmt));
 	if (*out == NULL) {
-mem_error:	
+mem_error:
 		set_connect_error(con, ODBC_MEM_ERROR,
 			"Unable to allocate memory for statement", "SQLStatement");
 		return SQL_ERROR;
 	}
 	memset(*out, 0, sizeof(odbc_stmt));
-	
+
 	(*out)->apd = (struct descriptor*) malloc(sizeof(struct descriptor));
 	(*out)->ipd = (struct descriptor*) malloc(sizeof(struct descriptor));
 	(*out)->ard = (struct descriptor*) malloc(sizeof(struct descriptor));
@@ -673,7 +675,7 @@ mem_error:
 	(*out)->log = con->log;
 	(*out)->log_level = con->log_level;
 	(*out)->id = gen_next_id(con->id, &stmt_sq);
-	
+
 	return SQL_SUCCESS;
 }
 

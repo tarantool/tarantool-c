@@ -2,6 +2,7 @@
 #define _ODBC_DRIVER_H 1
 #include <stdint.h>
 #include <time.h>
+#include <ctype.h>
 #include <inttypes.h>
 
 #define DRIVER_VER_INFO "0.1"
@@ -65,6 +66,7 @@ struct error_holder {
 	int code;
 	char *message;
 	int native;
+	int reported;
 };
 
 typedef struct odbc_connect_t {
@@ -149,7 +151,7 @@ struct column_def {
 
 
 /*
- * These are kye difinitions for ODBC.INI files or registry.
+ * These are keys difinitions for ODBC.INI files or registry.
  */
 
 #define KEY_DSN "DSN"
@@ -171,6 +173,29 @@ struct tmeasure {
 	long sec;
 	long usec;
 };
+
+
+static inline int
+m_strcasecmp(const char *s1, const char *s2)
+{
+	while (*s1 != 0 && *s2 != 0 && (tolower(*s1) - tolower(*s2)) == 0) {
+		s1++; s2++;
+	}
+	return tolower(*s1) - tolower(*s2);
+}
+static inline int
+m_strncasecmp(const char *s1, const char *s2, size_t n)
+{
+	if (n == 0)
+		return 0;
+	else
+		n--;
+	while (n && *s1 != 0 && *s2 != 0 && (tolower(*s1) - tolower(*s2)) == 0) {
+		s1++; s2++; n--;
+	}
+	return tolower(*s1) - tolower(*s2);
+}
+
 
 
 /* This two functions is for time measure */

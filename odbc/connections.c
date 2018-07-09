@@ -29,27 +29,6 @@
 #endif
 #define PARAMSZ  1024
 
-static inline int
-m_strcasecmp(const char *s1, const char *s2)
-{
-	while (*s1 != 0 && *s2 != 0 && (tolower(*s1) - tolower(*s2)) == 0) {
-		s1++; s2++;
-	}
-	return tolower(*s1) - tolower(*s2);
-}
-static inline int
-m_strncasecmp(const char *s1, const char *s2, size_t n)
-{
-	if (n == 0)
-		return 0;
-	else
-		n--;
-	while (n && *s1 != 0 && *s2 != 0 && (tolower(*s1) - tolower(*s2)) == 0) {
-		s1++; s2++; n--;
-	}
-	return tolower(*s1) - tolower(*s2);
-}
-
 
 #ifdef _WIN32
 /* It's a plan N*N strsep implementation.

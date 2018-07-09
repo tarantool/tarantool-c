@@ -414,7 +414,7 @@ tnt2odbc(int t)
 	case MP_BIN:
 		return SQL_BINARY;
 	default:
-		return SQL_CHAR; /* Shouldn't be */
+		return SQL_VARCHAR; /* Shouldn't be */
 	}
 }
 
@@ -423,19 +423,20 @@ sqltypestr(int t)
 {
 	switch (t) {
 	case MP_INT:
-		return "MP_INT";
+		return "BIGINT";
 	case MP_UINT:
-		return "MP_UINT";
+		/* There aren't exactly such thing as a usigned type. */
+		return "BIGINT";
 	case MP_STR:
-		return "MP_STR"; /* Or SQL_VARCHAR? */
+		return "VARCHAR"; /* Or SQL_VARCHAR? */
 	case MP_FLOAT:
-		return "MP_FLOAT";
+		return "REAL";
 	case MP_DOUBLE:
-		return "MP_DOUBLE";
+		return "DOUBLE PRECISION";
 	case MP_BIN:
-		return "MP_BIN";
+		return "BINARY";
 	default:
-		return "";
+		return "VARCHAR";
 	}
 }
 
