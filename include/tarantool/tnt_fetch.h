@@ -28,6 +28,13 @@ enum QUERY_TYPE {
 
 typedef ptrdiff_t tnt_size_t;
 
+typedef union {
+		int64_t i;
+		uint64_t u;
+		double d;
+		void *p;
+} tnt_val_t;
+
 /**
  * Structure for holding column values from result row.
  */
@@ -35,12 +42,25 @@ typedef ptrdiff_t tnt_size_t;
 struct tnt_coldata {
 	int32_t type;
 	tnt_size_t size;
-	union {
-		int64_t i;
-		uint64_t u;
-		double d;
-		void *p;
-	} v;
+	tnt_val_t v;
+};
+
+struct row_node {
+	tnt_coldata* data;
+	struct row_node *next;
+};
+
+
+/**
+ * it's a structure for fake ruleset
+ */
+
+struct fake_resultset {
+	int ncols;
+	struct row_node *row;
+	struct row_node *end_p;
+	int nrows;
+	char ** names;
 };
 
 /**
@@ -108,6 +128,8 @@ typedef struct tnt_stmt {
 	int reply_state;
 	int qtype;
 	int error;
+	/* Structure for ruleset builded in memory from scratch for fake results */
+	struct fake_ruleset *fake_ruleset;
 } tnt_stmt_t;
 
 

@@ -11,7 +11,7 @@
 
 
 static int
-tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col);
+tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col, int nc);
 static int
 tnt_fetch_binded_result(tnt_stmt_t * stmt);
 
@@ -195,6 +195,9 @@ tnt_fetch_fields(tnt_stmt_t * stmt)
 }
 
 static void
+free_fake_resultset(struct fake_resultset *rs);
+
+static void
 free_stmt_cursor_mem(tnt_stmt_t *stmt)
 {
 	if (stmt->reply) {
@@ -204,6 +207,11 @@ free_stmt_cursor_mem(tnt_stmt_t *stmt)
 	}
 	if (stmt->row)
 		tnt_mem_free(stmt->row);
+
+	if (stmt->fake_resultset) {
+		stmt->ncols = stmt->fake_resultset->ncols;
+		stmt->field_names = stmt->fake_resultset->names;
+	}
 	if (stmt->field_names) {
 		free_strings(stmt->field_names, stmt->ncols);
 		tnt_mem_free(stmt->field_names);
@@ -214,6 +222,8 @@ free_stmt_cursor_mem(tnt_stmt_t *stmt)
 	if (stmt->alloc_obind)
 		free(stmt->alloc_obind);
 
+	if (stmt->fake_resultset)
+		free_fake_resultset(stmt->fake_resultset);
 }
 
 
@@ -222,6 +232,7 @@ tnt_stmt_close_cursor(tnt_stmt_t *stmt)
 {
 	if (stmt) {
 		free_stmt_cursor_mem(stmt);
+		stmt->fake_resultset = 0;
 		stmt->data = 0;
 		stmt->row = 0;
 		stmt->reply = 0;
@@ -840,6 +851,67 @@ tnt_fetch_binded_result(tnt_stmt_t * stmt)
 	return OK;
 }
 
+static int
+realloc_row(tnt_stmt_t *stmt, int ncols)
+{
+	stmt->ncols = ncols;
+	if (stmt->row)
+		tnt_mem_free(stmt->row);
+	stmt->row = (struct tnt_coldata *)tnt_mem_alloc(sizeof(struct tnt_coldata) * stmt->ncols);
+	if (!stmt->row) {
+		stmt->error = STMT_MEMORY;
+		return FAIL;
+	}
+	return OK;
+}
+
+static void
+free_fake_resultset(struct fake_resultset *rs)
+{
+	if (rs) {
+		struct row_node *p = rs->end_p;
+		do {
+			struct row_node *c = p;
+			p = p->next;
+			if (c->data) {
+				for(int i=0; i <  rs->ncols; ++i) {
+					free(c->data[i]->name);
+					free(c->data[i]);
+				}
+				free(c->data);
+			}
+			free(c);
+		} while (p!= rs->end_p);
+		free(rs);
+	}
+}
+
+
+static void
+tnt_fake_result_init(tnt_stmt_t *stmt)
+{
+	stmt->nrows = stmt->fake_resultset->nrows;
+	stmt->field_names = stmt->fake_resultset->names;
+	stmt->ncols = stmt->fakeresultset->ncols;
+
+	/* end_p is a pointer to end of the ring list
+	 * end_p is a fake node. There is no data in it.
+	 */
+	stmt->fake_resultset->row = stmt->fake_resultset->end_p;
+}
+
+static int
+tnt_fake_fetch(tnt_stmt_t *stmt)
+{
+	if (stmt->fake_resultset->row == NULL) {
+		tnt_fake_result_init(stmt);
+	}
+	if (stmt->fake_resultset->row->next != stmt->fake_resultset->end_p) {
+		stmt->fake_resultset->row = stmt->fake_resultset->row->next;
+		return stmt->fake_resultset->ncols;
+	} else
+		return -1;
+}
 
 /**
  * Fetches one row of data and stores it in tnt_stmt->row[] for
@@ -849,33 +921,34 @@ tnt_fetch_binded_result(tnt_stmt_t * stmt)
 int
 tnt_fetch(tnt_stmt_t * stmt)
 {
-	if (stmt->reply_state != REND && stmt->reply_state != RCHUNK) {
-		stmt->error = STMT_BADSTATE;
-		return FAIL;
-	}
-	while (stmt->nrows <= 0) {
-		if (stmt->reply_state != RCHUNK)
-			return NODATA;
-		if (read_chunk(stmt)!=OK)
+	if (!stmt->fake_resultset) {
+		if (stmt->reply_state != REND && stmt->reply_state != RCHUNK) {
+			stmt->error = STMT_BADSTATE;
 			return FAIL;
+		}
+		while (stmt->nrows <= 0) {
+			if (stmt->reply_state != RCHUNK)
+				return NODATA;
+			if (read_chunk(stmt)!=OK)
+				return FAIL;
+		}
+		if (mp_typeof(*stmt->data) != MP_ARRAY) {
+			stmt->error = STMT_BADPROTO;
+			return FAIL;
+		}
+		stmt->ncols = mp_decode_array(&stmt->data);
+	} else {
+		if ((stmt->ncols = tnt_fake_fetch(stmt)) == -1)
+			return NODATA;
 	}
-	if (mp_typeof(*stmt->data) != MP_ARRAY) {
-		stmt->error = STMT_BADPROTO;
+
+	if (realloc_row(stmt, stmt->ncols)!= OK)
 		return FAIL;
-	}
-	stmt->ncols = mp_decode_array(&stmt->data);
-	if (stmt->row)
-		tnt_mem_free(stmt->row);
-	stmt->row = (struct tnt_coldata *)tnt_mem_alloc(sizeof(struct tnt_coldata) * stmt->ncols);
-	if (!stmt->row) {
-		stmt->error = STMT_MEMORY;
-		return FAIL;
-	}
 
 	stmt->nrows--;
 	stmt->cur_row++;
 	for (int i = 0; i < stmt->ncols; i++) {
-		if (tnt_decode_col(stmt, &stmt->row[i])!=OK) {
+		if (tnt_decode_col(stmt, &stmt->row[i], i)!=OK) {
 			stmt->error = STMT_BADPROTO;
 			return FAIL;
 		}
@@ -884,14 +957,34 @@ tnt_fetch(tnt_stmt_t * stmt)
 		tnt_fetch_binded_result(stmt);
 	return OK;
 }
-/*
-static int
-tnt_store_desc(tnt_stmt_t* stmt)
+
+static tnt_val_t
+tnt_fake_value(tnt_stmt_t * stmt, int coln)
 {
-  return stmt?OK:FAIL;
+	return stmt->fakeruleset->row->data[i].v;
 }
 
-*/
+static tnt_size_t
+tnt_fake_len(tnt_stmt_t * stmt, int coln)
+{
+	return stmt->fakeruleset->row->data[i].size;
+}
+
+static int
+tnt_fake_type(tnt_stmt_t * stmt, int coln)
+{
+	return stmt->fakeruleset->row->data[i].type;
+}
+
+static int
+tnt_fake_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col, int coln)
+{
+	col->v = tnt_fake_value(stmt, coln);
+	col->type = tnt_fake_type(stmt, coln);
+	col->size = tnt_fake_len(stmt, coln);
+	return OK;
+}
+
 
 /**
  * Convert a msgpack value into tnt_coldata. Integral values are copied
@@ -900,43 +993,40 @@ tnt_store_desc(tnt_stmt_t* stmt)
 
 
 static int
-tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col)
+tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col, int nc)
 {
 	uint32_t sz = 0;
 	memset(col, 0, sizeof(struct tnt_coldata));
-	int tp = mp_typeof(*stmt->data);
-	switch (tp) {
+
+	if (stmt->fakeruleset)
+		return tnt_fake_decode_col(stmt, col, nc);
+
+	col->type = mp_typeof(*stmt->data);
+	switch (col->type) {
 	case MP_UINT:
 		col->type = col->v.u & (1ULL<<63)?MP_UINT:MP_INT;
 		col->v.u = mp_decode_uint(&stmt->data);
 		break;
 	case MP_INT:
-		col->type = MP_INT;
 		col->v.i = mp_decode_int(&stmt->data);
 		break;
 	case MP_DOUBLE:
-		col->type = MP_DOUBLE;
 		col->v.d = mp_decode_double(&stmt->data);
 		break;
 	case MP_FLOAT:
-		col->type = MP_FLOAT;
 		col->v.d = mp_decode_float(&stmt->data);
 		break;
 	case MP_STR:
-		col->type = MP_STR;
 		col->v.p = (void *)mp_decode_str(&stmt->data, &sz);
 		/* Does he need to check for overflow? */
 		col->size=sz;
 		break;
-
 	case MP_BIN:
-		col->type = MP_BIN;
 		col->v.p = (void *)mp_decode_bin(&stmt->data, &sz);
 		col->size=sz;
 		break;
 
 	case MP_NIL:
-		col->type = MP_NIL;
 		col->v.p = NULL;
 		mp_decode_nil(&stmt->data);
 		break;
