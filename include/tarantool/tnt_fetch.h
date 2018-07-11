@@ -46,7 +46,7 @@ struct tnt_coldata {
 };
 
 struct row_node {
-	tnt_coldata* data;
+	struct tnt_coldata *data;
 	struct row_node *next;
 };
 
@@ -60,7 +60,7 @@ struct fake_resultset {
 	struct row_node *row;
 	struct row_node *end_p;
 	int nrows;
-	char ** names;
+	char **names;
 };
 
 /**
@@ -129,7 +129,7 @@ typedef struct tnt_stmt {
 	int qtype;
 	int error;
 	/* Structure for ruleset builded in memory from scratch for fake results */
-	struct fake_ruleset *fake_ruleset;
+	struct fake_resultset *fake_resultset;
 } tnt_stmt_t;
 
 

@@ -585,6 +585,26 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	return SQL_ERROR;
 }
 
+const char*
+odbctype2name(int t)
+{
+	switch (t) {
+	case SQL_BIGINT:
+		return "BIGINT";
+	case SQL_REAL:
+		return "REAL";
+	case SQL_DOUBLE:
+		return "DOUBLE PRECISION";
+	case SQL_CHAR:
+		return "CHAR";
+	case SQL_BINARY:
+		return "BINARY";
+	case SQL_VARCHAR:
+	default:
+		return "VARCHAR";
+	}
+}
+
 int
 coltype2odbc(const char * tnt_type, size_t len)
 {
@@ -653,17 +673,93 @@ error:
 	return NULL;
 }
 
-void
-setup_pseudo_resultset(odbc_stmt *stmt)
+int
+tnt_fake_setup_resultset(odbc_stmt *stmt, int ncols)
 {
-
+	tnt_stmt_t *tnt = stmt->tnt_statement;
+	tnt->fake_resultset = (struct fake_resultsey*) malloc(sizeof(struct fake_resultset));
+	if (!tnt->fake_resultset)
+		return FAIL;
+	memset(tnt->fake_resultset, 0, sizeof(struct fake_resultset));
+	tnt->fake_resultset->ncols = ncols;
+	tnt->fake_resultset->names = (char **) malloc(sizeof(char* ) * ncols);
+	if (!tnt->fake_resultset->names)
+		return FAIL;
+	memset(tnt->fake_resultset->names, 0, sizeof(char *) * ncols);
+	tnt->fake_resultset->end_p = (struct row_node*) malloc (sizeof(struct row_node));
+	if (!tnt->fake_resultset->end_p)
+		return FAIL;
+	tnt->fake_resultset->end_p->next = tnt->fake_resultset->end_p;
+	tnt->fake_resultset->end_p->data = NULL;
+	return OK;
 }
-void
-add_pseudo_colifo_row(odbc_stmt *stmt,struct column_def *col)
+
+int
+tnt_fake_add_col_name(tnt_stmt_t *tnt, int icol, const char * n)
 {
+	if ((tnt->fake_resultset->names[icol] = strdup(n)) == NULL)
+		return FAIL;
+
+	return OK;
+}
+
+struct tnt_coldata *
+tnt_fake_add_row(tnt_stmt_t *tnt)
+{
+	struct row_node *node = (struct row_node*) malloc(sizeof(struct row_node));
+	if (!node)
+		return NULL;
+	node->data = (struct tnt_coldata *) malloc(sizeof(struct tnt_coldata) * tnt->fake_resultset->ncols);
+	if (!node->data) {
+		free(node);
+		return NULL;
+	}
+	memset(node->data, 0, sizeof(struct tnt_coldata*) * tnt->fake_resultset->ncols);
+	node->next = tnt->fake_resultset->end_p->next;
+	tnt->fake_resultset->end_p->next = node;
+	return node->data;
+}
+
+#define COLINFO_NCOLS 8
+
+int
+add_fake_colifo_row(odbc_stmt *stmt, struct column_def *col)
+{
+	if ( tnt_fake_add_col_name(stmt, "SCOPE", 0) != OK ||
+	     tnt_fake_add_col_name(stmt, "COLUMN_NAME", 1) != OK ||
+	     tnt_fake_add_col_name(stmt, "DATA_TYPE", 2) != OK ||
+	     tnt_fake_add_col_name(stmt, "TYPE_NAME", 3) != OK ||
+	     tnt_fake_add_col_name(stmt, "COLUMN_SIZE", 4) != OK ||
+	     tnt_fake_add_col_name(stmt, "BUFFER_LENGTH", 5) != OK ||
+	     tnt_fake_add_col_name(stmt, "DECIMAL_DIGITS", 6) != OK ||
+	     tnt_fake_add_col_name(stmt, "PSEUDO_COLUMN", 7) != OK )
+		return FAIL;
+	tnt_stmt_t *tnt = stmt->tnt_statement;
+	struct tnt_coldata * row = tnt_fake_add_row(tnt);
+	if (!row)
+		return FAIL;
+
+	row[0].type = MP_INT;
+	row[0].v.i = SQL_SCOPE_SESSION;
+
+	row[1].type = MP_STR;
+	row[1].v.p = strdup(col->name);
+	if (!row[1].v.p)
+		return FAIL;
+
+	row[2].type = MP_INT;
+	row[2].v.i = col->type;
+
+	row[3].type = MP_STR;
+	row[3].v.p = strdup (odbctype2name(col->type));
+	if (!row[3].v.p)
+		return FAIL;
+
+	row[4].type = MP_INT;
+	row[4].v.i = column_size(col->type);
 	if (col) {
-		fprintf (stderr, "col name: %s, is null: %d, type: %d, is pk: %d\n", col->name, col->is_nullable,
-			col->type, col->is_pk);
+		fprintf (stderr, "col name: %s, is null: %d, type: %d, is pk: %d\n",
+			 col->name, col->is_nullable, col->type, col->is_pk);
 	}
 }
 
@@ -680,7 +776,6 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	/* Since Tarantool do not have catalog and scheme just ignoring these. */
 	char tname[NLEN];
 	char q[2*NLEN];
-
 	snprintf(q, sizeof(q), "pragma table_info(%s)", makez(tname, sizeof(tname), (char*)table, tablelen));
 
 	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) != SQL_SUCCESS
@@ -691,12 +786,12 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	   SQL_PC_NOT_PSEUDO */
 	struct column_def ** col = read_columns_rows(stmt);
 	struct column_def ** col_p = col;
-	setup_pseudo_resultset(stmt);
+	setup_fake_resultset(stmt, COLINFO_NCOLS);
 	if (itype == SQL_BEST_ROWID)
 		while(*col) {
 			if ((*col)->is_pk && (nullable == SQL_NULLABLE
 					      || (nullable == SQL_NO_NULLS && !(*col)->is_nullable)))
-				add_pseudo_colifo_row(stmt, *col);
+				add_fake_colinfo_row(stmt, *col);
 			col++;
 		}
 	free_columns_info(col_p);

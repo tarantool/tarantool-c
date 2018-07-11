@@ -196,6 +196,10 @@ m_strncasecmp(const char *s1, const char *s2, size_t n)
 	return tolower(*s1) - tolower(*s2);
 }
 
+/* convert MsgPack types enums to related SQL type names
+ *
+ */
+const char * sqltypestr(int t);
 
 
 /* This two functions is for time measure */

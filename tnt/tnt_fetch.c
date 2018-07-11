@@ -875,8 +875,9 @@ free_fake_resultset(struct fake_resultset *rs)
 			p = p->next;
 			if (c->data) {
 				for(int i=0; i <  rs->ncols; ++i) {
-					free(c->data[i]->name);
-					free(c->data[i]);
+					if (c->data[i].type == MP_STR)
+						free(c->data[i].v.p);
+					free(c->data + i);
 				}
 				free(c->data);
 			}
@@ -892,7 +893,7 @@ tnt_fake_result_init(tnt_stmt_t *stmt)
 {
 	stmt->nrows = stmt->fake_resultset->nrows;
 	stmt->field_names = stmt->fake_resultset->names;
-	stmt->ncols = stmt->fakeresultset->ncols;
+	stmt->ncols = stmt->fake_resultset->ncols;
 
 	/* end_p is a pointer to end of the ring list
 	 * end_p is a fake node. There is no data in it.
@@ -961,19 +962,19 @@ tnt_fetch(tnt_stmt_t * stmt)
 static tnt_val_t
 tnt_fake_value(tnt_stmt_t * stmt, int coln)
 {
-	return stmt->fakeruleset->row->data[i].v;
+	return stmt->fake_resultset->row->data[coln].v;
 }
 
 static tnt_size_t
 tnt_fake_len(tnt_stmt_t * stmt, int coln)
 {
-	return stmt->fakeruleset->row->data[i].size;
+	return stmt->fake_resultset->row->data[coln].size;
 }
 
 static int
 tnt_fake_type(tnt_stmt_t * stmt, int coln)
 {
-	return stmt->fakeruleset->row->data[i].type;
+	return stmt->fake_resultset->row->data[coln].type;
 }
 
 static int
@@ -998,7 +999,7 @@ tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col, int nc)
 	uint32_t sz = 0;
 	memset(col, 0, sizeof(struct tnt_coldata));
 
-	if (stmt->fakeruleset)
+	if (stmt->fake_resultset)
 		return tnt_fake_decode_col(stmt, col, nc);
 
 	col->type = mp_typeof(*stmt->data);
