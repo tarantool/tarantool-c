@@ -877,7 +877,6 @@ free_fake_resultset(struct fake_resultset *rs)
 				for(int i=0; i <  rs->ncols; ++i) {
 					if (c->data[i].type == MP_STR)
 						free(c->data[i].v.p);
-					free(c->data + i);
 				}
 				free(c->data);
 			}

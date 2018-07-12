@@ -677,7 +677,7 @@ int
 tnt_fake_setup_resultset(odbc_stmt *stmt, int ncols)
 {
 	tnt_stmt_t *tnt = stmt->tnt_statement;
-	tnt->fake_resultset = (struct fake_resultsey*) malloc(sizeof(struct fake_resultset));
+	tnt->fake_resultset = (struct fake_resultset*) malloc(sizeof(struct fake_resultset));
 	if (!tnt->fake_resultset)
 		return FAIL;
 	memset(tnt->fake_resultset, 0, sizeof(struct fake_resultset));
@@ -695,7 +695,7 @@ tnt_fake_setup_resultset(odbc_stmt *stmt, int ncols)
 }
 
 int
-tnt_fake_add_col_name(tnt_stmt_t *tnt, int icol, const char * n)
+tnt_fake_add_col_name(tnt_stmt_t *tnt, const char * n, int icol)
 {
 	if ((tnt->fake_resultset->names[icol] = strdup(n)) == NULL)
 		return FAIL;
@@ -717,24 +717,112 @@ tnt_fake_add_row(tnt_stmt_t *tnt)
 	memset(node->data, 0, sizeof(struct tnt_coldata*) * tnt->fake_resultset->ncols);
 	node->next = tnt->fake_resultset->end_p->next;
 	tnt->fake_resultset->end_p->next = node;
+	tnt->fake_resultset->nrows ++;
 	return node->data;
 }
+
+/* This function returns maximum display size in decimal digits
+ */
+
+int
+column_size(int tp)
+{
+	switch (tp) {
+	case SQL_DECIMAL:
+	case SQL_NUMERIC:
+		return 10;
+	case SQL_BIT:
+		return 1;
+	case SQL_TINYINT:
+		return 3;
+	case SQL_SMALLINT:
+		return 5;
+	case SQL_INTEGER:
+		return 10;
+	case SQL_BIGINT:
+		return 19;
+	case SQL_REAL:
+		return 7;
+	case SQL_DOUBLE:
+	case SQL_FLOAT:
+		return 15;
+	default:
+		return -1;
+	}
+}
+
+/* This function returns muximum numbers of digits to the right of
+ * decimal point. It't undefined (0) for integral types.
+ */
+
+int
+column_dec_size(int tp)
+{
+	switch (tp) {
+	case SQL_DECIMAL:
+	case SQL_NUMERIC:
+		return 10;
+	case SQL_BIT:
+	case SQL_TINYINT:
+	case SQL_SMALLINT:
+	case SQL_INTEGER:
+	case SQL_BIGINT:
+	case SQL_REAL:
+	case SQL_DOUBLE:
+	case SQL_FLOAT:
+		return 0;
+	default:
+		return -1;
+	}
+}
+
+/* This function returns actual length of data type in bytes
+ */
+
+int
+column_buffer_size(int tp)
+{
+	switch (tp) {
+	case SQL_DECIMAL:
+	case SQL_NUMERIC:
+		return 12;
+	case SQL_BIT:
+		return 1;
+	case SQL_TINYINT:
+		return 1;
+	case SQL_SMALLINT:
+		return 2;
+	case SQL_INTEGER:
+		return 4;
+	case SQL_BIGINT:
+		return 8;
+	case SQL_REAL:
+		return 4;
+	case SQL_DOUBLE:
+	case SQL_FLOAT:
+		return 8;
+	default:
+		return -1;
+	}
+}
+
 
 #define COLINFO_NCOLS 8
 
 int
-add_fake_colifo_row(odbc_stmt *stmt, struct column_def *col)
+add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col)
 {
-	if ( tnt_fake_add_col_name(stmt, "SCOPE", 0) != OK ||
-	     tnt_fake_add_col_name(stmt, "COLUMN_NAME", 1) != OK ||
-	     tnt_fake_add_col_name(stmt, "DATA_TYPE", 2) != OK ||
-	     tnt_fake_add_col_name(stmt, "TYPE_NAME", 3) != OK ||
-	     tnt_fake_add_col_name(stmt, "COLUMN_SIZE", 4) != OK ||
-	     tnt_fake_add_col_name(stmt, "BUFFER_LENGTH", 5) != OK ||
-	     tnt_fake_add_col_name(stmt, "DECIMAL_DIGITS", 6) != OK ||
-	     tnt_fake_add_col_name(stmt, "PSEUDO_COLUMN", 7) != OK )
-		return FAIL;
 	tnt_stmt_t *tnt = stmt->tnt_statement;
+	if ( tnt_fake_add_col_name(tnt, "SCOPE", 0) != OK ||
+	     tnt_fake_add_col_name(tnt, "COLUMN_NAME", 1) != OK ||
+	     tnt_fake_add_col_name(tnt, "DATA_TYPE", 2) != OK ||
+	     tnt_fake_add_col_name(tnt, "TYPE_NAME", 3) != OK ||
+	     tnt_fake_add_col_name(tnt, "COLUMN_SIZE", 4) != OK ||
+	     tnt_fake_add_col_name(tnt, "BUFFER_LENGTH", 5) != OK ||
+	     tnt_fake_add_col_name(tnt, "DECIMAL_DIGITS", 6) != OK ||
+	     tnt_fake_add_col_name(tnt, "PSEUDO_COLUMN", 7) != OK )
+		return FAIL;
+
 	struct tnt_coldata * row = tnt_fake_add_row(tnt);
 	if (!row)
 		return FAIL;
@@ -746,6 +834,7 @@ add_fake_colifo_row(odbc_stmt *stmt, struct column_def *col)
 	row[1].v.p = strdup(col->name);
 	if (!row[1].v.p)
 		return FAIL;
+	row[1].size = strlen(col->name);
 
 	row[2].type = MP_INT;
 	row[2].v.i = col->type;
@@ -754,13 +843,31 @@ add_fake_colifo_row(odbc_stmt *stmt, struct column_def *col)
 	row[3].v.p = strdup (odbctype2name(col->type));
 	if (!row[3].v.p)
 		return FAIL;
+	row[3].size = strlen((char*)row[3].v.p);
 
 	row[4].type = MP_INT;
 	row[4].v.i = column_size(col->type);
+
+	row[5].type = MP_INT;
+	row[5].v.i = column_buffer_size(col->type);
+
+
+	row[6].v.i = column_dec_size(col->type);
+	if (row[6].v.i == -1) {
+		row[6].type = MP_NIL;
+		row[6].v.p = NULL;
+	} else {
+		row[6].type = MP_INT;
+	}
+
+	row[7].type = MP_INT;
+	row[7].v.i = SQL_PC_NOT_PSEUDO;
+
 	if (col) {
 		fprintf (stderr, "col name: %s, is null: %d, type: %d, is pk: %d\n",
 			 col->name, col->is_nullable, col->type, col->is_pk);
 	}
+	return OK;
 }
 
 SQLRETURN
@@ -782,18 +889,29 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	    || stmt_execute(stmth) != SQL_SUCCESS)
 		return SQL_ERROR;
 
-	/* SQL_SCOPE_SESSION
-	   SQL_PC_NOT_PSEUDO */
 	struct column_def ** col = read_columns_rows(stmt);
 	struct column_def ** col_p = col;
-	setup_fake_resultset(stmt, COLINFO_NCOLS);
+	tnt_stmt_close_cursor(stmt->tnt_statement);
+
+	if (tnt_fake_setup_resultset(stmt, COLINFO_NCOLS)!=OK) {
+		free_columns_info(col_p);
+		set_stmt_error(stmt, ODBC_HY013_ERROR,"Memory management error",
+			       "SQLSpecialColumns");
+		return SQL_ERROR;
+	}
 	if (itype == SQL_BEST_ROWID)
 		while(*col) {
 			if ((*col)->is_pk && (nullable == SQL_NULLABLE
 					      || (nullable == SQL_NO_NULLS && !(*col)->is_nullable)))
-				add_fake_colinfo_row(stmt, *col);
+				if (add_fake_colinfo_row(stmt, *col) != OK) {
+					free_columns_info(col_p);
+					set_stmt_error(stmt, ODBC_HY013_ERROR,"Memory management error",
+						       "SQLSpecialColumns");
+					return SQL_ERROR;
+				}
 			col++;
 		}
+	stmt->state = EXECUTED;
 	free_columns_info(col_p);
 	return SQL_SUCCESS;
 }

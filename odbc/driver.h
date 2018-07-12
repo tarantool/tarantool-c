@@ -36,7 +36,8 @@ enum ERROR_CODES {
 	/* ODBC_07009_ERROR,  Invalid parameter number */
 	ODBC_42000_ERROR, /* Sql execution error */
 	ODBC_HY092_ERROR, /* Unsupported attribute */
-	ODBC_07002_ERROR  /* Too many bind parameters */
+	ODBC_07002_ERROR,  /* Too many bind parameters */
+	ODBC_HY013_ERROR /* Another memory error */
 };
 enum TNT_SQL_ERROR {
 	ER_SQL_RANGE = 154,

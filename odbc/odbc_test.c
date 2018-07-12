@@ -561,6 +561,7 @@ test_metadata_table(const char *dsn, const char *table)
 		retcode = SQLSpecialColumns(st.hstmt, SQL_BEST_ROWID, (SQLCHAR *)"", 0,(SQLCHAR *) "", 0,
 					    (SQLCHAR*)table, SQL_NTS, SQL_SCOPE_SESSION, SQL_NULLABLE);
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
+			int i=0;
 			while(SQLFetch(st.hstmt) == SQL_SUCCESS) {
 			SQLBIGINT long_val = 0;
 			SQLSMALLINT short_val = 0;
@@ -569,20 +570,20 @@ test_metadata_table(const char *dsn, const char *table)
 			SQLCHAR str_typ[BUFSIZ] = "";
 
 			SQLLEN str_len;
-
-			int code = SQLGetData(st.hstmt, 3, SQL_C_CHAR, &str_val[0], BUFSIZ, &str_len);
+			fprintf(stderr, "it %d\n", i++);
+			int code = SQLGetData(st.hstmt, 2, SQL_C_CHAR, str_val, BUFSIZ, &str_len);
 			CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
 
 			code = SQLGetData(st.hstmt, 3, SQL_C_SHORT, &short_val, 0, 0);
 			CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
 
-			code = SQLGetData(st.hstmt, 4, SQL_C_CHAR, &str_typ, BUFSIZ, &str_len);
+			code = SQLGetData(st.hstmt, 4, SQL_C_CHAR, str_typ, BUFSIZ, &str_len);
 			CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
 
 
-			fprintf(stderr, "type val %hd, type str %s, and name is %s\n",
+			fprintf(stderr, "xtype val %hd, type str %s, and name is %s\n",
 				/* (long)*/ short_val, str_typ, str_val);
-
+			ret_code=1;
 			}
 		} else {
 			    show_error(SQL_HANDLE_STMT, st.hstmt);
