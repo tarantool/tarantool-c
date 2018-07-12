@@ -644,7 +644,7 @@ read_columns_rows(odbc_stmt *stmt)
 	int row_count = 0;
 	while(stmt_fetch(stmt) == SQL_SUCCESS) {
 		row_count ++ ;
-		while (capacity < row_count && capacity < INT_MAX) {
+		while (capacity < row_count + 1 && capacity < INT_MAX) {
 			capacity *=2;
 			void *p = realloc (cols, (sizeof(struct column_def *)*capacity));
 			if (!p)
