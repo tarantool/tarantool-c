@@ -165,6 +165,12 @@ SQLBrowseConnect(SQLHDBC         hdbc,
 		 SQLSMALLINT     BufferLength,
 		 SQLSMALLINT *   StringLength2Ptr)
 {
+	(void) InConnectionString;
+	(void) StringLength1;
+	(void) OutConnectionString;
+	(void) BufferLength;
+	(void) StringLength2Ptr;
+
 	if (hdbc == SQL_NULL_HDBC)
 		return SQL_INVALID_HANDLE;
 	return SQL_ERROR;
@@ -342,13 +348,18 @@ SQLGetInfo(SQLHDBC hndl, SQLUSMALLINT tp, SQLPOINTER iptr, SQLSMALLINT in_len, S
 SQLRETURN SQL_API
 SQLMoreResults(SQLHSTMT hstmt)
 {
-    return SQL_NO_DATA;
+	(void) hstmt;
+	return SQL_NO_DATA;
 }
 
 SQLRETURN SQL_API
 SQLSetPos(HSTMT hstmt, SQLSETPOSIROW irow, SQLUSMALLINT fOption, SQLUSMALLINT fLock)
 {
-    return SQL_ERROR;
+	(void) hstmt;
+	(void) irow;
+	(void) fOption;
+	(void)fLock;
+	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
@@ -360,30 +371,38 @@ SQLDescribeParam(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 
 
 SQLRETURN SQL_API
-SQLExtendedFetch(
-	SQLHSTMT         StatementHandle,
-	SQLUSMALLINT     FetchOrientation,
-	SQLLEN           FetchOffset,
-	SQLULEN *        RowCountPtr,
-	SQLUSMALLINT *   RowStatusArray)
+SQLExtendedFetch(SQLHSTMT StatementHandle, SQLUSMALLINT FetchOrientation,
+		 SQLLEN FetchOffset, SQLULEN *RowCountPtr,
+		 SQLUSMALLINT *RowStatusArray)
 {
+	(void) StatementHandle;
+	(void) FetchOrientation;
+	(void) FetchOffset;
+	(void) RowCountPtr;
+	(void) RowStatusArray;
+
 	return SQL_ERROR;
 }
+
 SQLRETURN SQL_API
-SQLGetCursorName(
-	SQLHSTMT        StatementHandle,
-	SQLCHAR *       CursorName,
-	SQLSMALLINT     BufferLength,
-	SQLSMALLINT *   NameLengthPtr)
+SQLGetCursorName(SQLHSTMT StatementHandle, SQLCHAR *CursorName,
+		  SQLSMALLINT BufferLength, SQLSMALLINT *NameLengthPtr)
 {
+	(void) StatementHandle;
+	(void) CursorName;
+	(void) BufferLength;
+	(void) NameLengthPtr;
 	return SQL_ERROR;
 }
+
 SQLRETURN SQL_API
-SQLSetCursorName(
-	SQLHSTMT      StatementHandle,
-	SQLCHAR *     CursorName,
-	SQLSMALLINT   NameLength)
+SQLSetCursorName(SQLHSTMT StatementHandle, SQLCHAR *CursorName,
+		 SQLSMALLINT NameLength)
 {
+	(void) StatementHandle;
+	(void) CursorName;
+	(void) NameLength;
+
 	return SQL_ERROR;
 }
 SQLRETURN SQL_API
@@ -396,214 +415,256 @@ SQLColumns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 }
 
 SQLRETURN SQL_API
-SQLGetTypeInfo(
-	SQLHSTMT      StatementHandle,
-	SQLSMALLINT   DataType)
+SQLGetTypeInfo(SQLHSTMT StatementHandle, SQLSMALLINT DataType)
 {
+	(void) StatementHandle;
+	(void) DataType;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLParamData(
-	SQLHSTMT       StatementHandle,
-	SQLPOINTER *   ValuePtrPtr)
+SQLParamData(SQLHSTMT StatementHandle, SQLPOINTER *ValuePtrPtr)
 {
+	(void) StatementHandle;
+	(void) ValuePtrPtr;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLPutData(
-	SQLHSTMT     StatementHandle,
-	SQLPOINTER   DataPtr,
-	SQLLEN       StrLen_or_Ind)
+SQLPutData(SQLHSTMT StatementHandle, SQLPOINTER DataPtr,
+	   SQLLEN StrLen_or_Ind)
 {
+	(void) StatementHandle;
+	(void) DataPtr;
+	(void) StrLen_or_Ind;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLStatistics(
-	SQLHSTMT        StatementHandle,
-	SQLCHAR *       CatalogName,
-	SQLSMALLINT     NameLength1,
-	SQLCHAR *       SchemaName,
-	SQLSMALLINT     NameLength2,
-	SQLCHAR *       TableName,
-	SQLSMALLINT     NameLength3,
-	SQLUSMALLINT    Unique,
-	SQLUSMALLINT    Reserved)
+SQLStatistics(SQLHSTMT StatementHandle, SQLCHAR * CatalogName,
+	      SQLSMALLINT NameLength1, SQLCHAR * SchemaName,
+	      SQLSMALLINT NameLength2, SQLCHAR * TableName,
+	      SQLSMALLINT NameLength3, SQLUSMALLINT Unique,
+	      SQLUSMALLINT Reserved)
 {
+	(void) StatementHandle;
+	(void) CatalogName;
+	(void) NameLength1;
+	(void) SchemaName;
+	(void) NameLength2;
+	(void) TableName;
+	(void) NameLength3;
+	(void) Unique;
+	(void) Reserved;
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
 SQLTables(SQLHSTMT stmth, SQLCHAR *cat,	SQLSMALLINT catlen, SQLCHAR *schema,
-	  SQLSMALLINT schemlen,	SQLCHAR *table,	SQLSMALLINT tablelen, SQLCHAR *tabletype,
-	  SQLSMALLINT tabletypelen)
+	  SQLSMALLINT schemlen,	SQLCHAR *table,	SQLSMALLINT tablelen,
+	  SQLCHAR *tabletype, SQLSMALLINT tabletypelen)
 {
 	return info_tables(stmth, cat, catlen, schema, schemlen, table,
 		tablelen, tabletype, tabletypelen);
 }
 
 SQLRETURN SQL_API
-SQLColumnPrivileges(
-	SQLHSTMT      StatementHandle,
-	SQLCHAR *     CatalogName,
-	SQLSMALLINT   NameLength1,
-	SQLCHAR *     SchemaName,
-	SQLSMALLINT   NameLength2,
-	SQLCHAR *     TableName,
-	SQLSMALLINT   NameLength3,
-	SQLCHAR *     ColumnName,
-	SQLSMALLINT   NameLength4)
+SQLColumnPrivileges( SQLHSTMT StatementHandle, SQLCHAR *CatalogName,
+		     SQLSMALLINT NameLength1, SQLCHAR *SchemaName,
+		     SQLSMALLINT NameLength2, SQLCHAR *TableName,
+		     SQLSMALLINT NameLength3, SQLCHAR *ColumnName,
+		     SQLSMALLINT NameLength4)
 {
+	(void) StatementHandle;
+	(void) CatalogName;
+	(void) NameLength1;
+	(void) SchemaName;
+	(void) NameLength2;
+	(void) TableName;
+	(void) NameLength3;
+	(void) ColumnName;
+	(void) NameLength4;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLPrimaryKeys(
-	SQLHSTMT       StatementHandle,
-	SQLCHAR *      CatalogName,
-	SQLSMALLINT    NameLength1,
-	SQLCHAR *      SchemaName,
-	SQLSMALLINT    NameLength2,
-	SQLCHAR *      TableName,
-	SQLSMALLINT    NameLength3)
+SQLPrimaryKeys(SQLHSTMT StatementHandle, SQLCHAR *CatalogName,
+	       SQLSMALLINT NameLength1, SQLCHAR *SchemaName,
+	       SQLSMALLINT NameLength2, SQLCHAR *TableName,
+	       SQLSMALLINT NameLength3)
 {
+	(void) StatementHandle;
+	(void) CatalogName;
+	(void) NameLength1;
+	(void) SchemaName;
+	(void) NameLength2;
+	(void) TableName;
+	(void) NameLength3;
+
 	return SQL_ERROR;
 }
 
 
 SQLRETURN SQL_API
-SQLProcedureColumns(
-	SQLHSTMT      StatementHandle,
-	SQLCHAR *     CatalogName,
-	SQLSMALLINT   NameLength1,
-	SQLCHAR *     SchemaName,
-	SQLSMALLINT   NameLength2,
-	SQLCHAR *     ProcName,
-	SQLSMALLINT   NameLength3,
-	SQLCHAR *     ColumnName,
-	SQLSMALLINT   NameLength4)
+SQLProcedureColumns(SQLHSTMT StatementHandle, SQLCHAR *CatalogName,
+		    SQLSMALLINT NameLength1, SQLCHAR *SchemaName,
+		    SQLSMALLINT NameLength2, SQLCHAR *ProcName,
+		    SQLSMALLINT NameLength3, SQLCHAR *ColumnName,
+		    SQLSMALLINT NameLength4)
 {
+	(void) StatementHandle;
+	(void) CatalogName;
+	(void) NameLength1;
+	(void) SchemaName;
+	(void) NameLength2;
+	(void) ProcName;
+	(void) NameLength3;
+	(void) ColumnName;
+	(void) NameLength4;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLProcedures(
-	SQLHSTMT       StatementHandle,
-	SQLCHAR *      CatalogName,
-	SQLSMALLINT    NameLength1,
-	SQLCHAR *      SchemaName,
-	SQLSMALLINT    NameLength2,
-	SQLCHAR *      ProcName,
-	SQLSMALLINT    NameLength3)
+SQLProcedures(SQLHSTMT StatementHandle, SQLCHAR *CatalogName,
+	      SQLSMALLINT NameLength1, SQLCHAR * SchemaName,
+	      SQLSMALLINT NameLength2, SQLCHAR * ProcName,
+	      SQLSMALLINT NameLength3)
 {
+	(void) StatementHandle;
+	(void) CatalogName;
+	(void) NameLength1;
+	(void) SchemaName;
+	(void) NameLength2;
+	(void) ProcName;
+	(void) NameLength3;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLTablePrivileges(
-	SQLHSTMT      StatementHandle,
-	SQLCHAR *     CatalogName,
-	SQLSMALLINT   NameLength1,
-	SQLCHAR *     SchemaName,
-	SQLSMALLINT   NameLength2,
-	SQLCHAR *     TableName,
-	SQLSMALLINT   NameLength3)
+SQLTablePrivileges(SQLHSTMT StatementHandle, SQLCHAR *CatalogName,
+		   SQLSMALLINT NameLength1, SQLCHAR *SchemaName,
+		   SQLSMALLINT NameLength2, SQLCHAR *TableName,
+		   SQLSMALLINT NameLength3)
 {
+	(void) StatementHandle;
+	(void) CatalogName;
+	(void) NameLength1;
+	(void) SchemaName;
+	(void) NameLength2;
+	(void) TableName;
+	(void) NameLength3;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLCopyDesc(
-	SQLHDESC     SourceDescHandle,
-	SQLHDESC     TargetDescHandle)
+SQLCopyDesc(SQLHDESC SourceDescHandle, SQLHDESC TargetDescHandle)
 {
+	(void) SourceDescHandle;
+	(void) TargetDescHandle;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLGetDescField(
-	SQLHDESC        DescriptorHandle,
-	SQLSMALLINT     RecNumber,
-	SQLSMALLINT     FieldIdentifier,
-	SQLPOINTER      ValuePtr,
-	SQLINTEGER      BufferLength,
-	SQLINTEGER *    StringLengthPtr)
+SQLGetDescField(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
+		SQLSMALLINT FieldIdentifier, SQLPOINTER ValuePtr,
+		SQLINTEGER BufferLength, SQLINTEGER * StringLengthPtr)
 {
+	(void) DescriptorHandle;
+	(void) RecNumber;
+	(void) FieldIdentifier;
+	(void) ValuePtr;
+	(void) BufferLength;
+	(void) StringLengthPtr;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLGetDescRec(
-	SQLHDESC        DescriptorHandle,
-	SQLSMALLINT     RecNumber,
-	SQLCHAR *       Name,
-	SQLSMALLINT     BufferLength,
-	SQLSMALLINT *   StringLengthPtr,
-	SQLSMALLINT *   TypePtr,
-	SQLSMALLINT *   SubTypePtr,
-	SQLLEN *        LengthPtr,
-	SQLSMALLINT *   PrecisionPtr,
-	SQLSMALLINT *   ScalePtr,
-	SQLSMALLINT *   NullablePtr)
+SQLGetDescRec(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
+	      SQLCHAR * Name, SQLSMALLINT BufferLength,
+	      SQLSMALLINT *StringLengthPtr, SQLSMALLINT *TypePtr,
+	      SQLSMALLINT *SubTypePtr,	SQLLEN *LengthPtr,
+	      SQLSMALLINT *PrecisionPtr, SQLSMALLINT *ScalePtr,
+	      SQLSMALLINT *NullablePtr)
 {
+	(void) DescriptorHandle;
+	(void) RecNumber;
+	(void) Name;
+	(void) BufferLength;
+	(void) StringLengthPtr;
+	(void) TypePtr;
+	(void) SubTypePtr;
+	(void) LengthPtr;
+	(void) PrecisionPtr;
+	(void) ScalePtr;
+	(void) NullablePtr;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLGetStmtAttr(
-	SQLHSTMT        stmth,
-	SQLINTEGER      att,
-	SQLPOINTER      ptr,
-	SQLINTEGER      buflen,
-	SQLINTEGER *    olen)
+SQLGetStmtAttr(SQLHSTMT stmth,	SQLINTEGER att,
+	       SQLPOINTER ptr,	SQLINTEGER buflen,
+	       SQLINTEGER * olen)
 {
 	return stmt_get_attr(stmth, att, ptr, buflen, olen);
 }
 
 SQLRETURN SQL_API
-SQLSetDescField(
-	SQLHDESC      DescriptorHandle,
-	SQLSMALLINT   RecNumber,
-	SQLSMALLINT   FieldIdentifier,
-	SQLPOINTER    ValuePtr,
-	SQLINTEGER    BufferLength)
+SQLSetDescField(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
+		SQLSMALLINT FieldIdentifier, SQLPOINTER ValuePtr,
+		SQLINTEGER BufferLength)
 {
+	(void) DescriptorHandle;
+	(void) RecNumber;
+	(void) FieldIdentifier;
+	(void) ValuePtr;
+	(void) BufferLength;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLSetDescRec(
-	SQLHDESC      DescriptorHandle,
-	SQLSMALLINT   RecNumber,
-	SQLSMALLINT   Type,
-	SQLSMALLINT   SubType,
-	SQLLEN        Length,
-	SQLSMALLINT   Precision,
-	SQLSMALLINT   Scale,
-	SQLPOINTER    DataPtr,
-	SQLLEN *      StringLengthPtr,
-	SQLLEN *      IndicatorPtr)
+SQLSetDescRec(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
+	      SQLSMALLINT Type, SQLSMALLINT SubType,
+	      SQLLEN Length, SQLSMALLINT Precision,
+	      SQLSMALLINT Scale, SQLPOINTER DataPtr,
+	      SQLLEN *StringLengthPtr, SQLLEN *IndicatorPtr)
 {
+	(void) DescriptorHandle;
+	(void) RecNumber;
+	(void) Type;
+	(void) SubType;
+	(void) Length;
+	(void) Precision;
+	(void) Scale;
+	(void) DataPtr;
+	(void) StringLengthPtr;
+	(void) IndicatorPtr;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN SQL_API
-SQLSetStmtAttr(
-	SQLHSTMT      stmth,
-	SQLINTEGER    att,
-	SQLPOINTER    ptr,
-	SQLINTEGER    plen)
+SQLSetStmtAttr(SQLHSTMT stmth, SQLINTEGER att,
+	       SQLPOINTER ptr, SQLINTEGER plen)
 {
 	return stmt_set_attr(stmth, att, ptr, plen);
 }
 
 SQLRETURN SQL_API
-SQLBulkOperations(
-	SQLHSTMT       StatementHandle,
-	SQLSMALLINT   Operation)
+SQLBulkOperations(SQLHSTMT StatementHandle, SQLSMALLINT Operation)
 {
+	(void) StatementHandle;
+	(void) Operation;
 	return SQL_ERROR;
 }
 
@@ -613,37 +674,43 @@ SQLSpecialColumns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	SQLCHAR *table, SQLSMALLINT tablelen,
 	SQLUSMALLINT scope, SQLUSMALLINT nullable)
 {
-	return special_columns(stmth, itype, cat, catlen,schema, schemalen, 
+	return special_columns(stmth, itype, cat, catlen,schema, schemalen,
 							table, tablelen, scope, nullable);
 }
 
 SQLRETURN SQL_API
-SQLForeignKeys(
-	SQLHSTMT       StatementHandle,
-	SQLCHAR *      PKCatalogName,
-	SQLSMALLINT    NameLength1,
-	SQLCHAR *      PKSchemaName,
-	SQLSMALLINT    NameLength2,
-	SQLCHAR *      PKTableName,
-	SQLSMALLINT    NameLength3,
-	SQLCHAR *      FKCatalogName,
-	SQLSMALLINT    NameLength4,
-	SQLCHAR *      FKSchemaName,
-	SQLSMALLINT    NameLength5,
-	SQLCHAR *      FKTableName,
-	SQLSMALLINT    NameLength6)
+SQLForeignKeys(SQLHSTMT StatementHandle, SQLCHAR *PKCatalogName,
+	       SQLSMALLINT NameLength1, SQLCHAR *PKSchemaName,
+	       SQLSMALLINT NameLength2, SQLCHAR *PKTableName,
+	       SQLSMALLINT NameLength3, SQLCHAR *FKCatalogName,
+	       SQLSMALLINT NameLength4, SQLCHAR *FKSchemaName,
+	       SQLSMALLINT NameLength5, SQLCHAR *FKTableName,
+	       SQLSMALLINT NameLength6)
 {
+	(void) StatementHandle;
+	(void) PKCatalogName;
+	(void) NameLength1;
+	(void) PKSchemaName;
+	(void) NameLength2;
+	(void) PKTableName;
+	(void) NameLength3;
+	(void) FKCatalogName;
+	(void) NameLength4;
+	(void) FKSchemaName;
+	(void) NameLength5;
+	(void) FKTableName;
+	(void) NameLength6;
+
 	return SQL_ERROR;
 }
 
 SQLRETURN   SQL_API
-SQLError(SQLHENV henv,
-	SQLHDBC hdbc, SQLHSTMT hstmt,
+SQLError(SQLHENV henv, SQLHDBC hdbc, SQLHSTMT hstmt,
 	SQLCHAR *szSqlState, SQLINTEGER *pfNativeError,
 	SQLCHAR *szErrorMsg, SQLSMALLINT cbErrorMsgMax,
 	SQLSMALLINT *pcbErrorMsg)
 {
-	return old_error(henv, hdbc, hstmt, szSqlState, 
-						pfNativeError, szErrorMsg, 
+	return old_error(henv, hdbc, hstmt, szSqlState,
+						pfNativeError, szErrorMsg,
 						cbErrorMsgMax, pcbErrorMsg);
 }

@@ -377,7 +377,6 @@ error:
 static SQLRETURN
 real_connect(odbc_connect *tcon)
 {
-	struct dsn *ret = tcon->dsn_params;
 	tcon->tnt_hndl = tnt_net(NULL);
 	if (!tcon->tnt_hndl) {
 		set_connect_error(tcon,ODBC_MEM_ERROR,
@@ -418,10 +417,12 @@ open_log(odbc_connect *tcon)
 }
 
 SQLRETURN
-odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen, SQLCHAR *out_conn_s,
-		 SQLSMALLINT buflen, SQLSMALLINT *out_len, SQLUSMALLINT drv_compl)
+odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s,
+		 SQLSMALLINT slen, SQLCHAR *out_conn_s,
+		 SQLSMALLINT buflen, SQLSMALLINT *out_len,
+		 SQLUSMALLINT drv_compl)
 {
-
+	(void) whndl;
 	if (dbch == SQL_NULL_HDBC)
 		return SQL_INVALID_HANDLE;
 	odbc_connect *tcon = (odbc_connect *)dbch;
@@ -433,14 +434,18 @@ odbc_drv_connect(SQLHDBC dbch, SQLHWND whndl, SQLCHAR *conn_s, SQLSMALLINT slen,
 
 	 /* first we'll read DSN string and parse information from it */
 	if (!tcon->dsn_params || !(kv = load_attr((char *)conn_s, slen))) {
-		set_connect_error(tcon,ODBC_MEM_ERROR, "Unable to allocate memory", "SQLDriverConnect");
+		set_connect_error(tcon,ODBC_MEM_ERROR,
+				  "Unable to allocate memory",
+				  "SQLDriverConnect");
 		return SQL_ERROR;
 	}
 	char * data_source = get_attr("DSN", kv);
 	if (!data_source)
 		data_source = "DEFAULT";
 
-	/* Next we'll fill defaults with DSN system defaults using data source from string*/
+	/* Next we'll fill defaults with DSN system defaults
+	 * using data source from string
+	 */
 	odbc_read_dsn(tcon, data_source, (int)strlen(data_source));
 
 
@@ -645,7 +650,7 @@ end_transact(SQLSMALLINT htype, SQLHANDLE hndl, SQLSMALLINT tran_type)
 	return SQL_ERROR;
 }
 
-#define TEST 1
+#undef TEST
 #ifdef TEST
 
 int

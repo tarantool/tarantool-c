@@ -638,7 +638,8 @@ struct column_def **
 read_columns_rows(odbc_stmt *stmt)
 {
 	int capacity = 2;
-	struct column_def ** cols = (struct column_def **) malloc (sizeof(struct column_def *)*capacity);
+	struct column_def ** cols = (struct column_def **)
+	  malloc (sizeof(struct column_def *)*capacity);
 	if (!cols)
 		return NULL;
 	int row_count = 0;
@@ -646,7 +647,8 @@ read_columns_rows(odbc_stmt *stmt)
 		row_count ++ ;
 		while (capacity < row_count + 1 && capacity < INT_MAX) {
 			capacity *=2;
-			void *p = realloc (cols, (sizeof(struct column_def *)*capacity));
+			void *p = realloc (cols, (sizeof(struct column_def *)
+						  *capacity));
 			if (!p)
 				goto error;
 			cols = (struct column_def **) p;

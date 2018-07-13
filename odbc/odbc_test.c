@@ -114,7 +114,6 @@ test_connect(const char *dsn) {
 	struct set_handles st;
 	SQLRETURN retcode;
 
-	SQLCHAR * OutConnStr = (SQLCHAR * )malloc(BUFSZ);
 	SQLSMALLINT * OutConnStrLen = (SQLSMALLINT *)malloc(BUFSZ);
 
 	if (init_dbc(&st,NULL)) {
@@ -142,8 +141,6 @@ test_driver_connect(const char *dsn) {
 	struct set_handles st;
 	SQLRETURN retcode;
 
-	SQLCHAR * OutConnStr = (SQLCHAR * )malloc(BUFSZ);
-	SQLSMALLINT * OutConnStrLen = (SQLSMALLINT *)malloc(BUFSZ);
 
 
 	if (init_dbc(&st,NULL)) {
@@ -650,7 +647,7 @@ testfail(int i)
 }
 
 int
-main(int ac, char* av[])
+main()
 {
 	test(test_connect("Taran"));
 	test(test_connect("SystemT"));

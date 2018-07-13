@@ -70,7 +70,7 @@ option(ENABLE_ODBC "Build ODBC driver together with the libtarantool" ON)
 if (ENABLE_ODBC)
    if (NOT WIN32)
       find_program(ODBC_CONFIG
-      NAMES odbc_config iodbc-config
+      NAMES odbc_config iodbc-config odbcinst
       DOC "Path to unixODBC or iODBC config program")
       mark_as_advanced(ODBC_CONFIG)
       if (ODBC_CONFIG)
