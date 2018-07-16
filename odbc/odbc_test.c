@@ -308,7 +308,6 @@ do_fetchbind(struct set_handles *st, void *p)
 {
 	struct fetchbind_par *par_ptr = p;
 	int row_cnt = 0;
-	int matches = 0;
 	long val;
 	SQLLEN val_len;
 	int code = SQLBindCol (st->hstmt,                  // Statement handle
@@ -431,7 +430,7 @@ do_fetchgetdata_stream(struct set_handles *st, void *p)
 	struct fetchbind_par *par_ptr = p;
 	int row_cnt = 0;
 	int matches = 0;
-	long *pars = (long*) par_ptr->args;
+
 
 	while(row_cnt < 100) {
 		int code = SQLFetch(st->hstmt);
@@ -562,7 +561,6 @@ test_metadata_table(const char *dsn, const char *table)
 			while(SQLFetch(st.hstmt) == SQL_SUCCESS) {
 			SQLBIGINT long_val = 0;
 			SQLSMALLINT short_val = 0;
-			SQLDOUBLE  double_val;
 			SQLCHAR str_val[BUFSIZ] = "";
 			SQLCHAR str_typ[BUFSIZ] = "";
 
@@ -615,7 +613,6 @@ test_inbindbad(const char *dsn, const char *sql,int p1,const char *p2) {
 		// Process data
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 			retcode = SQLExecute(st.hstmt);
-			SQLLEN ar = -1;
 			if (retcode == SQL_SUCCESS) {
 				ret_code = 1;
 			} else {

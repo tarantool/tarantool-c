@@ -154,10 +154,15 @@ realloc_params(int num,int *old_num, tnt_bind_t **params)
 }
 
 SQLRETURN
-stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype, SQLSMALLINT ctype, SQLSMALLINT sqltype,
-		 SQLULEN col_len, SQLSMALLINT scale, SQLPOINTER buf,
-		 SQLLEN buf_len, SQLLEN *len_ind)
+stmt_in_bind(SQLHSTMT stmth, SQLUSMALLINT parnum, SQLSMALLINT ptype,
+	     SQLSMALLINT ctype, SQLSMALLINT sqltype,
+	     SQLULEN col_len, SQLSMALLINT scale, SQLPOINTER buf,
+	     SQLLEN buf_len, SQLLEN *len_ind)
 {
+	(void) ptype;
+	(void) sqltype;
+	(void) col_len;
+	(void) scale;
 
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
@@ -292,7 +297,7 @@ stmt_fetch(SQLHSTMT stmth)
 SQLRETURN
 stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset)
 {
-
+	(void) offset;
 	if (orientation != SQL_FETCH_NEXT) {
 		set_stmt_error((odbc_stmt *)stmth, ODBC_HY106_ERROR,
 			       "Unsupported fetch orientation",
@@ -705,6 +710,11 @@ param_info(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 	   SQLULEN *out_len, SQLSMALLINT *out_dnum,
 		 SQLSMALLINT *is_null)
 {
+	(void) pnum;
+	(void) type_ptr;
+	(void) out_len;
+	(void) old_dnum;
+
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
@@ -783,6 +793,7 @@ SQLRETURN
 stmt_get_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER ptr,
 	SQLINTEGER buflen, SQLINTEGER *olen)
 {
+	(void) buflen;
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;

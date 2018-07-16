@@ -32,11 +32,12 @@ extern HINSTANCE hModule;
 
 /* plain copy from sqlite odbc driver */
 SQLRETURN
-get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax, SQLSMALLINT *valLen)
+get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax_, SQLSMALLINT *valLen)
 {
 	odbc_connect *d = (odbc_connect *)dbc;
 	char dummyc[16];
 	SQLSMALLINT dummy;
+	size_t valMax = (size_t)valMax_;
 #if defined(_WIN32) || defined(_WIN64)
 	char pathbuf[301], *drvname;
 #else
@@ -519,7 +520,7 @@ makez(char *dst, size_t dstlen, const char* src, SQLSMALLINT srclen)
 	 */
 	if (srclen == SQL_NTS)
 		srclen = strlen(src);
-	if (dstlen < srclen + 1)
+	if (dstlen < (size_t)(srclen + 1))
 		srclen = dstlen - 1;
 	memcpy(dst, src, srclen);
 	dst[srclen] = '\0';
@@ -568,7 +569,7 @@ print_info_columns(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR 
 		"table='%%.%hds', column='%%.%hds')", catlen, schemlen,
 		 tablelen, collen);
 
-	snprintf(b, blen, frm, cat, schema, table, collen);
+	snprintf(b, blen, frm, cat, schema, table, col);
 	return b;
 }
 
@@ -608,6 +609,9 @@ odbctype2name(int t)
 int
 coltype2odbc(const char * tnt_type, size_t len)
 {
+	/* This code should be in sync with actual Tarantool types.
+	 *
+	 */
 	static char *types_names[] = {"integer", "scalar", "real",
 				      "float", "double", "string",
 				      "char", "varchar", "binary",
@@ -624,11 +628,12 @@ coltype2odbc(const char * tnt_type, size_t len)
 }
 
 void
-free_columns_info( struct column_def ** cols)
+free_columns_info(struct column_def ** cols)
 {
 	struct column_def **it = cols;
 	while (it && *it) {
 		free((*it)->name);
+		free((*it)->typename);
 		free(*it++);
 	}
 	free(cols);
@@ -667,6 +672,8 @@ read_columns_rows(odbc_stmt *stmt)
 		cols[row_count - 1]->is_pk  = tnt_col_int(stmt->tnt_statement, 5);
 		cols[row_count - 1]->type = coltype2odbc(tnt_col_str(stmt->tnt_statement, 2),
 							 tnt_col_len(stmt->tnt_statement, 2));
+		cols[row_count - 1]->typename = strndup(tnt_col_str(stmt->tnt_statement, 2),
+						    tnt_col_len(stmt->tnt_statement, 2));
 
 	}
 	return cols;
@@ -711,7 +718,8 @@ tnt_fake_add_row(tnt_stmt_t *tnt)
 	struct row_node *node = (struct row_node*) malloc(sizeof(struct row_node));
 	if (!node)
 		return NULL;
-	node->data = (struct tnt_coldata *) malloc(sizeof(struct tnt_coldata) * tnt->fake_resultset->ncols);
+	node->data = (struct tnt_coldata *) malloc(sizeof(struct tnt_coldata) *
+						   tnt->fake_resultset->ncols);
 	if (!node->data) {
 		free(node);
 		return NULL;
@@ -812,7 +820,7 @@ column_buffer_size(int tp)
 #define COLINFO_NCOLS 8
 
 int
-add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col)
+add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def *col_types)
 {
 	tnt_stmt_t *tnt = stmt->tnt_statement;
 	if ( tnt_fake_add_col_name(tnt, "SCOPE", 0) != OK ||
@@ -878,6 +886,12 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 		SQLCHAR *table, SQLSMALLINT tablelen,
 		SQLUSMALLINT scope, SQLUSMALLINT nullable)
 {
+	(void) scope;
+	(void) schema;
+	(void) cat;
+	(void) schemalen;
+	(void) catlen;
+
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
@@ -885,11 +899,35 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	/* Since Tarantool do not have catalog and scheme just ignoring these. */
 	char tname[NLEN];
 	char q[2*NLEN];
-	snprintf(q, sizeof(q), "pragma table_info(%s)", makez(tname, sizeof(tname), (char*)table, tablelen));
+	char *tbl = makez(tname, sizeof(tname), (char*)table, tablelen);
 
-	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) != SQL_SUCCESS
-	    || stmt_execute(stmth) != SQL_SUCCESS)
+
+
+	/* This is a hack until we would have real metadata tables with real
+	 * types. For now one can get real types from user created table 'table_types'.
+	 * If this select fails just ignore it. So it will work when Tarantool get types
+	 * and sombody just removed that table.
+	 */
+
+	snprintf(q, sizeof(q), "select 1,name,types,0,0,0 from table_types where name='%s'", tbl);
+	struct column_def ** col_tp = NULL;
+	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
+	    stmt_execute(stmth) == SQL_SUCCESS) {
+
+		col_tp = read_columns_rows(stmt);
+
+	}
+	free_stmt(stmth, SQL_CLOSE);
+
+	snprintf(q, sizeof(q), "pragma table_info(%s)", tbl);
+
+	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) != SQL_SUCCESS ||
+	    stmt_execute(stmth) != SQL_SUCCESS) {
+		free_columns_info(col_tp);
 		return SQL_ERROR;
+	}
+
+
 
 	struct column_def ** col = read_columns_rows(stmt);
 	struct column_def ** col_p = col;
@@ -897,6 +935,7 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 
 	if (tnt_fake_setup_resultset(stmt, COLINFO_NCOLS)!=OK) {
 		free_columns_info(col_p);
+		free_columns_info(col_tp);
 		set_stmt_error(stmt, ODBC_HY013_ERROR,"Memory management error",
 			       "SQLSpecialColumns");
 		return SQL_ERROR;
@@ -905,9 +944,11 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 		while(*col) {
 			if ((*col)->is_pk && (nullable == SQL_NULLABLE
 					      || (nullable == SQL_NO_NULLS && !(*col)->is_nullable)))
-				if (add_fake_colinfo_row(stmt, *col) != OK) {
+				if (add_fake_colinfo_row(stmt, *col, col_tp) != OK) {
 					free_columns_info(col_p);
-					set_stmt_error(stmt, ODBC_HY013_ERROR,"Memory management error",
+					free_columns_info(col_tp);
+					set_stmt_error(stmt, ODBC_HY013_ERROR,
+						       "Memory management error",
 						       "SQLSpecialColumns");
 					return SQL_ERROR;
 				}
@@ -915,6 +956,7 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 		}
 	stmt->state = EXECUTED;
 	free_columns_info(col_p);
+	free_columns_info(col_tp);
 	return SQL_SUCCESS;
 }
 

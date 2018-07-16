@@ -459,7 +459,9 @@ free_env(SQLHENV env)
 SQLRETURN
 env_set_attr(SQLHENV ehndl, SQLINTEGER attr, SQLPOINTER val, SQLINTEGER len)
 {
-	odbc_env *env_ptr = (odbc_env *)ehndl;
+       (void) ehndl;
+       (void) val;
+       (void) len;
 	/* HYC00	Optional feature not implemented*/
 	/* SQL_ATTR_ODBC_VERSION */
 	/* SQL_ATTR_OUTPUT_NTS */
@@ -474,7 +476,13 @@ SQLRETURN
 env_get_attr(SQLHENV  ehndl, SQLINTEGER attr, SQLPOINTER val,
 	SQLINTEGER in_len, SQLINTEGER *out_len)
 {
-	odbc_env *env_ptr = (odbc_env *)ehndl;
+	(void) ehndl;
+	(void) attr;
+	(void) val;
+	(void) in_len;
+	(void) out_len;
+
+
 	return SQL_ERROR;
 }
 
