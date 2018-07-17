@@ -713,7 +713,7 @@ param_info(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 	(void) pnum;
 	(void) type_ptr;
 	(void) out_len;
-	(void) old_dnum;
+	(void) out_dnum;
 
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)

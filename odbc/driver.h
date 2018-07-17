@@ -147,6 +147,7 @@ struct column_def {
 	int type;
 	int is_nullable;
 	char *name;
+	char *typename;
 	int is_pk;
 };
 

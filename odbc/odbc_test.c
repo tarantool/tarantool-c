@@ -654,7 +654,7 @@ main()
 	test(test_driver_connect("DSN=tarantoolTest;PORT=33000"));
 	testfail(test_driver_connect("DSN=tarantoolTest;PORT=33003"));
 	testfail(test_driver_connect("DSN=tarantoolTest;UID=test;PWD=wrongpwd;PORT=33000;UID=test;PWD=test"));
-	const char *good_dsn = "DRIVER=Tarantool;SERVER=100.100.152.17;"
+	const char *good_dsn = "DRIVER=Tarantool;SERVER=100.96.161.41;"
 		"UID=test;PWD=test;PORT=33000;"
 		"LOG_FILENAME=C:\\Users\\alexey.gadzhiev\\ODBC.LOG;LOG_LEVEL=5";
 

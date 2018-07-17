@@ -820,7 +820,7 @@ column_buffer_size(int tp)
 #define COLINFO_NCOLS 8
 
 int
-add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def *col_types)
+add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def **col_types)
 {
 	tnt_stmt_t *tnt = stmt->tnt_statement;
 	if ( tnt_fake_add_col_name(tnt, "SCOPE", 0) != OK ||
@@ -833,7 +833,26 @@ add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def 
 	     tnt_fake_add_col_name(tnt, "PSEUDO_COLUMN", 7) != OK )
 		return FAIL;
 
+	int user_type = col->type;
+	char *user_type_str = NULL;
+
+	/* It's a brute force approach for finding name in array. Since usually table fields number
+	 * is less then 20-30 columns and functions for metadata retrivial
+	 * is not called very often. And finally it's a temparary hack.
+	 */
+	if (col_types) {
+		for(struct column_def **c=col_types; *c; ++c) {
+			if (m_strcasecmp(col->name, (*c)->name) == 0) {
+				user_type = (*c)->type;
+				/* seems I don't need typename (Original tarantool type name) */
+				user_type_str = (*c)->typename;
+			}
+		}
+	}
+
+
 	struct tnt_coldata * row = tnt_fake_add_row(tnt);
+
 	if (!row)
 		return FAIL;
 
@@ -847,10 +866,12 @@ add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def 
 	row[1].size = strlen(col->name);
 
 	row[2].type = MP_INT;
-	row[2].v.i = col->type;
+	if (col->type != user_type) {
+		row[2].v.i = col->type;
+	}
 
 	row[3].type = MP_STR;
-	row[3].v.p = strdup (odbctype2name(col->type));
+	row[3].v.p = strdup (odbctype2name(row[2].v.i));
 	if (!row[3].v.p)
 		return FAIL;
 	row[3].size = strlen((char*)row[3].v.p);
@@ -928,36 +949,36 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	}
 
 
-
+	SQLRETURN status;
 	struct column_def ** col = read_columns_rows(stmt);
 	struct column_def ** col_p = col;
 	tnt_stmt_close_cursor(stmt->tnt_statement);
 
 	if (tnt_fake_setup_resultset(stmt, COLINFO_NCOLS)!=OK) {
-		free_columns_info(col_p);
-		free_columns_info(col_tp);
 		set_stmt_error(stmt, ODBC_HY013_ERROR,"Memory management error",
 			       "SQLSpecialColumns");
-		return SQL_ERROR;
+		status = SQL_ERROR;
+		goto ret;
 	}
 	if (itype == SQL_BEST_ROWID)
 		while(*col) {
 			if ((*col)->is_pk && (nullable == SQL_NULLABLE
 					      || (nullable == SQL_NO_NULLS && !(*col)->is_nullable)))
 				if (add_fake_colinfo_row(stmt, *col, col_tp) != OK) {
-					free_columns_info(col_p);
-					free_columns_info(col_tp);
 					set_stmt_error(stmt, ODBC_HY013_ERROR,
 						       "Memory management error",
 						       "SQLSpecialColumns");
-					return SQL_ERROR;
+					status = SQL_ERROR;
+					goto ret;
 				}
 			col++;
 		}
 	stmt->state = EXECUTED;
+	status = SQL_SUCCESS;
+ret:
 	free_columns_info(col_p);
 	free_columns_info(col_tp);
-	return SQL_SUCCESS;
+	return status;
 }
 
 
