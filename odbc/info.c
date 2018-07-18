@@ -981,7 +981,32 @@ ret:
 	return status;
 }
 
+int
+int_sql_regexp(const char *p, const char *p_e, const char *t, const char *t_e)
+{
+	if (p == p_e || t == t_e) {
+		if (p == p_e && t == t_e)
+			return OK;
+		else
+			return FAIL;
+	}
+	if (*p == '_' || (*p!='%' &&  *p == *t))
+		return int_sql_regexp(p+1, p_e, t+1, t_e);
+	else  if (*p != '%')
+			return FAIL;
+	else { /* *p == '%' */
+		return int_sql_regexp(p, p_e, t+1, t_e) /* one symblol match */
+			|| int_sql_regexp(p+1, p_e, t, t_e) /* zero string match */
+			|| int_sql_regexp(p+1, p_e, t+1, t_e);
+	}
+}
 
+int
+sql_regexp(const char *pattern,  const char *text)
+{
+	return int_sql_regexp(pattern, pattern + strlen(pattern),
+			     text, text + strlen(text));
+}
 
 
 /* Defines for SQLGetFunctions

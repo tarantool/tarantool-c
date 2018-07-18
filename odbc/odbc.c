@@ -675,7 +675,7 @@ SQLSpecialColumns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	SQLUSMALLINT scope, SQLUSMALLINT nullable)
 {
 	return special_columns(stmth, itype, cat, catlen,schema, schemalen,
-							table, tablelen, scope, nullable);
+			       table, tablelen, scope, nullable);
 }
 
 SQLRETURN SQL_API
@@ -711,6 +711,6 @@ SQLError(SQLHENV henv, SQLHDBC hdbc, SQLHSTMT hstmt,
 	SQLSMALLINT *pcbErrorMsg)
 {
 	return old_error(henv, hdbc, hstmt, szSqlState,
-						pfNativeError, szErrorMsg,
-						cbErrorMsgMax, pcbErrorMsg);
+			 pfNativeError, szErrorMsg,
+			 cbErrorMsgMax, pcbErrorMsg);
 }
