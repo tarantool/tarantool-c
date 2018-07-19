@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define OK 0
-#define FAIL -1
 
 int
 int_sql_regexp(const char *p, const char *p_e, const char *t, const char *t_e)
@@ -17,7 +15,7 @@ int_sql_regexp(const char *p, const char *p_e, const char *t, const char *t_e)
 		if (int_sql_regexp(p+1, p_e, t, t_e)) /* zero string match */
 			return 1;
 		else if (t!=t_e)
-			return int_sql_regexp(p, p_e, t+1, t_e) /* one symblol match */
+			return int_sql_regexp(p, p_e, t+1, t_e) /* one symbol match */
 				|| int_sql_regexp(p+1, p_e, t+1, t_e);
 		else
 			return 0;
