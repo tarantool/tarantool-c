@@ -260,7 +260,7 @@ tnt_stmt_t *
 tnt_query(struct tnt_stream *s, const char *text, size_t len)
 {
 	if (s && (tnt_execute(s,text,len,NULL)!=FAIL))
-		return tnt_filfull(s);
+		return tnt_fulfill(s);
 	return NULL;
 }
 
@@ -522,7 +522,7 @@ error:
 }
 
 static tnt_stmt_t*
-tnt_filfull_stmt(tnt_stmt_t *);
+tnt_fulfill_stmt(tnt_stmt_t *);
 
 int
 tnt_stmt_execute(tnt_stmt_t* stmt)
@@ -543,13 +543,13 @@ tnt_stmt_execute(tnt_stmt_t* stmt)
 			TNT_SNET_CAST(stmt->stream)->error = TNT_EBADVAL;
 		}
 	}
-	if (result !=FAIL && (tnt_filfull_stmt(stmt)!=NULL))
+	if (result !=FAIL && (tnt_fulfill_stmt(stmt)!=NULL))
 		return OK;
 	return FAIL;
 }
 
 tnt_stmt_t *
-tnt_filfull(struct tnt_stream *stream)
+tnt_fulfill(struct tnt_stream *stream)
 {
 	tnt_stmt_t *stmt = (tnt_stmt_t *) tnt_mem_alloc(sizeof(tnt_stmt_t));
 	if (!stmt) {
@@ -560,7 +560,7 @@ tnt_filfull(struct tnt_stream *stream)
 	stmt->row = NULL;
 	stmt->a_rows = 0;
 	stmt->reqid = stmt->stream->reqid - 1;
-	if (!tnt_filfull_stmt(stmt)) {
+	if (!tnt_fulfill_stmt(stmt)) {
 		tnt_stmt_free(stmt);
 		return NULL;
 	}
@@ -620,7 +620,7 @@ read_chunk(tnt_stmt_t *stmt)
 }
 
 static tnt_stmt_t *
-tnt_filfull_stmt(tnt_stmt_t *stmt)
+tnt_fulfill_stmt(tnt_stmt_t *stmt)
 {
 	struct tnt_stream *stream = stmt->stream;
 	stmt->reply_state = RSENT;
