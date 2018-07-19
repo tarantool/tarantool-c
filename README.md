@@ -302,7 +302,7 @@ tnt_stmt_t* x2 = tnt_prepare(tnt, statement2, strlen(statement2));
 int num= 100;
 tnt_bind_query_param(x2, 0, TNTC_INT, &num, 0);
 tnt_stmt_execute(x2);
-printf("result after execute = %d\n", tnt_stmt_code(x2));</pre>
+printf("result after execute = %d\n", tnt_stmt_code(x2));
 ```
 
 ### tnt_bind_result
@@ -350,7 +350,7 @@ tnt_bind_result(x2, p_num, 1);
 tnt_stmt_execute(x2);
 printf("result after execute = %d\n", tnt_stmt_code(x2));
 tnt_fetch(x2);
-printf("num=%d, num_errore=%d\n", num, num_error);</pre>
+printf("num=%d, num_errore=%d\n", num, num_error);
 ```
 This should put something in `num` if `EXEMPLAR` has at least one row.
 
@@ -437,7 +437,7 @@ tnt_fetch(x2);
 const char* i= tnt_col_bin(x2, 0);
 int len= tnt_col_len(x2, 0);
 int k;
-for (k= 0; k < len; ++k) printf("%x\n", *(i+k));</pre>
+for (k= 0; k < len; ++k) printf("%x\n", *(i+k));
 ```
 The `printf` will display 44, 0, 55.
 
@@ -508,7 +508,7 @@ tnt_stmt_t* x2 = tnt_prepare(tnt, statement2, strlen(statement2));
 tnt_stmt_execute(x2);
 tnt_fetch(x2);
 float i= tnt_col_float(x2, 0);
-printf("%1.15f\n", i);</pre>
+printf("%1.15f\n", i);
 ```
 
 The `printf` will display 1.234567... an inaccurate result.
@@ -542,7 +542,7 @@ all functions whose names start with `tnt_col_`.
   tnt_stmt_execute(x2);
   tnt_fetch(x2);
   int64_t i= tnt_col_int(x2, 0);
-  printf("%ld\n", i);</pre>
+  printf("%ld\n", i);
 ```
 
 `EXEMPLAR` must contain at least 1 row. This will display one value.
@@ -577,7 +577,7 @@ tnt_stmt_t* x2 = tnt_prepare(tnt, statement2, strlen(statement2));
 tnt_stmt_execute(x2);
 tnt_fetch(x2);
 int i= tnt_col_is_null(x2, 0);
-printf("%d\n", i);</pre>
+printf("%d\n", i);
 ```
 
 The `printf` will display 1.
@@ -616,7 +616,7 @@ tnt_stmt_t* x2 = tnt_prepare(tnt, statement2, strlen(statement2));
 tnt_stmt_execute(x2);
 tnt_fetch(x2);
 int len= tnt_col_len(x2, 0);
-printf("%d\n", len);</pre>
+printf("%d\n", len);
 ```
 
 The `printf` will display 2.
@@ -659,7 +659,7 @@ char statement2[] = "VALUES('Щ' as \"cyrillic_character\");";
 tnt_stmt_t* x2 = tnt_prepare(tnt, statement2, strlen(statement2));
 tnt_stmt_execute(x2);
 const char *s2= tnt_col_name(x2, 0);
-printf("%s\n", s2);</pre>
+printf("%s\n", s2);
 ```
 
 The `printf` will display `cyrillic_character`.
@@ -700,7 +700,7 @@ tnt_stmt_t* x2 = tnt_prepare(tnt, statement2, strlen(statement2));
 tnt_stmt_execute(x2);
 tnt_fetch(x2);
 const char *s= tnt_col_str(x2, 3);
-printf("%s\n", s);</pre>
+printf("%s\n", s);
 ```
 
 The `printf` will display `d`.
@@ -741,7 +741,7 @@ tnt_stmt_execute(x2);
 tnt_fetch(x2);
 const char *s= tnt_col_str(x2, 3);
 int k;
-for (k= 0; k <= 3; ++k) printf("%d\n", tnt_col_type(x2, k));</pre>
+for (k= 0; k <= 3; ++k) printf("%d\n", tnt_col_type(x2, k));
 ```
 
 The `printf` will display 2, 9, 4, 3.
@@ -808,7 +808,7 @@ tnt_stmt_execute(x2);
 int k1, k2;
 k1= tnt_fetch(x2);
 k2= tnt_fetch(x2);
-printf("%d %d\n", k1, k2);</pre>
+printf("%d %d\n", k1, k2);
 ```
 
 The `printf` will display 0, 2.
@@ -837,7 +837,7 @@ in a loop, rather than `tnt_field_names`.
   tnt_stmt_execute(x2);
   printf("result after execute = %d\n", tnt_stmt_code(x2));
   const char *tx= *tnt_field_names(x2);
-  printf("%s.\n", tx);</pre>
+  printf("%s.\n", tx);
 ```
 
 The `printf` will display "S2".
@@ -948,7 +948,7 @@ The memory that `tnt_prepare` allocates can be freed with
 
 ```c
 char statement2[] = "SELECT 5, 'd';";
-tnt_stmt_t* x2 = tnt_prepare(tnt, statement2, strlen(statement2));</pre>
+tnt_stmt_t* x2 = tnt_prepare(tnt, statement2, strlen(statement2));
 ```
 
 ### tnt_query
@@ -985,7 +985,7 @@ flexibility, because after `tnt_prepare` they can
 
 ```c
 char query[]= "CREATE TABLE t(id INT PRIMARY KEY);";
-tnt_query(tnt,query,strlen(query));</pre>
+tnt_query(tnt,query,strlen(query));
 ```
 
 ### tnt_setup_bind_param
@@ -1059,7 +1059,7 @@ after executing any `SELECT` or `VALUES` statement and processing the result set
 char statement2[] = "SELECT 1, 2.2, x'440045', 'd';";
 tnt_stmt_t* x2 = tnt_prepare(tnt, statement2, strlen(statement2));
 tnt_stmt_execute(x2);
-tnt_stmt_close_cursor(x2);</pre>
+tnt_stmt_close_cursor(x2);
 ```
 
 ### tnt_stmt_code
@@ -1096,7 +1096,7 @@ char statement3[] = "DROP TABLE no_such_table;";
 tnt_stmt_t* x3 = tnt_prepare(tnt, statement3, strlen(statement3));
 tnt_stmt_execute(x3);
 int i= tnt_stmt_code(x3);
-printf("%d\n", i);</pre>
+printf("%d\n", i);
 ```
 
 There is no table named `no_such_table` so `printf` will not print 0.
@@ -1133,7 +1133,7 @@ tnt_stmt_t* x3 = tnt_prepare(tnt, statement3, strlen(statement3));
 tnt_stmt_execute(x3);
 size_t len;
 const char *e= tnt_stmt_error(x3, &len);
-printf("%s\n", e);</pre>
+printf("%s\n", e);
 ```
 
 The `printf` will display
@@ -1171,7 +1171,7 @@ associated with addresses within the program memory -- this is why
 ```c
 char statement3[] = "DROP TABLE no_such_table;";
 tnt_stmt_t* x3 = tnt_prepare(tnt, statement3, strlen(statement3));
-tnt_stmt_execute(x3);</pre>
+tnt_stmt_execute(x3);
 ```
 
 ### tnt_stmt_free
@@ -1204,7 +1204,7 @@ but teardown is good practice.)
 char statement3[] = "SELECT 5;";
 tnt_stmt_t* x3 = tnt_prepare(tnt, statement3, strlen(statement3));
 tnt_stmt_execute(x3);
-tnt_stmt_free(x3);</pre>
+tnt_stmt_free(x3);
 ```
 
 ## Structures of the API
@@ -1225,7 +1225,7 @@ typedef struct tnt_bind {
   tnt_size_t *out_len;
   int *is_null;
   int *error; /* conversion result. O is OK */
-  } tnt_bind_t;</pre>
+  } tnt_bind_t;
 ```
 
 The `tnt_bind_t` structure is important for
