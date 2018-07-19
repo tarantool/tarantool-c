@@ -245,7 +245,7 @@ int tnt_bind_result(tnt_stmt_t *, tnt_bind_t *, int number_of_parameters);
 /**
  * Creates tnt_stmt_t structure after tnt_execute query.
  */
-tnt_stmt_t *tnt_filfull(struct tnt_stream *);
+tnt_stmt_t *tnt_fulfill(struct tnt_stream *);
 
 
 
