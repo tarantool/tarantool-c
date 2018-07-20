@@ -573,19 +573,6 @@ print_info_columns(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR 
 	return b;
 }
 
-
-SQLRETURN
-info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
-		       SQLSMALLINT schemalen, SQLCHAR *table, SQLSMALLINT tablelen,
-		       SQLCHAR *col, SQLSMALLINT collen)
-{
-	odbc_stmt *stmt = (odbc_stmt *)stmth;
-	char b[2*NLEN];
-	LOG_INFO(stmt,"%s\n", print_info_columns(b, sizeof(b), cat, catlen, schema, schemalen,
-					       table, tablelen, col, collen));
-	return SQL_ERROR;
-}
-
 const char*
 odbctype2name(int t)
 {
@@ -901,6 +888,102 @@ add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def 
 	return OK;
 }
 
+
+int
+add_fake_column_row(odbc_stmt *stmt, struct column_def *col, struct column_def **col_types, const char *tablename)
+{
+	tnt_stmt_t *tnt = stmt->tnt_statement;
+	if ( tnt_fake_add_col_name(tnt, "TABLE_CAT", 0) != OK ||
+	     tnt_fake_add_col_name(tnt, "TABLE_SCHEM", 1) != OK ||
+	     tnt_fake_add_col_name(tnt, "TABLE_NAME", 2) != OK ||
+	     tnt_fake_add_col_name(tnt, "COLUMN_NAME", 3) != OK ||
+	     tnt_fake_add_col_name(tnt, "DATA_TYPE", 4) != OK ||
+	     tnt_fake_add_col_name(tnt, "TYPE_NAME", 5) != OK ||
+	     tnt_fake_add_col_name(tnt, "COLUMN_SIZE", 6) != OK ||
+	     tnt_fake_add_col_name(tnt, "BUFFER_LENGTH", 7) != OK ||
+	     tnt_fake_add_col_name(tnt, "DECIMAL_DIGITS", 8) != OK ||
+	     tnt_fake_add_col_name(tnt, "NUM_PREC_RADIX", 9) != OK ||
+	     tnt_fake_add_col_name(tnt, "NULLABLE", 10) != OK ||
+	     tnt_fake_add_col_name(tnt, "REMARKS", 11) != OK ||
+	     tnt_fake_add_col_name(tnt, "COLUMN_DEF", 12) != OK ||
+	     tnt_fake_add_col_name(tnt, "SQL_DATA_TYPE", 13) != OK ||
+	     tnt_fake_add_col_name(tnt, "SQL_DATETIME_SUB", 14) != OK ||
+	     tnt_fake_add_col_name(tnt, "CHAR_OCTET_LENGTH", 15) != OK ||
+	     tnt_fake_add_col_name(tnt, "ORDINAL_POSITION", 16) != OK ||
+	     tnt_fake_add_col_name(tnt, "IS_NULLABLE", 17) != OK)
+		return FAIL;
+
+	int user_type = col->type;
+	char *user_type_str = NULL;
+
+	/* It's a brute force approach for finding name in array. Since usually table fields number
+	 * is less then 20-30 columns and functions for metadata retrivial
+	 * is not called very often. And finally it's a temparary hack.
+	 */
+	if (col_types) {
+		for(struct column_def **c=col_types; *c; ++c) {
+			if (m_strcasecmp(col->name, (*c)->name) == 0) {
+				user_type = (*c)->type;
+				/* seems I don't need typename (Original tarantool type name) */
+				user_type_str = (*c)->typename;
+			}
+		}
+	}
+
+
+	struct tnt_coldata * row = tnt_fake_add_row(tnt);
+
+	if (!row)
+		return FAIL;
+
+	row[0].type = MP_INT;
+	row[0].v.i = SQL_SCOPE_SESSION;
+
+	row[1].type = MP_STR;
+	row[1].v.p = strdup(col->name);
+	if (!row[1].v.p)
+		return FAIL;
+	row[1].size = strlen(col->name);
+
+	row[2].type = MP_INT;
+	if (col->type != user_type) {
+		row[2].v.i = col->type;
+	}
+
+	row[3].type = MP_STR;
+	row[3].v.p = strdup (odbctype2name(row[2].v.i));
+	if (!row[3].v.p)
+		return FAIL;
+	row[3].size = strlen((char*)row[3].v.p);
+
+	row[4].type = MP_INT;
+	row[4].v.i = column_size(col->type);
+
+	row[5].type = MP_INT;
+	row[5].v.i = column_buffer_size(col->type);
+
+
+	row[6].v.i = column_dec_size(col->type);
+	if (row[6].v.i == -1) {
+		row[6].type = MP_NIL;
+		row[6].v.p = NULL;
+	} else {
+		row[6].type = MP_INT;
+	}
+
+	row[7].type = MP_INT;
+	row[7].v.i = SQL_PC_NOT_PSEUDO;
+
+	if (col) {
+		fprintf (stderr, "col name: %s, is null: %d, type: %d, is pk: %d\n",
+			 col->name, col->is_nullable, col->type, col->is_pk);
+	}
+	return OK;
+}
+
+
+
+
 SQLRETURN
 special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 		SQLSMALLINT catlen, SQLCHAR *schema, SQLSMALLINT schemalen,
@@ -981,32 +1064,74 @@ ret:
 	return status;
 }
 
-int
-int_sql_regexp(const char *p, const char *p_e, const char *t, const char *t_e)
+#define COLUMNS_NCOLS = 18;
+
+SQLRETURN
+info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
+	     SQLSMALLINT schemalen, SQLCHAR *table, SQLSMALLINT tablelen,
+	     SQLCHAR *coln, SQLSMALLINT collen)
 {
-	if (p == p_e || t == t_e) {
-		if (p == p_e && t == t_e)
-			return OK;
-		else
-			return FAIL;
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+	char b[2*NLEN];
+	LOG_INFO(stmt,"%s\n", print_info_columns(b, sizeof(b), cat, catlen, schema, schemalen,
+					       table, tablelen, coln, collen));
+	if (!stmt)
+		return SQL_INVALID_HANDLE;
+
+	/* Since Tarantool do not have catalog and scheme just ignoring these. */
+	char tname[NLEN];
+	char q[2*NLEN];
+	char *tbl = makez(tname, sizeof(tname), (char*)table, tablelen);
+
+	snprintf(q, sizeof(q), "select 1,name,types,0,0,0 from table_types where name='%s'", tbl);
+	struct column_def ** col_tp = NULL;
+	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
+	    stmt_execute(stmth) == SQL_SUCCESS) {
+
+		col_tp = read_columns_rows(stmt);
+
 	}
-	if (*p == '_' || (*p!='%' &&  *p == *t))
-		return int_sql_regexp(p+1, p_e, t+1, t_e);
-	else  if (*p != '%')
-			return FAIL;
-	else { /* *p == '%' */
-		return int_sql_regexp(p, p_e, t+1, t_e) /* one symblol match */
-			|| int_sql_regexp(p+1, p_e, t, t_e) /* zero string match */
-			|| int_sql_regexp(p+1, p_e, t+1, t_e);
+	free_stmt(stmth, SQL_CLOSE);
+
+	snprintf(q, sizeof(q), "pragma table_info(%s)", tbl);
+
+	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) != SQL_SUCCESS ||
+	    stmt_execute(stmth) != SQL_SUCCESS) {
+		free_columns_info(col_tp);
+		return SQL_ERROR;
 	}
+
+
+	SQLRETURN status;
+	struct column_def ** col = read_columns_rows(stmt);
+	struct column_def ** col_p = col;
+	tnt_stmt_close_cursor(stmt->tnt_statement);
+
+	if (tnt_fake_setup_resultset(stmt, COLUMNS_NCOLS)!=OK) {
+		set_stmt_error(stmt, ODBC_HY013_ERROR,"Memory management error",
+			       "SQLColumns");
+		status = SQL_ERROR;
+		goto ret;
+	}
+	while(*col) {
+		if (coln == NULL || sql_regexp(coln, (*col)->name))
+			if (add_fake_column_row(stmt, *col, col_tp, table) != OK) {
+				set_stmt_error(stmt, ODBC_HY013_ERROR,
+					       "Memory management error",
+					       "SQLColumns");
+				status = SQL_ERROR;
+				goto ret;
+			}
+	}
+	col++;
+	stmt->state = EXECUTED;
+	status = SQL_SUCCESS;
+ret:
+	free_columns_info(col_p);
+	free_columns_info(col_tp);
+	return status;
 }
 
-int
-sql_regexp(const char *pattern,  const char *text)
-{
-	return int_sql_regexp(pattern, pattern + strlen(pattern),
-			     text, text + strlen(text));
-}
 
 
 /* Defines for SQLGetFunctions
