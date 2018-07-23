@@ -342,4 +342,7 @@ SQLRETURN special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	SQLSMALLINT catlen, SQLCHAR *schema, SQLSMALLINT schemalen,
 	SQLCHAR *table, SQLSMALLINT tablelen,
 	SQLUSMALLINT scope, SQLUSMALLINT nullable);
+int sql_regexp(const char *pattern,  const char *text, char esc);
+
+
 #endif

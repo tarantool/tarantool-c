@@ -804,6 +804,71 @@ column_buffer_size(int tp)
 }
 
 
+/* It's a brute force approach for finding name in array. Since usually table fields number
+ * is less then 20-30 columns and functions for metadata retrivial
+ * is not called very often. And finally it's a temparary hack.
+ */
+void
+get_type(struct column_def **col_types, const char* name, int *user_type, char ** user_type_str)
+{
+	if (col_types) {
+		for(struct column_def **c=col_types; *c; ++c) {
+			if (m_strcasecmp(name, (*c)->name) == 0) {
+				*user_type = (*c)->type;
+				/* seems I don't need typename (Original tarantool type name) */
+				*user_type_str = (*c)->typename;
+			}
+		}
+	}
+}
+
+void
+tnt_fake_set_column_int(struct tnt_coldata *row, int icol, int64_t val)
+{
+	row[icol].type  = MP_INT;
+	row[icol].v.i = val;
+}
+
+void
+tnt_fake_set_column_uint(struct tnt_coldata *row, int icol, uint64_t val)
+{
+	row[icol].type  = MP_UINT;
+	row[icol].v.i = val;
+}
+
+void*
+tnt_fake_set_column_str(struct tnt_coldata *row, int icol, char *s)
+{
+	row[icol].type  = MP_STR;
+	row[icol].v.p = s;
+	row[icol].size = (s)? strlen(s): 0;
+	return row[icol].v.p;
+}
+
+void
+tnt_fake_set_column_double(struct tnt_coldata *row, int icol, double val)
+{
+	row[icol].type  = MP_DOUBLE;
+	row[icol].v.d = val;
+}
+
+void
+tnt_fake_set_column_null(struct tnt_coldata *row, int icol)
+{
+	row[icol].type  = MP_NIL;
+	row[icol].v.p = NULL;
+}
+
+void
+tnt_fake_set_column_bin(struct tnt_coldata *row, int icol, void *p, size_t sz)
+{
+	row[icol].type  = MP_BIN;
+	row[icol].v.p = p;
+	row[icol].size = sz;
+}
+
+
+
 #define COLINFO_NCOLS 8
 
 int
@@ -823,63 +888,33 @@ add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def 
 	int user_type = col->type;
 	char *user_type_str = NULL;
 
-	/* It's a brute force approach for finding name in array. Since usually table fields number
-	 * is less then 20-30 columns and functions for metadata retrivial
-	 * is not called very often. And finally it's a temparary hack.
-	 */
-	if (col_types) {
-		for(struct column_def **c=col_types; *c; ++c) {
-			if (m_strcasecmp(col->name, (*c)->name) == 0) {
-				user_type = (*c)->type;
-				/* seems I don't need typename (Original tarantool type name) */
-				user_type_str = (*c)->typename;
-			}
-		}
-	}
-
+	get_type(col_types, col->name, &user_type, &user_type_str);
 
 	struct tnt_coldata * row = tnt_fake_add_row(tnt);
 
 	if (!row)
 		return FAIL;
 
-	row[0].type = MP_INT;
-	row[0].v.i = SQL_SCOPE_SESSION;
+	tnt_fake_set_column_int(row, 0, SQL_SCOPE_SESSION);
 
-	row[1].type = MP_STR;
-	row[1].v.p = strdup(col->name);
-	if (!row[1].v.p)
+	if (!tnt_fake_set_column_str(row, 1, strdup(col->name)))
 		return FAIL;
-	row[1].size = strlen(col->name);
 
-	row[2].type = MP_INT;
-	if (col->type != user_type) {
-		row[2].v.i = col->type;
-	}
+	tnt_fake_set_column_int(row, 2, user_type);
 
-	row[3].type = MP_STR;
-	row[3].v.p = strdup (odbctype2name(row[2].v.i));
-	if (!row[3].v.p)
+	if (!tnt_fake_set_column_str(row, 3, strdup (odbctype2name(user_type)) ))
 		return FAIL;
-	row[3].size = strlen((char*)row[3].v.p);
 
-	row[4].type = MP_INT;
-	row[4].v.i = column_size(col->type);
+	tnt_fake_set_column_int(row, 4, column_size(col->type));
 
-	row[5].type = MP_INT;
-	row[5].v.i = column_buffer_size(col->type);
+	tnt_fake_set_column_int(row, 5 , column_buffer_size(col->type));
 
 
-	row[6].v.i = column_dec_size(col->type);
-	if (row[6].v.i == -1) {
-		row[6].type = MP_NIL;
-		row[6].v.p = NULL;
-	} else {
-		row[6].type = MP_INT;
-	}
+	tnt_fake_set_column_int(row, 6, column_dec_size(col->type));
+	if (row[6].v.i == -1)
+		tnt_fake_set_column_null(row, 6);
 
-	row[7].type = MP_INT;
-	row[7].v.i = SQL_PC_NOT_PSEUDO;
+	tnt_fake_set_column_int(row, 7, SQL_PC_NOT_PSEUDO);
 
 	if (col) {
 		fprintf (stderr, "col name: %s, is null: %d, type: %d, is pk: %d\n",
@@ -887,6 +922,7 @@ add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def 
 	}
 	return OK;
 }
+
 
 
 int
@@ -916,63 +952,49 @@ add_fake_column_row(odbc_stmt *stmt, struct column_def *col, struct column_def *
 	int user_type = col->type;
 	char *user_type_str = NULL;
 
-	/* It's a brute force approach for finding name in array. Since usually table fields number
-	 * is less then 20-30 columns and functions for metadata retrivial
-	 * is not called very often. And finally it's a temparary hack.
-	 */
-	if (col_types) {
-		for(struct column_def **c=col_types; *c; ++c) {
-			if (m_strcasecmp(col->name, (*c)->name) == 0) {
-				user_type = (*c)->type;
-				/* seems I don't need typename (Original tarantool type name) */
-				user_type_str = (*c)->typename;
-			}
-		}
-	}
-
+	get_type(col_types, col->name, &user_type, &user_type_str);
 
 	struct tnt_coldata * row = tnt_fake_add_row(tnt);
 
 	if (!row)
 		return FAIL;
 
-	row[0].type = MP_INT;
-	row[0].v.i = SQL_SCOPE_SESSION;
-
-	row[1].type = MP_STR;
-	row[1].v.p = strdup(col->name);
-	if (!row[1].v.p)
+	if (!tnt_fake_set_column_str(row, 0, strdup("")) || /* TABLE_CAT */
+	    !tnt_fake_set_column_str(row, 1, strdup("")) || /* TABLE_SCHEM */
+	    !tnt_fake_set_column_str(row, 11, strdup("")) || /* REMARKS */
+	    !tnt_fake_set_column_str(row, 2, strdup(tablename)) || /* TABLE_NAME */
+	    !tnt_fake_set_column_str(row, 3, strdup(col->name))) /* COLUMN_NAME */
 		return FAIL;
-	row[1].size = strlen(col->name);
 
-	row[2].type = MP_INT;
-	if (col->type != user_type) {
-		row[2].v.i = col->type;
-	}
-
-	row[3].type = MP_STR;
-	row[3].v.p = strdup (odbctype2name(row[2].v.i));
-	if (!row[3].v.p)
+	/* DATA_TYPE */
+	tnt_fake_set_column_int(row, 4, user_type);
+	/* TYPE_NAME */
+	if (!tnt_fake_set_column_str(row, 5, strdup (odbctype2name(user_type))))
 		return FAIL;
-	row[3].size = strlen((char*)row[3].v.p);
-
-	row[4].type = MP_INT;
-	row[4].v.i = column_size(col->type);
-
-	row[5].type = MP_INT;
-	row[5].v.i = column_buffer_size(col->type);
-
-
-	row[6].v.i = column_dec_size(col->type);
-	if (row[6].v.i == -1) {
-		row[6].type = MP_NIL;
-		row[6].v.p = NULL;
-	} else {
-		row[6].type = MP_INT;
-	}
-
-	row[7].type = MP_INT;
-	row[7].v.i = SQL_PC_NOT_PSEUDO;
+	/* COLUMN_SIZ*/
+	tnt_fake_set_column_int(row, 6, column_size(col->type));
+	/* SQL_DATA_TYPE */
+	tnt_fake_set_column_int(row, 13, column_size(col->type));
+	/* BUFFER_LENGTH */
+	tnt_fake_set_column_int(row, 7, column_buffer_size(col->type));
+	/* DECIMAL_DIGITS */
+	tnt_fake_set_column_int(row, 8, column_dec_size(col->type));
+	if (row[8].v.i == -1)
+		tnt_fake_set_column_null(row, 8);
+	/* NUM_PREC_RADIX */
+	tnt_fake_set_column_int(row, 9, 2);
+	/* NULLABLE */
+	tnt_fake_set_column_int(row, 10, col->is_nullable? SQL_NULLABLE: SQL_NO_NULLS);
+	/* COLUMN_DEF */
+	tnt_fake_set_column_null(row, 12);
+	/* SQL_DATETIME_SUB */
+	tnt_fake_set_column_null(row, 14);
+	/* CHAR_OCTET_LENGTH */
+	tnt_fake_set_column_null(row, 15);
+	/* ORDINAL_POSITION */
+	tnt_fake_set_column_int(row, 16, col->id + 1);
+	/* IS_NULLABLE */
+	tnt_fake_set_column_str(row, 17, col->is_nullable? strdup("YES"):strdup("NO"));
 
 	if (col) {
 		fprintf (stderr, "col name: %s, is null: %d, type: %d, is pk: %d\n",
@@ -1064,17 +1086,17 @@ ret:
 	return status;
 }
 
-#define COLUMNS_NCOLS = 18;
+#define COLUMNS_NCOLS  18
 
 SQLRETURN
 info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	     SQLSMALLINT schemalen, SQLCHAR *table, SQLSMALLINT tablelen,
-	     SQLCHAR *coln, SQLSMALLINT collen)
+	     SQLCHAR *col_, SQLSMALLINT collen)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	char b[2*NLEN];
 	LOG_INFO(stmt,"%s\n", print_info_columns(b, sizeof(b), cat, catlen, schema, schemalen,
-					       table, tablelen, coln, collen));
+					       table, tablelen, col_, collen));
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
 
@@ -1082,6 +1104,10 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	char tname[NLEN];
 	char q[2*NLEN];
 	char *tbl = makez(tname, sizeof(tname), (char*)table, tablelen);
+
+	char colb[NLEN];
+	char *coln = makez(colb, sizeof(colb), (char*)col_, collen);
+
 
 	snprintf(q, sizeof(q), "select 1,name,types,0,0,0 from table_types where name='%s'", tbl);
 	struct column_def ** col_tp = NULL;
@@ -1114,16 +1140,16 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 		goto ret;
 	}
 	while(*col) {
-		if (coln == NULL || sql_regexp(coln, (*col)->name))
-			if (add_fake_column_row(stmt, *col, col_tp, table) != OK) {
+		if (coln[0] == '\0' || sql_regexp(coln, (*col)->name, '\0'))
+			if (add_fake_column_row(stmt, *col, col_tp, (char *)table) != OK) {
 				set_stmt_error(stmt, ODBC_HY013_ERROR,
 					       "Memory management error",
 					       "SQLColumns");
 				status = SQL_ERROR;
 				goto ret;
 			}
+		col++;
 	}
-	col++;
 	stmt->state = EXECUTED;
 	status = SQL_SUCCESS;
 ret:
