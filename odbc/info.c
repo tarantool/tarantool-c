@@ -677,7 +677,7 @@ tnt_fake_setup_resultset(odbc_stmt *stmt, int ncols)
 	if (!tnt->fake_resultset)
 		return FAIL;
 	memset(tnt->fake_resultset, 0, sizeof(struct fake_resultset));
-	tnt->fake_resultset->ncols = ncols;
+	tnt->ncols = tnt->fake_resultset->ncols = ncols;
 	tnt->fake_resultset->names = (char **) malloc(sizeof(char* ) * ncols);
 	if (!tnt->fake_resultset->names)
 		return FAIL;
@@ -1150,6 +1150,7 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 			}
 		col++;
 	}
+
 	stmt->state = EXECUTED;
 	status = SQL_SUCCESS;
 ret:

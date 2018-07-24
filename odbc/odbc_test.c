@@ -626,8 +626,8 @@ test_metadata_columns(const char *dsn, const char *table, const char *cols)
 			SQLSMALLINT DatetimeSubtypeCode;
 			SQLLEN cbCatalog;
 			SQLLEN cbSchema;
-			SQLLEN cbTableName;
-			SQLLEN cbColumnName;
+			SQLLEN cbTableName=0;
+			SQLLEN cbColumnName=0;
 			SQLLEN cbDataType;
 			SQLLEN cbTypeName;
 			SQLLEN cbColumnSize;
@@ -670,6 +670,13 @@ test_metadata_columns(const char *dsn, const char *table, const char *cols)
 			fprintf(stderr, "xtype val %hd, is_null: %s, type str %s, and name is %s\n",
 				/* (long)*/ DataType, szIsNullable, szTypeName, szColumnName);
 			ret_code=1;
+			int code = SQLGetData(st.hstmt, 3, SQL_C_CHAR, szTableName, STR_LEN, &cbTableName);
+			CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
+			int xcode = SQLGetData(st.hstmt, 4, SQL_C_CHAR, szColumnName, STR_LEN, &cbColumnName);
+			CHECK(xcode, show_error(SQL_HANDLE_STMT, st.hstmt));
+			szColumnName[cbColumnName] = 0;
+			szTableName[cbTableName] = 0;
+			fprintf(stderr, "table: %s, name %s\n", szTableName, szColumnName);
 			}
 		} else {
 			    show_error(SQL_HANDLE_STMT, st.hstmt);

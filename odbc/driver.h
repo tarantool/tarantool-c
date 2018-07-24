@@ -343,6 +343,6 @@ SQLRETURN special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	SQLCHAR *table, SQLSMALLINT tablelen,
 	SQLUSMALLINT scope, SQLUSMALLINT nullable);
 int sql_regexp(const char *pattern,  const char *text, char esc);
-
+SQLRETURN set_out_bind_params(odbc_stmt *stmt, const char *fname);
 
 #endif

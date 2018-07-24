@@ -49,6 +49,22 @@ stmt_prepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
 }
 
 SQLRETURN
+set_out_bind_params(odbc_stmt *stmt, const char *fname)
+{
+	if (stmt->outbind_params) {
+		if (tnt_number_of_cols(stmt->tnt_statement) > stmt->outbind_items &&
+		    realloc_params(tnt_number_of_cols(stmt->tnt_statement),
+				   &(stmt->outbind_items),&(stmt->outbind_params)) == FAIL) {
+			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory for parameters", fname);
+			return SQL_ERROR;
+		}
+		tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
+	}
+	return SQL_SUCCESS;
+}
+
+
+SQLRETURN
 stmt_execute(SQLHSTMT stmth)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
@@ -78,17 +94,10 @@ stmt_execute(SQLHSTMT stmth)
 				   error, (int)sz, "Execute");
 		return SQL_ERROR;
 	}
-
-
-	if (stmt->outbind_params) {
-		if (tnt_number_of_cols(stmt->tnt_statement) > stmt->outbind_items &&
-		    realloc_params(tnt_number_of_cols(stmt->tnt_statement),
-				   &(stmt->outbind_items),&(stmt->outbind_params)) == FAIL) {
-			set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory for parameters","Execute");
-			return SQL_ERROR;
-		}
-		tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,stmt->outbind_items);
-	}
+	/*
+	if (set_out_bind_params(stmt, "Execute") != SQL_SUCCESS)
+		return SQL_ERROR;
+	*/
 
 	stmt->state = EXECUTED;
 	LOG_INFO(stmt, "Execute(%s) = OK  %s %" PRIu64 " rows so far\n",
@@ -254,6 +263,7 @@ stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER
 	--colnum;
 	stmt->outbind_params[colnum].type = in_type;
 	stmt->outbind_params[colnum].buffer = (void *)val;
+	stmt->outbind_params[colnum].in_len = in_len;
 	stmt->outbind_params[colnum].out_len = out_len;
 
 	tnt_bind_result(stmt->tnt_statement,stmt->outbind_params,
@@ -276,6 +286,10 @@ stmt_fetch(SQLHSTMT stmth)
 		set_stmt_error(stmt,ODBC_24000_ERROR,"Invalid cursor state", "SQLFetch");
 		return SQL_ERROR;
 	}
+
+	if (set_out_bind_params(stmt, "Fetch") != SQL_SUCCESS)
+		return SQL_ERROR;
+
 	int retcode = tnt_fetch(stmt->tnt_statement);
 
 

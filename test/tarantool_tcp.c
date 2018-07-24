@@ -413,7 +413,7 @@ test_execute(char *uri) {
 	     "Create execute sql request: select no args");
 	/* isnt(tnt_flush(tnt), -1, "Send to server"); */
 
-	tnt_stmt_t* result = tnt_filfull(tnt);
+	tnt_stmt_t* result = tnt_fulfill(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence");
 
 	if (result) {
@@ -432,7 +432,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: create table");
 
-	result = tnt_filfull(tnt);
+	result = tnt_fulfill(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after create table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
@@ -468,7 +468,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
-	result = tnt_filfull(tnt);
+	result = tnt_fulfill(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
@@ -600,7 +600,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
-	result = tnt_filfull(tnt);
+	result = tnt_fulfill(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
@@ -723,7 +723,7 @@ test_execute(char *uri) {
 	isnt(tnt_execute(tnt, query, strlen(query), NULL), -1,
 	     "Create execute sql request: drop table");
 
-	result = tnt_filfull(tnt);
+	result = tnt_fulfill(tnt);
 	isnt(result, NULL, "Check tnt_stmt_t presence after drop table");
 	if (result) {
 	  is(tnt_stmt_code(result),0,"checking code after table creation");
