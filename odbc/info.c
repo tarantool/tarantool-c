@@ -519,9 +519,9 @@ makez(char *dst, size_t dstlen, const char* src, SQLSMALLINT srclen)
 	 *!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	 */
 	if (srclen == SQL_NTS)
-		srclen = strlen(src);
+		srclen = (SQLSMALLINT)strlen(src);
 	if (dstlen < (size_t)(srclen + 1))
-		srclen = dstlen - 1;
+		srclen = (SQLSMALLINT) (dstlen - 1);
 	memcpy(dst, src, srclen);
 	dst[srclen] = '\0';
 	return dst;
@@ -652,11 +652,11 @@ read_columns_rows(odbc_stmt *stmt)
 		/* Actually it's a bad thing to mix tnt API and ODBC layer.
 		 * So it's better to change tnt_* calls in the future.
 		 */
-		cols[row_count - 1]->id = tnt_col_int(stmt->tnt_statement, 0);
+		cols[row_count - 1]->id = (int) tnt_col_int(stmt->tnt_statement, 0);
 		cols[row_count - 1]->name = strndup(tnt_col_str(stmt->tnt_statement, 1),
 						    tnt_col_len(stmt->tnt_statement, 1));
 		cols[row_count - 1]->is_nullable = !tnt_col_int(stmt->tnt_statement, 3);
-		cols[row_count - 1]->is_pk  = tnt_col_int(stmt->tnt_statement, 5);
+		cols[row_count - 1]->is_pk  = (int) tnt_col_int(stmt->tnt_statement, 5);
 		cols[row_count - 1]->type = coltype2odbc(tnt_col_str(stmt->tnt_statement, 2),
 							 tnt_col_len(stmt->tnt_statement, 2));
 		cols[row_count - 1]->typename = strndup(tnt_col_str(stmt->tnt_statement, 2),

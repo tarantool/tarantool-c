@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
+
+#ifdef _WIN32
+#include <tnt_winsup.h>
+#endif
 
 struct mem {
 	signed char *tbl;
@@ -53,8 +58,8 @@ static int
 int_sql_regexp(const char *p, const char *p_e, const char *t, const char *t_e,
 	       char esc, struct mem *m)
 {
-	int row = p_e-p;
-	int col = t_e-t;
+	int row = (int) (p_e-p);
+	int col = (int) (t_e-t);
 
 	if (mem_get(m, row, col)!= -1)
 		return mem_get(m, row, col);
@@ -80,7 +85,7 @@ int_sql_regexp(const char *p, const char *p_e, const char *t, const char *t_e,
 		return mem_set(m, row, col, int_sql_regexp(p+1, p_e, t, t_e, esc, m) /* zero string match */
 			|| int_sql_regexp(p, p_e, t+1, t_e, esc, m) /* one symbol match */
 			       || int_sql_regexp(p+1, p_e, t+1, t_e, esc, m));
-	} else if ((*p == '_' && !escaped) || *p == *t)
+	} else if ((*p == '_' && !escaped) || tolower(*p) == tolower(*t))
 		return mem_set(m, row, col, int_sql_regexp(p+1, p_e, t+1, t_e, esc, m));
 	else
 		return mem_set(m, row, col, 0);
@@ -89,8 +94,8 @@ int_sql_regexp(const char *p, const char *p_e, const char *t, const char *t_e,
 int
 sql_regexp(const char *pattern,  const char *text, char esc)
 {
-	size_t patl = strlen(pattern);
-	size_t textl = strlen(text);
+	int patl = (int)strlen(pattern);
+	int textl = (int)strlen(text);
 	struct mem *m = init_mem(patl+1, textl+1);
 
 
