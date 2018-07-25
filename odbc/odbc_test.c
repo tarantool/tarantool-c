@@ -677,6 +677,10 @@ test_metadata_columns(const char *dsn, const char *table, const char *cols)
 			szColumnName[cbColumnName] = 0;
 			szTableName[cbTableName] = 0;
 			fprintf(stderr, "table: %s, name %s\n", szTableName, szColumnName);
+
+			cbDataType = -1;
+			SQLGetData(st.hstmt, 5, SQL_C_DEFAULT, &DataType, 2, &cbDataType);
+			fprintf(stderr, "res size for def = %hd\n", cbDataType);
 			}
 		} else {
 			    show_error(SQL_HANDLE_STMT, st.hstmt);

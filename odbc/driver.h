@@ -344,5 +344,10 @@ SQLRETURN special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	SQLUSMALLINT scope, SQLUSMALLINT nullable);
 int sql_regexp(const char *pattern,  const char *text, char esc);
 SQLRETURN set_out_bind_params(odbc_stmt *stmt, const char *fname);
+SQLRETURN statistics(SQLHSTMT StatementHandle, SQLCHAR *CatalogName,
+	SQLSMALLINT NameLength1, SQLCHAR *SchemaName,
+	SQLSMALLINT NameLength2, SQLCHAR *TableName,
+	SQLSMALLINT NameLength3, SQLUSMALLINT Unique,
+	SQLUSMALLINT Reserved);
 
 #endif

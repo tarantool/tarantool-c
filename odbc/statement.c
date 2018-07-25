@@ -254,10 +254,19 @@ stmt_out_bind(SQLHSTMT stmth, SQLUSMALLINT colnum, SQLSMALLINT ctype, SQLPOINTER
 
 	int in_type = odbc_types_covert(ctype);
 	if (in_type == -1) {
-		set_stmt_error(stmt,ODBC_HY003_ERROR,
-			       "Invalid application buffer type",
-			       "SQLBindCol");
-		return SQL_ERROR;
+		if (ctype == SQL_C_DEFAULT) {
+			/* Here we don't know the exact types of result set.
+			*  In order to work properly odbc needs to know
+			*  result set after prepare phase.
+			*/
+			in_type = TNTC_CHAR;
+		}
+		else {
+			set_stmt_error(stmt, ODBC_HY003_ERROR,
+				"Invalid application buffer type",
+				"SQLBindCol");
+			return SQL_ERROR;
+		}
 	}
 
 	--colnum;
@@ -322,57 +331,99 @@ stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset)
 }
 
 
+void 
+recalculate_types(tnt_bind_t *p)
+{
+	
+	switch (p->type) {
+	case MP_INT:
+	case MP_UINT:
+		if (p->in_len < sizeof(int64_t)) {
+			switch (p->in_len) {
+				case sizeof(int32_t):
+					p->type = (p->type == MP_UINT) ? TNTC_UINT : TNTC_INT;
+					break;
+				case sizeof(int16_t):
+					p->type = (p->type == MP_UINT) ? TNTC_USHORT : TNTC_SHORT;
+					break;
+				case sizeof(int8_t):
+					p->type = (p->type == MP_UINT) ? TNTC_UTINY : TNTC_TINY;
+					break;
+			}
+		}
+		break;
+	case MP_DOUBLE:
+	case MP_FLOAT:
+		if (p->in_len == sizeof(double))
+			p->type = MP_DOUBLE;
+		if (p->in_len == sizeof(float))
+			p->type = MP_FLOAT;
+		else if (p->in_len < sizeof(float)) {
+			p->type = MP_NIL;
+			p->in_len = 0;
+		}
+	break;
+	}
+}
+
+
 SQLRETURN
 get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type,
-	 SQLPOINTER val_ptr, SQLLEN in_len, SQLLEN *out_len)
+	SQLPOINTER val_ptr, SQLLEN in_len, SQLLEN *out_len)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
-	if (!stmt->tnt_statement || stmt->state!=EXECUTED) {
-		set_stmt_error(stmt,ODBC_HY010_ERROR,
-			       "Function sequence error", "SQLGetData");
+	if (!stmt->tnt_statement || stmt->state != EXECUTED) {
+		set_stmt_error(stmt, ODBC_HY010_ERROR,
+			"Function sequence error", "SQLGetData");
 		return SQL_ERROR;
 	}
 	/* Don't do bookmarks for now */
 
 	if (num == 0 || num >= stmt->tnt_statement->ncols + 1) {
-		set_stmt_error(stmt,ODBC_07009_ERROR,
-			       "Invalid descriptor index", "SQLGetData");
+		set_stmt_error(stmt, ODBC_07009_ERROR,
+			"Invalid descriptor index", "SQLGetData");
 		return SQL_ERROR;
 	}
 
 	--num;
 
 	if (stmt->tnt_statement->nrows < 0) {
-		set_stmt_error(stmt,ODBC_07009_ERROR,
-			       "No data or row in current row", "SQLGetData");
+		set_stmt_error(stmt, ODBC_07009_ERROR,
+			"No data or row in current row", "SQLGetData");
 		return SQL_ERROR;
 	}
-	if (tnt_col_is_null(stmt->tnt_statement,num)) {
+	if (tnt_col_is_null(stmt->tnt_statement, num)) {
 		if (out_len) {
 			*out_len = SQL_NULL_DATA;
 			return SQL_SUCCESS;
-		} else {
+		}
+		else {
 			set_stmt_error(stmt, ODBC_22002_ERROR,
-				       "Indicator variable required but "
-				       "not supplied", "SQLGetData");
+				"Indicator variable required but "
+				"not supplied", "SQLGetData");
 			return SQL_ERROR;
 		}
 	}
-	if (in_len<0) {
-		set_stmt_error(stmt,ODBC_HY090_ERROR,
-			       "Invalid string or buffer length", "SQLGetData");
+	if (in_len < 0) {
+		set_stmt_error(stmt, ODBC_HY090_ERROR,
+			"Invalid string or buffer length", "SQLGetData");
 		return SQL_ERROR;
 	}
 
 	int in_type = odbc_types_covert(type);
 	if (in_type == FAIL) {
-		set_stmt_error(stmt,ODBC_HY090_ERROR,
-			       "Invalid string or buffer length",
-			       "SQLGetData");
-		return SQL_ERROR;
+		if (type == SQL_C_DEFAULT) {
+			/* Tarantool has a 1:1 mapping from DB types to C language. */
+			in_type = tnt_col_type(stmt->tnt_statement, num);
+		} else {
+			set_stmt_error(stmt, ODBC_HY090_ERROR,
+				"Invalid string or buffer length",
+				"SQLGetData");
+			return SQL_ERROR;
+		}
 	}
 
 
@@ -383,6 +434,13 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type,
 	par.in_len = in_len;
 	par.out_len = out_len;
 	par.is_null = NULL;
+
+	/* this function corrects types according to size. 
+	 * This is happened due to SQL_C_DEFAULT ODBC type
+	 * and due to tnt sql layer do not checks sizes for
+	 * integral types.
+	 */
+	recalculate_types(&par);
 
 	int error = 0;
 	par.error = &error;
@@ -535,11 +593,10 @@ num_cols(SQLHSTMT stmth, SQLSMALLINT *ncols)
 			       "Function sequence error", "SQLNumResultCols");
 		return SQL_ERROR;
 	}
-	if (!stmt->tnt_statement->field_names) {
-		*ncols = 0;
-	} else {
-		*ncols = tnt_number_of_cols(stmt->tnt_statement);
-	}
+
+	*ncols = tnt_number_of_cols(stmt->tnt_statement);
+	
+	LOG_INFO(stmt, "SQLNumResultCols(OK) %d columns\n", (int) *ncols);
 	return SQL_SUCCESS;
 }
 

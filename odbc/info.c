@@ -494,12 +494,19 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax_, SQ
 }
 
 #define NLEN 128
+#define setlen(s,l) do{ s = (s == NULL)?"":s; \
+				l = (l == SQL_NTS)?(SQLSMALLINT)strlen((char*)s):l;} while(0)
 
 static char*
 print_info_tables(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	SQLSMALLINT schemlen, SQLCHAR * table, SQLSMALLINT tablelen,
 	SQLCHAR * tabletype, SQLSMALLINT tabletypelen)
 {
+	setlen(cat, catlen);
+	setlen(schema, schemlen);
+	setlen(table, tablelen);
+	setlen(tabletype, tabletypelen);
+
 	char frm[NLEN];
 	snprintf(frm, NLEN, "SQLTables(cat='%%.%hds', schema='%%.%hds', "
 		 "table='%%.%hds', tabletype='%%.%hds')",(short) (catlen == SQL_NTS? (short)strlen((char*)cat): catlen),
@@ -515,9 +522,11 @@ static char*
 makez(char *dst, size_t dstlen, const char* src, SQLSMALLINT srclen)
 {
 	/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	 *!! HERE SHOULD BE QUOTING TEST!!!!!!
+	 *!! HERE SHOULD BE QUOTING CODE!!!!!!
 	 *!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	 */
+	if (src == NULL)
+		src = "";
 	if (srclen == SQL_NTS)
 		srclen = (SQLSMALLINT)strlen(src);
 	if (dstlen < (size_t)(srclen + 1))
@@ -559,12 +568,18 @@ info_tables(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	return SQL_ERROR;
 }
 
+
 static char*
 print_info_columns(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 		   SQLSMALLINT schemlen, SQLCHAR *table, SQLSMALLINT tablelen,
 		   SQLCHAR *col, SQLSMALLINT collen)
 {
 	char frm[NLEN];
+	setlen(cat, catlen);
+	setlen(schema, schemlen);
+	setlen(table, tablelen);
+	setlen(col, collen);
+
 	snprintf(frm, 100, "SQLColumns(cat='%%.%hds', schema='%%.%hds', "
 		"table='%%.%hds', column='%%.%hds')", catlen, schemlen,
 		 tablelen, collen);
@@ -603,7 +618,7 @@ coltype2odbc(const char * tnt_type, size_t len)
 				      "float", "double", "string",
 				      "char", "varchar", "binary",
 				      NULL };
-	static int types[] = {SQL_BIGINT, SQL_VARCHAR, SQL_REAL,
+	static int types[] = {SQL_INTEGER, SQL_VARCHAR, SQL_REAL,
 			      SQL_REAL, SQL_DOUBLE, SQL_VARCHAR,
 			      SQL_CHAR, SQL_VARCHAR, SQL_BINARY,
 			      0};
@@ -678,7 +693,8 @@ tnt_fake_setup_resultset(odbc_stmt *stmt, int ncols)
 		return FAIL;
 	memset(tnt->fake_resultset, 0, sizeof(struct fake_resultset));
 	tnt->ncols = tnt->fake_resultset->ncols = ncols;
-	tnt->fake_resultset->names = (char **) malloc(sizeof(char* ) * ncols);
+	tnt->field_names = tnt->fake_resultset->names = 
+						(char **) malloc(sizeof(char* ) * ncols);
 	if (!tnt->fake_resultset->names)
 		return FAIL;
 	memset(tnt->fake_resultset->names, 0, sizeof(char *) * ncols);
@@ -731,18 +747,25 @@ column_size(int tp)
 	case SQL_BIT:
 		return 1;
 	case SQL_TINYINT:
-		return 3;
+		return 4;
 	case SQL_SMALLINT:
-		return 5;
+		return 6;
 	case SQL_INTEGER:
 		return 10;
 	case SQL_BIGINT:
 		return 19;
 	case SQL_REAL:
-		return 7;
+		return 25;
 	case SQL_DOUBLE:
+		return 54;
 	case SQL_FLOAT:
-		return 15;
+		return 25;
+	case SQL_VARCHAR:
+		return 255;
+	case SQL_CHAR:
+		return 255;
+	case SQL_BINARY:
+		return 255;
 	default:
 		return -1;
 	}
@@ -760,16 +783,22 @@ column_dec_size(int tp)
 	case SQL_NUMERIC:
 		return 10;
 	case SQL_BIT:
+		return 1;
 	case SQL_TINYINT:
+		return 3;
 	case SQL_SMALLINT:
+		return 5;
 	case SQL_INTEGER:
 	case SQL_BIGINT:
+		return 9;
 	case SQL_REAL:
+		return 23;
 	case SQL_DOUBLE:
+		return 53;
 	case SQL_FLOAT:
-		return 0;
+		return 24;
 	default:
-		return -1;
+		return 0;
 	}
 }
 
@@ -916,10 +945,6 @@ add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def 
 
 	tnt_fake_set_column_int(row, 7, SQL_PC_NOT_PSEUDO);
 
-	if (col) {
-		fprintf (stderr, "col name: %s, is null: %d, type: %d, is pk: %d\n",
-			 col->name, col->is_nullable, col->type, col->is_pk);
-	}
 	return OK;
 }
 
@@ -978,11 +1003,9 @@ add_fake_column_row(odbc_stmt *stmt, struct column_def *col, struct column_def *
 	/* BUFFER_LENGTH */
 	tnt_fake_set_column_int(row, 7, column_buffer_size(col->type));
 	/* DECIMAL_DIGITS */
-	tnt_fake_set_column_int(row, 8, column_dec_size(col->type));
-	if (row[8].v.i == -1)
-		tnt_fake_set_column_null(row, 8);
+	tnt_fake_set_column_int(row, 8, 10 /*column_dec_size(col->type) */);
 	/* NUM_PREC_RADIX */
-	tnt_fake_set_column_int(row, 9, 2);
+	tnt_fake_set_column_int(row, 9, 0);
 	/* NULLABLE */
 	tnt_fake_set_column_int(row, 10, col->is_nullable? SQL_NULLABLE: SQL_NO_NULLS);
 	/* COLUMN_DEF */
@@ -990,16 +1013,12 @@ add_fake_column_row(odbc_stmt *stmt, struct column_def *col, struct column_def *
 	/* SQL_DATETIME_SUB */
 	tnt_fake_set_column_null(row, 14);
 	/* CHAR_OCTET_LENGTH */
-	tnt_fake_set_column_null(row, 15);
+	tnt_fake_set_column_int(row, 15, 536870912);
 	/* ORDINAL_POSITION */
 	tnt_fake_set_column_int(row, 16, col->id + 1);
 	/* IS_NULLABLE */
 	tnt_fake_set_column_str(row, 17, col->is_nullable? strdup("YES"):strdup("NO"));
 
-	if (col) {
-		fprintf (stderr, "col name: %s, is null: %d, type: %d, is pk: %d\n",
-			 col->name, col->is_nullable, col->type, col->is_pk);
-	}
 	return OK;
 }
 
@@ -1154,12 +1173,88 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	stmt->state = EXECUTED;
 	status = SQL_SUCCESS;
 ret:
+	LOG_INFO(stmt, "SQLColumns()=%d\n", (int)status);
 	free_columns_info(col_p);
 	free_columns_info(col_tp);
 	return status;
 }
 
+SQLRETURN 
+statistics(SQLHSTMT stmth, SQLCHAR *cat,
+	SQLSMALLINT catlen, SQLCHAR *schema,
+	SQLSMALLINT schemalen, SQLCHAR *table,
+	SQLSMALLINT tablelen, SQLUSMALLINT uniq,
+	SQLUSMALLINT res)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+	if (!stmt)
+		return SQL_INVALID_HANDLE;
 
+	/* Since Tarantool do not have catalog and scheme just ignoring these. */
+	char tname[NLEN];
+	char q[2 * NLEN];
+	char *tbl = makez(tname, sizeof(tname), (char*)table, tablelen);
+
+
+
+	/* This is a hack until we would have real metadata tables with real
+	* types. For now one can get real types from user created table 'table_types'.
+	* If this select fails just ignore it. So it will work when Tarantool get types
+	* and sombody just removed that table.
+	*/
+
+	snprintf(q, sizeof(q), "pragma index_list(%s)", tbl);
+	struct column_def ** col_tp = NULL;
+	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
+		stmt_execute(stmth) == SQL_SUCCESS) {
+
+		col_tp = read_columns_rows(stmt);
+
+	}
+	free_stmt(stmth, SQL_CLOSE);
+
+	snprintf(q, sizeof(q), "pragma table_info(%s)", tbl);
+
+	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) != SQL_SUCCESS ||
+		stmt_execute(stmth) != SQL_SUCCESS) {
+		free_columns_info(col_tp);
+		return SQL_ERROR;
+	}
+
+
+	SQLRETURN status;
+	struct column_def ** col = read_columns_rows(stmt);
+	struct column_def ** col_p = col;
+	tnt_stmt_close_cursor(stmt->tnt_statement);
+
+	if (tnt_fake_setup_resultset(stmt, COLINFO_NCOLS) != OK) {
+		set_stmt_error(stmt, ODBC_HY013_ERROR, "Memory management error",
+			"SQLSpecialColumns");
+		status = SQL_ERROR;
+		goto ret;
+	}
+	if (itype == SQL_BEST_ROWID)
+		while (*col) {
+			if ((*col)->is_pk && (nullable == SQL_NULLABLE
+				|| (nullable == SQL_NO_NULLS && !(*col)->is_nullable)))
+				if (add_fake_colinfo_row(stmt, *col, col_tp) != OK) {
+					set_stmt_error(stmt, ODBC_HY013_ERROR,
+						"Memory management error",
+						"SQLSpecialColumns");
+					status = SQL_ERROR;
+					goto ret;
+				}
+			col++;
+		}
+	stmt->state = EXECUTED;
+	status = SQL_SUCCESS;
+ret:
+	free_columns_info(col_p);
+	free_columns_info(col_tp);
+	return status;
+	
+	return SQL_ERROR;
+}
 
 /* Defines for SQLGetFunctions
 

@@ -416,8 +416,6 @@ bind2object(tnt_stmt_t* stmt)
 				goto error;
 			break;
 
-
-		case TNTC_SINT:
 		case TNTC_INT: {
 			int *v = (int *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
@@ -431,8 +429,19 @@ bind2object(tnt_stmt_t* stmt)
 				goto error;
 			break;
 		}
+		case TNTC_TINY: {
+			signed char *v = (signed char *)stmt->ibind[npar - i - 1].buffer;
+			if (tnt_object_add_int(obj, *v) == FAIL)
+				goto error;
+			break;
+		}
 
-		case TNTC_SSHORT:
+		case TNTC_UTINY: {
+			unsigned char *v = (unsigned char *)stmt->ibind[npar - i - 1].buffer;
+			if (tnt_object_add_int(obj, *v) == FAIL)
+				goto error;
+			break;
+		}
 		case TNTC_SHORT: {
 			short *v = (short *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
@@ -447,7 +456,6 @@ bind2object(tnt_stmt_t* stmt)
 			break;
 		}
 
-		case TNTC_SLONG:
 		case TNTC_LONG: {
 			long *v = (long *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
@@ -462,8 +470,6 @@ bind2object(tnt_stmt_t* stmt)
 			break;
 		}
 
-
-		case TNTC_SBIGINT:
 		case TNTC_BIGINT: {
 			int64_t *v = (int64_t *)stmt->ibind[npar-i-1].buffer;
 			if (tnt_object_add_int(obj,*v) == FAIL)
@@ -669,6 +675,12 @@ double2float(double v,int *e)
 	return (float)v;
 }
 
+static void
+set_size(tnt_size_t *p, size_t s)
+{
+	if (p)
+		*p = (tnt_size_t)s;
+}
 
 void
 store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
@@ -683,59 +695,80 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 	if (obind->error)
 		*obind->error = 0;
 
-	if (obind->buffer == NULL) {
+	if (obind->buffer == NULL || obind->type == MP_NIL)
 		return;
-	}
 
 	switch (stmt->row[i].type) {
 	case MP_INT:
 	case MP_UINT:
 		if (obind->type == TNTC_ULONG) {
 			unsigned long *v = obind->buffer;
-			*v = (unsigned long) stmt->row[i].v.u;
+			*v = (unsigned long)stmt->row[i].v.u;
 			if (obind->error && (stmt->row[i].v.u > ULONG_MAX))
 				*obind->error = TRUNCATE;
-		} else if (obind->type == TNTC_LONG || obind->type == TNTC_SLONG) {
+			set_size(obind->out_len, sizeof(unsigned long));
+		} else if (obind->type == TNTC_UTINY) {
+			unsigned char *v = obind->buffer;
+			*v = (unsigned char)stmt->row[i].v.u;
+			if (obind->error && (stmt->row[i].v.u > UCHAR_MAX))
+				*obind->error = TRUNCATE;
+			set_size(obind->out_len, sizeof(unsigned char));
+		} else if (obind->type == TNTC_TINY) {
+			signed char *v = obind->buffer;
+			*v = (signed char)stmt->row[i].v.i;
+			if (obind->error && (stmt->row[i].v.i > SCHAR_MAX))
+				*obind->error = TRUNCATE;
+			set_size(obind->out_len, sizeof(signed char));
+		} else if (obind->type == TNTC_LONG) {
 			long *v = obind->buffer;
 			*v = (long) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>LONG_MAX || stmt->row[i].v.i<LONG_MIN))
 				*obind->error = TRUNCATE;
+			set_size(obind->out_len, sizeof(long));
 		} else if (obind->type == TNTC_USHORT) {
 			unsigned short *v = obind->buffer;
 			*v = (unsigned short) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>USHRT_MAX))
 				*obind->error = TRUNCATE;
-		} else if (obind->type == TNTC_SHORT || obind->type == TNTC_SSHORT) {
+			set_size(obind->out_len, sizeof(unsigned short));
+		} else if (obind->type == TNTC_SHORT) {
 			short *v = obind->buffer;
 			*v = (short) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>SHRT_MAX || stmt->row[i].v.i<SHRT_MIN))
 				*obind->error = TRUNCATE;
+			set_size(obind->out_len, sizeof(short));
 		} else if (obind->type == TNTC_UINT)  {
 			unsigned int *v = obind->buffer;
 			*v = (unsigned int) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>UINT_MAX))
 				*obind->error = TRUNCATE;
-		} else if (obind->type == TNTC_INT || obind->type == TNTC_SINT) {
+			set_size(obind->out_len, sizeof(unsigned int));
+		} else if (obind->type == TNTC_INT) {
 			int *v = obind->buffer;
 			*v = (int) stmt->row[i].v.i;
 			if (obind->error && (stmt->row[i].v.i>INT_MAX || stmt->row[i].v.i<INT_MIN))
 				*obind->error = TRUNCATE;
+			set_size(obind->out_len, sizeof(int));
 		}
-		else if (obind->type == TNTC_BIGINT || obind->type == TNTC_SBIGINT) {
+		else if (obind->type == TNTC_BIGINT) {
 			/* TNTC_BIGINT ~~ MP_INT */
 			int64_t *v = obind->buffer;
 			*v = stmt->row[i].v.i;
+			set_size(obind->out_len, sizeof(int64_t));
 		} else if (obind->type == TNTC_UBIGINT) {
 			uint64_t *v = obind->buffer;
 			*v = stmt->row[i].v.u;
+			set_size(obind->out_len, sizeof(uint64_t));
 		} else if (obind->type == MP_DOUBLE) {
 			double *v = obind->buffer;
 			*v = (double)stmt->row[i].v.i;
+			set_size(obind->out_len, sizeof(double));
 		} else if (obind->type == MP_FLOAT) {
 			float *v = obind->buffer;
 			*v = (float)stmt->row[i].v.i;
 			if (obind->error)
 				*(obind->error) = 1;
+			set_size(obind->out_len, sizeof(float));
 		} else if (obind->type == MP_STR) {
 			int wr=snprintf(obind->buffer,obind->in_len,"%" PRId64 ,stmt->row[i].v.i);
 			if (obind->out_len)
@@ -755,47 +788,69 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			*v = (unsigned long) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>ULONG_MAX))
 				*obind->error = TRUNCATE;
-		} else if (obind->type == TNTC_LONG || obind->type == TNTC_SLONG) {
+			set_size(obind->out_len, sizeof(unsigned long));
+		} else if (obind->type == TNTC_LONG) {
 			long *v = obind->buffer;
 			*v = (long) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>LONG_MAX || stmt->row[i].v.d<LONG_MIN))
 				*obind->error = TRUNCATE;
+			set_size(obind->out_len, sizeof(long));
+		} else if (obind->type = TNTC_UTINY) {
+			unsigned char *v = obind->buffer;
+			*v = (unsigned char)stmt->row[i].v.d;
+			if (obind->error && (stmt->row[i].v.d > UCHAR_MAX))
+				*obind->error = TRUNCATE;
+			set_size(obind->out_len, sizeof(unsigned char));
+		} else if (obind->type == TNTC_TINY) {
+			signed char *v = obind->buffer;
+			*v = (signed char)stmt->row[i].v.d;
+			if (obind->error && (stmt->row[i].v.d > SCHAR_MAX))
+				*obind->error = TRUNCATE;
+			set_size(obind->out_len, sizeof(signed char));
 		} else if (obind->type == TNTC_USHORT) {
 			unsigned short *v = obind->buffer;
 			*v = (unsigned short) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>USHRT_MAX))
 				*obind->error = TRUNCATE;
-		} else if (obind->type == TNTC_SHORT || obind->type == TNTC_SSHORT) {
+			set_size(obind->out_len, sizeof(unsigned short));
+		} else if (obind->type == TNTC_SHORT) {
 			short *v = obind->buffer;
 			*v = (short) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>SHRT_MAX || stmt->row[i].v.d<SHRT_MIN))
 				*obind->error = TRUNCATE;
+			set_size(obind->out_len, sizeof(short));
 		} else if (obind->type == TNTC_UINT)  {
 			unsigned int *v = obind->buffer;
 			*v = (unsigned int) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>UINT_MAX))
 				*obind->error = TRUNCATE;
-		} else if (obind->type == TNTC_INT || obind->type == TNTC_SINT) {
+			set_size(obind->out_len, sizeof(unsigned int));
+		} else if (obind->type == TNTC_INT) {
 			int *v = obind->buffer;
 			*v = (int) stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d>INT_MAX || stmt->row[i].v.d<INT_MIN))
 				*obind->error = TRUNCATE;
+			set_size(obind->out_len, sizeof(int));
 		}
-		else if (obind->type == TNTC_BIGINT || obind->type == TNTC_SBIGINT) {
+		else if (obind->type == TNTC_BIGINT) {
 			int64_t *v = obind->buffer;
 			*v = (int64_t)stmt->row[i].v.d;
+			set_size(obind->out_len, sizeof(int64_t));
 		} else if (obind->type == TNTC_UBIGINT) {
 			uint64_t *v = obind->buffer;
 			*v = (uint64_t)stmt->row[i].v.d;
+			set_size(obind->out_len, sizeof(uint64_t));
 		} else if (obind->type == MP_DOUBLE) {
 			double *v = obind->buffer;
 			*v = stmt->row[i].v.d;
+			set_size(obind->out_len, sizeof(double));
 		} else if (obind->type == MP_FLOAT) {
 			float *v = obind->buffer;
 			int e;
 			*v = double2float(stmt->row[i].v.d,&e);
 			if (obind->error && e)
 				*(obind->error) = TRUNCATE;
+			set_size(obind->out_len, sizeof(float));
 		} else if (obind->type == MP_STR) {
 			int wr = snprintf(obind->buffer,obind->in_len,"%lf",stmt->row[i].v.d);
 			if (obind->out_len)
@@ -1006,15 +1061,19 @@ tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col, int nc)
 	case MP_UINT:
 		col->type = col->v.u & (1ULL<<63)?MP_UINT:MP_INT;
 		col->v.u = mp_decode_uint(&stmt->data);
+		col->size = sizeof(col->v.u);
 		break;
 	case MP_INT:
 		col->v.i = mp_decode_int(&stmt->data);
+		col->size = sizeof(col->v.i);
 		break;
 	case MP_DOUBLE:
 		col->v.d = mp_decode_double(&stmt->data);
+		col->size = sizeof(col->v.d);
 		break;
 	case MP_FLOAT:
 		col->v.d = mp_decode_float(&stmt->data);
+		col->size = sizeof(col->v.d);
 		break;
 	case MP_STR:
 		col->v.p = (void *)mp_decode_str(&stmt->data, &sz);
@@ -1029,6 +1088,7 @@ tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col, int nc)
 	case MP_NIL:
 		col->v.p = NULL;
 		mp_decode_nil(&stmt->data);
+		col->size = 0;
 		break;
 	default:
 		return FAIL;

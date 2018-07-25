@@ -444,22 +444,16 @@ SQLPutData(SQLHSTMT StatementHandle, SQLPOINTER DataPtr,
 }
 
 SQLRETURN SQL_API
-SQLStatistics(SQLHSTMT StatementHandle, SQLCHAR * CatalogName,
-	      SQLSMALLINT NameLength1, SQLCHAR * SchemaName,
-	      SQLSMALLINT NameLength2, SQLCHAR * TableName,
+SQLStatistics(SQLHSTMT StatementHandle, SQLCHAR *CatalogName,
+	      SQLSMALLINT NameLength1, SQLCHAR *SchemaName,
+	      SQLSMALLINT NameLength2, SQLCHAR *TableName,
 	      SQLSMALLINT NameLength3, SQLUSMALLINT Unique,
 	      SQLUSMALLINT Reserved)
 {
-	(void) StatementHandle;
-	(void) CatalogName;
-	(void) NameLength1;
-	(void) SchemaName;
-	(void) NameLength2;
-	(void) TableName;
-	(void) NameLength3;
-	(void) Unique;
-	(void) Reserved;
-	return SQL_ERROR;
+	return statistics(StatementHandle, CatalogName,
+		              NameLength1, SchemaName,
+					  NameLength2, TableName,
+					  NameLength3, Unique, Reserved);
 }
 
 SQLRETURN SQL_API
