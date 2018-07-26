@@ -494,7 +494,7 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax_, SQ
 }
 
 #define NLEN 128
-#define setlen(s,l) do{ s = (s == NULL)?"":s; \
+#define setlen(s,l) do{ s = (s == NULL)?(SQLCHAR*)"":s;				\
 				l = (l == SQL_NTS)?(SQLSMALLINT)strlen((char*)s):l;} while(0)
 
 static char*
@@ -709,7 +709,7 @@ tnt_fake_setup_resultset(odbc_stmt *stmt, int ncols)
 		return FAIL;
 	memset(tnt->fake_resultset, 0, sizeof(struct fake_resultset));
 	tnt->ncols = tnt->fake_resultset->ncols = ncols;
-	tnt->field_names = tnt->fake_resultset->names = 
+	tnt->field_names = tnt->fake_resultset->names =
 						(char **) malloc(sizeof(char* ) * ncols);
 	if (!tnt->fake_resultset->names)
 		return FAIL;
@@ -920,7 +920,7 @@ tnt_fake_set_column_bin(struct tnt_coldata *row, int icol, void *p, size_t sz)
 #define INDEX_NCOLS 13
 
 int
-add_fake_index_row(odbc_stmt *stmt, const char *tbl, 
+add_fake_index_row(odbc_stmt *stmt, const char *tbl,
 					struct index_def *col, struct index_def *col_row)
 {
 	tnt_stmt_t *tnt = stmt->tnt_statement;
@@ -963,7 +963,7 @@ add_fake_index_row(odbc_stmt *stmt, const char *tbl,
 	tnt_fake_set_column_null(row, 11);
 	tnt_fake_set_column_null(row, 12);
 
-	
+
 	return OK;
 }
 
@@ -1286,7 +1286,7 @@ read_index_rows(odbc_stmt *stmt)
 		cols[row_count - 1] = (struct index_def*) malloc(sizeof(struct index_def));
 		if (!cols[row_count - 1])
 			goto error;
-	
+
 		cols[row_count - 1]->id = (int)tnt_col_int(stmt->tnt_statement, 0);
 		cols[row_count - 1]->name = strndup(tnt_col_str(stmt->tnt_statement, 1),
 			tnt_col_len(stmt->tnt_statement, 1));
@@ -1362,7 +1362,7 @@ get_index_list(odbc_stmt *stmt, const char *tbl)
 		r = read_index_rows(stmt);
 	}
 	/* Here odbc statement handle is not closed
-	 * since we reuse tnt_statemnet context in fake resultset 
+	 * since we reuse tnt_statemnet context in fake resultset
 	 */
 	return r;
 }
@@ -1372,10 +1372,10 @@ get_index_list(odbc_stmt *stmt, const char *tbl)
 
 SQLRETURN
 statistics(SQLHSTMT stmth, SQLCHAR *cat,
-	SQLSMALLINT catlen, SQLCHAR *schema,
-	SQLSMALLINT schemalen, SQLCHAR *table,
-	SQLSMALLINT tablelen, SQLUSMALLINT uniq,
-	SQLUSMALLINT res)
+	   SQLSMALLINT catlen, SQLCHAR *schema,
+	   SQLSMALLINT schemalen, SQLCHAR *table,
+	   SQLSMALLINT tablelen, SQLUSMALLINT uniq,
+	   SQLUSMALLINT res)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
@@ -1386,6 +1386,12 @@ statistics(SQLHSTMT stmth, SQLCHAR *cat,
 	char *tbl = makez(tname, sizeof(tname), (char*)table, tablelen);
 
 	struct index_def **lst = get_index_list(stmt, tname);
+	struct index_def **lst_p = lst;
+
+	/* In order to setup fake resultset one needs to use existing
+	 * tnt_statement context. So we close tnt_statemnet but do not
+	 * free it.
+	 */
 	tnt_stmt_close_cursor(stmt->tnt_statement);
 	SQLRETURN status = SQL_ERROR;
 	odbc_stmt *sup_stmt = 0;
@@ -1395,9 +1401,9 @@ statistics(SQLHSTMT stmth, SQLCHAR *cat,
 		status = SQL_ERROR;
 		goto ret;
 	}
-	
-	struct index_def **index_info = 0;	
-	if (alloc_stmt(stmt->connect, &sup_stmt) != SQL_SUCCESS)
+
+	struct index_def **index_info = 0;
+	if (alloc_stmt(stmt->connect, (SQLHSTMT *)&sup_stmt) != SQL_SUCCESS)
 		goto ret;
 	while (*lst) {
 			if (uniq == SQL_INDEX_UNIQUE && !(*lst)->is_uniq)
@@ -1427,7 +1433,7 @@ ret:
 		free_stmt(stmt, SQL_CLOSE);
 		free_stmt(sup_stmt, SQL_DROP);
 	}
-	free_indexes_info(lst);
+	free_indexes_info(lst_p);
 	free_indexes_info(index_info);
 	return status;
 }
