@@ -929,13 +929,13 @@ add_fake_index_row(odbc_stmt *stmt, const char *tbl,
 		tnt_fake_add_col_name(tnt, "TABLE_NAME", 2) != OK ||
 		tnt_fake_add_col_name(tnt, "NON_UNIQUE", 3) != OK ||
 		tnt_fake_add_col_name(tnt, "INDEX_QUALIFIER", 4) != OK ||
-		tnt_fake_add_col_name(tnt, "TYPE", 5) != OK ||
-		tnt_fake_add_col_name(tnt, "INDEX_NAME", 6)  ||
-		tnt_fake_add_col_name(tnt, "ORDINAL_POSITION", 7) ||
-		tnt_fake_add_col_name(tnt, "COLUMN_NAME", 8) ||
-		tnt_fake_add_col_name(tnt, "ASC_OR_DESC", 9) ||
-		tnt_fake_add_col_name(tnt, "CARDINALITY", 10) ||
-		tnt_fake_add_col_name(tnt, "PAGES", 11) ||
+		tnt_fake_add_col_name(tnt, "TYPE", 6) != OK ||
+		tnt_fake_add_col_name(tnt, "INDEX_NAME", 5) != OK ||
+		tnt_fake_add_col_name(tnt, "ORDINAL_POSITION", 7) != OK ||
+		tnt_fake_add_col_name(tnt, "COLUMN_NAME", 8) != OK ||
+		tnt_fake_add_col_name(tnt, "ASC_OR_DESC", 9) != OK ||
+		tnt_fake_add_col_name(tnt, "CARDINALITY", 10) != OK ||
+		tnt_fake_add_col_name(tnt, "PAGES", 11) != OK ||
 		tnt_fake_add_col_name(tnt, "FILTER_CONDITION", 12) != OK)
 		return FAIL;
 
@@ -950,13 +950,13 @@ add_fake_index_row(odbc_stmt *stmt, const char *tbl,
 		!tnt_fake_set_column_str(row, 1, strdup("")) ||
 		!tnt_fake_set_column_str(row, 2, strdup(tbl)) ||
 		!tnt_fake_set_column_str(row, 8, strdup(col_row->column_name)) ||
-		!tnt_fake_set_column_str(row, 9, col_row->asc_or_desc == 0 ? strdup("a") :
-											strdup("d")))
+		!tnt_fake_set_column_str(row, 9, col_row->asc_or_desc == 0 ? strdup("A") :
+											strdup("D")))
 		return FAIL;
 
 	tnt_fake_set_column_null(row, 4);
 	tnt_fake_set_column_int(row, 3, (col->is_uniq)?SQL_FALSE:SQL_TRUE);
-	tnt_fake_set_column_int(row, 7, col_row->column_index);
+	tnt_fake_set_column_int(row, 7, col_row->column_index + 1);
 
 	tnt_fake_set_column_int(row, 6, SQL_INDEX_OTHER);
 	tnt_fake_set_column_null(row, 10);
@@ -1430,7 +1430,7 @@ statistics(SQLHSTMT stmth, SQLCHAR *cat,
 	status = SQL_SUCCESS;
 ret:
 	if (sup_stmt) {
-		free_stmt(stmt, SQL_CLOSE);
+		free_stmt(sup_stmt, SQL_CLOSE);
 		free_stmt(sup_stmt, SQL_DROP);
 	}
 	free_indexes_info(lst_p);

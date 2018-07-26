@@ -712,9 +712,9 @@ test_metadata_index(const char *dsn, const char *table)
 				fprintf(stderr, "it %d\n", i++);
 			
 				ret_code = 1;
-				int code = SQLGetData(st.hstmt, 5, SQL_C_CHAR, szTableName, STR_LEN, &cbTableName);
+				int code = SQLGetData(st.hstmt, 6, SQL_C_CHAR, szTableName, STR_LEN, &cbTableName);
 				CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
-				int xcode = SQLGetData(st.hstmt, 8, SQL_C_CHAR, szColumnName, STR_LEN, &cbColumnName);
+				int xcode = SQLGetData(st.hstmt, 9, SQL_C_CHAR, szColumnName, STR_LEN, &cbColumnName);
 				CHECK(xcode, show_error(SQL_HANDLE_STMT, st.hstmt));
 				
 				szColumnName[cbColumnName] = 0;
@@ -722,7 +722,7 @@ test_metadata_index(const char *dsn, const char *table)
 				fprintf(stderr, "index_name: %s, COLUMN %s\n", szTableName, szColumnName);
 				SQLSMALLINT DataType = 0;
 				SQLLEN cbDataType = -1;
-				SQLGetData(st.hstmt, 7, SQL_C_DEFAULT, &DataType, 2, &cbDataType);
+				SQLGetData(st.hstmt, 8, SQL_C_DEFAULT, &DataType, 2, &cbDataType);
 				fprintf(stderr, " col_pos = %hd\n", DataType);
 				fprintf(stderr, " col_pos_len = %lld\n", cbDataType);
 			
