@@ -670,17 +670,16 @@ test_metadata_columns(const char *dsn, const char *table, const char *cols)
 			fprintf(stderr, "xtype val %hd, is_null: %s, type str %s, and name is %s\n",
 				/* (long)*/ DataType, szIsNullable, szTypeName, szColumnName);
 			ret_code=1;
-			int code = SQLGetData(st.hstmt, 3, SQL_C_CHAR, szTableName, STR_LEN, &cbTableName);
+			int code = SQLGetData(st.hstmt, 6, SQL_C_CHAR, szTableName, STR_LEN, &cbTableName);
 			CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
-			int xcode = SQLGetData(st.hstmt, 4, SQL_C_CHAR, szColumnName, STR_LEN, &cbColumnName);
+			int xcode = SQLGetData(st.hstmt, 9, SQL_C_CHAR, szColumnName, STR_LEN, &cbColumnName);
 			CHECK(xcode, show_error(SQL_HANDLE_STMT, st.hstmt));
 			szColumnName[cbColumnName] = 0;
 			szTableName[cbTableName] = 0;
 			fprintf(stderr, "table: %s, name %s\n", szTableName, szColumnName);
-
 			cbDataType = -1;
 			SQLGetData(st.hstmt, 5, SQL_C_DEFAULT, &DataType, 2, &cbDataType);
-			fprintf(stderr, "res size for def = %hd\n", cbDataType);
+			fprintf(stderr, "res size for def = %lld\n", cbDataType);
 			}
 		} else {
 			    show_error(SQL_HANDLE_STMT, st.hstmt);
@@ -691,7 +690,52 @@ test_metadata_columns(const char *dsn, const char *table, const char *cols)
 	return ret_code;
 }
 
+int
+test_metadata_index(const char *dsn, const char *table)
+{
+	int ret_code = 0;
 
+	struct set_handles st;
+	SQLRETURN retcode;
+
+	if (init_dbc(&st, dsn)) {
+		retcode = SQLStatistics(st.hstmt, NULL, 0, NULL, 0, (SQLCHAR*)table, SQL_NTS, 
+								SQL_INDEX_ALL, SQL_QUICK);
+		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
+
+			SQLCHAR szColumnName[STR_LEN];
+			SQLCHAR szTableName[STR_LEN];
+			SQLLEN cbColumnName = 0;
+			SQLLEN cbTableName = 0;
+			int i = 0;
+			while (SQLFetch(st.hstmt) == SQL_SUCCESS) {
+				fprintf(stderr, "it %d\n", i++);
+			
+				ret_code = 1;
+				int code = SQLGetData(st.hstmt, 5, SQL_C_CHAR, szTableName, STR_LEN, &cbTableName);
+				CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
+				int xcode = SQLGetData(st.hstmt, 8, SQL_C_CHAR, szColumnName, STR_LEN, &cbColumnName);
+				CHECK(xcode, show_error(SQL_HANDLE_STMT, st.hstmt));
+				
+				szColumnName[cbColumnName] = 0;
+				szTableName[cbTableName] = 0;
+				fprintf(stderr, "index_name: %s, COLUMN %s\n", szTableName, szColumnName);
+				SQLSMALLINT DataType = 0;
+				SQLLEN cbDataType = -1;
+				SQLGetData(st.hstmt, 7, SQL_C_DEFAULT, &DataType, 2, &cbDataType);
+				fprintf(stderr, " col_pos = %hd\n", DataType);
+				fprintf(stderr, " col_pos_len = %lld\n", cbDataType);
+			
+			}
+		}
+		else {
+			show_error(SQL_HANDLE_STMT, st.hstmt);
+			ret_code = 0;
+		}
+		close_set(&st);
+	}
+	return ret_code;
+}
 
 
 
@@ -851,6 +895,7 @@ main()
 
 	test(test_metadata_table(good_dsn, "dbl"));
 	test(test_metadata_columns(good_dsn, "dbl", NULL));
+	test(test_metadata_index(good_dsn, "dbl"));
 
 	fprintf(stderr, "sizeof(long)=%zu, sizeof(long long)=%zu\n",
 		sizeof(long), sizeof(long long));

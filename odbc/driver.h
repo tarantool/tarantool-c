@@ -151,9 +151,19 @@ struct column_def {
 	int is_pk;
 };
 
+struct index_def {
+	int id;
+	int is_uniq;
+	char *name;
+	int is_pk;
+	int asc_or_desc; /* 0 - asc, 1 - desc*/
+	char *column_name;
+	int column_index;
+};
+
 
 /*
- * These are keys difinitions for ODBC.INI files or registry.
+ * These are keys definitions for ODBC.INI files or registry.
  */
 
 #define KEY_DSN "DSN"

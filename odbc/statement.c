@@ -42,7 +42,7 @@ stmt_prepare(SQLHSTMT    stmth, SQLCHAR     *query, SQLINTEGER  query_len)
 		stmt->state = PREPARED;
 		return SQL_SUCCESS;
 	} else {
-		/* Prepare just copying query string so only memory error could be here. */
+		/* Prepare is just copying query string so only memory error could be here. */
 		set_stmt_error(stmt,ODBC_MEM_ERROR,"Unable to allocate memory", "Prepare");
 		return SQL_ERROR;
 	}

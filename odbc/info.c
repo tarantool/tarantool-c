@@ -632,13 +632,29 @@ coltype2odbc(const char * tnt_type, size_t len)
 void
 free_columns_info(struct column_def ** cols)
 {
-	struct column_def **it = cols;
-	while (it && *it) {
-		free((*it)->name);
-		free((*it)->typename);
-		free(*it++);
+	if (cols) {
+		struct column_def **it = cols;
+		while (it && *it) {
+			free((*it)->name);
+			free((*it)->typename);
+			free(*it++);
+		}
+		free(cols);
 	}
-	free(cols);
+}
+
+void
+free_indexes_info(struct index_def ** cols)
+{
+	if (cols) {
+		struct index_def **it = cols;
+		while (it && *it) {
+			free((*it)->name);
+			free((*it)->column_name);
+			free(*it++);
+		}
+		free(cols);
+	}
 }
 
 struct column_def **
@@ -709,6 +725,9 @@ tnt_fake_setup_resultset(odbc_stmt *stmt, int ncols)
 int
 tnt_fake_add_col_name(tnt_stmt_t *tnt, const char * n, int icol)
 {
+	if (tnt->fake_resultset->names[icol])
+		return OK;
+
 	if ((tnt->fake_resultset->names[icol] = strdup(n)) == NULL)
 		return FAIL;
 
@@ -894,6 +913,58 @@ tnt_fake_set_column_bin(struct tnt_coldata *row, int icol, void *p, size_t sz)
 	row[icol].type  = MP_BIN;
 	row[icol].v.p = p;
 	row[icol].size = sz;
+}
+
+
+
+#define INDEX_NCOLS 13
+
+int
+add_fake_index_row(odbc_stmt *stmt, const char *tbl, 
+					struct index_def *col, struct index_def *col_row)
+{
+	tnt_stmt_t *tnt = stmt->tnt_statement;
+	if (tnt_fake_add_col_name(tnt, "TABLE_CAT", 0) != OK ||
+		tnt_fake_add_col_name(tnt, "TABLE_SCHEM", 1) != OK ||
+		tnt_fake_add_col_name(tnt, "TABLE_NAME", 2) != OK ||
+		tnt_fake_add_col_name(tnt, "NON_UNIQUE", 3) != OK ||
+		tnt_fake_add_col_name(tnt, "INDEX_QUALIFIER", 4) != OK ||
+		tnt_fake_add_col_name(tnt, "TYPE", 5) != OK ||
+		tnt_fake_add_col_name(tnt, "INDEX_NAME", 6)  ||
+		tnt_fake_add_col_name(tnt, "ORDINAL_POSITION", 7) ||
+		tnt_fake_add_col_name(tnt, "COLUMN_NAME", 8) ||
+		tnt_fake_add_col_name(tnt, "ASC_OR_DESC", 9) ||
+		tnt_fake_add_col_name(tnt, "CARDINALITY", 10) ||
+		tnt_fake_add_col_name(tnt, "PAGES", 11) ||
+		tnt_fake_add_col_name(tnt, "FILTER_CONDITION", 12) != OK)
+		return FAIL;
+
+
+	struct tnt_coldata * row = tnt_fake_add_row(tnt);
+
+	if (!row)
+		return FAIL;
+
+	if (!tnt_fake_set_column_str(row, 5, strdup(col->name)) ||
+		!tnt_fake_set_column_str(row, 0, strdup("")) ||
+		!tnt_fake_set_column_str(row, 1, strdup("")) ||
+		!tnt_fake_set_column_str(row, 2, strdup(tbl)) ||
+		!tnt_fake_set_column_str(row, 8, strdup(col_row->column_name)) ||
+		!tnt_fake_set_column_str(row, 9, col_row->asc_or_desc == 0 ? strdup("a") :
+											strdup("d")))
+		return FAIL;
+
+	tnt_fake_set_column_null(row, 4);
+	tnt_fake_set_column_int(row, 3, (col->is_uniq)?SQL_FALSE:SQL_TRUE);
+	tnt_fake_set_column_int(row, 7, col_row->column_index);
+
+	tnt_fake_set_column_int(row, 6, SQL_INDEX_OTHER);
+	tnt_fake_set_column_null(row, 10);
+	tnt_fake_set_column_null(row, 11);
+	tnt_fake_set_column_null(row, 12);
+
+	
+	return OK;
 }
 
 
@@ -1179,7 +1250,127 @@ ret:
 	return status;
 }
 
-SQLRETURN 
+static struct column_def**
+get_columns(odbc_stmt *stmt, const char *tbl)
+{
+	struct column_def **r=0;
+	char q[NLEN];
+	snprintf(q, sizeof(q), "pragma table_info(%s)", tbl);
+	if (stmt_prepare(stmt, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
+		stmt_execute(stmt) == SQL_SUCCESS) {
+		r = read_columns_rows(stmt);
+	}
+	return r;
+}
+
+struct index_def **
+read_index_rows(odbc_stmt *stmt)
+{
+	int capacity = 2;
+	struct index_def ** cols = (struct index_def **)
+		malloc(sizeof(struct index_def *)*capacity);
+	if (!cols)
+		return NULL;
+	int row_count = 0;
+	while (stmt_fetch(stmt) == SQL_SUCCESS) {
+		row_count++;
+		while (capacity < row_count + 1 && capacity < INT_MAX) {
+			capacity *= 2;
+			void *p = realloc(cols, (sizeof(struct index_def *)
+				*capacity));
+			if (!p)
+				goto error;
+			cols = (struct index_def **) p;
+		}
+		cols[row_count] = NULL;
+		cols[row_count - 1] = (struct index_def*) malloc(sizeof(struct index_def));
+		if (!cols[row_count - 1])
+			goto error;
+	
+		cols[row_count - 1]->id = (int)tnt_col_int(stmt->tnt_statement, 0);
+		cols[row_count - 1]->name = strndup(tnt_col_str(stmt->tnt_statement, 1),
+			tnt_col_len(stmt->tnt_statement, 1));
+		cols[row_count - 1]->is_uniq = (int)tnt_col_int(stmt->tnt_statement, 2);
+		cols[row_count - 1]->is_pk = tnt_col_str(stmt->tnt_statement, 3)[0] == 'p'?1:0;
+		cols[row_count - 1]->column_name = NULL;
+		cols[row_count - 1]->asc_or_desc = 0;
+	}
+	return cols;
+error:
+	free_indexes_info(cols);
+	return NULL;
+}
+
+struct index_def **
+read_index_info_rows(odbc_stmt *stmt)
+{
+	int capacity = 2;
+	struct index_def ** cols = (struct index_def **)
+		malloc(sizeof(struct index_def *)*capacity);
+	if (!cols)
+		return NULL;
+	int row_count = 0;
+	while (stmt_fetch(stmt) == SQL_SUCCESS) {
+		row_count++;
+		while (capacity < row_count + 1 && capacity < INT_MAX) {
+			capacity *= 2;
+			void *p = realloc(cols, (sizeof(struct index_def *)
+				*capacity));
+			if (!p)
+				goto error;
+			cols = (struct index_def **) p;
+		}
+		cols[row_count] = NULL;
+		cols[row_count - 1] = (struct index_def*) malloc(sizeof(struct index_def));
+		if (!cols[row_count - 1])
+			goto error;
+		cols[row_count - 1]->name = NULL;
+		cols[row_count - 1]->id = (int)tnt_col_int(stmt->tnt_statement, 0);
+		cols[row_count - 1]->column_name = strndup(tnt_col_str(stmt->tnt_statement, 2),
+			tnt_col_len(stmt->tnt_statement, 2));
+		cols[row_count - 1]->asc_or_desc = (int)tnt_col_int(stmt->tnt_statement, 3);
+		cols[row_count - 1]->column_index = (int)tnt_col_int(stmt->tnt_statement, 1);
+	}
+	return cols;
+error:
+	free_indexes_info(cols);
+	return NULL;
+}
+
+static struct index_def **
+get_index(odbc_stmt *stmt, const char *tbl, const char *nm)
+{
+	struct index_def **r = 0;
+	char q[NLEN];
+	snprintf(q, sizeof(q), "pragma index_xinfo=%s.\"%s\"", tbl, nm);
+	if (stmt_prepare(stmt, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
+		stmt_execute(stmt) == SQL_SUCCESS) {
+		r = read_index_info_rows(stmt);
+	}
+	free_stmt(stmt, SQL_CLOSE);
+	return r;
+}
+
+static struct index_def**
+get_index_list(odbc_stmt *stmt, const char *tbl)
+{
+	struct index_def **r=0;
+	char q[NLEN];
+	snprintf(q, sizeof(q), "pragma index_list(%s)", tbl);
+	if (stmt_prepare(stmt, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
+		stmt_execute(stmt) == SQL_SUCCESS) {
+		r = read_index_rows(stmt);
+	}
+	/* Here odbc statement handle is not closed
+	 * since we reuse tnt_statemnet context in fake resultset 
+	 */
+	return r;
+}
+
+
+
+
+SQLRETURN
 statistics(SQLHSTMT stmth, SQLCHAR *cat,
 	SQLSMALLINT catlen, SQLCHAR *schema,
 	SQLSMALLINT schemalen, SQLCHAR *table,
@@ -1192,68 +1383,53 @@ statistics(SQLHSTMT stmth, SQLCHAR *cat,
 
 	/* Since Tarantool do not have catalog and scheme just ignoring these. */
 	char tname[NLEN];
-	char q[2 * NLEN];
 	char *tbl = makez(tname, sizeof(tname), (char*)table, tablelen);
 
-
-
-	/* This is a hack until we would have real metadata tables with real
-	* types. For now one can get real types from user created table 'table_types'.
-	* If this select fails just ignore it. So it will work when Tarantool get types
-	* and sombody just removed that table.
-	*/
-
-	snprintf(q, sizeof(q), "pragma index_list(%s)", tbl);
-	struct column_def ** col_tp = NULL;
-	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
-		stmt_execute(stmth) == SQL_SUCCESS) {
-
-		col_tp = read_columns_rows(stmt);
-
-	}
-	free_stmt(stmth, SQL_CLOSE);
-
-	snprintf(q, sizeof(q), "pragma table_info(%s)", tbl);
-
-	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) != SQL_SUCCESS ||
-		stmt_execute(stmth) != SQL_SUCCESS) {
-		free_columns_info(col_tp);
-		return SQL_ERROR;
-	}
-
-
-	SQLRETURN status;
-	struct column_def ** col = read_columns_rows(stmt);
-	struct column_def ** col_p = col;
+	struct index_def **lst = get_index_list(stmt, tname);
 	tnt_stmt_close_cursor(stmt->tnt_statement);
-
-	if (tnt_fake_setup_resultset(stmt, COLINFO_NCOLS) != OK) {
+	SQLRETURN status = SQL_ERROR;
+	odbc_stmt *sup_stmt = 0;
+	if (tnt_fake_setup_resultset(stmt, INDEX_NCOLS) != OK) {
 		set_stmt_error(stmt, ODBC_HY013_ERROR, "Memory management error",
-			"SQLSpecialColumns");
+						"SQLStatistics");
 		status = SQL_ERROR;
 		goto ret;
 	}
-	if (itype == SQL_BEST_ROWID)
-		while (*col) {
-			if ((*col)->is_pk && (nullable == SQL_NULLABLE
-				|| (nullable == SQL_NO_NULLS && !(*col)->is_nullable)))
-				if (add_fake_colinfo_row(stmt, *col, col_tp) != OK) {
-					set_stmt_error(stmt, ODBC_HY013_ERROR,
-						"Memory management error",
-						"SQLSpecialColumns");
-					status = SQL_ERROR;
-					goto ret;
+	
+	struct index_def **index_info = 0;	
+	if (alloc_stmt(stmt->connect, &sup_stmt) != SQL_SUCCESS)
+		goto ret;
+	while (*lst) {
+			if (uniq == SQL_INDEX_UNIQUE && !(*lst)->is_uniq)
+				continue;
+			index_info = get_index(sup_stmt, tname, (*lst)->name);
+			if (index_info) {
+				struct index_def **row = index_info;
+				while (*row) {
+					if (add_fake_index_row(stmt, tname, *lst, *row) != OK) {
+						set_stmt_error(stmt, ODBC_HY013_ERROR,
+							"Memory management error",
+							"SQLStatistics");
+						status = SQL_ERROR;
+						goto ret;
+					}
+					row++;
 				}
-			col++;
-		}
+				free_indexes_info(index_info);
+				index_info = 0;
+			}
+		lst++;
+	}
 	stmt->state = EXECUTED;
 	status = SQL_SUCCESS;
 ret:
-	free_columns_info(col_p);
-	free_columns_info(col_tp);
+	if (sup_stmt) {
+		free_stmt(stmt, SQL_CLOSE);
+		free_stmt(sup_stmt, SQL_DROP);
+	}
+	free_indexes_info(lst);
+	free_indexes_info(index_info);
 	return status;
-	
-	return SQL_ERROR;
 }
 
 /* Defines for SQLGetFunctions
