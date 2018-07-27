@@ -795,7 +795,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 			if (obind->error && (stmt->row[i].v.d > LONG_MAX || stmt->row[i].v.d < LONG_MIN))
 				*obind->error = TRUNCATE;
 			set_size(obind->out_len, sizeof(long));
-		} else if (obind->type = TNTC_UTINY) {
+		} else if (obind->type == TNTC_UTINY) {
 			unsigned char *v = obind->buffer;
 			*v = (unsigned char)stmt->row[i].v.d;
 			if (obind->error && (stmt->row[i].v.d > UCHAR_MAX))
