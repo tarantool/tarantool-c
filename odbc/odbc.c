@@ -415,12 +415,9 @@ SQLColumns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 }
 
 SQLRETURN SQL_API
-SQLGetTypeInfo(SQLHSTMT StatementHandle, SQLSMALLINT DataType)
+SQLGetTypeInfo(SQLHSTMT stmth, SQLSMALLINT dtype)
 {
-	(void) StatementHandle;
-	(void) DataType;
-
-	return SQL_ERROR;
+	return type_info(stmth, dtype);
 }
 
 SQLRETURN SQL_API

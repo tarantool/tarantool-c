@@ -597,7 +597,7 @@ odbctype2name(int t)
 	case SQL_REAL:
 		return "REAL";
 	case SQL_DOUBLE:
-		return "DOUBLE PRECISION";
+		return "DOUBLE";
 	case SQL_CHAR:
 		return "CHAR";
 	case SQL_BINARY:
@@ -1435,6 +1435,170 @@ ret:
 	}
 	free_indexes_info(lst_p);
 	free_indexes_info(index_info);
+	return status;
+}
+
+
+int
+make_type_row(struct tnt_coldata * row, const char *typename, int sqltype)
+{
+	char *quote = NULL;
+	int usign = 0;
+	char *par = NULL;
+
+	if (!tnt_fake_set_column_str(row, 0, strdup(typename)) ||
+		!tnt_fake_set_column_str(row, 12, strdup(typename))) {
+		return FAIL;
+	}
+
+	tnt_fake_set_column_int(row, 1, sqltype);
+	tnt_fake_set_column_int(row, 15, sqltype);
+
+	switch (sqltype) {
+	case SQL_CHAR:
+	case SQL_VARCHAR:
+	case SQL_BINARY:
+		usign = -1;
+		quote = "'";
+		par = "length";
+		tnt_fake_set_column_int(row, 2, 32 * 1024);
+		break;
+	case SQL_TINYINT:
+		tnt_fake_set_column_int(row, 2, 3);
+		break;
+	case SQL_SMALLINT:
+		tnt_fake_set_column_int(row, 2, 5);
+		break;
+	case SQL_INTEGER:
+		tnt_fake_set_column_int(row, 2, 9);
+		break;
+	case SQL_FLOAT:
+		tnt_fake_set_column_int(row, 2, 7);
+		break;
+	case SQL_DOUBLE:
+		tnt_fake_set_column_int(row, 2, 15);
+		break;
+	case SQL_BIT:
+		usign = 1;
+		tnt_fake_set_column_int(row, 2, 1);
+		break;
+	default:
+		tnt_fake_set_column_int(row, 2, 1);
+	}
+	if (quote) {
+		if (!tnt_fake_set_column_str(row, 3, strdup(quote))  ||
+			!tnt_fake_set_column_str(row, 4, strdup(quote)))
+			return FAIL;
+	}
+	else {
+		tnt_fake_set_column_null(row, 3);
+		tnt_fake_set_column_null(row, 4);
+	}
+
+	if (par) {
+		if (!tnt_fake_set_column_str(row, 5, strdup(par)))
+			return FAIL;
+	} else {
+		tnt_fake_set_column_null(row, 5);
+	}
+
+	tnt_fake_set_column_int(row, 6, SQL_NULLABLE);
+	tnt_fake_set_column_int(row, 7, SQL_FALSE);
+	tnt_fake_set_column_int(row, 8, SQL_SEARCHABLE);
+	if (usign == -1)
+		tnt_fake_set_column_null(row, 9);
+	else
+		tnt_fake_set_column_int(row, 9, (usign) ? SQL_TRUE : SQL_FALSE);
+
+	tnt_fake_set_column_int(row, 10, SQL_FALSE);
+	tnt_fake_set_column_int(row, 11, SQL_FALSE);
+
+	tnt_fake_set_column_null(row, 13);
+	tnt_fake_set_column_null(row, 14);
+
+	tnt_fake_set_column_null(row, 16);
+	tnt_fake_set_column_int(row, 17, 10);
+	tnt_fake_set_column_null(row, 18);
+	return OK;
+}
+
+
+#define INFO_NCOLS 19
+
+struct tpair {
+	int type;
+	const char *name;
+};
+
+static struct tpair sqlt[] = {
+	{ SQL_CHAR, "char"},
+	{ SQL_VARCHAR, "varchar"},
+	{ SQL_BINARY, "binary"},
+	{SQL_TINYINT, "tinyint"},
+	{SQL_SMALLINT, "smallint"},
+	{SQL_INTEGER, "integer"},
+	{SQL_FLOAT, "float"},
+	{SQL_DOUBLE, "double" },
+	{SQL_BIGINT, "bigint"},
+	{SQL_BIT, "bit"}
+};
+
+
+SQLRETURN 
+type_info(SQLHSTMT stmth, SQLSMALLINT dtype)
+{
+	odbc_stmt *stmt = (odbc_stmt *)stmth;
+	/* init resultset context*/
+	if (stmt_prepare(stmt, "select 1", SQL_NTS) != SQL_SUCCESS)
+		return SQL_ERROR;
+	tnt_stmt_close_cursor(stmt->tnt_statement);
+	SQLRETURN status = SQL_ERROR;
+	if (tnt_fake_setup_resultset(stmt, INFO_NCOLS) != OK) {
+		set_stmt_error(stmt, ODBC_HY013_ERROR, "Memory management error",
+			"SQLGetTypeInfo");
+		status = SQL_ERROR;
+		goto ret;
+	}
+	tnt_stmt_t *tnt = stmt->tnt_statement;
+	if (tnt_fake_add_col_name(tnt, "TYPE_NAME", 0) != OK ||
+		tnt_fake_add_col_name(tnt, "DATA_TYPE", 1) != OK ||
+		tnt_fake_add_col_name(tnt, "COLUMN_SIZE", 2) != OK ||
+		tnt_fake_add_col_name(tnt, "LITERAL_PREFIX", 3) != OK ||
+		tnt_fake_add_col_name(tnt, "LITERAL_SUFFIX", 4) != OK ||
+		tnt_fake_add_col_name(tnt, "CREATE_PARAMS", 5) != OK ||
+		tnt_fake_add_col_name(tnt, "NULLABLE", 6) != OK ||
+		tnt_fake_add_col_name(tnt, "CASE_SENSITIVE", 7) != OK ||
+		tnt_fake_add_col_name(tnt, "SEARCHABLE", 8) != OK ||
+		tnt_fake_add_col_name(tnt, "UNSIGNED_ATTRIBUE", 9) != OK ||
+		tnt_fake_add_col_name(tnt, "FIXED_PREC_SCALE", 10) != OK ||
+		tnt_fake_add_col_name(tnt, "AUTO_UNIQUE_VALUE", 11) != OK ||
+		tnt_fake_add_col_name(tnt, "LOCAL_TYPE_NAME", 12) != OK ||
+		tnt_fake_add_col_name(tnt, "MINIMUM_SCALE", 13) != OK ||
+		tnt_fake_add_col_name(tnt, "MAXIMUM_SCALE", 14) != OK ||
+		tnt_fake_add_col_name(tnt, "SQL_DATA_TYPE", 15) != OK ||
+		tnt_fake_add_col_name(tnt, "SQL_DATETIME_SUB", 16) != OK ||
+		tnt_fake_add_col_name(tnt, "NUM_PREC_RADIX", 17) != OK ||
+		tnt_fake_add_col_name(tnt, "INTERVAL_PRECISION", 18) != OK) {
+		set_stmt_error(stmt, ODBC_HY013_ERROR, "Memory management error",
+			"SQLGetTypeInfo");
+		status = SQL_ERROR;
+		goto ret;
+	}
+
+	for (int i = 0; i < sizeof(sqlt) / sizeof(struct tpair); ++i) {
+		if (dtype == SQL_ALL_TYPES || dtype == sqlt[i].type) {
+			struct tnt_coldata * row = tnt_fake_add_row(tnt);
+			if (!row || make_type_row(row, sqlt[i].name, sqlt[i].type) != OK) {
+				set_stmt_error(stmt, ODBC_HY013_ERROR, "Memory management error",
+					"SQLGetTypeInfo");
+				status = SQL_ERROR;
+				goto ret;
+			}
+		}
+	}
+	stmt->state = EXECUTED;
+	status = SQL_SUCCESS;
+ret:
 	return status;
 }
 

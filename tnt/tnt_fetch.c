@@ -786,13 +786,13 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 		if (obind->type == TNTC_ULONG) {
 			unsigned long *v = obind->buffer;
 			*v = (unsigned long) stmt->row[i].v.d;
-			if (obind->error && (stmt->row[i].v.d>ULONG_MAX))
+			if (obind->error && (stmt->row[i].v.d > ULONG_MAX))
 				*obind->error = TRUNCATE;
 			set_size(obind->out_len, sizeof(unsigned long));
 		} else if (obind->type == TNTC_LONG) {
 			long *v = obind->buffer;
 			*v = (long) stmt->row[i].v.d;
-			if (obind->error && (stmt->row[i].v.d>LONG_MAX || stmt->row[i].v.d<LONG_MIN))
+			if (obind->error && (stmt->row[i].v.d > LONG_MAX || stmt->row[i].v.d < LONG_MIN))
 				*obind->error = TRUNCATE;
 			set_size(obind->out_len, sizeof(long));
 		} else if (obind->type = TNTC_UTINY) {
@@ -810,7 +810,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 		} else if (obind->type == TNTC_USHORT) {
 			unsigned short *v = obind->buffer;
 			*v = (unsigned short) stmt->row[i].v.d;
-			if (obind->error && (stmt->row[i].v.d>USHRT_MAX))
+			if (obind->error && (stmt->row[i].v.d > USHRT_MAX))
 				*obind->error = TRUNCATE;
 			set_size(obind->out_len, sizeof(unsigned short));
 		} else if (obind->type == TNTC_SHORT) {
@@ -852,7 +852,7 @@ store_conv_bind_var(tnt_stmt_t * stmt, int i, tnt_bind_t* obind, int off)
 				*(obind->error) = TRUNCATE;
 			set_size(obind->out_len, sizeof(float));
 		} else if (obind->type == MP_STR) {
-			int wr = snprintf(obind->buffer,obind->in_len,"%lf",stmt->row[i].v.d);
+			int wr = snprintf(obind->buffer,obind->in_len,"%f", stmt->row[i].v.d);
 			if (obind->out_len)
 				*obind->out_len = strlen((char*)obind->buffer);
 			if (obind->error && (wr+1) >= obind->in_len)

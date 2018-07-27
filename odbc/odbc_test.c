@@ -425,6 +425,55 @@ do_fetchgetdata(struct set_handles *st, void *p)
 }
 
 int
+do_fetchgetdata2(struct set_handles *st, void *p)
+{
+	struct fetchbind_par *par_ptr = p;
+	int row_cnt = 0;
+	int matches = 0;
+
+	long *pars = (long*)par_ptr->args;
+
+	while (row_cnt < 100) {
+		int code = SQLFetch(st->hstmt);
+		if (code == SQL_SUCCESS) {
+		
+			SQLCHAR str_val1[BUFSIZ] = "";
+			SQLCHAR str_val2[BUFSIZ] = "";
+			SQLCHAR str_val3[BUFSIZ] = "";
+
+			SQLLEN str_len1;
+			SQLLEN str_len2;
+			SQLLEN str_len3;
+
+			code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val1[0], BUFSIZ, &str_len1);
+			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
+
+			code = SQLGetData(st->hstmt, 2, SQL_C_CHAR, &str_val2[0], BUFSIZ, &str_len2);
+			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
+
+			SQLDOUBLE double_val;
+			code = SQLGetData(st->hstmt, 1, SQL_C_DOUBLE, &double_val, 0, 0);
+			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
+
+			fprintf(stderr, "'%f' '%s' '%s'\n", double_val, str_val1, str_val2);
+			
+			matches++;
+			row_cnt++;
+		}
+		else if (code == SQL_NO_DATA) {
+			fprintf(stderr, "fetched good %d rows matches is %d\n", row_cnt, matches);
+			return matches == par_ptr->cnt;
+		}
+		else {
+			fprintf(stderr, "fetched good %d rows\n", row_cnt);
+			show_error(SQL_HANDLE_STMT, st->hstmt);
+			return 0;
+		}
+	}
+	return 0;
+}
+
+int
 do_fetchgetdata_stream(struct set_handles *st, void *p)
 {
 	struct fetchbind_par *par_ptr = p;
@@ -737,6 +786,51 @@ test_metadata_index(const char *dsn, const char *table)
 	return ret_code;
 }
 
+int
+test_typeinfo(const char *dsn, int type)
+{
+	int ret_code = 0;
+
+	struct set_handles st;
+	SQLRETURN retcode;
+
+	if (init_dbc(&st, dsn)) {
+		retcode = SQLGetTypeInfo(st.hstmt, type);
+		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
+
+			SQLCHAR szColumnName[STR_LEN];
+			SQLCHAR szTableName[STR_LEN];
+			SQLLEN cbColumnName = 0;
+			SQLLEN cbTableName = 0;
+			int i = 0;
+			while (SQLFetch(st.hstmt) == SQL_SUCCESS) {
+				fprintf(stderr, "it %d\n", i++);
+
+				ret_code = 1;
+				int code = SQLGetData(st.hstmt, 1, SQL_C_CHAR, szTableName, STR_LEN, &cbTableName);
+				CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
+				int xcode = SQLGetData(st.hstmt, 13, SQL_C_CHAR, szColumnName, STR_LEN, &cbColumnName);
+				CHECK(xcode, show_error(SQL_HANDLE_STMT, st.hstmt));
+
+				szColumnName[cbColumnName] = 0;
+				szTableName[cbTableName] = 0;
+				fprintf(stderr, "type name: %s, localtype name %s\n", szTableName, szColumnName);
+				SQLSMALLINT DataType = 0;
+				SQLLEN cbDataType = -1;
+				SQLGetData(st.hstmt, 3, SQL_C_DEFAULT, &DataType, 2, &cbDataType);
+				fprintf(stderr, " col_size = %hd\n", DataType);
+				fprintf(stderr, " col_size_len = %lld\n", cbDataType);
+
+			}
+		}
+		else {
+			show_error(SQL_HANDLE_STMT, st.hstmt);
+			ret_code = 0;
+		}
+		close_set(&st);
+	}
+	return ret_code;
+}
 
 
 
@@ -889,13 +983,20 @@ main()
 	par.args = &vals2[0];
 
 
-	test(test_fetch(good_dsn, "select * from dbl order by val",&par, do_fetchgetdata));
+	test(test_fetch(good_dsn, "select * from dbl order by val", &par, do_fetchgetdata));
+	test(test_fetch(good_dsn, "select D, ID from dbl order by val", &par, do_fetchgetdata2));
+
 	par.cnt = 44 ;
+
+
 	test(test_fetch(good_dsn, "select * from dbl where val=6", &par, do_fetchgetdata_stream));
 
 	test(test_metadata_table(good_dsn, "dbl"));
 	test(test_metadata_columns(good_dsn, "dbl", NULL));
 	test(test_metadata_index(good_dsn, "dbl"));
+	test(test_typeinfo(good_dsn, SQL_ALL_TYPES));
+	test(test_typeinfo(good_dsn, SQL_BIGINT));
+	test(test_typeinfo(good_dsn, SQL_LONGVARCHAR));
 
 	fprintf(stderr, "sizeof(long)=%zu, sizeof(long long)=%zu\n",
 		sizeof(long), sizeof(long long));

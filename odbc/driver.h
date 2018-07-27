@@ -359,5 +359,6 @@ SQLRETURN statistics(SQLHSTMT StatementHandle, SQLCHAR *CatalogName,
 	SQLSMALLINT NameLength2, SQLCHAR *TableName,
 	SQLSMALLINT NameLength3, SQLUSMALLINT Unique,
 	SQLUSMALLINT Reserved);
+SQLRETURN type_info(SQLHSTMT stmth, SQLSMALLINT dtype);
 
 #endif
