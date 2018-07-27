@@ -401,7 +401,7 @@ do_fetchgetdata(struct set_handles *st, void *p)
 			code = SQLGetData(st->hstmt, 2, SQL_C_LONG, &long_val, 0, 0);
 			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
 
-			code = SQLGetData(st->hstmt, 3, SQL_C_DOUBLE, &double_val, 0, 0);
+			code = SQLGetData(st->hstmt, 3, SQL_C_DOUBLE, &double_val, sizeof(double_val), 0);
 			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
 
 
@@ -452,7 +452,7 @@ do_fetchgetdata2(struct set_handles *st, void *p)
 			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
 
 			SQLDOUBLE double_val;
-			code = SQLGetData(st->hstmt, 1, SQL_C_DOUBLE, &double_val, 0, 0);
+			code = SQLGetData(st->hstmt, 1, SQL_C_DOUBLE, &double_val, sizeof(double_val), 0);
 			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
 
 			fprintf(stderr, "'%f' '%s' '%s'\n", double_val, str_val1, str_val2);
