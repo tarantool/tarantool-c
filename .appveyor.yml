@@ -41,7 +41,8 @@ before_build:
 
 build:
 # project: c:\projects\cmake-init\build\template.sln
-#  verbosity: minimal
+# verbosity: minimal
+  project: ALL_BUILD.vcxproj
   parallel: false
 only_commits:
   files:
