@@ -30,8 +30,8 @@ init:
 
 before_build:
 - cmd: |-
-    mkdir build%arch%
-    cd build%arch%
+    mkdir build
+    cd build
     cmake --version
     cmake .. -G %generator%
     cmake --config Release .
