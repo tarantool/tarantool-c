@@ -59,7 +59,7 @@ artifacts:
 
 
 deploy:
-  release: tnt_odbc-win$(arch)-v$(appveyor_build_version)
+  release: tnt_odbc-win-$(platform)
   description: 'Tarantool internal win dist'
   provider: GitHub
   auth_token:
