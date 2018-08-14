@@ -12,7 +12,7 @@ platform:
 - x64
 - x86
 environment:
-  arch: Win64
+  xarch: Win64
 matrix:
   fast_finish: true
 
