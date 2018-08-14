@@ -52,6 +52,14 @@ only_commits:
     - source/
     - cmake/
 
+artifacts:
+  - path: '**\*.dll'
+    name: ODBC dll
+
+  - path: '**\*.exe'
+    name: Test binaries
+    type: zip
+
 
 deploy:
   release: tnt_odbc-win$(arch)-v$(appveyor_build_version)
@@ -59,7 +67,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: y0ASjHrs4wZFAURc4N5oVCzdNtw8XPzd2fzGB+py0a5u8o3HenR2hu09zMjuv0H5
-  #artifact: /.*\.dll/            # upload all dlls packages to release assets
+  artifact: '**\*.dll', '**\*.exe'             # upload all dlls packages to release assets
   draft: false
   prerelease: false
   on:
