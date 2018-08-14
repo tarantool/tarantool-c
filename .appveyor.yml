@@ -58,10 +58,10 @@ deploy:
   description: 'Tarantool internal win dist'
   provider: GitHub
   auth_token:
-    secure: d5e27b1cf4e4a9b51d918ec9f1cf59c7c3cd880f # your encrypted token from GitHub
+    secure: y0ASjHrs4wZFAURc4N5oVCzdNtw8XPzd2fzGB+py0a5u8o3HenR2hu09zMjuv0H5
   #artifact: /.*\.dll/            # upload all dlls packages to release assets
   draft: false
   prerelease: false
   on:
     branch: odbc                 # release from master branch only
-    appveyor_repo_tag: true
+    appveyor_repo_tag: false
