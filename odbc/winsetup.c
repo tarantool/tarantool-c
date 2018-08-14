@@ -368,7 +368,7 @@ mod_dsn(HWND hwnd, struct dsn_attr* da)
 
 
 
-BOOL
+BOOL __stdcall
 ConfigDSN(HWND hwnd, WORD rq, LPCTSTR drv, LPCTSTR iattr)
 {
 	struct dsn_attr *attr = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, 
