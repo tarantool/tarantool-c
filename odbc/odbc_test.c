@@ -114,7 +114,6 @@ test_connect(const char *dsn) {
 	struct set_handles st;
 	SQLRETURN retcode;
 
-	SQLSMALLINT * OutConnStrLen = (SQLSMALLINT *)malloc(BUFSZ);
 
 	if (init_dbc(&st,NULL)) {
 		// Connect to data source
@@ -265,7 +264,6 @@ test_inbind(const char *dsn, const char *sql,int p1,const char *p2) {
 		// Process data
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 			retcode = SQLExecute(st.hstmt);
-			SQLLEN ar = -1;
 			if (retcode == SQL_SUCCESS) {
 				ret_code = 1;
 			} else {
@@ -431,19 +429,16 @@ do_fetchgetdata2(struct set_handles *st, void *p)
 	int row_cnt = 0;
 	int matches = 0;
 
-	long *pars = (long*)par_ptr->args;
-
 	while (row_cnt < 100) {
 		int code = SQLFetch(st->hstmt);
 		if (code == SQL_SUCCESS) {
-		
+
 			SQLCHAR str_val1[BUFSIZ] = "";
 			SQLCHAR str_val2[BUFSIZ] = "";
-			SQLCHAR str_val3[BUFSIZ] = "";
 
 			SQLLEN str_len1;
 			SQLLEN str_len2;
-			SQLLEN str_len3;
+
 
 			code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val1[0], BUFSIZ, &str_len1);
 			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
@@ -456,7 +451,7 @@ do_fetchgetdata2(struct set_handles *st, void *p)
 			CHECK(code, show_error(SQL_HANDLE_STMT, st->hstmt));
 
 			fprintf(stderr, "'%f' '%s' '%s'\n", double_val, str_val1, str_val2);
-			
+
 			matches++;
 			row_cnt++;
 		}
@@ -608,7 +603,6 @@ test_metadata_table(const char *dsn, const char *table)
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 			int i=0;
 			while(SQLFetch(st.hstmt) == SQL_SUCCESS) {
-			SQLBIGINT long_val = 0;
 			SQLSMALLINT short_val = 0;
 			SQLCHAR str_val[BUFSIZ] = "";
 			SQLCHAR str_typ[BUFSIZ] = "";
@@ -641,6 +635,7 @@ test_metadata_table(const char *dsn, const char *table)
 int
 test_metadata_columns(const char *dsn, const char *table, const char *cols)
 {
+	(void) cols;
 	int ret_code = 0;
 
 	struct set_handles st;
@@ -728,7 +723,7 @@ test_metadata_columns(const char *dsn, const char *table, const char *cols)
 			fprintf(stderr, "table: %s, name %s\n", szTableName, szColumnName);
 			cbDataType = -1;
 			SQLGetData(st.hstmt, 5, SQL_C_DEFAULT, &DataType, 2, &cbDataType);
-			fprintf(stderr, "res size for def = %lld\n", cbDataType);
+			fprintf(stderr, "res size for def = %lld\n", (long long)cbDataType);
 			}
 		} else {
 			    show_error(SQL_HANDLE_STMT, st.hstmt);
@@ -748,7 +743,7 @@ test_metadata_index(const char *dsn, const char *table)
 	SQLRETURN retcode;
 
 	if (init_dbc(&st, dsn)) {
-		retcode = SQLStatistics(st.hstmt, NULL, 0, NULL, 0, (SQLCHAR*)table, SQL_NTS, 
+		retcode = SQLStatistics(st.hstmt, NULL, 0, NULL, 0, (SQLCHAR*)table, SQL_NTS,
 								SQL_INDEX_ALL, SQL_QUICK);
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 
@@ -759,13 +754,13 @@ test_metadata_index(const char *dsn, const char *table)
 			int i = 0;
 			while (SQLFetch(st.hstmt) == SQL_SUCCESS) {
 				fprintf(stderr, "it %d\n", i++);
-			
+
 				ret_code = 1;
 				int code = SQLGetData(st.hstmt, 6, SQL_C_CHAR, szTableName, STR_LEN, &cbTableName);
 				CHECK(code, show_error(SQL_HANDLE_STMT, st.hstmt));
 				int xcode = SQLGetData(st.hstmt, 9, SQL_C_CHAR, szColumnName, STR_LEN, &cbColumnName);
 				CHECK(xcode, show_error(SQL_HANDLE_STMT, st.hstmt));
-				
+
 				szColumnName[cbColumnName] = 0;
 				szTableName[cbTableName] = 0;
 				fprintf(stderr, "index_name: %s, COLUMN %s\n", szTableName, szColumnName);
@@ -773,8 +768,8 @@ test_metadata_index(const char *dsn, const char *table)
 				SQLLEN cbDataType = -1;
 				SQLGetData(st.hstmt, 8, SQL_C_DEFAULT, &DataType, 2, &cbDataType);
 				fprintf(stderr, " col_pos = %hd\n", DataType);
-				fprintf(stderr, " col_pos_len = %lld\n", cbDataType);
-			
+				fprintf(stderr, " col_pos_len = %lld\n", (long long) cbDataType);
+
 			}
 		}
 		else {
@@ -819,7 +814,7 @@ test_typeinfo(const char *dsn, int type)
 				SQLLEN cbDataType = -1;
 				SQLGetData(st.hstmt, 3, SQL_C_DEFAULT, &DataType, 2, &cbDataType);
 				fprintf(stderr, " col_size = %hd\n", DataType);
-				fprintf(stderr, " col_size_len = %lld\n", cbDataType);
+				fprintf(stderr, " col_size_len = %lld\n", (long long)cbDataType);
 
 			}
 		}

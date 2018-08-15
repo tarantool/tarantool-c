@@ -331,14 +331,14 @@ stmt_fetch_scroll(SQLHSTMT stmth, SQLSMALLINT orientation, SQLLEN offset)
 }
 
 
-void 
+void
 recalculate_types(tnt_bind_t *p)
 {
-	
+
 	switch (p->type) {
 	case MP_INT:
 	case MP_UINT:
-		if (p->in_len < sizeof(int64_t)) {
+		if ((size_t)p->in_len < sizeof(int64_t)) {
 			switch (p->in_len) {
 				case sizeof(int32_t):
 					p->type = (p->type == MP_UINT) ? TNTC_UINT : TNTC_INT;
@@ -358,7 +358,7 @@ recalculate_types(tnt_bind_t *p)
 			p->type = MP_DOUBLE;
 		if (p->in_len == sizeof(float))
 			p->type = MP_FLOAT;
-		else if (p->in_len < sizeof(float)) {
+		else if ((size_t)p->in_len < sizeof(float)) {
 			p->type = MP_NIL;
 			p->in_len = 0;
 		}
@@ -435,7 +435,7 @@ get_data(SQLHSTMT stmth, SQLUSMALLINT num, SQLSMALLINT type,
 	par.out_len = out_len;
 	par.is_null = NULL;
 
-	/* this function corrects types according to size. 
+	/* this function corrects types according to size.
 	 * This is happened due to SQL_C_DEFAULT ODBC type
 	 * and due to tnt sql layer do not checks sizes for
 	 * integral types.
@@ -595,7 +595,7 @@ num_cols(SQLHSTMT stmth, SQLSMALLINT *ncols)
 	}
 
 	*ncols = tnt_number_of_cols(stmt->tnt_statement);
-	
+
 	LOG_INFO(stmt, "SQLNumResultCols(OK) %d columns\n", (int) *ncols);
 	return SQL_SUCCESS;
 }
@@ -785,6 +785,7 @@ param_info(SQLHSTMT stmth, SQLUSMALLINT pnum, SQLSMALLINT *type_ptr,
 	(void) type_ptr;
 	(void) out_len;
 	(void) out_dnum;
+	(void) is_null;
 
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
@@ -802,6 +803,8 @@ SQLRETURN
 stmt_set_attr(SQLHSTMT stmth, SQLINTEGER att, SQLPOINTER val,
 	SQLINTEGER vallen)
 {
+	(void) val;
+	(void) vallen;
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;

@@ -248,7 +248,6 @@ static enum tnt_error tnt_io_xbufmax(struct tnt_stream_net *s, int opt, int min)
 }
 
 static enum tnt_error tnt_io_setopts(struct tnt_stream_net *s) {
-	int opt = 1;
 
 	tnt_io_xbufmax(s, SO_SNDBUF, s->opt.send_buf);
 	tnt_io_xbufmax(s, SO_RCVBUF, s->opt.recv_buf);
@@ -443,7 +442,7 @@ tnt_io_sendv(struct tnt_stream_net *s, struct iovec *iov, int count)
 	int i;
 	for (i = 0 ; i < count ; i++)
 		size += (ssize_t)iov[i].iov_len;
-	if (size > s->sbuf.size) {
+	if (size > (ssize_t)s->sbuf.size) {
 		s->error = TNT_EBIG;
 		return -1;
 	}

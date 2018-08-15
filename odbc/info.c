@@ -1250,19 +1250,6 @@ ret:
 	return status;
 }
 
-static struct column_def**
-get_columns(odbc_stmt *stmt, const char *tbl)
-{
-	struct column_def **r=0;
-	char q[NLEN];
-	snprintf(q, sizeof(q), "pragma table_info(%s)", tbl);
-	if (stmt_prepare(stmt, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
-		stmt_execute(stmt) == SQL_SUCCESS) {
-		r = read_columns_rows(stmt);
-	}
-	return r;
-}
-
 struct index_def **
 read_index_rows(odbc_stmt *stmt)
 {
@@ -1377,15 +1364,21 @@ statistics(SQLHSTMT stmth, SQLCHAR *cat,
 	   SQLSMALLINT tablelen, SQLUSMALLINT uniq,
 	   SQLUSMALLINT res)
 {
+	(void) cat;
+	(void) catlen;
+	(void) schema;
+	(void) schemalen;
+	(void) res;
+
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	if (!stmt)
 		return SQL_INVALID_HANDLE;
 
 	/* Since Tarantool do not have catalog and scheme just ignoring these. */
 	char tname[NLEN];
-	char *tbl = makez(tname, sizeof(tname), (char*)table, tablelen);
 
-	struct index_def **lst = get_index_list(stmt, tname);
+	struct index_def **lst = get_index_list(stmt, makez(tname, sizeof(tname),
+							    (char*)table, tablelen));
 	struct index_def **lst_p = lst;
 
 	/* In order to setup fake resultset one needs to use existing
@@ -1395,6 +1388,7 @@ statistics(SQLHSTMT stmth, SQLCHAR *cat,
 	tnt_stmt_close_cursor(stmt->tnt_statement);
 	SQLRETURN status = SQL_ERROR;
 	odbc_stmt *sup_stmt = 0;
+	struct index_def **index_info = 0;
 	if (tnt_fake_setup_resultset(stmt, INDEX_NCOLS) != OK) {
 		set_stmt_error(stmt, ODBC_HY013_ERROR, "Memory management error",
 						"SQLStatistics");
@@ -1402,7 +1396,6 @@ statistics(SQLHSTMT stmth, SQLCHAR *cat,
 		goto ret;
 	}
 
-	struct index_def **index_info = 0;
 	if (alloc_stmt(stmt->connect, (SQLHSTMT *)&sup_stmt) != SQL_SUCCESS)
 		goto ret;
 	while (*lst) {
@@ -1544,12 +1537,12 @@ static struct tpair sqlt[] = {
 };
 
 
-SQLRETURN 
+SQLRETURN
 type_info(SQLHSTMT stmth, SQLSMALLINT dtype)
 {
 	odbc_stmt *stmt = (odbc_stmt *)stmth;
 	/* init resultset context*/
-	if (stmt_prepare(stmt, "select 1", SQL_NTS) != SQL_SUCCESS)
+	if (stmt_prepare(stmt, (SQLCHAR*)"select 1", SQL_NTS) != SQL_SUCCESS)
 		return SQL_ERROR;
 	tnt_stmt_close_cursor(stmt->tnt_statement);
 	SQLRETURN status = SQL_ERROR;
@@ -1585,7 +1578,7 @@ type_info(SQLHSTMT stmth, SQLSMALLINT dtype)
 		goto ret;
 	}
 
-	for (int i = 0; i < sizeof(sqlt) / sizeof(struct tpair); ++i) {
+	for (int i = 0; i < (int)(sizeof(sqlt) / sizeof(struct tpair)); ++i) {
 		if (dtype == SQL_ALL_TYPES || dtype == sqlt[i].type) {
 			struct tnt_coldata * row = tnt_fake_add_row(tnt);
 			if (!row || make_type_row(row, sqlt[i].name, sqlt[i].type) != OK) {

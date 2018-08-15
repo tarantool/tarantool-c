@@ -38,7 +38,7 @@ endif (NOT ENABLE_BUNDLED_MSGPUCK)
 # include_directories("${PROJECT_SOURCE_DIR}/tnt")
 # include_directories("${PROJECT_SOURCE_DIR}/tntnet")
 
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -std=gnu99 -D__USE_XOPEN")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -std=gnu99 -D__USE_XOPEN")
 # Set default compile flags for GCC
 if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "GCC detected, adding compile flags")
@@ -50,7 +50,7 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING
-        "Choose the type of build, options are: Debug Release" FORCE)
+	"Choose the type of build, options are: Debug Release" FORCE)
 endif()
 
 if (ENABLE_BUNDLED_DOCS)
@@ -74,16 +74,16 @@ if (ENABLE_ODBC)
       DOC "Path to unixODBC or iODBC config program")
       mark_as_advanced(ODBC_CONFIG)
       if (ODBC_CONFIG)
-      	 message(STATUS "Found ODBC program ${ODBC_CONFIG}")
+	 message(STATUS "Found ODBC program ${ODBC_CONFIG}")
       else ()
-      	 message(STATUS "Unable to find ODBC program")
+	 message(STATUS "Unable to find ODBC program")
       endif()
 	  if (NOT ODBC_CONFIG)
-        set(ENABLE_ODBC OFF)
+	set(ENABLE_ODBC OFF)
       endif()
     endif()
 endif()
-      
+
 
 include_directories("${MSGPUCK_INCLUDE_DIRS}")
 include_directories("${PROJECT_SOURCE_DIR}/third_party")
