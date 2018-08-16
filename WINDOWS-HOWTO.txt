@@ -1,0 +1,24 @@
+Windows DLL binaries could be built with Microsoft Visual C 2017 compiler. One should generate *.proj* with cmake tools. To build 64 bit version use: cmake . -G "Visual Studio 15 2017 Win64"
+For 32 bit version builtfiles should be generated with: cmake . -G "Visual Studio 15 2017"
+Then MsBuild.exe command tool or Visual Studio GUI can be used for compilation and linking.
+There is AppVeyor setup for Windows binaries. Compilation is controlled via .appveyor.yml file. Resulted files (DLLs and EXEs) are copied into GitHub release section under tags "tnt_odbc-win-x86" and "tnt_odbc-win-x64". This tags and names are important since this storage is used for the installator building.
+
+How to setup Appveyor
+
+ Register AppVeyor account and give it access to Github account with commit permissions to tarantool-c. Add new  AppVeyor project with github tarantool/tarantool-c prject. Then generate new GitHub token (https://github.com/settings/tokens) with repo permissions. After that encrypt the token with AppVeyor (https://ci.appveyor.com/tools/encrypt). Put encrypted token in the .appveyor.yml file under deploy->auth_token->secure key.
+
+	 deploy:
+		release: tnt-odbc-win-$(platform)
+		description: 'Tarantool odbc win dist'
+		provider: GitHub
+		auth_token:
+			secure: y0ASjHrs4wZFAURc4N5oVCzdNtw8XPzd2fzGB+py0a5u8o3HenR2hu09zMjuv0H5
+
+Currently ODBC is located under "odbc" branch. So you need to tell AppVeyor about it. In project setting change "Default branch" and "Branches to build" to "odbc".
+Now you should be able to compile and build Tarantool ODBC driver.  The DLLs and test executales should be uploaded automatically under tarantool/tarantool-c GitHub release section under  tnt_odbc-win-* tags. Note, thes tags do not have versions since this github storage (actially Amazon s3) used later for the Tarantool Windows Installer and URLs shpould be static. Now you can build binaries with "NEW BUILD" button.
+
+ How to build the Windows Installer
+
+the Windows Installer sources located under tarantool/TarantoolODBCDriverInstaller  Github project. One should setup new AppVeyor project in similar manner. You should create encrypted token for binaries upload to GitHub. It can be the same token as with ODBC binaries if that person has write access to both tarantool-c and TarantoolODBCDriverInstaller. Resulted binaries will be uploaded to the GitHub release section under the TarantoolODBCDriverInstaller project. Note The Installer downloads odbc binaries from tarantool-c  release section during build. The URLs are fixed:
+ https://github.com/tarantool/tarantool-c/releases/download/tnt_odbc-win-x86/tnt_odbc.dll
+ https://github.com/tarantool/tarantool-c/releases/download/tnt_odbc-win-x64/tnt_odbc.dll
