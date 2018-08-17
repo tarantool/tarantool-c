@@ -1292,10 +1292,12 @@ test_msgpack_mapa_iter() {
 int main() {
 	plan(11);
 
+	/*
 	if (!getenv("PRIMARY_PORT"))
 		putenv("PRIMARY_PORT=33000");
-        if (!getenv("PRIMARY_HOST"))
+	if (!getenv("PRIMARY_HOST"))
 		putenv("PRIMARY_HOST=localhost");
+	*/
 
 	char uri[128] = {0};
 	snprintf(uri, 128, "%s%s:%s", "test:test@",
