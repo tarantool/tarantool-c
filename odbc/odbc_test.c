@@ -991,7 +991,7 @@ main()
 	test(test_metadata_index(good_dsn, "dbl"));
 	test(test_typeinfo(good_dsn, SQL_ALL_TYPES));
 	test(test_typeinfo(good_dsn, SQL_BIGINT));
-	test(test_typeinfo(good_dsn, SQL_LONGVARCHAR));
+	testfail(test_typeinfo(good_dsn, SQL_LONGVARCHAR));
 
 	fprintf(stderr, "sizeof(long)=%zu, sizeof(long long)=%zu\n",
 		sizeof(long), sizeof(long long));
