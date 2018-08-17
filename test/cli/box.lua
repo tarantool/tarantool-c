@@ -44,7 +44,7 @@ for k, v in pairs(lp) do
    end
 end
 
-box.schema.user.grant('test', 'read,write,execute,create', 'universe')
+
 
 if not box.space.test then
    local test = box.schema.space.create('test')
