@@ -63,7 +63,7 @@ deploy:
   description: 'Tarantool internal win dist'
   provider: GitHub
   auth_token:
-    secure: y0ASjHrs4wZFAURc4N5oVCzdNtw8XPzd2fzGB+py0a5u8o3HenR2hu09zMjuv0H5
+    secure: vPaivTRDmqkUYsOxABeD194IZOOnvGNpre9Re8w84rzaeUgY9YCTGQu6TrX0MPtB
   artifact: dll,test             # upload all dlls packages to release assets
   draft: false
   prerelease: false
