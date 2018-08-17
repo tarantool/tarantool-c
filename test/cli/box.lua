@@ -9,7 +9,7 @@ require('log').info(listen_port)
 
 box.cfg{
    listen           = listen_port,
-   log_level        = 7,
+   log_level        = 1,
  --  log           = 'tarantool.log',
 }
 
@@ -39,14 +39,12 @@ for k, v in pairs(lp) do
    if #box.space._user.index.name:select{k} == 0 then
       box.schema.user.create(k, { password = v })
       if k == 'test' then
-         box.schema.user.grant('test', 'read', 'space', '_space')
-         box.schema.user.grant('test', 'read', 'space', '_index')
-         box.schema.user.grant('test', 'read', 'space', '_truncate')
-         box.schema.user.grant('test', 'execute', 'universe')
-         box.schema.user.grant('test', 'write', 'universe')
+	 box.schema.user.grant('test', 'read,write,execute,create', 'universe')
       end
    end
 end
+
+box.schema.user.grant('test', 'read,write,execute,create', 'universe')
 
 if not box.space.test then
    local test = box.schema.space.create('test')
@@ -70,17 +68,17 @@ end
 function test_1()
     require('log').error('1')
     return true, {
-        c= {
-            ['106']= {1, 1428578535},
-            ['2']= {1, 1428578535}
-        },
-        pc= {
-            ['106']= {1, 1428578535, 9243},
-            ['2']= {1, 1428578535, 9243}
-        },
-        s= {1, 1428578535},
-        u= 1428578535,
-        v= {}
+	c= {
+	    ['106']= {1, 1428578535},
+	    ['2']= {1, 1428578535}
+	},
+	pc= {
+	    ['106']= {1, 1428578535, 9243},
+	    ['2']= {1, 1428578535, 9243}
+	},
+	s= {1, 1428578535},
+	u= 1428578535,
+	v= {}
     }, true
 end
 
