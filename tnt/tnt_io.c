@@ -44,6 +44,7 @@
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <netinet/in.h>
+#include <sys/poll.h>
 #include <sys/un.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
@@ -59,6 +60,10 @@
 #if !defined(MIN)
 #	define MIN(a, b) (a) < (b) ? (a) : (b)
 #endif /* !defined(MIN) */
+
+#define TIMEVAL_TO_MSEC(tv) ((tv).tv_sec * 1000 + (tv).tv_usec / 1000)
+#define TIMEVAL_DIFF_MSEC(tv1, tv2) (((tv1).tv_sec - (tv2).tv_sec) * 1000 + \
+	((tv1).tv_usec - (tv2).tv_usec) / 1000)
 
 static enum tnt_error
 tnt_io_resolve(struct sockaddr_in *addr,
@@ -100,6 +105,7 @@ tnt_io_nonblock(struct tnt_stream_net *s, int set)
 	return TNT_EOK;
 }
 
+/** Waiting for connection while handling signal events. */
 static enum tnt_error
 tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 		       socklen_t addr_size)
@@ -112,9 +118,6 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 	if (connect(s->fd, (struct sockaddr*)addr, addr_size) != -1)
 		return TNT_EOK;
 	if (errno == EINPROGRESS) {
-		/** waiting for connection while handling signal events */
-		const int64_t micro = 1000000;
-		int64_t tmout_usec = s->opt.tmout_connect.tv_sec * micro;
 		/* get start connect time */
 		struct timeval start_connect;
 		if (gettimeofday(&start_connect, NULL) == -1) {
@@ -122,13 +125,12 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 			return TNT_ESYSTEM;
 		}
 		/* set initial timer */
-		struct timeval tmout;
-		memcpy(&tmout, &s->opt.tmout_connect, sizeof(tmout));
+		int timeout = TIMEVAL_TO_MSEC(s->opt.tmout_connect);
 		while (1) {
-			fd_set fds;
-			FD_ZERO(&fds);
-			FD_SET(s->fd, &fds);
-			int ret = select(s->fd + 1, NULL, &fds, NULL, &tmout);
+			struct pollfd fds[1];
+			fds[0].fd = s->fd;
+			fds[0].events = POLLOUT;
+			int ret = poll(fds, 1, timeout);
 			if (ret == -1) {
 				if (errno == EINTR || errno == EAGAIN) {
 					/* get current time */
@@ -137,16 +139,13 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 						s->errno_ = errno;
 						return TNT_ESYSTEM;
 					}
-					/* calculate timeout last time */
-					int64_t passd_usec = (curr.tv_sec - start_connect.tv_sec) * micro +
-						(curr.tv_usec - start_connect.tv_usec);
-					int64_t curr_tmeout = passd_usec - tmout_usec;
-					if (curr_tmeout <= 0) {
+					/* check timeout */
+					int passed_time = TIMEVAL_DIFF_MSEC(
+						curr, start_connect);
+					if (passed_time >= timeout) {
 						/* timeout */
 						return TNT_ETMOUT;
 					}
-					tmout.tv_sec = curr_tmeout / micro;
-					tmout.tv_usec = curr_tmeout % micro;
 				} else {
 					s->errno_ = errno;
 					return TNT_ESYSTEM;
