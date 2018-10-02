@@ -44,6 +44,7 @@
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <netinet/in.h>
+#include <sys/poll.h>
 #include <sys/un.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
@@ -113,8 +114,8 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 		return TNT_EOK;
 	if (errno == EINPROGRESS) {
 		/** waiting for connection while handling signal events */
-		const int64_t micro = 1000000;
-		int64_t tmout_usec = s->opt.tmout_connect.tv_sec * micro;
+		const int milli = 1000;
+		int tmout_msec = s->opt.tmout_connect.tv_sec * milli;
 		/* get start connect time */
 		struct timeval start_connect;
 		if (gettimeofday(&start_connect, NULL) == -1) {
@@ -122,13 +123,13 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 			return TNT_ESYSTEM;
 		}
 		/* set initial timer */
-		struct timeval tmout;
-		memcpy(&tmout, &s->opt.tmout_connect, sizeof(tmout));
+		int tmout = s->opt.tmout_connect.tv_sec * milli + 
+			s->opt.tmout_connect.tv_usec / milli;
 		while (1) {
-			fd_set fds;
-			FD_ZERO(&fds);
-			FD_SET(s->fd, &fds);
-			int ret = select(s->fd + 1, NULL, &fds, NULL, &tmout);
+			struct pollfd fds[1];
+			fds[0].fd = s->fd;
+			fds[0].events = POLLOUT;
+			int ret = poll(fds, 1, tmout);
 			if (ret == -1) {
 				if (errno == EINTR || errno == EAGAIN) {
 					/* get current time */
@@ -138,15 +139,13 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 						return TNT_ESYSTEM;
 					}
 					/* calculate timeout last time */
-					int64_t passd_usec = (curr.tv_sec - start_connect.tv_sec) * micro +
-						(curr.tv_usec - start_connect.tv_usec);
-					int64_t curr_tmeout = passd_usec - tmout_usec;
-					if (curr_tmeout <= 0) {
+					int passd_msec = (curr.tv_sec - start_connect.tv_sec) * milli +
+						(curr.tv_usec - start_connect.tv_usec) / milli;
+					int tmout = passd_msec - tmout_msec;
+					if (tmout <= 0) {
 						/* timeout */
 						return TNT_ETMOUT;
 					}
-					tmout.tv_sec = curr_tmeout / micro;
-					tmout.tv_usec = curr_tmeout % micro;
 				} else {
 					s->errno_ = errno;
 					return TNT_ESYSTEM;
