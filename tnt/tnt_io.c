@@ -141,11 +141,11 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 					/* calculate timeout last time */
 					int passd_msec = (curr.tv_sec - start_connect.tv_sec) * milli +
 						(curr.tv_usec - start_connect.tv_usec) / milli;
-					int tmout = passd_msec - tmout_msec;
-					if (tmout <= 0) {
+					if (passd_msec >= tmout_msec) {
 						/* timeout */
 						return TNT_ETMOUT;
-					}
+                                        }
+					tmout = passd_msec - tmout_msec;
 				} else {
 					s->errno_ = errno;
 					return TNT_ESYSTEM;
