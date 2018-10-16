@@ -123,7 +123,7 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 			return TNT_ESYSTEM;
 		}
 		/* set initial timer */
-		int tmout = s->opt.tmout_connect.tv_sec * milli + 
+		int tmout = s->opt.tmout_connect.tv_sec * milli +
 			s->opt.tmout_connect.tv_usec / milli;
 		while (1) {
 			struct pollfd fds[1];
@@ -139,12 +139,14 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 						return TNT_ESYSTEM;
 					}
 					/* calculate timeout last time */
-					int passd_msec = (curr.tv_sec - start_connect.tv_sec) * milli +
-						(curr.tv_usec - start_connect.tv_usec) / milli;
+					int passd_msec = (curr.tv_sec -
+						start_connect.tv_sec) * milli +
+						(curr.tv_usec -
+						start_connect.tv_usec) / milli;
 					if (passd_msec >= tmout_msec) {
 						/* timeout */
 						return TNT_ETMOUT;
-                                        }
+					}
 					tmout = passd_msec - tmout_msec;
 				} else {
 					s->errno_ = errno;
