@@ -59,13 +59,9 @@ test_() {
 */
 
 static int
-test_connect_tcp() {
+test_connect_tcp(const char *uri) {
 	plan(7);
 	header();
-
-	char uri[128] = {0};
-	snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:",
-		 getenv("PRIMARY_PORT"));
 
 	struct tnt_stream *s = NULL; s = tnt_net(NULL);
 	isnt(s, NULL, "Checking that stream is allocated");
@@ -263,7 +259,6 @@ test_request_01(char *uri) {
 	tnt_request_set_tuple(req2, arg);
 	uint64_t sync2 = tnt_request_compile(tnt, req2);
 	tnt_request_free(req2);
-
 
 	tnt_flush(tnt);
 
@@ -787,45 +782,66 @@ test_msgpack_mapa_iter() {
 	return check_plan();
 }
 
-/*
-static inline int
-test_msgpack_mapa_iter() {
-	plan(5);
+static int test_pushes(const char *uri) {
+	struct tnt_stream *tnt = NULL;
+	tnt = tnt_net(NULL);
+	assert(tnt != NULL);
+	int rv = tnt_set(tnt, TNT_OPT_URI, uri);
+	assert(rv != -1);
+	rv = tnt_connect(tnt);
+	assert(rv != -1);
+
+	struct tnt_request *subscribe = tnt_request_call(NULL);
+	tnt_request_set_funcz(subscribe, "test_5");
+	uint64_t sync = tnt_request_compile(tnt, subscribe);
+	(void )sync;
+
+	tnt_flush(tnt);
+
+	bool supports_push = true, ended = false;
+	int count = 0;
+	struct tnt_iter it; tnt_iter_reply(&it, tnt);
+	while (tnt_next(&it)) {
+		assert(ended == false);
+		struct tnt_reply *r = TNT_IREPLY_PTR(&it);
+		if ((r->code & TNT_CHUNK) != 0) {
+			count += 1;
+		} else {
+			const char *pos = r->data;
+			assert(mp_typeof(*pos) == MP_ARRAY);
+			int len = mp_decode_array(&pos);
+			assert(len == 1);
+			assert(mp_typeof(*pos) == MP_BOOL);
+			supports_push = mp_decode_bool(&pos);
+			ended = true;
+		}
+	}
+	tnt_close(tnt);
+
+	plan(2);
 	header();
 
-	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
-	isnt(tnt, NULL, "Check connection creation");
-	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
-	isnt(tnt_connect(tnt), -1, "Connecting");
-	tnt_stream_reqid(tnt, 0);
+	if (supports_push) {
+		is(count, 10,   "Got 10 results");
+		is(ended, true, "Received response from server");
+	} else {
+		skip("server don't support pushes");
+		skip("server don't support pushes");
+	}
 
-	struct tnt_request *req = tnt_request_replace(NULL);
-	isnt(req, NULL, "Check request creation");
-	is  (req->hdr.type, TNT_OP_REPLACE, "Check that we inited replace");
-	is  (tnt_request_set_sspacez(tnt, req, "test"), 0, "Set space");
-	is  (tnt_request_set_tuple_format(req, "[%d%s%d%s]", 1, "hello", 2, "world"), 0, "Set tuple");
-	isnt(tnt_request_compile(tnt, req), -1, "Compile request");
-	tnt_request_free(req);
-
-	struct tnt_request *req = tnt_request_upsert(NULL);
-	isnt(req, NULL, "Check request creation");
-	is  (req->hdr.type, TNT_OP_UPDATE, "CHeck that we inited upsert");
-	is  (tnt_request_set_sspacez(tnt, req, "test"), 0, "Set space");
-	is  (tnt_request_set_tuple(req, val), 0, ""
-	tnt_stream_free(val);
-	tnt_stream_free(val);
 
 	footer();
 	return check_plan();
 }
-*/
+
 int main() {
-	plan(9);
+	plan(10);
 
 	char uri[128] = {0};
-	snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:", getenv("PRIMARY_PORT"));
+	snprintf(uri, 128, "%s%s%s", "test:test@", "localhost:",
+		 getenv("PRIMARY_PORT"));
 
-	test_connect_tcp();
+	test_connect_tcp(uri);
 	test_object();
 	test_request_01(uri);
 	test_request_02(uri);
@@ -834,6 +850,7 @@ int main() {
 	test_request_05(uri);
 	test_msgpack_array_iter();
 	test_msgpack_mapa_iter();
+	test_pushes(uri);
 
 	return check_plan();
 }

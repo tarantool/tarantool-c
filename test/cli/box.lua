@@ -94,3 +94,13 @@ end
 function test_4()
     return box.session.user()
 end
+
+function test_5()
+    if box.session.push == nil then
+        return false
+    end
+    for i = 1, 10 do
+        box.session.push({ position = i, value = 'i love maccartney' })
+    end
+    return true
+end

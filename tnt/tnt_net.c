@@ -102,8 +102,11 @@ static int
 tnt_net_reply(struct tnt_stream *s, struct tnt_reply *r) {
 	if (pm_atomic_load(&s->wrcnt) == 0)
 		return 1;
-	pm_atomic_fetch_sub(&s->wrcnt, 1);
-	return tnt_reply_from(r, (tnt_reply_t)tnt_net_recv_cb, s);
+	int rv = tnt_reply_from(r, (tnt_reply_t)tnt_net_recv_cb, s);
+	if (r->error || (r->code & TNT_CHUNK) == 0) {
+		pm_atomic_fetch_sub(&s->wrcnt, 1);
+	}
+	return rv;
 }
 
 struct tnt_stream *tnt_net(struct tnt_stream *s) {

@@ -25,7 +25,7 @@ try:
     output=subprocess.check_output(progname,stderr=subprocess.STDOUT)
 except subprocess.CalledProcessError as e:
     output=e.output
-    result = 'not '+ result 
+    result = 'not ' + result + ' # ' + str(e)
 
 sys.stderr.write(output)
 print(result)
