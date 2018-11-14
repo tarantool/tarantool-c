@@ -70,6 +70,11 @@ enum tnt_body_key_t {
 	TNT_SQL_BIND = 0x41,
 };
 
+enum tnt_response_type_t {
+	TNT_OK    = 0x00,
+	TNT_CHUNK = 0x80,
+};
+
 /**
  * \brief Response body field types (keys)
  */

@@ -89,6 +89,8 @@ int check_plan(void);
 #define fail(fmt, args...)		\
 	ok(0, fmt, ##args)
 
+#define skip(fmt, args...)		\
+	ok(1, "Skipping: " fmt, ##args)
 
 #endif /* TEST_H_INCLUDED */
 
