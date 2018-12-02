@@ -30,6 +30,13 @@ add_executable(tarantool-test-call
 set_target_properties(tarantool-test-call PROPERTIES OUTPUT_NAME "tarantool-call")
 target_link_libraries(tarantool-test-call tnt)
 
+project(tarantool-test-poll)
+add_executable(tarantool-test-poll
+    tarantool_poll.c
+    ${common_files})
+set_target_properties(tarantool-test-poll PROPERTIES OUTPUT_NAME "cli/tarantool-poll")
+target_link_libraries(tarantool-test-poll tnt)
+
 add_custom_target(test
     COMMAND ${PROJECT_SOURCE_DIR}/test-run.py -j -1
         --builddir=${PROJECT_BINARY_DIR}
