@@ -20,7 +20,9 @@ source test-env/bin/activate
 pip install -r test-run/requirements.txt
 cmake . -DCMAKE_BUILD_TYPE=Debug
 make
+
+ulimit -n 8192 # make fd limit more for 1024-poll test
 make test
+
 deactivate
 rm -rf test-env
-

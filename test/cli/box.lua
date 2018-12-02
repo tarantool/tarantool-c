@@ -8,25 +8,11 @@ require('log').info(listen_port)
 
 box.cfg{
    listen           = listen_port,
-   log_level        = 7,
- --  log           = 'tarantool.log',
 }
 
 require('console').listen(os.getenv('ADMIN'))
 
 fiber = require('fiber')
-
---[[
-box.schema.func.create('fiber.time')
-box.schema.user.grant('guest','execute', 'function', 'fiber.time')
-
-sp = box.schema.space.create('first', {id=512})
-sp:create_index('primary', {})
-
-box.schema.user.grant('guest','read,write', 'space', 'first')
-
-box.schema.user.create("myamlya", {password='1234'});
-]]--
 
 lp = {
    test = 'test',
