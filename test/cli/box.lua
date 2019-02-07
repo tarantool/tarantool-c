@@ -22,7 +22,10 @@ box.once('init', function()
     for k, v in pairs(lp) do
         box.schema.user.create(k, { password = v })
         if k == 'test' then
-            box.schema.user.grant('test', 'execute', 'universe')
+            -- Read and write are needed due to Tarantool
+            -- 1.7.6-27-g7ef5be2 in CI and
+            -- https://github.com/tarantool/tarantool/issues/3017
+            box.schema.user.grant('test', 'read,write,execute', 'universe')
         end
     end
 
