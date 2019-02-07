@@ -22,7 +22,7 @@ cmake . -DCMAKE_BUILD_TYPE=Debug
 make
 
 ulimit -n 8192 # make fd limit more for 1024-poll test
-make test
+make test || (find test -name '*.reject' | xargs head -n -1 && exit 1)
 
 deactivate
 rm -rf test-env
