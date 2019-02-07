@@ -89,6 +89,7 @@ base64_encode_block(const char *in_bin, int in_len,
 			result = (fragment & 0x0fc) >> 2;
 			*out_pos++ = base64_encode_value(result);
 			result = (fragment & 0x003) << 4;
+			/* fallthrough */
 	case step_B:
 			if (in_pos == in_end || out_pos >= out_end) {
 				state->result = result;
@@ -99,6 +100,7 @@ base64_encode_block(const char *in_bin, int in_len,
 			result |= (fragment & 0x0f0) >> 4;
 			*out_pos++ = base64_encode_value(result);
 			result = (fragment & 0x00f) << 2;
+			/* fallthrough */
 	case step_C:
 			if (in_pos == in_end || out_pos + 2 >= out_end) {
 				state->result = result;
@@ -242,6 +244,7 @@ base64_decode_block(const char *in_base64, int in_len,
 				fragment = base64_decode_value(*in_pos++);
 			} while (fragment < 0);
 			*out_pos    = (fragment & 0x03f) << 2;
+			/* fallthrough */
 	case step_b:
 			do {
 				if (in_pos == in_end || out_pos >= out_end)
@@ -255,6 +258,7 @@ base64_decode_block(const char *in_base64, int in_len,
 			*out_pos++ |= (fragment & 0x030) >> 4;
 			if (out_pos < out_end)
 				*out_pos = (fragment & 0x00f) << 4;
+			/* fallthrough */
 	case step_c:
 			do {
 				if (in_pos == in_end || out_pos >= out_end)
@@ -268,6 +272,7 @@ base64_decode_block(const char *in_base64, int in_len,
 			*out_pos++ |= (fragment & 0x03c) >> 2;
 			if (out_pos < out_end)
 				*out_pos = (fragment & 0x003) << 6;
+			/* fallthrough */
 	case step_d:
 			do {
 				if (in_pos == in_end || out_pos >= out_end)

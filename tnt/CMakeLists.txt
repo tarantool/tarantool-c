@@ -49,6 +49,9 @@ set (TNT_SOURCES
 # Builds
 #----------------------------------------------------------------------------#
 
+set_source_files_properties(${PROJECT_SOURCE_DIR}/third_party/uri.c PROPERTIES
+    COMPILE_FLAGS "-Wno-implicit-fallthrough")
+
 ## Static library
 project(tnt)
 add_library(${PROJECT_NAME} STATIC ${TNT_SOURCES})
