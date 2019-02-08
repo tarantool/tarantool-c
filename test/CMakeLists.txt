@@ -4,6 +4,8 @@ add_library(test_common STATIC "${CMAKE_CURRENT_SOURCE_DIR}/common/test.c"
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/common")
 
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cli")
+
 project(tarantool-test-tcp)
 add_executable(tarantool-test-tcp cli/tarantool_tcp.c)
 set_target_properties(tarantool-test-tcp PROPERTIES OUTPUT_NAME "cli/tarantool-tcp")
