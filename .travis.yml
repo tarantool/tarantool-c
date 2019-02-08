@@ -11,6 +11,9 @@ cache:
     directories:
       - $HOME/.cache
 
+git:
+    depth: 100500
+
 env:
     global:
       - ENCRYPTION_LABEL="27298b445e90"
