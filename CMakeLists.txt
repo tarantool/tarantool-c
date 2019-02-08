@@ -15,6 +15,12 @@ if(POLICY CMP0002)
     cmake_policy(SET CMP0002 OLD) # allow submodules with same target names
 endif(POLICY CMP0002)
 
+if (CMAKE_C_COMPILER_ID STREQUAL Clang)
+    set(CMAKE_COMPILER_IS_CLANG  ON)
+    set(CMAKE_COMPILER_IS_GNUCC  OFF)
+    set(CMAKE_COMPILER_IS_GNUCXX OFF)
+endif()
+
 set(ENABLE_BUNDLED_MSGPUCK_DEFAULT OFF)
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/msgpuck/CMakeLists.txt)
     set(ENABLE_BUNDLED_MSGPUCK_DEFAULT ON)
