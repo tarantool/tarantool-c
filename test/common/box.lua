@@ -34,7 +34,9 @@ box.once('init', function()
             -- Read and write are needed due to Tarantool
             -- 1.7.6-27-g7ef5be2 in CI and
             -- https://github.com/tarantool/tarantool/issues/3017
-            box.schema.user.grant('test', 'read,write,execute', 'universe')
+            -- Create grant is needed to create a table with tnt_execute().
+            box.schema.user.grant('test', 'read,write,execute,create',
+                                  'universe')
         end
     end
 

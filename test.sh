@@ -1,14 +1,16 @@
 #!/bin/bash
 
-set -e 
+set -e
 
-curl http://download.tarantool.org/tarantool/1.7/gpgkey | sudo apt-key add -
+REPO=${TARANTOOL_REPO:-1.7}
+
+curl http://download.tarantool.org/tarantool/${REPO}/gpgkey | sudo apt-key add -
 release=`lsb_release -c -s`
 
 sudo rm -f /etc/apt/sources.list.d/*tarantool*.list
-sudo tee /etc/apt/sources.list.d/tarantool_1.7.list <<- EOF
-deb http://download.tarantool.org/tarantool/1.7/ubuntu/ $release main
-deb-src http://download.tarantool.org/tarantool/1.7/ubuntu/ $release main
+sudo tee /etc/apt/sources.list.d/tarantool_${REPO}.list <<- EOF
+deb http://download.tarantool.org/tarantool/${REPO}/ubuntu/ $release main
+deb-src http://download.tarantool.org/tarantool/${REPO}/ubuntu/ $release main
 EOF
 
 sudo apt-get update
