@@ -32,4 +32,5 @@ tarantool-tcp
 tarantool-poll
 tarantool-cli
 tarantool-call
+tarantool-unix
 test/var/

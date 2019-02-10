@@ -7,20 +7,36 @@
 
 #include <tarantool/tnt_net.h>
 #include <tarantool/tnt_opt.h>
+#include <uri.h> /* for tnt_set_credentials() */
 
 #include "common.h"
 
 #define header() note("*** %s: prep ***", __func__)
 #define footer() note("*** %s: done ***", __func__)
 
+/* XXX: Cannot use user:pass@unix/:/path/to/socket (gh-120). */
+static void
+tnt_set_credentials(struct tnt_stream *s, const char *login,
+		    const char *password)
+{
+	struct tnt_stream_net *sn = TNT_SNET_CAST(s);
+	struct uri *uri = sn->opt.uri;
+
+	uri->login = login;
+	uri->login_len = strlen(login);
+	uri->password = password;
+	uri->password_len = strlen(password);
+}
+
 static int
-test_connect_unix(char *uri) {
+test_connect_unix(const char *uri) {
 	plan(3);
 	header();
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
+	tnt_set_credentials(tnt, "test", "test");
 	isnt(tnt_connect(tnt), -1, "Connecting");
 //	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
@@ -31,13 +47,14 @@ test_connect_unix(char *uri) {
 }
 
 static int
-test_ping(char *uri) {
+test_ping(const char *uri) {
 	plan(7);
 	header();
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
+	tnt_set_credentials(tnt, "test", "test");
 	isnt(tnt_connect(tnt), -1, "Connecting");
 //	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
@@ -57,7 +74,7 @@ test_ping(char *uri) {
 }
 
 static int
-test_auth_call(char *uri) {
+test_auth_call(const char *uri) {
 	plan(21);
 	header();
 
@@ -69,6 +86,7 @@ test_auth_call(char *uri) {
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
+	tnt_set_credentials(tnt, "test", "test");
 	isnt(tnt_connect(tnt), -1, "Connecting");
 //	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 
@@ -104,7 +122,7 @@ test_auth_call(char *uri) {
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
 	is  (reply.error, NULL, "Check error absence");
-	
+
 	tnt_stream_free(args);
 	tnt_reply_free(&reply);
 	tnt_stream_free(tnt);
@@ -114,13 +132,14 @@ test_auth_call(char *uri) {
 }
 
 static int
-test_insert_replace_delete(char *uri) {
+test_insert_replace_delete(const char *uri) {
 	plan(186);
 	header();
 
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
+	tnt_set_credentials(tnt, "test", "test");
 	isnt(tnt_connect(tnt), -1, "Connecting");
 //	isnt(tnt_authenticate(tnt), -1, "Authenticating");
 	tnt_stream_reqid(tnt, 0);
@@ -277,13 +296,12 @@ test_insert_replace_delete(char *uri) {
 	return check_plan();
 }
 
+/* XXX: Enable it only on tarantool 2x (gh-122). */
+#if 0
 static int
-test_execute(char *uri) {
+test_execute(const char *uri) {
 	plan(39);
 	header();
-
-
-
 
 	struct tnt_reply reply;
 	char *query;
@@ -292,6 +310,7 @@ test_execute(char *uri) {
 	struct tnt_stream *tnt = NULL; tnt = tnt_net(NULL);
 	isnt(tnt, NULL, "Check connection creation");
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
+	tnt_set_credentials(tnt, "test", "test");
 	isnt(tnt_connect(tnt), -1, "Connecting");
 
 	args = tnt_object(NULL);
@@ -367,18 +386,29 @@ test_execute(char *uri) {
 	footer();
 	return check_plan();
 }
+#endif
 
 int main() {
-	plan(5);
+	plan(4);
 
-	char uri[128] = {0};
-	snprintf(uri, 128, "%s%s", "test:test@", getenv("PRIMARY_PORT"));
+	/*
+	 * XXX: Cannot use user:pass@unix/:/path/to/socket
+	 * (gh-120).
+	 */
+	const char *uri = getenv("LISTEN");
+	/* Ensure the uri contains unix socket. */
+	assert(strstr(uri, "/") != NULL);
 
 	test_connect_unix(uri);
 	test_ping(uri);
 	test_auth_call(uri);
 	test_insert_replace_delete(uri);
-	test_execute(uri);
+
+	/*
+	 * XXX: We need to enable it conditionally depending on
+	 * tarantool version: enable only on 2x (gh-122).
+	 */
+	/* test_execute(uri); */
 
 	return check_plan();
 }
