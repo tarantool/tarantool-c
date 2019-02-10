@@ -296,8 +296,6 @@ test_insert_replace_delete(const char *uri) {
 	return check_plan();
 }
 
-/* XXX: Enable it only on tarantool 2x (gh-122). */
-#if 0
 static int
 test_execute(const char *uri) {
 	plan(39);
@@ -312,6 +310,16 @@ test_execute(const char *uri) {
 	isnt(tnt_set(tnt, TNT_OPT_URI, uri), -1, "Setting URI");
 	tnt_set_credentials(tnt, "test", "test");
 	isnt(tnt_connect(tnt), -1, "Connecting");
+
+	/* Skip tests on Tarantool 1x. */
+	struct tnt_stream_net *sn = TNT_SNET_CAST(tnt);
+	if (strncmp(sn->greeting, "Tarantool 1.", 12) == 0) {
+		tnt_stream_free(tnt);
+		for (int i = 0; i < 36; ++i)
+			skip("Tarantool 2x required");
+		footer();
+		return check_plan();
+	}
 
 	args = tnt_object(NULL);
 	isnt(args, NULL, "Check object creation");
@@ -386,10 +394,9 @@ test_execute(const char *uri) {
 	footer();
 	return check_plan();
 }
-#endif
 
 int main() {
-	plan(4);
+	plan(5);
 
 	/*
 	 * XXX: Cannot use user:pass@unix/:/path/to/socket
@@ -404,11 +411,7 @@ int main() {
 	test_auth_call(uri);
 	test_insert_replace_delete(uri);
 
-	/*
-	 * XXX: We need to enable it conditionally depending on
-	 * tarantool version: enable only on 2x (gh-122).
-	 */
-	/* test_execute(uri); */
+	test_execute(uri);
 
 	return check_plan();
 }
