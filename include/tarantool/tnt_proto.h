@@ -82,7 +82,7 @@ enum tnt_response_key_t {
 	TNT_DATA = 0x30,
 	TNT_ERROR = 0x31,
 	TNT_METADATA = 0x32,
-	TNT_SQL_INFO = 0x43,
+	TNT_SQL_INFO = 0x42,
 };
 
 /**
