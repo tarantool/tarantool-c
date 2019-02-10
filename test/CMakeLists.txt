@@ -5,6 +5,7 @@ add_library(test_common STATIC "${CMAKE_CURRENT_SOURCE_DIR}/common/test.c"
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/common")
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cli")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/unix")
 
 project(tarantool-test-tcp)
 add_executable(tarantool-test-tcp cli/tarantool_tcp.c)
@@ -22,8 +23,8 @@ set_target_properties(tarantool-test-call PROPERTIES OUTPUT_NAME "tarantool-call
 target_link_libraries(tarantool-test-call tnt test_common)
 
 project(tarantool-test-unix)
-add_executable(tarantool-test-unix tarantool_unix.c)
-set_target_properties(tarantool-test-unix PROPERTIES OUTPUT_NAME "tarantool-unix")
+add_executable(tarantool-test-unix unix/tarantool_unix.c)
+set_target_properties(tarantool-test-unix PROPERTIES OUTPUT_NAME "unix/tarantool-unix")
 target_link_libraries(tarantool-test-unix tnt test_common)
 
 project(tarantool-test-disconnect)
