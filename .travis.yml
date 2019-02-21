@@ -27,26 +27,18 @@ env:
       - OS=el DIST=7
       - OS=fedora DIST=24
       - OS=fedora DIST=25
+      - OS=fedora DIST=26
+      - OS=fedora DIST=27
       - OS=ubuntu DIST=precise
       - OS=ubuntu DIST=trusty
       - OS=ubuntu DIST=xenial
+      - OS=ubuntu DIST=bionic
+      - OS=ubuntu DIST=cosmic
       - OS=debian DIST=wheezy
       - OS=debian DIST=jessie
       - OS=debian DIST=stretch
 
 matrix:
-    allow_failures:
-#      - env: OS=el DIST=6
-#      - env: OS=el DIST=7
-#      - env: OS=fedora DIST=24
-#      - env: OS=fedora DIST=25
-#      - env: OS=ubuntu DIST=precise
-#      - env: OS=ubuntu DIST=trusty
-#      - env: OS=ubuntu DIST=xenial
-#      - env: OS=ubuntu DIST=yakkety
-#      - env: OS=debian DIST=wheezy
-#      - env: OS=debian DIST=jessie
-#      - env: OS=debian DIST=stretch
     exclude:
       - env: OS=el DIST=6
         compiler: clang
@@ -56,11 +48,19 @@ matrix:
         compiler: clang
       - env: OS=fedora DIST=25
         compiler: clang
+      - env: OS=fedora DIST=26
+        compiler: clang
+      - env: OS=fedora DIST=27
+        compiler: clang
       - env: OS=ubuntu DIST=precise
         compiler: clang
       - env: OS=ubuntu DIST=trusty
         compiler: clang
       - env: OS=ubuntu DIST=xenial
+        compiler: clang
+      - env: OS=ubuntu DIST=bionic
+        compiler: clang
+      - env: OS=ubuntu DIST=cosmic
         compiler: clang
       - env: OS=debian DIST=wheezy
         compiler: clang
