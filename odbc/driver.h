@@ -143,24 +143,28 @@ typedef struct odbc_env_t {
 #define NAMEMAX 32
 
 struct column_def {
-	int id;
-	int type;
-	int is_nullable;
+	uint32_t id;
 	char *name;
-	char *typename;
-	int is_pk;
+	/* SQL_INTEGER, SQL_VARCHAR, ... */
+	int type;
+	bool notnull;
+	bool pk;
 };
 
 struct index_def {
-	int id;
-	int is_uniq;
 	char *name;
-	int is_pk;
-	int asc_or_desc; /* 0 - asc, 1 - desc*/
-	char *column_name;
-	int column_index;
+	bool unique;
 };
 
+struct index_part_def {
+	uint32_t id;
+	/* Column name. */
+	char *name;
+	bool desc;
+	char *coll;
+	/* SQL_INTEGER, SQL_VARCHAR, ... */
+	int type;
+};
 
 /*
  * These are keys definitions for ODBC.INI files or registry.

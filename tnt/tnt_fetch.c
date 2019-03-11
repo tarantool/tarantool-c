@@ -8,12 +8,12 @@
 #include <string.h>
 #include <tarantool/tnt_fetch.h>
 
-
-
 static int
 tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col, int nc);
 static int
 tnt_fetch_binded_result(tnt_stmt_t * stmt);
+void
+clear_reply(tnt_stmt_t *stmt);
 
 static tnt_stmt_t *
 tnt_stmt_new(struct tnt_stream *s)
@@ -165,32 +165,68 @@ tnt_read_affected_rows(tnt_stmt_t * stmt)
 
 
 static int
-tnt_fetch_fields(tnt_stmt_t * stmt)
+tnt_fetch_fields(tnt_stmt_t *stmt)
 {
-	if (stmt->reply) {
-		const char *metadata = stmt->reply->metadata;
-		if (metadata) {
-			if (mp_typeof(*metadata) != MP_ARRAY)
-				return FAIL;
-			stmt->ncols = mp_decode_array(&metadata);
-			if (stmt->ncols) {
-				int n = stmt->ncols;
-				stmt->field_names = (char **)tnt_mem_alloc(sizeof(const char *) * n);
-				while (n-- > 0) {
-					mp_decode_map(&metadata);	/* == 1 */
-					mp_decode_uint(&metadata);	/* == IPROTO_FIELD_NAME */
-					uint32_t sz;
-					const char *s = mp_decode_str(&metadata, &sz);
-					stmt->field_names[stmt->ncols - n - 1] = strndup(s, sz);
-					if (!stmt->field_names[stmt->ncols - n - 1]) {
-						free_strings(stmt->field_names, stmt->ncols);
-						return FAIL;
-					}
-				}
-			}	/* If (metadata) .. */
-			return OK;
+	if (stmt->reply == NULL || stmt->reply->metadata == NULL) {
+		clear_reply(stmt);
+		stmt->error = STMT_BADSTATE;
+		return FAIL;
+	}
+
+	const char *metadata = stmt->reply->metadata;
+	if (mp_typeof(*metadata) != MP_ARRAY) {
+		clear_reply(stmt);
+		stmt->error = STMT_BADPROTO;
+		return FAIL;
+	}
+
+	uint32_t ncols = mp_decode_array(&metadata);
+	if (ncols == 0) {
+		stmt->ncols = ncols;
+		return OK;
+	}
+
+	char **field_names = (char **) tnt_mem_alloc(sizeof(char *) * ncols);
+	uint32_t fields_count = 0;
+
+	for (uint32_t i = 0; i < ncols; ++i) {
+		uint32_t map_size = mp_decode_map(&metadata);
+		for (uint32_t j = 0; j < map_size; ++j) {
+			switch (mp_decode_uint(&metadata)) {
+			case TNT_FIELD_NAME: {
+				uint32_t sz;
+				const char *s = mp_decode_str(&metadata, &sz);
+				field_names[i] = strndup(s, sz);
+				++fields_count;
+				break;
+			}
+			case TNT_FIELD_TYPE: {
+				uint32_t sz;
+				mp_decode_str(&metadata, &sz);
+				/* Ignore for now. */
+				break;
+			}
+			default:
+				goto err;
+			}
 		}
 	}
+
+	if (stmt->field_names != NULL) {
+		for (uint32_t j = 0; j < fields_count; ++j)
+			free(field_names[j]);
+		tnt_mem_free(field_names);
+	}
+	stmt->ncols = ncols;
+	stmt->field_names = field_names;
+	return OK;
+
+err:
+	for (uint32_t j = 0; j < fields_count; ++j)
+		free(field_names[j]);
+	tnt_mem_free(field_names);
+	clear_reply(stmt);
+	stmt->error = STMT_BADPROTO;
 	return FAIL;
 }
 
@@ -654,9 +690,6 @@ tnt_fulfill_stmt(tnt_stmt_t *stmt)
 	}
 	return stmt;
 }
-
-
-
 
 float
 double2float(double v,int *e)

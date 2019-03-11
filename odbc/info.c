@@ -494,13 +494,17 @@ get_info(SQLHDBC dbc, SQLUSMALLINT type, SQLPOINTER val, SQLSMALLINT valMax_, SQ
 }
 
 #define NLEN 128
-#define setlen(s,l) do{ s = (s == NULL)?(SQLCHAR*)"":s;				\
-				l = (l == SQL_NTS)?(SQLSMALLINT)strlen((char*)s):l;} while(0)
+#define setlen(s,l) do {						\
+	s = (s == NULL) ? (SQLCHAR *) "" : s;				\
+	l = (l == SQL_NTS) ? (SQLSMALLINT) strlen((char *) s) : l;	\
+} while(0)
 
 static char*
-print_info_tables(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
-	SQLSMALLINT schemlen, SQLCHAR * table, SQLSMALLINT tablelen,
-	SQLCHAR * tabletype, SQLSMALLINT tabletypelen)
+print_info_tables(char* b, int blen,
+	SQLCHAR *cat, SQLSMALLINT catlen,
+	SQLCHAR *schema, SQLSMALLINT schemlen,
+	SQLCHAR *table, SQLSMALLINT tablelen,
+	SQLCHAR *tabletype, SQLSMALLINT tabletypelen)
 {
 	setlen(cat, catlen);
 	setlen(schema, schemlen);
@@ -509,11 +513,8 @@ print_info_tables(char* b, int blen, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *
 
 	char frm[NLEN];
 	snprintf(frm, NLEN, "SQLTables(cat='%%.%hds', schema='%%.%hds', "
-		 "table='%%.%hds', tabletype='%%.%hds')",(short) (catlen == SQL_NTS? (short)strlen((char*)cat): catlen),
-		 (short)(schemlen == SQL_NTS? (short)strlen((char*)schema): schemlen),
-		 (short)(tablelen == SQL_NTS? (short)strlen((char*)table): tablelen),
-		 (short)(tabletypelen == SQL_NTS? (short)strlen((char*)tabletype): tabletypelen));
-
+		 "table='%%.%hds', tabletype='%%.%hds')", catlen, schemlen,
+		 tablelen, tabletypelen);
 	snprintf(b, blen, frm, cat, schema, table, tabletype);
 	return b;
 }
@@ -609,7 +610,7 @@ odbctype2name(int t)
 }
 
 int
-coltype2odbc(const char * tnt_type, size_t len)
+coltype2odbc(const char *tnt_type, size_t len)
 {
 	/* This code should be in sync with actual Tarantool types.
 	 *
@@ -636,7 +637,6 @@ free_columns_info(struct column_def ** cols)
 		struct column_def **it = cols;
 		while (it && *it) {
 			free((*it)->name);
-			free((*it)->typename);
 			free(*it++);
 		}
 		free(cols);
@@ -644,13 +644,26 @@ free_columns_info(struct column_def ** cols)
 }
 
 void
-free_indexes_info(struct index_def ** cols)
+free_indexes_info(struct index_def **cols)
 {
 	if (cols) {
 		struct index_def **it = cols;
 		while (it && *it) {
 			free((*it)->name);
-			free((*it)->column_name);
+			free(*it++);
+		}
+		free(cols);
+	}
+}
+
+void
+free_index_parts(struct index_part_def **cols)
+{
+	if (cols) {
+		struct index_part_def **it = cols;
+		while (it && *it) {
+			free((*it)->name);
+			free((*it)->coll);
 			free(*it++);
 		}
 		free(cols);
@@ -661,38 +674,39 @@ struct column_def **
 read_columns_rows(odbc_stmt *stmt)
 {
 	int capacity = 2;
-	struct column_def ** cols = (struct column_def **)
-	  malloc (sizeof(struct column_def *)*capacity);
+	struct column_def **cols = (struct column_def **)
+		malloc(sizeof(struct column_def *) * capacity);
 	if (!cols)
 		return NULL;
 	int row_count = 0;
-	while(stmt_fetch(stmt) == SQL_SUCCESS) {
-		row_count ++ ;
+	while (stmt_fetch(stmt) == SQL_SUCCESS) {
+		++row_count;
 		while (capacity < row_count + 1 && capacity < INT_MAX) {
-			capacity *=2;
-			void *p = realloc (cols, (sizeof(struct column_def *)
-						  *capacity));
+			capacity *= 2;
+			void *p = realloc(cols, sizeof(struct column_def *) *
+					  capacity);
 			if (!p)
 				goto error;
 			cols = (struct column_def **) p;
 		}
 		cols[row_count] = NULL;
-		cols[row_count - 1] = (struct column_def*) malloc(sizeof(struct column_def));
+		cols[row_count - 1] = (struct column_def *)
+			malloc(sizeof(struct column_def));
 		if (!cols[row_count-1])
 			goto error;
-		/* Actually it's a bad thing to mix tnt API and ODBC layer.
-		 * So it's better to change tnt_* calls in the future.
-		 */
-		cols[row_count - 1]->id = (int) tnt_col_int(stmt->tnt_statement, 0);
-		cols[row_count - 1]->name = strndup(tnt_col_str(stmt->tnt_statement, 1),
-						    tnt_col_len(stmt->tnt_statement, 1));
-		cols[row_count - 1]->is_nullable = !tnt_col_int(stmt->tnt_statement, 3);
-		cols[row_count - 1]->is_pk  = (int) tnt_col_int(stmt->tnt_statement, 5);
-		cols[row_count - 1]->type = coltype2odbc(tnt_col_str(stmt->tnt_statement, 2),
-							 tnt_col_len(stmt->tnt_statement, 2));
-		cols[row_count - 1]->typename = strndup(tnt_col_str(stmt->tnt_statement, 2),
-						    tnt_col_len(stmt->tnt_statement, 2));
-
+		/* Columns: id name type notnull dflt_value pk. */
+		cols[row_count - 1]->id = tnt_col_int(stmt->tnt_statement, 0);
+		cols[row_count - 1]->name = strndup(
+			tnt_col_str(stmt->tnt_statement, 1),
+			tnt_col_len(stmt->tnt_statement, 1));
+		cols[row_count - 1]->type = coltype2odbc(
+			tnt_col_str(stmt->tnt_statement, 2),
+			tnt_col_len(stmt->tnt_statement, 2));
+		cols[row_count - 1]->notnull =
+			!!tnt_col_int(stmt->tnt_statement, 3);
+		/* dflt_value is ignored */
+		cols[row_count - 1]->pk =
+			!!tnt_col_int(stmt->tnt_statement, 5);
 	}
 	return cols;
 error:
@@ -857,14 +871,12 @@ column_buffer_size(int tp)
  * is not called very often. And finally it's a temparary hack.
  */
 void
-get_type(struct column_def **col_types, const char* name, int *user_type, char ** user_type_str)
+get_type(struct column_def **col_types, const char* name, int *user_type)
 {
 	if (col_types) {
 		for(struct column_def **c=col_types; *c; ++c) {
 			if (m_strcasecmp(name, (*c)->name) == 0) {
 				*user_type = (*c)->type;
-				/* seems I don't need typename (Original tarantool type name) */
-				*user_type_str = (*c)->typename;
 			}
 		}
 	}
@@ -920,10 +932,11 @@ tnt_fake_set_column_bin(struct tnt_coldata *row, int icol, void *p, size_t sz)
 #define INDEX_NCOLS 13
 
 int
-add_fake_index_row(odbc_stmt *stmt, const char *tbl,
-					struct index_def *col, struct index_def *col_row)
+add_fake_index_row(odbc_stmt *stmt, const char *tbl, struct index_def *col,
+		   struct index_part_def *col_row)
 {
 	tnt_stmt_t *tnt = stmt->tnt_statement;
+
 	if (tnt_fake_add_col_name(tnt, "TABLE_CAT", 0) != OK ||
 		tnt_fake_add_col_name(tnt, "TABLE_SCHEM", 1) != OK ||
 		tnt_fake_add_col_name(tnt, "TABLE_NAME", 2) != OK ||
@@ -946,33 +959,30 @@ add_fake_index_row(odbc_stmt *stmt, const char *tbl,
 		return FAIL;
 
 	if (!tnt_fake_set_column_str(row, 5, strdup(col->name)) ||
-		!tnt_fake_set_column_str(row, 0, strdup("")) ||
-		!tnt_fake_set_column_str(row, 1, strdup("")) ||
-		!tnt_fake_set_column_str(row, 2, strdup(tbl)) ||
-		!tnt_fake_set_column_str(row, 8, strdup(col_row->column_name)) ||
-		!tnt_fake_set_column_str(row, 9, col_row->asc_or_desc == 0 ? strdup("A") :
-											strdup("D")))
+	    !tnt_fake_set_column_str(row, 0, strdup("")) ||
+	    !tnt_fake_set_column_str(row, 1, strdup("")) ||
+	    !tnt_fake_set_column_str(row, 2, strdup(tbl)) ||
+	    !tnt_fake_set_column_str(row, 8, strdup(col_row->name)) ||
+	    !tnt_fake_set_column_str(row, 9, strdup(col_row->desc ? "D" : "A")))
 		return FAIL;
 
 	tnt_fake_set_column_null(row, 4);
-	tnt_fake_set_column_int(row, 3, (col->is_uniq)?SQL_FALSE:SQL_TRUE);
-	tnt_fake_set_column_int(row, 7, col_row->column_index + 1);
+	tnt_fake_set_column_int(row, 3, col->unique ? SQL_FALSE : SQL_TRUE);
+	tnt_fake_set_column_int(row, 7, col_row->id + 1);
 
 	tnt_fake_set_column_int(row, 6, SQL_INDEX_OTHER);
 	tnt_fake_set_column_null(row, 10);
 	tnt_fake_set_column_null(row, 11);
 	tnt_fake_set_column_null(row, 12);
 
-
 	return OK;
 }
-
-
 
 #define COLINFO_NCOLS 8
 
 int
-add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def **col_types)
+add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col,
+		     struct column_def **col_types)
 {
 	tnt_stmt_t *tnt = stmt->tnt_statement;
 	if ( tnt_fake_add_col_name(tnt, "SCOPE", 0) != OK ||
@@ -986,11 +996,9 @@ add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def 
 		return FAIL;
 
 	int user_type = col->type;
-	char *user_type_str = NULL;
+	get_type(col_types, col->name, &user_type);
 
-	get_type(col_types, col->name, &user_type, &user_type_str);
-
-	struct tnt_coldata * row = tnt_fake_add_row(tnt);
+	struct tnt_coldata *row = tnt_fake_add_row(tnt);
 
 	if (!row)
 		return FAIL;
@@ -1019,10 +1027,9 @@ add_fake_colinfo_row(odbc_stmt *stmt, struct column_def *col, struct column_def 
 	return OK;
 }
 
-
-
 int
-add_fake_column_row(odbc_stmt *stmt, struct column_def *col, struct column_def **col_types, const char *tablename)
+add_fake_column_row(odbc_stmt *stmt, struct column_def *col,
+		    struct column_def **col_types, const char *tablename)
 {
 	tnt_stmt_t *tnt = stmt->tnt_statement;
 	if ( tnt_fake_add_col_name(tnt, "TABLE_CAT", 0) != OK ||
@@ -1046,9 +1053,7 @@ add_fake_column_row(odbc_stmt *stmt, struct column_def *col, struct column_def *
 		return FAIL;
 
 	int user_type = col->type;
-	char *user_type_str = NULL;
-
-	get_type(col_types, col->name, &user_type, &user_type_str);
+	get_type(col_types, col->name, &user_type);
 
 	struct tnt_coldata * row = tnt_fake_add_row(tnt);
 
@@ -1078,7 +1083,8 @@ add_fake_column_row(odbc_stmt *stmt, struct column_def *col, struct column_def *
 	/* NUM_PREC_RADIX */
 	tnt_fake_set_column_int(row, 9, 0);
 	/* NULLABLE */
-	tnt_fake_set_column_int(row, 10, col->is_nullable? SQL_NULLABLE: SQL_NO_NULLS);
+	tnt_fake_set_column_int(row, 10,
+		col->notnull ? SQL_NO_NULLS : SQL_NULLABLE);
 	/* COLUMN_DEF */
 	tnt_fake_set_column_null(row, 12);
 	/* SQL_DATETIME_SUB */
@@ -1088,7 +1094,8 @@ add_fake_column_row(odbc_stmt *stmt, struct column_def *col, struct column_def *
 	/* ORDINAL_POSITION */
 	tnt_fake_set_column_int(row, 16, col->id + 1);
 	/* IS_NULLABLE */
-	tnt_fake_set_column_str(row, 17, col->is_nullable? strdup("YES"):strdup("NO"));
+	tnt_fake_set_column_str(row, 17,
+		col->notnull ? strdup("NO") : strdup("YES"));
 
 	return OK;
 }
@@ -1115,38 +1122,18 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	/* Since Tarantool do not have catalog and scheme just ignoring these. */
 	char tname[NLEN];
 	char q[2*NLEN];
-	char *tbl = makez(tname, sizeof(tname), (char*)table, tablelen);
-
-
-
-	/* This is a hack until we would have real metadata tables with real
-	 * types. For now one can get real types from user created table 'table_types'.
-	 * If this select fails just ignore it. So it will work when Tarantool get types
-	 * and sombody just removed that table.
-	 */
-
-	snprintf(q, sizeof(q), "select 1,name,types,0,0,0 from table_types where name='%s'", tbl);
-	struct column_def ** col_tp = NULL;
-	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
-	    stmt_execute(stmth) == SQL_SUCCESS) {
-
-		col_tp = read_columns_rows(stmt);
-
-	}
-	free_stmt(stmth, SQL_CLOSE);
+	char *tbl = makez(tname, sizeof(tname), (char *) table, tablelen);
 
 	snprintf(q, sizeof(q), "pragma table_info(%s)", tbl);
 
-	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) != SQL_SUCCESS ||
-	    stmt_execute(stmth) != SQL_SUCCESS) {
-		free_columns_info(col_tp);
+	if (stmt_prepare(stmth, (SQLCHAR *) q, SQL_NTS) != SQL_SUCCESS ||
+	    stmt_execute(stmth) != SQL_SUCCESS)
 		return SQL_ERROR;
-	}
 
 
 	SQLRETURN status;
-	struct column_def ** col = read_columns_rows(stmt);
-	struct column_def ** col_p = col;
+	struct column_def **col = read_columns_rows(stmt);
+	struct column_def **col_p = col;
 	tnt_stmt_close_cursor(stmt->tnt_statement);
 
 	if (tnt_fake_setup_resultset(stmt, COLINFO_NCOLS)!=OK) {
@@ -1156,23 +1143,25 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 		goto ret;
 	}
 	if (itype == SQL_BEST_ROWID)
-		while(*col) {
-			if ((*col)->is_pk && (nullable == SQL_NULLABLE
-					      || (nullable == SQL_NO_NULLS && !(*col)->is_nullable)))
-				if (add_fake_colinfo_row(stmt, *col, col_tp) != OK) {
+		while (*col) {
+			if ((*col)->pk && (nullable == SQL_NULLABLE ||
+			    (nullable == SQL_NO_NULLS && (*col)->notnull))) {
+				int rc = add_fake_colinfo_row(
+					stmt, *col, col_p);
+				if (rc != OK) {
 					set_stmt_error(stmt, ODBC_HY013_ERROR,
-						       "Memory management error",
-						       "SQLSpecialColumns");
+						"Memory management error",
+						"SQLSpecialColumns");
 					status = SQL_ERROR;
 					goto ret;
 				}
+			}
 			col++;
 		}
 	stmt->state = EXECUTED;
 	status = SQL_SUCCESS;
 ret:
 	free_columns_info(col_p);
-	free_columns_info(col_tp);
 	return status;
 }
 
@@ -1254,7 +1243,7 @@ struct index_def **
 read_index_rows(odbc_stmt *stmt)
 {
 	int capacity = 2;
-	struct index_def ** cols = (struct index_def **)
+	struct index_def **cols = (struct index_def **)
 		malloc(sizeof(struct index_def *)*capacity);
 	if (!cols)
 		return NULL;
@@ -1263,24 +1252,23 @@ read_index_rows(odbc_stmt *stmt)
 		row_count++;
 		while (capacity < row_count + 1 && capacity < INT_MAX) {
 			capacity *= 2;
-			void *p = realloc(cols, (sizeof(struct index_def *)
-				*capacity));
+			void *p = realloc(cols,
+				(sizeof(struct index_def *) * capacity));
 			if (!p)
 				goto error;
 			cols = (struct index_def **) p;
 		}
 		cols[row_count] = NULL;
-		cols[row_count - 1] = (struct index_def*) malloc(sizeof(struct index_def));
+		cols[row_count - 1] = (struct index_def *) malloc(
+			sizeof(struct index_def));
 		if (!cols[row_count - 1])
 			goto error;
 
-		cols[row_count - 1]->id = (int)tnt_col_int(stmt->tnt_statement, 0);
-		cols[row_count - 1]->name = strndup(tnt_col_str(stmt->tnt_statement, 1),
+		cols[row_count - 1]->name = strndup(
+			tnt_col_str(stmt->tnt_statement, 1),
 			tnt_col_len(stmt->tnt_statement, 1));
-		cols[row_count - 1]->is_uniq = (int)tnt_col_int(stmt->tnt_statement, 2);
-		cols[row_count - 1]->is_pk = tnt_col_str(stmt->tnt_statement, 3)[0] == 'p'?1:0;
-		cols[row_count - 1]->column_name = NULL;
-		cols[row_count - 1]->asc_or_desc = 0;
+		cols[row_count - 1]->unique =
+			!!tnt_col_int(stmt->tnt_statement, 2);
 	}
 	return cols;
 error:
@@ -1288,12 +1276,12 @@ error:
 	return NULL;
 }
 
-struct index_def **
+struct index_part_def **
 read_index_info_rows(odbc_stmt *stmt)
 {
 	int capacity = 2;
-	struct index_def ** cols = (struct index_def **)
-		malloc(sizeof(struct index_def *)*capacity);
+	struct index_part_def **cols = (struct index_part_def **)
+		malloc(sizeof(struct index_part_def *) * capacity);
 	if (!cols)
 		return NULL;
 	int row_count = 0;
@@ -1301,51 +1289,61 @@ read_index_info_rows(odbc_stmt *stmt)
 		row_count++;
 		while (capacity < row_count + 1 && capacity < INT_MAX) {
 			capacity *= 2;
-			void *p = realloc(cols, (sizeof(struct index_def *)
-				*capacity));
+			void *p = realloc(cols,
+				sizeof(struct index_part_def *)	* capacity);
 			if (!p)
 				goto error;
-			cols = (struct index_def **) p;
+			cols = (struct index_part_def **) p;
 		}
 		cols[row_count] = NULL;
-		cols[row_count - 1] = (struct index_def*) malloc(sizeof(struct index_def));
+		cols[row_count - 1] = (struct index_part_def *) malloc(
+			sizeof(struct index_part_def));
 		if (!cols[row_count - 1])
 			goto error;
-		cols[row_count - 1]->name = NULL;
-		cols[row_count - 1]->id = (int)tnt_col_int(stmt->tnt_statement, 0);
-		cols[row_count - 1]->column_name = strndup(tnt_col_str(stmt->tnt_statement, 2),
+		cols[row_count - 1]->id =
+			tnt_col_int(stmt->tnt_statement, 1);
+		cols[row_count - 1]->name = strndup(
+			tnt_col_str(stmt->tnt_statement, 2),
 			tnt_col_len(stmt->tnt_statement, 2));
-		cols[row_count - 1]->asc_or_desc = (int)tnt_col_int(stmt->tnt_statement, 3);
-		cols[row_count - 1]->column_index = (int)tnt_col_int(stmt->tnt_statement, 1);
+		cols[row_count - 1]->desc =
+			!!tnt_col_int(stmt->tnt_statement, 3);
+		cols[row_count - 1]->coll = strndup(
+			tnt_col_str(stmt->tnt_statement, 4),
+			tnt_col_len(stmt->tnt_statement, 4));
+		cols[row_count - 1]->type = coltype2odbc(
+			tnt_col_str(stmt->tnt_statement, 5),
+			tnt_col_len(stmt->tnt_statement, 5));
 	}
 	return cols;
 error:
-	free_indexes_info(cols);
+	free_index_parts(cols);
 	return NULL;
 }
 
-static struct index_def **
+static struct index_part_def **
 get_index(odbc_stmt *stmt, const char *tbl, const char *nm)
 {
-	struct index_def **r = 0;
+	struct index_part_def **r = NULL;
 	char q[NLEN];
-	snprintf(q, sizeof(q), "pragma index_xinfo=%s.\"%s\"", tbl, nm);
+	/* XXX: What if a name is in lower case? We need double
+	 * quotes around it.
+	 */
+	snprintf(q, sizeof(q), "pragma index_info(%s.\"%s\")", tbl, nm);
 	if (stmt_prepare(stmt, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
-		stmt_execute(stmt) == SQL_SUCCESS) {
+	    stmt_execute(stmt) == SQL_SUCCESS)
 		r = read_index_info_rows(stmt);
-	}
 	free_stmt(stmt, SQL_CLOSE);
 	return r;
 }
 
-static struct index_def**
+static struct index_def **
 get_index_list(odbc_stmt *stmt, const char *tbl)
 {
-	struct index_def **r=0;
+	struct index_def **r = NULL;
 	char q[NLEN];
 	snprintf(q, sizeof(q), "pragma index_list(%s)", tbl);
-	if (stmt_prepare(stmt, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
-		stmt_execute(stmt) == SQL_SUCCESS) {
+	if (stmt_prepare(stmt, (SQLCHAR *) q, SQL_NTS) == SQL_SUCCESS &&
+	    stmt_execute(stmt) == SQL_SUCCESS) {
 		r = read_index_rows(stmt);
 	}
 	/* Here odbc statement handle is not closed
@@ -1377,8 +1375,8 @@ statistics(SQLHSTMT stmth, SQLCHAR *cat,
 	/* Since Tarantool do not have catalog and scheme just ignoring these. */
 	char tname[NLEN];
 
-	struct index_def **lst = get_index_list(stmt, makez(tname, sizeof(tname),
-							    (char*)table, tablelen));
+	struct index_def **lst = get_index_list(stmt,
+		makez(tname, sizeof(tname), (char *) table, tablelen));
 	struct index_def **lst_p = lst;
 
 	/* In order to setup fake resultset one needs to use existing
@@ -1387,36 +1385,41 @@ statistics(SQLHSTMT stmth, SQLCHAR *cat,
 	 */
 	tnt_stmt_close_cursor(stmt->tnt_statement);
 	SQLRETURN status = SQL_ERROR;
-	odbc_stmt *sup_stmt = 0;
-	struct index_def **index_info = 0;
+	odbc_stmt *sup_stmt = NULL;
+	struct index_part_def **index_info = NULL;
 	if (tnt_fake_setup_resultset(stmt, INDEX_NCOLS) != OK) {
-		set_stmt_error(stmt, ODBC_HY013_ERROR, "Memory management error",
-						"SQLStatistics");
+		set_stmt_error(stmt, ODBC_HY013_ERROR,
+			       "Memory management error",
+			       "SQLStatistics");
 		status = SQL_ERROR;
 		goto ret;
 	}
 
-	if (alloc_stmt(stmt->connect, (SQLHSTMT *)&sup_stmt) != SQL_SUCCESS)
+	if (alloc_stmt(stmt->connect, (SQLHSTMT *) &sup_stmt) != SQL_SUCCESS)
 		goto ret;
 	while (*lst) {
-			if (uniq == SQL_INDEX_UNIQUE && !(*lst)->is_uniq)
-				continue;
-			index_info = get_index(sup_stmt, tname, (*lst)->name);
-			if (index_info) {
-				struct index_def **row = index_info;
-				while (*row) {
-					if (add_fake_index_row(stmt, tname, *lst, *row) != OK) {
-						set_stmt_error(stmt, ODBC_HY013_ERROR,
-							"Memory management error",
-							"SQLStatistics");
-						status = SQL_ERROR;
-						goto ret;
-					}
-					row++;
-				}
-				free_indexes_info(index_info);
-				index_info = 0;
+		if (uniq == SQL_INDEX_UNIQUE && !(*lst)->unique)
+			continue;
+		index_info = get_index(sup_stmt, tname, (*lst)->name);
+		if (index_info == NULL) {
+			// XXX: give an error?
+			++lst;
+			continue;
+		}
+		struct index_part_def **row = index_info;
+		while (*row) {
+			if (add_fake_index_row(stmt, tname, *lst, *row) != OK) {
+				set_stmt_error(stmt,
+					ODBC_HY013_ERROR,
+					"Memory management error",
+					"SQLStatistics");
+				status = SQL_ERROR;
+				goto ret;
 			}
+			row++;
+		}
+		free_index_parts(index_info);
+		index_info = NULL;
 		lst++;
 	}
 	stmt->state = EXECUTED;
@@ -1427,10 +1430,9 @@ ret:
 		free_stmt(sup_stmt, SQL_DROP);
 	}
 	free_indexes_info(lst_p);
-	free_indexes_info(index_info);
+	free_index_parts(index_info);
 	return status;
 }
-
 
 int
 make_type_row(struct tnt_coldata * row, const char *typename, int sqltype)

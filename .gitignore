@@ -27,3 +27,6 @@ latex
 
 deploy_key
 deploy_key.pub
+
+odbc.log
+odbc_test

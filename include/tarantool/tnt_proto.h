@@ -81,6 +81,14 @@ enum tnt_response_key_t {
 };
 
 /**
+ * \brief XXX
+ */
+enum tnt_metadata_key {
+	TNT_FIELD_NAME = 0,
+	TNT_FIELD_TYPE = 1,
+};
+
+/**
  * \brief Request types
  */
 enum tnt_request_t {
