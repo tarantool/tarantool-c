@@ -23,20 +23,19 @@ env:
       - TARGET=test TARANTOOL_REPO=1.9
       - TARGET=test TARANTOOL_REPO=1.10
       - TARGET=test TARANTOOL_REPO=2x
+      - TARGET=test TARANTOOL_REPO=2.2
       - OS=el DIST=6
       - OS=el DIST=7
-      - OS=fedora DIST=24
-      - OS=fedora DIST=25
-      - OS=fedora DIST=26
-      - OS=fedora DIST=27
-      - OS=ubuntu DIST=precise
+      - OS=fedora DIST=28
+      - OS=fedora DIST=29
       - OS=ubuntu DIST=trusty
       - OS=ubuntu DIST=xenial
       - OS=ubuntu DIST=bionic
       - OS=ubuntu DIST=cosmic
-      - OS=debian DIST=wheezy
+      - OS=ubuntu DIST=disco
       - OS=debian DIST=jessie
       - OS=debian DIST=stretch
+      - OS=debian DIST=buster
 
 matrix:
     exclude:
@@ -44,15 +43,9 @@ matrix:
         compiler: clang
       - env: OS=el DIST=7
         compiler: clang
-      - env: OS=fedora DIST=24
+      - env: OS=fedora DIST=28
         compiler: clang
-      - env: OS=fedora DIST=25
-        compiler: clang
-      - env: OS=fedora DIST=26
-        compiler: clang
-      - env: OS=fedora DIST=27
-        compiler: clang
-      - env: OS=ubuntu DIST=precise
+      - env: OS=fedora DIST=29
         compiler: clang
       - env: OS=ubuntu DIST=trusty
         compiler: clang
@@ -62,11 +55,13 @@ matrix:
         compiler: clang
       - env: OS=ubuntu DIST=cosmic
         compiler: clang
-      - env: OS=debian DIST=wheezy
+      - env: OS=ubuntu DIST=disco
         compiler: clang
       - env: OS=debian DIST=jessie
         compiler: clang
       - env: OS=debian DIST=stretch
+        compiler: clang
+      - env: OS=debian DIST=buster
         compiler: clang
       - env: TARGET=documentation
         compiler: clang
@@ -111,6 +106,16 @@ deploy:
   - provider: packagecloud
     username: tarantool
     repository: "2x"
+    token: ${PACKAGECLOUD_TOKEN}
+    dist: ${OS}/${DIST}
+    package_glob: build/*.{rpm,deb}
+    skip_cleanup: true
+    on:
+      branch: master
+      condition: -n "${OS}" && -n "${DIST}" && -n "${PACKAGECLOUD_TOKEN}"
+  - provider: packagecloud
+    username: tarantool
+    repository: "2_2"
     token: ${PACKAGECLOUD_TOKEN}
     dist: ${OS}/${DIST}
     package_glob: build/*.{rpm,deb}
