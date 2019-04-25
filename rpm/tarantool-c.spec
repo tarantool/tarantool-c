@@ -16,6 +16,14 @@ Group: Applications/Databases
 %description
 C client libraries for Tarantool
 
+# Use strip from devtoolset instead of /usr/bin/strip to avoid 'invalid
+# relocation type 42' error on CentOS 6.
+# https://bugzilla.redhat.com/show_bug.cgi?id=1545386#c5
+# https://stackoverflow.com/a/48801417
+%if 0%{?rhel} == 6
+%global __strip /opt/rh/devtoolset-6/root/usr/bin/strip
+%endif
+
 %package devel
 Summary: Development files for C libtnt
 Requires: tarantool-c%{?_isa} = %{version}-%{release}
