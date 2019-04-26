@@ -1,9 +1,12 @@
-set(common_files test.c
+set(common_files unit.c
                  common.c
                  tnt_assoc.c)
 if(WIN32)
 	set(WS2 wsock32 ws2_32)
 endif(WIN32)
+
+add_library(unit STATIC unit.c)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 project(tarantool-test-tcp)
 add_executable(tarantool-test-tcp
@@ -39,6 +42,8 @@ add_executable(tarantool-test-utest
     ${common_files})
 set_target_properties(tarantool-test-utest PROPERTIES OUTPUT_NAME "tarantool-utest")
 target_link_libraries(tarantool-test-utest tnt ${WS2})
+
+add_subdirectory(odbc)
 
 add_custom_target(test
     COMMAND ${PROJECT_SOURCE_DIR}/test-run.py -j -1
