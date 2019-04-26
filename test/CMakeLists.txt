@@ -1,9 +1,12 @@
-set(common_files test.c
+set(common_files unit.c
                  common.c
                  tnt_assoc.c)
 if(WIN32)
 	set(WS2 wsock32 ws2_32)
 endif(WIN32)
+
+add_library(unit STATIC unit.c)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 project(tarantool-test-tcp)
 add_executable(tarantool-test-tcp
@@ -40,7 +43,19 @@ add_executable(tarantool-test-utest
 set_target_properties(tarantool-test-utest PROPERTIES OUTPUT_NAME "tarantool-utest")
 target_link_libraries(tarantool-test-utest tnt ${WS2})
 
+add_subdirectory(odbc)
+
+if("$ENV{PYTHONPATH}" STREQUAL "")
+	set(PYTHONPATH "${CMAKE_CURRENT_SOURCE_DIR}/odbc")
+else()
+	set(PYTHONPATH $ENV{PYTHONPATH}:${CMAKE_CURRENT_SOURCE_DIR})
+endif()
+
 add_custom_target(test
-    COMMAND ${PROJECT_SOURCE_DIR}/test-run.py -j -1
-        --builddir=${PROJECT_BINARY_DIR}
-        --vardir=${PROJECT_BINARY_DIR}/test/var)
+		"${PROJECT_SOURCE_DIR}/odbc/set_odbcini.sh"
+		COMMAND
+		${CMAKE_COMMAND} -E env
+		"PYTHONPATH=${PYTHONPATH}"
+		${PROJECT_SOURCE_DIR}/test-run.py -j -1
+		--builddir=${PROJECT_BINARY_DIR}
+		--vardir=${PROJECT_BINARY_DIR}/test/var)
