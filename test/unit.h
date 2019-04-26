@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 
+#define header() note("*** %s: prep ***", __func__)
+#define footer() note("*** %s: done ***", __func__)
+
 /**
 @brief example
 
