@@ -216,7 +216,8 @@ do_fetchgetdata_stream(struct set_handles *st, void *p)
 			SQLLEN str_len;
 			int have_with_info = 0;
 			do {
-				code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val[0], 2, &str_len);
+				code = SQLGetData(st->hstmt, 1, SQL_C_CHAR,
+						  &str_val[0], 2, &str_len);
 				row_cnt ++ ;
 				if (code != SQL_SUCCESS_WITH_INFO)
 					break;
@@ -225,7 +226,8 @@ do_fetchgetdata_stream(struct set_handles *st, void *p)
 			if (code == SQL_SUCCESS) {
 				if (have_with_info)
 					matches ++;
-				code = SQLGetData(st->hstmt, 1, SQL_C_CHAR, &str_val[0], 2, &str_len);
+				code = SQLGetData(st->hstmt, 1, SQL_C_CHAR,
+						  &str_val[0], 2, &str_len);
 				if (code != SQL_NO_DATA) {
 					fprintf(stderr, "no SQL_NO_DATA after success code %d row_count %d\n",
 						code, row_cnt);
@@ -248,7 +250,8 @@ do_fetchgetdata_stream(struct set_handles *st, void *p)
 }
 
 int
-test_fetch(const char *dsn, const char *sql,void* cnt, int (*fnc) (struct set_handles *,void *))
+test_fetch(const char *dsn, const char *sql,void* cnt,
+	   int (*fnc) (struct set_handles *,void *))
 {
 	int ret_code = 0;
 

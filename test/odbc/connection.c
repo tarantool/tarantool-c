@@ -21,12 +21,14 @@ test_driver_connect(const char *dsn) {
 		char out_dsn[1024];
 		short out_len=0;
 		// Connect to data source
-		retcode = SQLDriverConnect(st.hdbc, 0, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)out_dsn,
-					   sizeof(out_dsn), &out_len, SQL_DRIVER_NOPROMPT);
+		retcode = SQLDriverConnect(st.hdbc, 0, (SQLCHAR *)dsn, SQL_NTS,
+					  (SQLCHAR *)out_dsn, sizeof(out_dsn),
+					  &out_len, SQL_DRIVER_NOPROMPT);
 
 		// Allocate statement handle
 		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-			retcode = SQLAllocHandle(SQL_HANDLE_STMT, st.hdbc, &st.hstmt);
+			retcode = SQLAllocHandle(SQL_HANDLE_STMT, st.hdbc,
+						 &st.hstmt);
 			// Process data
 			if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
 				SQLFreeHandle(SQL_HANDLE_STMT, st.hstmt);

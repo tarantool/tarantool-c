@@ -9,7 +9,8 @@
 #include "util.h"
 
 int
-test_describecol(const char *dsn, const char *sql, int icol, int type, const char *cname, int null_type)
+test_describecol(const char *dsn, const char *sql, int icol, int type,
+		 const char *cname, int null_type)
 {
 	int ret_code = 0;
 
@@ -28,14 +29,22 @@ test_describecol(const char *dsn, const char *sql, int icol, int type, const cha
 					SQLSMALLINT ret_type;
 					SQLSMALLINT is_null;
 
-					retcode = SQLDescribeCol (st.hstmt, icol, (SQLCHAR *)colname, BUFSZ,
-								  &colnamelen, &ret_type, 0, 0, &is_null);
+					retcode = SQLDescribeCol (st.hstmt,
+								  icol,
+								  (SQLCHAR *)colname,
+								  BUFSZ,
+								  &colnamelen,
+								  &ret_type, 0,
+								  0, &is_null);
 					if (retcode != SQL_SUCCESS) {
 						//show_error(SQL_HANDLE_STMT, st.hstmt);
 						ret_code = 0;
 					} else {
-						fprintf (stderr, "describecol(colname='%s'(%s),type=%d(%d), is_null=%d(%d))\n",
-							 colname, cname, ret_type, type, is_null, null_type);
+						fprintf (stderr,
+							"describecol(colname='%s'(%s),type=%d(%d), is_null=%d(%d))\n",
+							 colname, cname,
+							 ret_type, type,
+							 is_null, null_type);
 						if (m_strcasecmp(colname,cname) == 0 &&
 						    ret_type == type &&
 						    is_null == null_type)
