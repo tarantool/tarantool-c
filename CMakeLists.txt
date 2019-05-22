@@ -93,7 +93,27 @@ if (ENABLE_BUNDLED_DOCS)
     add_subdirectory(doc)
 endif(ENABLE_BUNDLED_DOCS)
 
+if (ENABLE_GCOV)
+    # Set flags to disable all optimisation.
 
+    # Set flags which are nessesary to calculate test coverage.
+    if (NOT HAVE_GCOV)
+        message (FATAL_ERROR
+                "ENABLE_GCOV option requested but gcov library is not found")
+    endif()
+
+    add_compile_flags("C;CXX"
+            "-fprofile-arcs"
+            "-ftest-coverage"
+            )
+
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ftest-coverage")
+    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fprofile-arcs")
+    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ftest-coverage")
+
+     add_library(gcov SHARED IMPORTED)
+endif()
 
 message(STATUS "------------------------------------------------")
 message(STATUS "        Tarantool library configuration:        ")
