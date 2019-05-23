@@ -2,235 +2,267 @@
 	#include <windows.h>
 #endif
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <sqlext.h>
 #include <stdio.h>
-#include <unit.h>
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
+#include "test.h"
 
-static inline int
-m_strcasecmp(const char *s1, const char *s2)
-{
-	while (*s1 != 0 && *s2 != 0 && (tolower(*s1) - tolower(*s2)) == 0) {
-		s1++; s2++;
-	}
-	return tolower(*s1) - tolower(*s2);
-}
+/* XXX: Split to header and C file. */
+/* XXX: Rename the unit more appropriately: odbc_util.[ch]? */
 
-#define BUFSZ 255
-#define STR_LEN 128 + 1
-#define REM_LEN 254 + 1
-#define CHECK(a,b) do { if (a != SQL_SUCCESS) { b ; return 0;} } while(0)
+/* {{{ ODBC helpers */
 
 void
-show_error(SQLSMALLINT ht, SQLHANDLE hndl)
+print_diag(SQLSMALLINT handle_type, SQLHANDLE handle)
 {
-	SQLCHAR       SqlState[6], Msg[SQL_MAX_MESSAGE_LENGTH];
-	SQLINTEGER    NativeError;
-	SQLSMALLINT   i, MsgLen;
-	SQLRETURN     rc2;
-	SQLLEN numRecs = 0;
-	SQLGetDiagField(ht, hndl, 0 , SQL_DIAG_NUMBER, &numRecs, 0, 0);
-	// Get the status records.
-	i = 1;
-	while (i <= numRecs &&
-	       (rc2 = SQLGetDiagRec(ht, hndl, i, SqlState, &NativeError,
-				    Msg, sizeof(Msg), &MsgLen)) != SQL_NO_DATA) {
-		fprintf (stderr,"{%s} errno=%d %s\n", SqlState,NativeError,Msg);
-		i++;
+	SQLCHAR sql_state[6];
+	SQLCHAR msg[SQL_MAX_MESSAGE_LENGTH];
+	SQLINTEGER native_error;
+	SQLSMALLINT msg_len;
+	SQLLEN record_count = 0;
+
+	SQLGetDiagField(handle_type, handle, 0, SQL_DIAG_NUMBER, &record_count,
+			0, NULL);
+
+	/* Get status records. */
+	SQLSMALLINT i;
+	for (i = 1; i <= record_count; ++i) {
+		SQLRETURN rc = SQLGetDiagRec(handle_type, handle, i, sql_state,
+					     &native_error, msg, sizeof(msg),
+					     &msg_len);
+		assert(rc != SQL_NO_DATA);
+		diag("[%s] errno=%d %s\n", sql_state, native_error, msg);
 	}
 }
 
-struct set_handles {
-    SQLHENV henv;
-    SQLHDBC hdbc;
-    SQLHSTMT hstmt;
-    int level;
+SQLCHAR *
+get_dsn()
+{
+	static char buf[256];
+	char *port = buf;
+	strcpy(port, getenv("LISTEN"));
+	strsep(&port, ":");
+	assert(strchr(port, ':') == NULL);
+
+	char *tmpl = "DRIVER=Tarantool;SERVER=localhost;"
+		     "UID=test;PWD=test;PORT=%s;"
+		     "LOG_FILENAME=odbc.log;LOG_LEVEL=5";
+	char *res;
+	asprintf(&res, tmpl, port);
+	return (SQLCHAR *) res;
+}
+
+/* }}} */
+
+/* {{{ Preallocated handles */
+
+/**
+ * Preallocated handles to simplity tests code.
+ */
+struct basic_handles {
+	SQLHENV henv;
+	SQLHDBC hdbc;
+	SQLHSTMT hstmt;
 };
 
-char *
-get_good_dsn()
-{
-	char *host_and_port = getenv("LISTEN");
-	strsep(&host_and_port, ":");
-	const char *port = strsep(&host_and_port, ":");
-
-	char *tmp_dsn = "DRIVER=Tarantool;SERVER=localhost;"
-			"UID=test;PWD=test;PORT=%s;"
-			"LOG_FILENAME=odbc.log;LOG_LEVEL=5";
-	char *res;
-	asprintf(&res, tmp_dsn, port);
-	return res;
-}
-
+/**
+ * Allocate handles and connect to a database.
+ *
+ * Aborts a program if an error occurs.
+ */
 void
-test(int t)
+basic_handles_create(struct basic_handles *handles)
 {
-	static int cnt = 0;
-	if (t)
-		printf("%d..ok\n",cnt);
-	else
-		printf("%d..fail\n",cnt);
-	cnt++;
+	SQLHENV henv = SQL_NULL_HENV;
+	SQLHDBC hdbc = SQL_NULL_HDBC;
+	SQLHSTMT hstmt = SQL_NULL_HSTMT;
+
+	SQLRETURN rc;
+
+	/* Allocate an environment handle. */
+	rc = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv);
+	if (!SQL_SUCCEEDED(rc)) {
+		fprintf(stderr, "Failed to allocate an environment handle\n");
+		abort();
+	}
+
+	/* Set the ODBC version environment attribute. */
+	rc = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION,
+			   (SQLPOINTER) SQL_OV_ODBC3, 0);
+	if (!SQL_SUCCEEDED(rc)) {
+		print_diag(SQL_HANDLE_ENV, henv);
+		SQLFreeHandle(SQL_HANDLE_ENV, henv);
+		abort();
+	}
+
+	/* Allocate a connection handle. */
+	rc = SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
+	if (!SQL_SUCCEEDED(rc)) {
+		print_diag(SQL_HANDLE_ENV, henv);
+		SQLFreeHandle(SQL_HANDLE_ENV, henv);
+		abort();
+	}
+
+	/* Set a login timeout to 5 seconds. */
+	rc = SQLSetConnectAttr(hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER) 5, 0);
+	if (!SQL_SUCCEEDED(rc)) {
+		print_diag(SQL_HANDLE_DBC, hdbc);
+		SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+		SQLFreeHandle(SQL_HANDLE_ENV, henv);
+		abort();
+	}
+
+	SQLCHAR *dsn = get_dsn();
+
+	/* Connect to a database. */
+	rc = SQLDriverConnect(hdbc, 0, (SQLCHAR *) dsn, SQL_NTS, NULL, 0, NULL,
+			      SQL_DRIVER_NOPROMPT);
+	free(dsn);
+	if (!SQL_SUCCEEDED(rc)) {
+		print_diag(SQL_HANDLE_DBC, hdbc);
+		SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+		SQLFreeHandle(SQL_HANDLE_ENV, henv);
+		abort();
+	}
+
+	/* Allocate a statement handle. */
+	rc = SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
+	if (!SQL_SUCCEEDED(rc)) {
+		print_diag(SQL_HANDLE_DBC, hdbc);
+		SQLDisconnect(hdbc);
+		SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+		SQLFreeHandle(SQL_HANDLE_ENV, henv);
+		abort();
+	}
+
+	handles->henv = henv;
+	handles->hdbc = hdbc;
+	handles->hstmt = hstmt;
 }
 
+/**
+ * Disconnect from a database and destroy handles.
+ */
 void
-testfail(int i)
+basic_handles_destroy(struct basic_handles *handles)
 {
-	test(!i);
+	// XXX: remove
+	//if (handles->hstmt != SQL_NULL_HSTMT)
+	//if (handles->hdbc != SQL_NULL_HDBC)
+	//if (handles->hstmt != SQL_NULL_HENV)
+	SQLFreeHandle(SQL_HANDLE_STMT, handles->hstmt);
+	SQLDisconnect(handles->hdbc);
+	SQLFreeHandle(SQL_HANDLE_DBC, handles->hdbc);
+	SQLFreeHandle(SQL_HANDLE_ENV, handles->henv);
 }
 
-int
-init_dbc(struct set_handles *st, const char *dsn)
-{
-	SQLRETURN retcode;
-	st->level  = 0;
-	// Allocate environment handle
-	retcode = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &st->henv);
+/* }}} */
 
-	// Set the ODBC version environment attribute
-	if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-		retcode = SQLSetEnvAttr(st->henv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
+/* {{{ Helpers to execute SQL requests */
 
-		// Allocate connection handle
-		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-			retcode = SQLAllocHandle(SQL_HANDLE_DBC, st->henv, &st->hdbc);
-			// Set login timeout to 5 seconds
-			if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-				SQLSetConnectAttr(st->hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
-				st->level = 1;
-				if (dsn == NULL)
-					return 1;
-				else {
-					SQLSMALLINT out_len;
-					retcode = SQLDriverConnect(st->hdbc, 0, (SQLCHAR *)dsn, SQL_NTS, 0,
-								   0, &out_len, SQL_DRIVER_NOPROMPT);
-					// Allocate statement handle
-					if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-						st->level = 2 ;
-						retcode = SQLAllocHandle(SQL_HANDLE_STMT, st->hdbc, &st->hstmt);
-						// Process data
-						if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-							st->level = 3;
-							return 1;
-						}
-					}
-				}
-			}
-		}
-	}
-	return 0;
-}
-
+/**
+ * Execute an SQL request.
+ *
+ * Aborts a program if an error occurs.
+ */
 void
-close_set(struct set_handles *st)
+execute_sql(struct basic_handles *handles, const char *sql)
 {
-	if (st->level == 3) {
-		SQLFreeHandle(SQL_HANDLE_STMT, st->hstmt);
-		st->level-- ;
-	}
-	if (st->level == 2 ) {
-		st->level --;
-		SQLDisconnect(st->hdbc);
-	}
-	if (st->level == 1) {
-		SQLFreeHandle(SQL_HANDLE_DBC, st->hdbc);
-		SQLFreeHandle(SQL_HANDLE_ENV, st->henv);
+	SQLRETURN rc = SQLExecDirect(handles->hstmt, (SQLCHAR *) sql, SQL_NTS);
+	if (!SQL_SUCCEEDED(rc)) {
+		print_diag(SQL_HANDLE_STMT, handles->hstmt);
+		abort();
 	}
 }
 
+/**
+ * Execute an array of SQL requests.
+ *
+ * Aborts a program if an erro occurs.
+ */
+void execute_sql_script(struct basic_handles *handles, const char **script,
+			size_t script_size)
+{
+	for (size_t i = 0; i < script_size; ++i)
+		execute_sql(handles, script[i]);
+}
+
+/* }}} */
+
+/* {{{ ODBC checks with TAP13 output */
+
+/**
+ * Verify that a statement was executed successfully.
+ */
 void
-execdirect(const char *dsn, const char *sql)
+sql_stmt_ok(SQLHENV hstmt, SQLRETURN result, const char *test_case_name)
 {
-	struct set_handles st;
-	if (init_dbc(&st, dsn)) {
-		SQLExecDirect(st.hstmt, (SQLCHAR*)sql, SQL_NTS);
-		close_set(&st);
-	}
+	bool succeeded = SQL_SUCCEEDED(result);
+	ok(succeeded, test_case_name);
+	if (!succeeded)
+		print_diag(SQL_HANDLE_STMT, hstmt);
 }
 
-int
-test_execdirect(const char *dsn, const char *sql) {
-	int ret_code = 0;
-
-	struct set_handles st;
-	SQLRETURN retcode;
-
-	if (init_dbc(&st,dsn)) {
-		retcode = SQLExecDirect(st.hstmt, (SQLCHAR*)sql, SQL_NTS);
-		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-			ret_code = 1;
-		} else {
-			show_error(SQL_HANDLE_STMT, st.hstmt);
-			ret_code = 0;
-		}
-		close_set(&st);
+/**
+ * Verify that a statement was executed with an error.
+ *
+ * SQLSTATE is verified against `exp_sqlstate` argument if it is
+ * not NULL.
+ */
+void
+sql_stmt_error(SQLHSTMT hstmt, SQLRETURN result, SQLRETURN exp_result,
+	       const char *exp_sqlstate, const char *test_case_name)
+{
+	/* Verify return code. */
+	bool succeeded = SQL_SUCCEEDED(result);
+	if (succeeded) {
+		fail("%s: succeeded while should give an error",
+		     test_case_name);
+		return;
 	}
-	return ret_code;
+
+	if (result != exp_result) {
+		fail("%s: fails with %d return code, expected %d",
+		     test_case_name, result, exp_result);
+		print_diag(SQL_HANDLE_STMT, hstmt);
+		return;
+	}
+
+	/* Skip SQLSTATE check if it is not requested. */
+	if (exp_sqlstate == NULL) {
+		ok(true, "%s", test_case_name);
+		return;
+	}
+
+	/* Verify error record count. */
+	SQLLEN record_count = 0;
+	SQLRETURN rc = SQLGetDiagField(SQL_HANDLE_STMT, hstmt, 0,
+				       SQL_DIAG_NUMBER, &record_count, 0, NULL);
+	assert(SQL_SUCCEEDED(rc));
+	if (record_count != 1) {
+		fail("%s: expected 1 error record, got %ld", test_case_name,
+		     (long) record_count);
+		print_diag(SQL_HANDLE_STMT, hstmt);
+		return;
+	}
+
+	/* Verify SQLSTATE. */
+	char sql_state[6];
+	rc = SQLGetDiagField(SQL_HANDLE_STMT, hstmt, 1, SQL_DIAG_SQLSTATE,
+			     (SQLCHAR *) sql_state, 0, NULL);
+	assert(SQL_SUCCEEDED(rc));
+	if (strncmp(sql_state, exp_sqlstate, sizeof(sql_state))) {
+		fail("%s: expected \"%s\" SQLSTATE, got \"%s\"", test_case_name,
+		     exp_sqlstate, sql_state);
+		print_diag(SQL_HANDLE_STMT, hstmt);
+		return;
+	}
+
+	ok(true, "%s", test_case_name);
 }
 
-int
-test_execrowcount(const char *dsn, const char *sql,int val) {
-	int ret_code = 0;
-
-	struct set_handles st;
-	SQLRETURN retcode;
-
-	if (init_dbc(&st,dsn)) {
-		retcode = SQLExecDirect(st.hstmt, (SQLCHAR*)sql, SQL_NTS);
-		SQLLEN ar = -1;
-		if (retcode == SQL_SUCCESS  &&
-		    ((retcode=SQLRowCount(st.hstmt,&ar)) == SQL_SUCCESS)) {
-			if (ar == val)
-				ret_code = 1;
-			else {
-				fprintf(stderr,"Affected row = %ld expected %d\n",(long)ar,val);
-				ret_code = 0;
-			}
-		} else {
-			show_error(SQL_HANDLE_STMT, st.hstmt);
-			ret_code = 0;
-		}
-		close_set(&st);
-	}
-	return ret_code;
-}
-
-int
-test_inbind(const char *dsn, const char *sql,int p1,const char *p2) {
-	int ret_code = 0;
-
-	struct set_handles st;
-	SQLRETURN retcode;
-
-	if (init_dbc(&st,dsn)) {
-		retcode = SQLPrepare(st.hstmt,(SQLCHAR*)sql, SQL_NTS);
-		long int_val = p1;
-		SQLCHAR *str_val = (SQLCHAR *)p2;
-		if (p2)
-			retcode = SQLBindParameter(st.hstmt, 1, SQL_PARAM_INPUT,
-						   SQL_C_CHAR, SQL_CHAR, 0, 0, str_val, SQL_NTS, 0);
-		else {
-			SQLLEN optlen = SQL_NULL_DATA;
-			retcode = SQLBindParameter(st.hstmt, 1, SQL_PARAM_INPUT,
-						   SQL_C_CHAR, SQL_CHAR, 0, 0, (SQLCHAR *) NULL, SQL_NTS, &optlen);
-		}
-
-		retcode = SQLBindParameter(st.hstmt, 2, SQL_PARAM_INPUT,
-					   SQL_C_LONG, SQL_INTEGER, 0, 0, &int_val, 0, 0);
-
-		// Process data
-		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-			retcode = SQLExecute(st.hstmt);
-			if (retcode == SQL_SUCCESS) {
-				ret_code = 1;
-			} else {
-				show_error(SQL_HANDLE_STMT, st.hstmt);
-				ret_code = 0;
-			}
-		}
-		close_set(&st);
-	}
-	return ret_code;
-}
+/* }}} */

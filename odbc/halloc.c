@@ -33,6 +33,7 @@ tnt2odbc_error(int e)
 		break;
 	case TNT_ESYSTEM: /*!< System error */
 		r = ODBC_08001_ERROR;
+		break;
 	case TNT_ESIZE: /*!< Bad buffer size */
 	case TNT_EBIG: /*!< Buffer is too big */
 		r = ODBC_22003_ERROR;
@@ -49,23 +50,19 @@ tnt2odbc_error(int e)
 	case TNT_ELOGIN: /*!< Failed to login */
 		r = ODBC_28000_ERROR;
 		break;
-	case ER_SQL_RANGE:
-		r = ODBC_22003_ERROR;
+	case TNT_ER_NO_SUCH_SPACE:
+		r = ODBC_42S02_ERROR;
 		break;
-	case ER_SQL_TYPE:
+	case ER_SQL_BIND_TYPE:
 		r = ODBC_HY105_ERROR;
 		break;
 	case ER_SQL_MAXARG:
 		r = ODBC_07009_ERROR;
 		break;
-	case ER_SQL_EXEC:
+	case ER_SQL_EXECUTE:
+		break;
+	case ER_SQL_UNRECOGNIZED_SYNTAX:
 		r = ODBC_42000_ERROR;
-		break;
-	case ER_SQL_GEN:
-		r = ODBC_HY000_ERROR;
-		break;
-	case ER_WRONG_BIND:
-		r = ODBC_07002_ERROR;
 		break;
 	default:
 		r = ODBC_HY000_ERROR;
@@ -87,6 +84,8 @@ code2sqlstate(int code)
 		return "07009";
 	case ODBC_42000_ERROR:
 		return "42000";
+	case ODBC_42S02_ERROR:
+		return "42S02";
 	case ODBC_07002_ERROR:
 		return "07002";
 	case ODBC_01004_ERROR:
@@ -287,7 +286,7 @@ get_diag_rec(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 
 	if (state)
 		strncpy((char *)state,
-				code2sqlstate(get_error(hndl_type, hndl)->code), 5);
+				code2sqlstate(get_error(hndl_type, hndl)->code), 6);
 	return copy_buf(txt, get_error(hndl_type, hndl)->message,
 		buflen, out_len);
 }
@@ -309,7 +308,7 @@ old_error(SQLHENV henv, SQLHDBC hdbc, SQLHSTMT hstmt,
 
 	if (!eh || eh->reported) {
 		if (state)
-			strncpy((char *)state, "00000", 5);
+			strncpy((char *) state, "00000", 6);
 		return SQL_NO_DATA_FOUND;
 	}
 
@@ -317,7 +316,7 @@ old_error(SQLHENV henv, SQLHDBC hdbc, SQLHSTMT hstmt,
 		*native = eh->native;
 
 	if (state)
-		strncpy((char *)state, code2sqlstate(eh->code), 5);
+		strncpy((char *) state, code2sqlstate(eh->code), 6);
 	eh->reported = 1;
 	return copy_buf(out_msg, eh->message, blen, olen);
 }
@@ -376,7 +375,7 @@ get_diag_field(SQLSMALLINT hndl_type, SQLHANDLE hndl, SQLSMALLINT rnum,
 	}
 	case SQL_DIAG_SQLSTATE:
 		if (ptr)
-			strncpy((char *)ptr, code2sqlstate(get_error(hndl_type, hndl)->code), 5);
+			strncpy((char *)ptr, code2sqlstate(get_error(hndl_type, hndl)->code), 6);
 		if (out_len)
 			*out_len = 5;
 		return SQL_SUCCESS;

@@ -75,23 +75,19 @@
 #endif /* !defined(MIN) */
 
 static enum tnt_error
-tnt_io_resolve(struct sockaddr_in *addr,
-	       const char *hostname, unsigned short port)
+tnt_io_resolve(struct addrinfo **addr_info_p,
+	       const char *hostname, const char *port)
 {
-	memset(addr, 0, sizeof(struct sockaddr_in));
-	addr->sin_family = AF_INET;
-	addr->sin_port = htons(port);
 	struct addrinfo *addr_info = NULL;
-	if (getaddrinfo(hostname, NULL, NULL, &addr_info) == 0 &&
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	if (getaddrinfo(hostname, port, &hints, &addr_info) == 0 &&
 	    addr_info != NULL) {
-		memcpy(&addr->sin_addr,
-		       (void*)&((struct sockaddr_in *)addr_info->ai_addr)->sin_addr,
-		       sizeof(addr->sin_addr));
-		freeaddrinfo(addr_info);
+		*addr_info_p = addr_info;
 		return TNT_EOK;
 	}
-	if (addr_info)
-		freeaddrinfo(addr_info);
 	return TNT_ERESOLVE;
 }
 
@@ -122,6 +118,38 @@ tnt_io_nonblock(struct tnt_stream_net *s, int set)
 		return TNT_ESYSTEM;
 	}
 #endif
+}
+
+static enum tnt_error tnt_io_xbufmax(struct tnt_stream_net *s, int opt, int min) {
+	int max = 128 * 1024 * 1024;
+	if (min == 0)
+		min = 16384;
+	unsigned int avg = 0;
+	while (min <= max) {
+		avg = ((unsigned int)(min + max)) / 2;
+		if (setsockopt(s->fd, SOL_SOCKET, opt, (const void*)&avg, sizeof(avg)) == 0)
+			min = avg + 1;
+		else
+			max = avg - 1;
+	}
+	return TNT_EOK;
+}
+
+static enum tnt_error tnt_io_setopts(struct tnt_stream_net *s) {
+
+	tnt_io_xbufmax(s, SO_SNDBUF, s->opt.send_buf);
+	tnt_io_xbufmax(s, SO_RCVBUF, s->opt.recv_buf);
+
+	if (setsockopt(s->fd, SOL_SOCKET, SO_SNDTIMEO,
+		       (const void*)&s->opt.tmout_send, sizeof(s->opt.tmout_send)) == -1)
+		goto error;
+	if (setsockopt(s->fd, SOL_SOCKET, SO_RCVTIMEO,
+		       (const void*)&s->opt.tmout_recv, sizeof(s->opt.tmout_recv)) == -1)
+		goto error;
+	return TNT_EOK;
+error:
+	s->errno_ = sys_errno;
+	return TNT_ESYSTEM;
 }
 
 static enum tnt_error
@@ -204,20 +232,55 @@ tnt_io_connect_do(struct tnt_stream_net *s, struct sockaddr *addr,
 }
 
 static enum tnt_error
-tnt_io_connect_tcp(struct tnt_stream_net *s, const char *host, int port)
+tnt_io_connect_tcp(struct tnt_stream_net *s, const char *host, const char *port)
 {
 	/* resolving address */
-	struct sockaddr_in addr;
-	enum tnt_error result = tnt_io_resolve(&addr, host, port);
+	struct addrinfo *addr_info = NULL;
+	enum tnt_error result = tnt_io_resolve(&addr_info, host, port);
 	if (result != TNT_EOK)
-		return result;
+		goto out;
 
-	return tnt_io_connect_do(s, (struct sockaddr *)&addr, sizeof(addr));
+	struct addrinfo *addr;
+	for (addr = addr_info; addr != NULL; addr = addr->ai_next) {
+		s->fd = socket(addr->ai_family, addr->ai_socktype,
+			       addr->ai_protocol);
+		if (s->fd < 0) {
+			s->errno_ = sys_errno;
+			result = TNT_ESYSTEM;
+			continue;
+		}
+		result = tnt_io_setopts(s);
+		if (result != TNT_EOK) {
+			tnt_io_close(s);
+			continue;
+		}
+		result = tnt_io_connect_do(s, addr->ai_addr, addr->ai_addrlen);
+		if (result != TNT_EOK)
+			tnt_io_close(s);
+		break;
+	}
+
+out:
+	if (addr_info != NULL)
+		freeaddrinfo(addr_info);
+	return result;
 }
 
 static enum tnt_error
 tnt_io_connect_unix(struct tnt_stream_net *s, const char *path)
 {
+	s->fd = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (s->fd < 0) {
+		s->errno_ = sys_errno;
+		return TNT_ESYSTEM;
+	}
+
+	enum tnt_error result = tnt_io_setopts(s);
+	if (result != TNT_EOK) {
+		tnt_io_close(s);
+		return result;
+	}
+
 #ifndef _WIN32
 	struct sockaddr_un addr;
 	memset(&addr, 0, sizeof(struct sockaddr_un));
@@ -229,77 +292,24 @@ tnt_io_connect_unix(struct tnt_stream_net *s, const char *path)
 #else
 	s->errno_ = ENOSYS;
 #endif
+	tnt_io_close(s);
 	return TNT_ESYSTEM;
-}
-
-static enum tnt_error tnt_io_xbufmax(struct tnt_stream_net *s, int opt, int min) {
-	int max = 128 * 1024 * 1024;
-	if (min == 0)
-		min = 16384;
-	unsigned int avg = 0;
-	while (min <= max) {
-		avg = ((unsigned int)(min + max)) / 2;
-		if (setsockopt(s->fd, SOL_SOCKET, opt, (const void*)&avg, sizeof(avg)) == 0)
-			min = avg + 1;
-		else
-			max = avg - 1;
-	}
-	return TNT_EOK;
-}
-
-static enum tnt_error tnt_io_setopts(struct tnt_stream_net *s) {
-
-	tnt_io_xbufmax(s, SO_SNDBUF, s->opt.send_buf);
-	tnt_io_xbufmax(s, SO_RCVBUF, s->opt.recv_buf);
-
-	if (setsockopt(s->fd, SOL_SOCKET, SO_SNDTIMEO,
-		       (const void*)&s->opt.tmout_send, sizeof(s->opt.tmout_send)) == -1)
-		goto error;
-	if (setsockopt(s->fd, SOL_SOCKET, SO_RCVTIMEO,
-		       (const void*)&s->opt.tmout_recv, sizeof(s->opt.tmout_recv)) == -1)
-		goto error;
-	return TNT_EOK;
-error:
-	s->errno_ = sys_errno;
-	return TNT_ESYSTEM;
-}
-
-static int tnt_io_htopf(int host_hint) {
-	switch(host_hint) {
-	case URI_NAME:
-	case URI_IPV4:
-		return PF_INET;
-	case URI_IPV6:
-		return PF_INET6;
-	case URI_UNIX:
-		return PF_UNIX;
-	default:
-		return -1;
-	}
 }
 
 enum tnt_error
 tnt_io_connect(struct tnt_stream_net *s)
 {
+	enum tnt_error result;
 	struct uri *uri = s->opt.uri;
-	s->fd = (int)socket(tnt_io_htopf(uri->host_hint), SOCK_STREAM, 0);
-	if (s->fd < 0) {
-		s->errno_ = sys_errno;
-		return TNT_ESYSTEM;
-	}
-	enum tnt_error result = tnt_io_setopts(s);
-	if (result != TNT_EOK)
-		goto out;
 	switch (uri->host_hint) {
 	case URI_NAME:
 	case URI_IPV4:
 	case URI_IPV6: {
 		char host[128];
+		const char *port = uri->service == NULL ? "3301" :
+			uri->service;
 		memcpy(host, uri->host, uri->host_len);
 		host[uri->host_len] = '\0';
-		uint32_t port = 3301;
-		if (uri->service)
-			port = strtol(uri->service, NULL, 10);
 		result = tnt_io_connect_tcp(s, host, port);
 		break;
 	}
@@ -314,12 +324,9 @@ tnt_io_connect(struct tnt_stream_net *s)
 		result = TNT_EFAIL;
 	}
 	if (result != TNT_EOK)
-		goto out;
+		return result;
 	s->connected = 1;
 	return TNT_EOK;
-out:
-	tnt_io_close(s);
-	return result;
 }
 
 void tnt_io_close(struct tnt_stream_net *s)

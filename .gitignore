@@ -30,3 +30,7 @@ deploy_key.pub
 
 odbc.log
 odbc_test
+
+test/odbc/*.test
+
+test/var

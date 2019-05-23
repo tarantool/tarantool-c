@@ -9,35 +9,12 @@ local os = require('os')
 local log = require('log')
 local fio = require('fio')
 
-local port = os.getenv("LISTEN"):split(":")[2]
-
 box.cfg {
-    listen = port,
+    listen = os.getenv('LISTEN'),
 }
 
 require('console').listen(os.getenv('ADMIN'))
 fiber = require('fiber')
-
--- Let's firstly generate odbc.ini.
-local odbc_test_dir_path = fio.dirname(fio.abspath(arg[0]))
-local odbc_ini_path = fio.pathjoin(odbc_test_dir_path, "odbc.ini")
-
-local f = fio.open(odbc_ini_path, {"O_RDWR", "O_CREAT", "O_TRUNC"}, 777)
-f:write(([[
-    [tarantoolTest]
-    Description=Tarantool test DSN
-    Trace=Yes
-    Server=localhost
-    Port=%s
-    Database=test
-    Log_filename=./tarantool_odbc.log
-    Log_level=5
-]]):format(port))
-f:close()
-
--- Run registration commands.
-os.execute( "odbcinst -u -s -n tarantoolTest")
-os.execute(("odbcinst -i -s -f %s"):format(odbc_ini_path))
 
 lp = {
     test = 'test',

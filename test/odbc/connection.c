@@ -5,49 +5,68 @@
 #include <stdlib.h>
 #include <sqlext.h>
 #include <stdio.h>
-#include <unit.h>
 #include <memory.h>
-#include <stdbool.h>
-#include <assert.h>
+#include "test.h"
 #include "util.h"
 
-int
-test_driver_connect(const char *dsn) {
-	int ret_code = 1;
-	struct set_handles st;
-	SQLRETURN retcode;
+/* XXX: Produce TAP13 output right from this function? */
+static int
+test_driver_connect(SQLHENV henv) {
+	SQLRETURN rc;
 
-	if (init_dbc(&st,NULL)) {
-		char out_dsn[1024];
-		short out_len=0;
-		// Connect to data source
-		retcode = SQLDriverConnect(st.hdbc, 0, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)out_dsn,
-					   sizeof(out_dsn), &out_len, SQL_DRIVER_NOPROMPT);
-
-		// Allocate statement handle
-		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-			retcode = SQLAllocHandle(SQL_HANDLE_STMT, st.hdbc, &st.hstmt);
-			// Process data
-			if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-				SQLFreeHandle(SQL_HANDLE_STMT, st.hstmt);
-			}
-		} else {
-			show_error(SQL_HANDLE_DBC, st.hdbc);
-			ret_code = 0;
-		}
-		SQLDisconnect(st.hdbc);
-		close_set(&st);
+	/* Create a new DBC handle. */
+	SQLHDBC hdbc = SQL_NULL_HDBC;
+	rc = SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
+	if (!SQL_SUCCEEDED(rc)) {
+		print_diag(SQL_HANDLE_ENV, henv);
+		return -1;
 	}
-	return ret_code;
+
+	/* Connect to a data source. */
+	SQLCHAR *dsn = get_dsn();
+	char out_dsn[1024];
+	short out_len = 0;
+	rc = SQLDriverConnect(hdbc, 0, dsn, SQL_NTS, (SQLCHAR *) out_dsn,
+			      sizeof(out_dsn), &out_len, SQL_DRIVER_NOPROMPT);
+	// XXX: check out_dsn, out_len
+	free(dsn);
+	if (!SQL_SUCCEEDED(rc)) {
+		print_diag(SQL_HANDLE_DBC, hdbc);
+		SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+		return -1;
+	}
+
+	/* Allocate statement handle. */
+	SQLHSTMT hstmt = SQL_NULL_HSTMT;
+	rc = SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
+	if (!SQL_SUCCEEDED(rc)) {
+		print_diag(SQL_HANDLE_DBC, hdbc);
+		SQLDisconnect(hdbc);
+		SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+		return -1;
+	}
+
+	SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+	SQLDisconnect(hdbc);
+	SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+	return 0;
 }
+
+// XXX: check SQLConnect
 
 int
 main()
 {
-	char *good_dsn = get_good_dsn();
-	const char *bad_dsn = good_dsn;
+	plan(1);
+	header();
+	struct basic_handles handles;
+	basic_handles_create(&handles);
 
-	test(test_driver_connect(good_dsn));
-	test(test_driver_connect(bad_dsn));
-	free(good_dsn);
+	int rc = test_driver_connect(handles.henv);
+	ok(rc == 0, "driver connection");
+
+	basic_handles_destroy(&handles);
+	footer();
+
+	return check_plan() == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
