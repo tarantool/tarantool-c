@@ -1124,7 +1124,11 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	char q[2*NLEN];
 	char *tbl = makez(tname, sizeof(tname), (char *) table, tablelen);
 
-	snprintf(q, sizeof(q), "pragma table_info(%s)", tbl);
+	/*
+	 * Case sensetive match. See the comment in
+	 * info_columns().
+	 */
+	snprintf(q, sizeof(q), "pragma table_info('%s')", tbl);
 
 	if (stmt_prepare(stmth, (SQLCHAR *) q, SQL_NTS) != SQL_SUCCESS ||
 	    stmt_execute(stmth) != SQL_SUCCESS)
@@ -1187,25 +1191,18 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	char colb[NLEN];
 	char *coln = makez(colb, sizeof(colb), (char*)col_, collen);
 
-
-	snprintf(q, sizeof(q), "select 1,name,types,0,0,0 from table_types where name='%s'", tbl);
-	struct column_def ** col_tp = NULL;
-	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
-	    stmt_execute(stmth) == SQL_SUCCESS) {
-
-		col_tp = read_columns_rows(stmt);
-
-	}
-	free_stmt(stmth, SQL_CLOSE);
-
-	snprintf(q, sizeof(q), "pragma table_info(%s)", tbl);
+	/*
+	 * Quotes around a table name are needed to treat the name
+	 * in the case sensetive way. We'll need to update the
+	 * implementation with support of SQL_ATTR_METADATA_ID
+	 * (now the behaviour always match SQL_FALSE value of the
+	 * option, which is default).
+	 */
+	snprintf(q, sizeof(q), "pragma table_info('%s')", tbl);
 
 	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) != SQL_SUCCESS ||
-	    stmt_execute(stmth) != SQL_SUCCESS) {
-		free_columns_info(col_tp);
+	    stmt_execute(stmth) != SQL_SUCCESS)
 		return SQL_ERROR;
-	}
-
 
 	SQLRETURN status;
 	struct column_def ** col = read_columns_rows(stmt);
@@ -1218,9 +1215,9 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 		status = SQL_ERROR;
 		goto ret;
 	}
-	while(*col) {
+	while (*col) {
 		if (coln[0] == '\0' || sql_regexp(coln, (*col)->name, '\0'))
-			if (add_fake_column_row(stmt, *col, col_tp, (char *)table) != OK) {
+			if (add_fake_column_row(stmt, *col, col_p, (char *)table) != OK) {
 				set_stmt_error(stmt, ODBC_HY013_ERROR,
 					       "Memory management error",
 					       "SQLColumns");
@@ -1235,7 +1232,6 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 ret:
 	LOG_INFO(stmt, "SQLColumns()=%d\n", (int)status);
 	free_columns_info(col_p);
-	free_columns_info(col_tp);
 	return status;
 }
 
