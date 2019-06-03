@@ -53,6 +53,9 @@ tnt2odbc_error(int e)
 	case TNT_ER_NO_SUCH_SPACE:
 		r = ODBC_42S02_ERROR;
 		break;
+	case ER_NO_SUCH_FIELD_NAME:
+		r = ODBC_42S22_ERROR;
+		break;
 	case ER_SQL_BIND_TYPE:
 		r = ODBC_HY105_ERROR;
 		break;
@@ -86,6 +89,8 @@ code2sqlstate(int code)
 		return "42000";
 	case ODBC_42S02_ERROR:
 		return "42S02";
+	case ODBC_42S22_ERROR:
+		return "42S22";
 	case ODBC_07002_ERROR:
 		return "07002";
 	case ODBC_01004_ERROR:

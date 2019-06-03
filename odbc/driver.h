@@ -36,11 +36,18 @@ enum ERROR_CODES {
 	/* ODBC_07009_ERROR,  Invalid parameter number */
 	ODBC_42000_ERROR, /* Sql execution error */
 	ODBC_42S02_ERROR, /* Base table or view not found */
+	ODBC_42S22_ERROR, /* Column not found */
 	ODBC_HY092_ERROR, /* Unsupported attribute */
 	ODBC_07002_ERROR,  /* Too many bind parameters */
 	ODBC_HY013_ERROR /* Another memory error */
 };
+
+/*
+ * XXX: It seems it worth to merge these errors into tnt_proto.h
+ * enum tnt_errcode_t.
+ */
 enum TNT_SQL_ERROR {
+	ER_NO_SUCH_FIELD_NAME = 153,
 	ER_SQL_BIND_TYPE = 157,
 	ER_SQL_MAXARG = 158,
 	ER_SQL_EXECUTE = 159,
