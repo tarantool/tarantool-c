@@ -662,19 +662,19 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id,
 		val = -1;
 		break;
 	case SQL_DESC_BASE_COLUMN_NAME:
-		len_strncpy( char_p, "" , buflen, out_len);
+		len_strncpy(char_p, "", buflen, out_len);
 		break;
 	case SQL_DESC_BASE_TABLE_NAME:
-		len_strncpy( char_p, "" , buflen, out_len);
+		len_strncpy(char_p, "", buflen, out_len);
 		break;
 	case SQL_DESC_CASE_SENSITIVE:
 		val  = -1;
 		break;
 	case SQL_DESC_CATALOG_NAME:
-		len_strncpy( char_p, "" , buflen, out_len);
+		len_strncpy(char_p, "", buflen, out_len);
 		break;
 	case SQL_DESC_CONCISE_TYPE:
-		val = tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol));;
+		val = tnt2odbc(tnt_col_type(stmt->tnt_statement, ncol));
 		break;
 	case SQL_DESC_COUNT:
 		val = tnt_number_of_cols(stmt->tnt_statement);
@@ -729,12 +729,12 @@ col_attribute(SQLHSTMT stmth, SQLUSMALLINT ncol, SQLUSMALLINT id,
 		len_strncpy( char_p, "" , buflen, out_len);
 		break;
 	case SQL_DESC_TYPE:
-		val = tnt2odbc(tnt_col_type(stmt->tnt_statement,ncol));
+		val = tnt2odbc(tnt_col_type(stmt->tnt_statement, ncol));
 		break;
 	case SQL_DESC_TYPE_NAME:
-		len_strncpy( char_p,
-			     sqltypestr(tnt2odbc(tnt_col_type(
-			     stmt->tnt_statement,ncol))) , buflen, out_len);
+		len_strncpy(char_p,
+			    sqltypestr(tnt2odbc(tnt_col_type(
+			    stmt->tnt_statement,ncol))) , buflen, out_len);
 		break;
 	case SQL_DESC_UNNAMED:
 		val = -1;

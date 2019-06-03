@@ -942,8 +942,8 @@ add_fake_index_row(odbc_stmt *stmt, const char *tbl, struct index_def *col,
 		tnt_fake_add_col_name(tnt, "TABLE_NAME", 2) != OK ||
 		tnt_fake_add_col_name(tnt, "NON_UNIQUE", 3) != OK ||
 		tnt_fake_add_col_name(tnt, "INDEX_QUALIFIER", 4) != OK ||
-		tnt_fake_add_col_name(tnt, "TYPE", 6) != OK ||
 		tnt_fake_add_col_name(tnt, "INDEX_NAME", 5) != OK ||
+		tnt_fake_add_col_name(tnt, "TYPE", 6) != OK ||
 		tnt_fake_add_col_name(tnt, "ORDINAL_POSITION", 7) != OK ||
 		tnt_fake_add_col_name(tnt, "COLUMN_NAME", 8) != OK ||
 		tnt_fake_add_col_name(tnt, "ASC_OR_DESC", 9) != OK ||
@@ -953,7 +953,7 @@ add_fake_index_row(odbc_stmt *stmt, const char *tbl, struct index_def *col,
 		return FAIL;
 
 
-	struct tnt_coldata * row = tnt_fake_add_row(tnt);
+	struct tnt_coldata *row = tnt_fake_add_row(tnt);
 
 	if (!row)
 		return FAIL;
@@ -1070,7 +1070,7 @@ add_fake_column_row(odbc_stmt *stmt, struct column_def *col,
 	/* DATA_TYPE */
 	tnt_fake_set_column_int(row, 4, user_type);
 	/* TYPE_NAME */
-	if (!tnt_fake_set_column_str(row, 5, strdup (odbctype2name(user_type))))
+	if (!tnt_fake_set_column_str(row, 5, strdup(odbctype2name(user_type))))
 		return FAIL;
 	/* COLUMN_SIZ*/
 	tnt_fake_set_column_int(row, 6, column_size(col->type));
