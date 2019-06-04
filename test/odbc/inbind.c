@@ -5,79 +5,239 @@
 #include <stdlib.h>
 #include <sqlext.h>
 #include <stdio.h>
+#include <memory.h>
 #include "test.h"
 #include "util.h"
 
-/* XXX: Rename the unit mode appropratelly: bind_parameter.[ch]. */
+static const char *setup_script[] = {
+	"DROP TABLE IF EXISTS test",
+	"CREATE TABLE test(id INTEGER PRIMARY KEY, name VARCHAR(255))"
+};
 
-#if 0
-static int
-test_inbind(const char *dsn, const char *sql,int p1,const char *p2) {
-	int ret_code = 0;
-
-	struct set_handles st;
-	SQLRETURN retcode;
-
-	if (init_dbc(&st,dsn)) {
-		retcode = SQLPrepare(st.hstmt,(SQLCHAR*)sql, SQL_NTS);
-		long int_val = p1;
-		SQLCHAR *str_val = (SQLCHAR *)p2;
-		if (p2)
-			retcode = SQLBindParameter(st.hstmt, 1, SQL_PARAM_INPUT,
-						   SQL_C_CHAR, SQL_CHAR, 0, 0, str_val, SQL_NTS, 0);
-		else {
-			SQLLEN optlen = SQL_NULL_DATA;
-			retcode = SQLBindParameter(st.hstmt, 1, SQL_PARAM_INPUT,
-						   SQL_C_CHAR, SQL_CHAR, 0, 0, (SQLCHAR *) NULL, SQL_NTS, &optlen);
-		}
-
-		retcode = SQLBindParameter(st.hstmt, 2, SQL_PARAM_INPUT,
-					   SQL_C_LONG, SQL_INTEGER, 0, 0, &int_val, 0, 0);
-
-		// Process data
-		if (retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
-			retcode = SQLExecute(st.hstmt);
-			if (retcode == SQL_SUCCESS) {
-				ret_code = 1;
-			} else {
-				print_diag(SQL_HANDLE_STMT, st.hstmt);
-				ret_code = 0;
-			}
-		}
-		close_set(&st);
+static bool
+check_rc(SQLRETURN SQL_API rc, const char *func_name, const char *test_case_name,
+	SQLHSTMT hstmt)
+{
+	char err_msg[100];
+	snprintf(err_msg, sizeof(err_msg), "%s: %s", test_case_name, func_name);
+	if (!SQL_SUCCEEDED(rc)) {
+		fail(err_msg);
+		print_diag(SQL_HANDLE_STMT, hstmt);
+		SQLCloseCursor(hstmt);
+		return false;
 	}
-	return ret_code;
+	return true;
 }
+
+static int
+test_bind_param_insert(SQLHSTMT hstmt, const char *test_case_name)
+{
+	SQLRETURN rc;
+
+	/* Prepare the INSERT statement with parameters. */
+	rc = SQLPrepare(hstmt, (SQLCHAR *) "INSERT INTO test(id, name) VALUES(?,?)",
+			SQL_NTS);
+	if (!check_rc(rc, "SQLPrepare()", test_case_name, hstmt))
+		return -1;
+
+	/* Bind parameters to variable-buffers. */
+	SQLINTEGER  id;
+	char        name[50];
+	rc = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_LONG,
+			      SQL_INTEGER, 0, 0, &id, 0, NULL);
+	if (!check_rc(rc, "SQLBindParameter()", test_case_name, hstmt))
+		return -1;
+
+	rc = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR,
+			      0, 0, name, sizeof(name), NULL);
+	if (!check_rc(rc, "SQLBindParameter()", test_case_name, hstmt))
+		return -1;
+
+	/* Use prepared statement. */
+	id = 1;
+	strcpy(name, "test name 1");
+	rc = SQLExecute(hstmt);
+	if (!check_rc(rc, "SQLExecute()", test_case_name, hstmt))
+		return -1;
+
+	/* Check result count. */
+	int exp_row_count = 1;
+	SQLLEN row_count;
+	rc = SQLRowCount(hstmt, &row_count);
+	if (!check_rc(rc, "SQLRowCount()", test_case_name, hstmt))
+		return -1;
+
+	if ((int) row_count != exp_row_count) {
+		fail("%s: SQLBindParameter()", test_case_name);
+		print_diag(SQL_HANDLE_STMT, hstmt);
+		SQLCloseCursor(hstmt);
+		return -1;
+	}
+	return 0;
+}
+
+static int
+test_bind_param_update(SQLHSTMT hstmt, const char *test_case_name) {
+	SQLRETURN rc;
+
+	/* Prepare the UPDATE statement with parameters. */
+	rc = SQLPrepare(hstmt,
+			(SQLCHAR *) "UPDATE test set name = ? WHERE id = ?",
+			SQL_NTS);
+	if (!check_rc(rc, "SQLPrepare", test_case_name, hstmt))
+		return -1;
+
+	/* Bind params. */
+	SQLINTEGER id;
+	char new_name[50];
+	rc = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR,
+			      0, 0, new_name, sizeof(new_name), NULL);
+	if (!check_rc(rc, "SQLBindParameter()", test_case_name, hstmt))
+		return -1;
+
+	rc = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_LONG,
+			      SQL_INTEGER, 0, 0, &id, 0, NULL);
+	if (!check_rc(rc, "SQLBindParameter()", test_case_name, hstmt))
+		return -1;
+
+	/* Use prepared statement. */
+	id = 1;
+	strcpy(new_name, "new test name 1");
+	rc = SQLExecute(hstmt);
+	if (!check_rc(rc, "SQLExecute()", test_case_name, hstmt))
+		return -1;
+
+	/* Check result count. */
+	int exp_row_count = 1;
+	SQLLEN row_count;
+	rc = SQLRowCount(hstmt, &row_count);
+	if (!check_rc(rc, "SQLRowCount()", test_case_name, hstmt))
+		return -1;
+
+	if ((int) row_count != exp_row_count) {
+		fail("%s: SQLBindParameter()", test_case_name);
+		print_diag(SQL_HANDLE_STMT, hstmt);
+		SQLCloseCursor(hstmt);
+		return -1;
+	}
+	return 0;
+}
+
+static int
+test_bind_param_delete(SQLHSTMT hstmt, const char *test_case_name) {
+	SQLRETURN rc;
+
+	/* Prepare the INSERT statement with parameters. */
+	rc = SQLPrepare(hstmt, (SQLCHAR *) "DELETE FROM test WHERE id = ?",
+			SQL_NTS);
+	if (!check_rc(rc, "SQLPrepare()", test_case_name, hstmt))
+		return -1;
+
+	/* Bind parameters to variable-buffers. */
+	SQLINTEGER  id;
+	char        name[50];
+	rc = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_LONG,
+			      SQL_INTEGER, 0, 0, &id, 0, NULL);
+	if (!check_rc(rc, "SQLBindParameter()", test_case_name, hstmt))
+		return -1;
+
+	/* Use prepared statement. */
+	id = 1;
+	rc = SQLExecute(hstmt);
+	if (!check_rc(rc, "SQLExecute()", test_case_name, hstmt))
+		return -1;
+
+	/* Check result count. */
+	int exp_row_count = 1;
+	SQLLEN row_count;
+	rc = SQLRowCount(hstmt, &row_count);
+	if (!check_rc(rc, "SQLRowCount()", test_case_name, hstmt))
+		return -1;
+
+	if ((int) row_count != exp_row_count) {
+		fail("%s: SQLBindParameter()", test_case_name);
+		print_diag(SQL_HANDLE_STMT, hstmt);
+		SQLCloseCursor(hstmt);
+		return -1;
+	}
+	return 0;
+}
+
+//static int
+//test_bind_param_insert_m(SQLHSTMT hstmt, const char *test_case_name)
+//{
+//	SQLRETURN rc;
+//
+//	/* Prepare the INSERT statement with parameters. */
+//	rc = SQLPrepare(hstmt, (SQLCHAR *) "INSERT INTO test(id, name) VALUES(?,?)",
+//			SQL_NTS);
+//	if (!check_rc(rc, "SQLPrepare()", test_case_name, hstmt))
+//		return -1;
+//
+//	/* Bind parameters to variable-buffers. */
+//	SQLINTEGER  id;
+//	char        name[50];
+//	rc = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_LONG,
+//			      SQL_INTEGER, 0, 0, &id, 0, NULL);
+//	if (!check_rc(rc, "SQLBindParameter()", test_case_name, hstmt))
+//		return -1;
+//
+//	rc = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR,
+//			      0, 0, name, sizeof(name), NULL);
+//	if (!check_rc(rc, "SQLBindParameter()", test_case_name, hstmt))
+//		return -1;
+//
+//	/* Use prepared statement. */
+//	for (id = 1; id <= 10; id++) {
+//		snprintf(name, sizeof(name), "name number %d", id);
+//		rc = SQLExecute(hstmt);
+//		if (!check_rc(rc, "SQLExecute()", test_case_name, hstmt))
+//			return -1;
+//		SQLFreeStmt(hstmt, SQL_RESET_PARAMS);
+//	}
+//
+//	rc = SQLExecute(hstmt);
+//	if (!check_rc(rc, "SQLExecute()", test_case_name, hstmt))
+//		return -1;
+//
+//	/* Check result count. */
+//	int exp_row_count = 10;
+//	SQLLEN row_count;
+//	rc = SQLRowCount(hstmt, &row_count);
+//	if (!check_rc(rc, "SQLRowCount()", test_case_name, hstmt))
+//		return -1;
+//
+//	if ((int) row_count != exp_row_count) {
+//		fail("%s: SQLBindParameter()", test_case_name);
+//		print_diag(SQL_HANDLE_STMT, hstmt);
+//		SQLCloseCursor(hstmt);
+//		return -1;
+//	}
+//	return 0;
+//}
 
 int
 main()
 {
-	char *dsn = get_dsn();
+	plan(4);
+	header();
+	struct basic_handles handles;
+	basic_handles_create(&handles);
+	execute_sql_script(&handles, setup_script, sizeof(setup_script) /
+			   sizeof(const char *));
+	int rc = test_bind_param_insert(handles.hstmt, "SQLBindParameter with INSERT");
+	ok(rc == 0, "SQLBindParameter with INSERT");
 
-	execdirect(dsn, "DROP TABLE str_table");
-	execdirect(dsn, "CREATE TABLE str_table(id VARCHAR(255), "
-			"val INTEGER, PRIMARY KEY (val))");
+	rc = test_bind_param_update(handles.hstmt, "SQLBindParameter with UPDATE");
+	ok(rc == 0, "SQLBindParameter with UPDATE");
 
-	test(test_inbind(dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",
-			 3, "Hello World"));
-	testfail(test_inbind(dsn, "INSERT INTO str_table(id,val) "
-				  "VALUES (?,?)", 3, "Hello World"));
+	rc = test_bind_param_delete(handles.hstmt, "SQLBindParameter with DELETE");
+	ok(rc == 0, "SQLBindParameter with DELETE");
 
-	testfail(test_inbind(dsn, "INSERT INTO str_table(id,val) "
-				  "VALUES (?,?)", 3, "Hello World"));
-	test(test_inbind(dsn, "INSERT INTO str_table(id,val) "
-			      "VALUES (?,?)", 4, "Hello World"));
-	testfail(test_inbind(dsn, "INSERT INTO str_table(id,val) "
-				  "VALUES (?,?)", 4, "Hello World"));
-	testfail(test_inbind(dsn, "INSERT INTO str_table(id,val) "
-				  "VALUES (?,?)", 4, "Hello World"));
+//	rc = test_bind_param_insert_m(handles.hstmt, "SQLBindParameter with multiple insert");
+//	ok(rc == 0, "SQLBindParameter with INSERT multiple");
 
-	test(test_inbind(dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",
-			 5, NULL));
-	testfail(test_inbind(dsn, "INSERT INTO str_table(id,val) VALUES (?,?)",
-			 5, NULL));
-	free(dsn);
+	basic_handles_destroy(&handles);
+	footer();
+	return check_plan() == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
-#else
-int main() { plan(1); ok(true, "%s", ""); check_plan(); return 0; }
-#endif

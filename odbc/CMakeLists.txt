@@ -12,3 +12,8 @@ endif(WIN32)
 include_directories(../include)
 add_library(tnt_odbc  SHARED connections.c halloc.c odbc.c statement.c info.c regexp.c ${WINSOURCES})
 target_link_libraries(tnt_odbc tnt ${ODBC} ${WS2})
+
+# By default shared libs in Mac OS have .dylib extension.
+if (APPLE)
+	set_property(TARGET tnt_odbc PROPERTY SUFFIX ".so")
+endif()

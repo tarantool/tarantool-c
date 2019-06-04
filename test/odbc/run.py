@@ -18,10 +18,11 @@ Driver          = {}
 with open(odbc_inst_file, 'w') as f:
     f.write(odbc_inst_content)
 
-# UnixODBC concatenates the provided file path with something like
-# /etc/unixODBC/.
+# UnixODBC determines path to odbcinst.ini file by concatenating
+# ODBCSYSINI + ODBCINSTINI.
 env = {
-    'ODBCINSTINI': '../../{}'.format(odbc_inst_file),
+    'ODBCINSTINI': '{}'.format(odbc_inst_file),
+    'ODBCSYSINI': '',
     'LISTEN': server.iproto.uri,
 }
 
