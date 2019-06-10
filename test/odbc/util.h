@@ -45,8 +45,13 @@ get_dsn()
 	static char buf[256];
 	char *port = buf;
 	strcpy(port, getenv("LISTEN"));
+	/*
+	 * To run with CLion debuger comment two lines below
+	 * and uncomment one line below them.
+	 */
 	strsep(&port, ":");
 	assert(strchr(port, ':') == NULL);
+//	assert(port != NULL);
 
 	char *tmpl = "DRIVER=Tarantool;SERVER=localhost;"
 		     "UID=test;PWD=test;PORT=%s;"
@@ -237,10 +242,14 @@ sql_stmt_sqlstate(SQLHENV hstmt, const char *exp_sqlstate,
  * Verify that a statement was executed successfully.
  */
 void
-sql_stmt_ok(SQLHENV hstmt, SQLRETURN result, const char *test_case_name)
+sql_stmt_ok(SQLRETURN result, const char *test_case_name, const char *func_name,
+	    SQLHENV hstmt)
 {
 	bool succeeded = SQL_SUCCEEDED(result);
-	ok(succeeded, test_case_name);
+	if (func_name == NULL)
+		ok(succeeded, test_case_name);
+	else
+		ok(succeeded, "%s:%s", test_case_name, func_name);
 	if (!succeeded)
 		print_diag(SQL_HANDLE_STMT, hstmt);
 }

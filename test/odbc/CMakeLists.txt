@@ -15,7 +15,7 @@ set(tests
     inbind
     metadata
     typeinfo
-    prepare
+    prepare_input
 )
 foreach(test ${tests})
     add_executable(${test}.test ../test.c ${test}.c)

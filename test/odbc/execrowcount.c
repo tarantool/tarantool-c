@@ -27,13 +27,13 @@ sql_stmt_ok_rowcount(SQLHSTMT hstmt, const char *sql, long exp_row_count,
 	rc = SQLExecDirect(hstmt, (SQLCHAR *) sql, SQL_NTS);
 	snprintf(subcase_name, sizeof(subcase_name),
 		 "%s: SQLExecDirect()", test_case_name);
-	sql_stmt_ok(hstmt, rc, subcase_name);
+	sql_stmt_ok(rc, subcase_name, NULL, hstmt);
 
 	SQLLEN row_count;
 	rc = SQLRowCount(hstmt, &row_count);
 	snprintf(subcase_name, sizeof(subcase_name),
 		 "%s: SQLRowCount()", test_case_name);
-	sql_stmt_ok(hstmt, rc, subcase_name);
+	sql_stmt_ok(rc, subcase_name, NULL, hstmt);
 
 	snprintf(subcase_name, sizeof(subcase_name),
 		 "%s: row count value", test_case_name);
@@ -61,7 +61,7 @@ sql_stmt_error_rowcount(SQLHSTMT hstmt, const char *sql, SQLRETURN exp_result,
 	rc = SQLRowCount(hstmt, &row_count);
 	snprintf(subcase_name, sizeof(subcase_name),
 		 "%s: SQLRowCount()", test_case_name);
-	sql_stmt_ok(hstmt, rc, subcase_name);
+	sql_stmt_ok(rc, subcase_name, NULL, hstmt);
 
 	snprintf(subcase_name, sizeof(subcase_name),
 		 "%s: row count value", test_case_name);
