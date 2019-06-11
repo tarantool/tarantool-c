@@ -152,10 +152,12 @@ realloc_params(int num,int *old_num, tnt_bind_t **params)
 			return FAIL;
 		}
 		memset(npar, 0, sizeof(tnt_bind_t)*num);
-		for(int i=0;i<*old_num;++i) {
-			npar[i] = (*params)[i];
+		if (*params != NULL) {
+			for(int i=0;i<*old_num;++i) {
+				npar[i] = (*params)[i];
+			}
+			free(*params);
 		}
-		free(*params);
 		*params = npar;
 		*old_num = num;
 	}
