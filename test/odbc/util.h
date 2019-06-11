@@ -150,10 +150,6 @@ basic_handles_create(struct basic_handles *handles)
 void
 basic_handles_destroy(struct basic_handles *handles)
 {
-	// XXX: remove
-	//if (handles->hstmt != SQL_NULL_HSTMT)
-	//if (handles->hdbc != SQL_NULL_HDBC)
-	//if (handles->hstmt != SQL_NULL_HENV)
 	SQLFreeHandle(SQL_HANDLE_STMT, handles->hstmt);
 	SQLDisconnect(handles->hdbc);
 	SQLFreeHandle(SQL_HANDLE_DBC, handles->hdbc);
@@ -189,6 +185,48 @@ void execute_sql_script(struct basic_handles *handles, const char **script,
 {
 	for (size_t i = 0; i < script_size; ++i)
 		execute_sql(handles, script[i]);
+}
+
+/* }}} */
+
+/* {{{ ODBC checks with retval */
+
+/**
+ * Verify SQLSTATE.
+ *
+ * Print diagnostics in case of an error.
+ *
+ * Return 0 at success, -1 at error.
+ */
+int
+sql_stmt_sqlstate(SQLHENV hstmt, const char *exp_sqlstate,
+		  const char *test_case_name)
+{
+	/* Verify error record count. */
+	SQLLEN record_count = 0;
+	SQLRETURN rc = SQLGetDiagField(SQL_HANDLE_STMT, hstmt, 0,
+				       SQL_DIAG_NUMBER, &record_count, 0, NULL);
+	assert(SQL_SUCCEEDED(rc));
+	if (record_count != 1) {
+		fprintf(stderr, "%s: expected 1 error record, got %ld",
+			test_case_name, (long) record_count);
+		print_diag(SQL_HANDLE_STMT, hstmt);
+		return -1;
+	}
+
+	/* Verify SQLSTATE. */
+	char sql_state[6];
+	rc = SQLGetDiagField(SQL_HANDLE_STMT, hstmt, 1, SQL_DIAG_SQLSTATE,
+			     (SQLCHAR *) sql_state, 0, NULL);
+	assert(SQL_SUCCEEDED(rc));
+	if (strncmp(sql_state, exp_sqlstate, sizeof(sql_state))) {
+		fprintf(stderr, "%s: expected \"%s\" SQLSTATE, got \"%s\"",
+			test_case_name, exp_sqlstate, sql_state);
+		print_diag(SQL_HANDLE_STMT, hstmt);
+		return -1;
+	}
+
+	return 0;
 }
 
 /* }}} */
@@ -238,27 +276,10 @@ sql_stmt_error(SQLHSTMT hstmt, SQLRETURN result, SQLRETURN exp_result,
 		return;
 	}
 
-	/* Verify error record count. */
-	SQLLEN record_count = 0;
-	SQLRETURN rc = SQLGetDiagField(SQL_HANDLE_STMT, hstmt, 0,
-				       SQL_DIAG_NUMBER, &record_count, 0, NULL);
-	assert(SQL_SUCCEEDED(rc));
-	if (record_count != 1) {
-		fail("%s: expected 1 error record, got %ld", test_case_name,
-		     (long) record_count);
-		print_diag(SQL_HANDLE_STMT, hstmt);
-		return;
-	}
-
 	/* Verify SQLSTATE. */
-	char sql_state[6];
-	rc = SQLGetDiagField(SQL_HANDLE_STMT, hstmt, 1, SQL_DIAG_SQLSTATE,
-			     (SQLCHAR *) sql_state, 0, NULL);
-	assert(SQL_SUCCEEDED(rc));
-	if (strncmp(sql_state, exp_sqlstate, sizeof(sql_state))) {
-		fail("%s: expected \"%s\" SQLSTATE, got \"%s\"", test_case_name,
-		     exp_sqlstate, sql_state);
-		print_diag(SQL_HANDLE_STMT, hstmt);
+	int rc = sql_stmt_sqlstate(hstmt, exp_sqlstate, test_case_name);
+	if (rc != 0) {
+		fail("%s: verify SQLSTATE", test_case_name);
 		return;
 	}
 

@@ -1121,7 +1121,11 @@ tnt_decode_col(tnt_stmt_t * stmt, struct tnt_coldata *col, int nc)
 	case MP_NIL:
 		col->v.p = NULL;
 		mp_decode_nil(&stmt->data);
-		col->size = 0;
+		/*
+		 * -1 for tnt_stmt API, but also equal to
+		 * SQL_NULL_DATA for ODBC.
+		 */
+		col->size = -1;
 		break;
 	default:
 		return FAIL;
