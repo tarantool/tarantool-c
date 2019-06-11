@@ -3,20 +3,8 @@ local os = require('os')
 local fiber = require('fiber')
 local console = require('console')
 
--- Don't bind tarantool to an IPv6 port, because tests are unable
--- to resolve 'localhost' to ::1 or unable to connect to an IPv6
--- port: don't sure what exactly going in a wrong way.
---
--- XXX: This should be fixed with gh-121.
-local listen = os.getenv('LISTEN')
-if listen:find(':') then
-    local host, port = unpack(listen:split(':'))
-    if host == 'localhost' and tonumber(port) ~= nil then
-        listen = ('127.0.0.1:%d'):format(port)
-    end
-end
 box.cfg{
-   listen = listen,
+   listen = os.getenv('LISTEN'),
 }
 
 console.listen(os.getenv('ADMIN'))
