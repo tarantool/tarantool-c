@@ -1128,7 +1128,7 @@ special_columns(SQLHSTMT stmth, SQLUSMALLINT itype, SQLCHAR *cat,
 	 * Case sensetive match. See the comment in
 	 * info_columns().
 	 */
-	snprintf(q, sizeof(q), "pragma table_info('%s')", tbl);
+	snprintf(q, sizeof(q), "pragma table_info(\"%s\")", tbl);
 
 	if (stmt_prepare(stmth, (SQLCHAR *) q, SQL_NTS) != SQL_SUCCESS ||
 	    stmt_execute(stmth) != SQL_SUCCESS)
@@ -1198,7 +1198,7 @@ info_columns(SQLHSTMT stmth, SQLCHAR *cat, SQLSMALLINT catlen, SQLCHAR *schema,
 	 * (now the behaviour always match SQL_FALSE value of the
 	 * option, which is default).
 	 */
-	snprintf(q, sizeof(q), "pragma table_info('%s')", tbl);
+	snprintf(q, sizeof(q), "pragma table_info(\"%s\")", tbl);
 
 	if (stmt_prepare(stmth, (SQLCHAR *)q, SQL_NTS) != SQL_SUCCESS ||
 	    stmt_execute(stmth) != SQL_SUCCESS)
@@ -1321,10 +1321,7 @@ get_index(odbc_stmt *stmt, const char *tbl, const char *nm)
 {
 	struct index_part_def **r = NULL;
 	char q[NLEN];
-	/* XXX: What if a name is in lower case? We need double
-	 * quotes around it.
-	 */
-	snprintf(q, sizeof(q), "pragma index_info(%s.\"%s\")", tbl, nm);
+	snprintf(q, sizeof(q), "pragma index_info(\"%s\".\"%s\")", tbl, nm);
 	if (stmt_prepare(stmt, (SQLCHAR *)q, SQL_NTS) == SQL_SUCCESS &&
 	    stmt_execute(stmt) == SQL_SUCCESS)
 		r = read_index_info_rows(stmt);
@@ -1337,7 +1334,7 @@ get_index_list(odbc_stmt *stmt, const char *tbl)
 {
 	struct index_def **r = NULL;
 	char q[NLEN];
-	snprintf(q, sizeof(q), "pragma index_list(%s)", tbl);
+	snprintf(q, sizeof(q), "pragma index_list(\"%s\")", tbl);
 	if (stmt_prepare(stmt, (SQLCHAR *) q, SQL_NTS) == SQL_SUCCESS &&
 	    stmt_execute(stmt) == SQL_SUCCESS) {
 		r = read_index_rows(stmt);
