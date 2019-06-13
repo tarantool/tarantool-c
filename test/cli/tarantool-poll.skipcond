@@ -1,0 +1,7 @@
+import resource
+
+soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+if soft < 2080 and soft != resource.RLIM_INFINITY:
+    self.skip = True
+
+# vim: set ft=python:
