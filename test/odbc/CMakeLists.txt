@@ -12,7 +12,7 @@ set(tests
     execdirect
     execrowcount
     fetch
-    inbind
+    bind_input
     metadata
     typeinfo
     prepare_input
