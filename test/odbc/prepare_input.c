@@ -1,5 +1,5 @@
 #ifdef _WIN32
-#include <windows.h>
+	#include <windows.h>
 #endif
 
 #include <stdlib.h>
@@ -54,7 +54,6 @@ test_simple_prepared_insert(SQLHSTMT hstmt)
 	is(pcrow, 1, "%s: SQLBindParameter()", test_case_name);
 	if (pcrow != 1) {
 		print_diag(SQL_HANDLE_STMT, hstmt);
-		SQLCloseCursor(hstmt);
 	}
 
 	SQLFreeStmt(hstmt, SQL_RESET_PARAMS);
@@ -76,7 +75,7 @@ test_simple_prepared_insert(SQLHSTMT hstmt)
 	rc = SQLFetch(hstmt);
 	sql_stmt_ok(rc, "SQLFetch()", test_case_name, hstmt);
 	is(id, 100, "%s: SQLFetch() - first column in result has unexpected value/type",
-		test_case_name);
+	   test_case_name);
 	if (id != 100) {
 		print_diag(SQL_HANDLE_STMT, hstmt);
 		SQLCloseCursor(hstmt);
@@ -84,8 +83,8 @@ test_simple_prepared_insert(SQLHSTMT hstmt)
 
 	/* 'Bob' consists of 3 chars. */
 	ok((strcmp(name, "Bob") == 0 && length2 == 3),
-		"%s: SQLFetch() - second column in result has unexpected value/type",
-		test_case_name);
+	   "%s: SQLFetch() - second column in result has unexpected value/type",
+	    test_case_name);
 	if (strcmp(name, "Bob") != 0 || length2 != 3) {
 		print_diag(SQL_HANDLE_STMT, hstmt);
 		SQLCloseCursor(hstmt);
@@ -116,14 +115,14 @@ test_simple_prepared_insert(SQLHSTMT hstmt)
 static void
 test_buffer_length(SQLHSTMT hstmt)
 {
-	plan(28);
+	plan(29);
 	const char *test_case_name = "StrLen_or_IndPtr in SQLPrepare";
 	SQLRETURN rc;
 
 	SQLCHAR buffer[20];
 
 	rc = SQLPrepare(hstmt, (SQLCHAR *) "INSERT INTO buf_test VALUES(?, ?)",
-		SQL_NTS);
+			SQL_NTS);
 	sql_stmt_ok(rc, "SQLPrepare()", test_case_name, hstmt);
 
 	SQLLEN length = 0;
@@ -133,16 +132,17 @@ test_buffer_length(SQLHSTMT hstmt)
 	SQLFreeStmt(hstmt, SQL_RESET_PARAMS);
 
 	rc = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_LONG,
-		SQL_INTEGER, 0, 0, &id, 0, NULL);
+			      SQL_INTEGER, 0, 0, &id, 0, NULL);
 	sql_stmt_ok(rc, "SQLBindParameter()", test_case_name, hstmt);
 
 	rc = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR,
-		15, 10, buffer, sizeof(buffer), &length);
+			      15, 10, buffer, sizeof(buffer), &length);
 	sql_stmt_ok(rc, "SQLBindParameter()", test_case_name, hstmt);
 
 	id = 1;
 	length = 3;
 	rc = SQLExecute(hstmt);
+	sql_stmt_ok(rc, "SQLExecute()", test_case_name, hstmt);
 
 	SQLFreeStmt(hstmt, SQL_CLOSE);
 
@@ -345,7 +345,7 @@ test_stored_procedures(SQLHSTMT hstmt, struct basic_handles *handles)
 	SQLLEN length;
 
 	rc = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER,
-			  0, 0, &test_int, 0, NULL);
+			      0, 0, &test_int, 0, NULL);
 	sql_stmt_ok(rc, "SQLBindParameter()", test_case_name, hstmt);
 
 	rc = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR,
