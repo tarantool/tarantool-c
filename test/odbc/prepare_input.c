@@ -583,6 +583,7 @@ int
 main()
 {
 	plan(5);
+	header();
 	struct basic_handles handles;
 
 	basic_handles_create(&handles);

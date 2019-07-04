@@ -13,12 +13,6 @@ box.cfg {
     listen = os.getenv('LISTEN'),
 }
 
--- During debug
---box.cfg {
---    listen = 33000,
---}
-
-
 require('console').listen(os.getenv('ADMIN'))
 fiber = require('fiber')
 

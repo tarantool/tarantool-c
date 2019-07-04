@@ -45,13 +45,8 @@ get_dsn()
 	static char buf[256];
 	char *port = buf;
 	strcpy(port, getenv("LISTEN"));
-	/*
-	 * To run with CLion debuger comment two lines below
-	 * and uncomment one line below them.
-	 */
 	strsep(&port, ":");
 	assert(strchr(port, ':') == NULL);
-//	assert(port != NULL);
 
 	char *tmpl = "DRIVER=Tarantool;SERVER=localhost;"
 		     "UID=test;PWD=test;PORT=%s;"
