@@ -95,7 +95,7 @@ test_auth_call(const char *uri) {
 
 	tnt_reply_init(&reply);
 	isnt(tnt->read_reply(tnt, &reply), -1, "Read reply from server");
-	isnt(reply.error, NULL, "Check error absence");
+	is(reply.error, NULL, "Check error absence");
 	tnt_reply_free(&reply);
 
 	isnt(tnt_call_16(tnt, "test_4", 6, args), -1, "Create call request");
