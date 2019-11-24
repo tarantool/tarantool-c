@@ -19,8 +19,6 @@ env:
       - ENCRYPTION_LABEL="27298b445e90"
     matrix:
       - TARGET=documentation
-      - TARGET=test TARANTOOL_REPO=1.7
-      - TARGET=test TARANTOOL_REPO=1.9
       - TARGET=test TARANTOOL_REPO=1.10
       - TARGET=test TARANTOOL_REPO=2x
       - TARGET=test TARANTOOL_REPO=2.2
@@ -83,16 +81,6 @@ before_deploy:
 
 deploy:
   # Deploy packages to PackageCloud
-  - provider: packagecloud
-    username: tarantool
-    repository: "1_9"
-    token: ${PACKAGECLOUD_TOKEN}
-    dist: ${OS}/${DIST}
-    package_glob: build/*.{rpm,deb}
-    skip_cleanup: true
-    on:
-      branch: master
-      condition: -n "${OS}" && -n "${DIST}" && -n "${PACKAGECLOUD_TOKEN}"
   - provider: packagecloud
     username: tarantool
     repository: "1_10"
