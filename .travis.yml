@@ -33,6 +33,7 @@ env:
       - OS=ubuntu DIST=xenial
       - OS=ubuntu DIST=bionic
       - OS=ubuntu DIST=eoan
+      - OS=ubuntu DIST=focal
       - OS=debian DIST=jessie
       - OS=debian DIST=stretch
       - OS=debian DIST=buster
@@ -58,6 +59,8 @@ matrix:
       - env: OS=ubuntu DIST=bionic
         compiler: clang
       - env: OS=ubuntu DIST=eoan
+        compiler: clang
+      - env: OS=ubuntu DIST=focal
         compiler: clang
       - env: OS=debian DIST=jessie
         compiler: clang
