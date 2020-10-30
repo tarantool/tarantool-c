@@ -418,8 +418,14 @@ ssize_t tnt_object_vformat(struct tnt_stream *s, const char *fmt, va_list vl)
 				assert(false);
 			}
 
-			if (int_status) {
-				if ((rv = tnt_object_add_int(s, int_value)) == -1)
+			if (int_status == 1) {
+				rv = tnt_object_add_int(s, int_value);
+				if (rv == -1)
+					return -1;
+				result += rv;
+			} else if (int_status == 2) {
+				rv = tnt_object_add_uint(s, int_value);
+				if (rv == -1)
 					return -1;
 				result += rv;
 			}
