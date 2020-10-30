@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <limits.h>
 
 #include <msgpuck.h>
 
@@ -834,8 +835,90 @@ static int test_pushes(const char *uri) {
 	return check_plan();
 }
 
+/**
+ * Encode a call to a function with given arguments.
+ *
+ * Invoke <tnt_flush>() afterwards.
+ *
+ * Helper for <test_object_format_uint>().
+ */
+static void
+call_helper(struct tnt_stream *tnt, const char *func_name,
+	    const char *format, ...)
+{
+	struct tnt_request *request = tnt_request_call(NULL);
+	struct tnt_stream *args = tnt_object(NULL);
+
+	va_list list;
+	va_start(list, format);
+	tnt_object_vformat(args, format, list);
+	va_end(list);
+
+	tnt_request_set_funcz(request, func_name);
+	tnt_request_set_tuple(request, args);
+	tnt_request_compile(tnt, request);
+
+	tnt_stream_free(args);
+	tnt_request_free(request);
+}
+
+static int
+test_object_format_uint(const char *uri)
+{
+	plan(20);
+	header();
+
+	int rc;
+
+	/* Connect to tarantool. */
+	struct tnt_stream *tnt = tnt_net(NULL);
+	assert(tnt != NULL);
+	rc = tnt_set(tnt, TNT_OPT_URI, uri);
+	assert(rc == 0);
+	rc = tnt_connect(tnt);
+	assert(rc == 0);
+
+	/*
+	 * Encode positive values of different sizes.
+	 *
+	 * It is especially interesting to pass a value from the
+	 * [2^63..2^64-1] range: all other values can be
+	 * unambiguously represented within <int64_t>. A naive
+	 * implementation that tries to hold any value within
+	 * <int64_t> may fail on values of this range.
+	 */
+	call_helper(tnt, "is_positive", "[%hhu]", UCHAR_MAX);
+	call_helper(tnt, "is_positive", "[%hu]", USHRT_MAX);
+	call_helper(tnt, "is_positive", "[%u]", UINT_MAX);
+	call_helper(tnt, "is_positive", "[%lu]", ULONG_MAX);
+	call_helper(tnt, "is_positive", "[%llu]", ULLONG_MAX);
+	tnt_flush(tnt);
+
+	/* Read replies and verify that all are <true>. */
+	for (int i = 0; i < 5; ++i) {
+		note("*** verify %d response: prep ***", i);
+		struct tnt_reply *reply = tnt_reply_init(NULL);
+		tnt->read_reply(tnt, reply);
+		const char *data = reply->data;
+		assert(data != NULL);
+		is(mp_typeof(*data), MP_ARRAY, "reply data is array");
+		is(mp_decode_array(&data), 1, "reply data array size is 1");
+		is(mp_typeof(*data), MP_BOOL, "result is boolean");
+		is(mp_decode_bool(&data), true, "result is true");
+		tnt_reply_free(reply);
+		note("*** verify %d response: done ***", i);
+	}
+
+	/* Clean up. */
+	tnt_close(tnt);
+	tnt_stream_free(tnt);
+
+	footer();
+	return check_plan();
+}
+
 int main() {
-	plan(10);
+	plan(11);
 
 	char uri[128] = {0};
 	snprintf(uri, 128, "test:test@%s", getenv("LISTEN"));
@@ -850,6 +933,7 @@ int main() {
 	test_msgpack_array_iter();
 	test_msgpack_mapa_iter();
 	test_pushes(uri);
+	test_object_format_uint(uri);
 
 	return check_plan();
 }

@@ -41,8 +41,11 @@ box.once('init', function()
     msgpack:insert{3, 'array with float key as key', {[{[2.7] = 3, [7] = 7}] = {1, 2, 3}}}
     msgpack:insert{6, 'array with string key as key', {['megusta'] = {1, 2, 3}}}
 
-    box.schema.func.create('test_4')
-    box.schema.user.grant('guest', 'execute', 'function', 'test_4');
+    -- Grant the following functions to 'guest' user.
+    for _, func in ipairs({'test_4', 'is_positive'}) do
+        box.schema.func.create(func)
+        box.schema.user.grant('guest', 'execute', 'function', func);
+    end
 end)
 
 function test_1()
@@ -82,4 +85,8 @@ function test_5()
         box.session.push({ position = i, value = 'i love maccartney' })
     end
     return true
+end
+
+function is_positive(x)
+    return x > 0
 end
