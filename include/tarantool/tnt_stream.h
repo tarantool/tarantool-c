@@ -36,7 +36,9 @@
  */
 
 #include <sys/types.h>
+#ifndef WIN32
 #include <sys/uio.h>
+#endif
 
 #include <tarantool/tnt_reply.h>
 #include <tarantool/tnt_request.h>

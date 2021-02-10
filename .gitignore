@@ -3,6 +3,7 @@ CMakeFiles
 Makefile
 cmake_install.cmake
 install_manifest.txt
+CMakeSettings.json 
 
 *.a
 *.so*
@@ -34,3 +35,6 @@ tarantool-cli
 tarantool-call
 tarantool-unix
 test/var/
+/build*/
+/.vs
+/out/build/

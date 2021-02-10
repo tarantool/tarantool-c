@@ -316,7 +316,7 @@ tnt_request_writeout(struct tnt_stream *s, struct tnt_request *req,
 	size_t plen = 0;
 	for (int i = 1; i < v_sz; ++i) plen += v[i].iov_len;
 	size_t hlen = mp_sizeof_luint32(plen);
-	v[0].iov_base -= hlen;
+	v[0].iov_base = (char*)v[0].iov_base - hlen;
 	v[0].iov_len  += hlen;
 	mp_encode_luint32(v[0].iov_base, plen);
 	ssize_t rv = s->writev(s, v, v_sz);

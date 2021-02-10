@@ -30,7 +30,12 @@
  */
 
 #include <stddef.h>
+#ifdef WIN32
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#else
 #include <netdb.h> /* NI_MAXHOST, NI_MAXSERV */
+#endif
 #include <limits.h> /* _POSIX_PATH_MAX */
 
 #if defined(__cplusplus)
@@ -59,7 +64,11 @@ struct uri {
 
 #define URI_HOST_UNIX "unix/"
 #define URI_MAXHOST NI_MAXHOST
+#ifdef _POSIX_PATH_MAX
 #define URI_MAXSERVICE _POSIX_PATH_MAX /* _POSIX_PATH_MAX always > NI_MAXSERV */
+#else 
+#define URI_MAXSERVICE MAX_PATH
+#endif
 
 int
 uri_parse(struct uri *uri, const char *str);

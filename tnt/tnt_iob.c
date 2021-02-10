@@ -33,8 +33,13 @@
 #include <string.h>
 #include <stdbool.h>
 
+#ifndef WIN32
 #include <unistd.h>
 #include <sys/uio.h>
+#else
+#include <tarantool/win32/vcunistd.h>
+#endif // !WIN32
+
 
 #include <tarantool/tnt_mem.h>
 #include <tarantool/tnt_iob.h>

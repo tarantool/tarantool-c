@@ -35,6 +35,10 @@
  * \brief Basic reply structure (parsing responses, e.t.c)
  */
 
+#ifdef WIN32
+#include "win32/vcunistd.h"
+#endif
+
 /**
  * \brief Size of iproto header
  */

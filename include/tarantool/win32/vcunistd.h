@@ -1,0 +1,52 @@
+#ifndef _VCUNISTD_H_
+#define _VCUNISTD_H_
+#ifdef _WIN32
+
+#include <crtdefs.h>
+#include <io.h>
+#include <direct.h>
+#include <process.h>
+
+#pragma comment( lib, "ws2_32" )
+#include <winsock2.h>
+#include <WS2tcpip.h>
+
+#include <process.h>
+#include <time.h>
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
+typedef int	pid_t;			/* process id type	*/
+
+#ifndef _SSIZE_T_DEFINED
+typedef ptrdiff_t ssize_t;
+#define _SSIZE_T_DEFINED
+#endif
+
+//<sys/stat.h>
+#define fstat64(fildes, stat) (_fstati64(fildes, stat))
+#define stat64(path, buffer) (_stati64(path,buffer))
+
+#define random()	rand()
+// FIXME - rand is claimed to be thread-safe in MSVC RT, the trick is to seed each thread properly
+// at the moment we just give up
+#define rand_r(pseed)	rand()
+
+// uio buffers defined, as it was for writev, readv.
+struct iovec {
+  void * iov_base;
+  size_t iov_len;
+};
+
+// TODO - implement these separately for file and socket descriptors
+// ssize_t readv(int filedes, const struct iovec *vector, int count);
+// ssize_t writev(int filedes, const struct iovec *vector, int count);
+
+
+#ifdef	__cplusplus
+}
+#endif
+#endif /* _WIN32 */
+#endif /* _VCUNISTD_H_ */

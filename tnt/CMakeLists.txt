@@ -49,8 +49,10 @@ set (TNT_SOURCES
 # Builds
 #----------------------------------------------------------------------------#
 
-set_source_files_properties(${PROJECT_SOURCE_DIR}/third_party/uri.c PROPERTIES
-    COMPILE_FLAGS "-Wno-implicit-fallthrough")
+if(NOT WIN32)
+    set_source_files_properties(${PROJECT_SOURCE_DIR}/third_party/uri.c PROPERTIES
+        COMPILE_FLAGS "-Wno-implicit-fallthrough")
+endif()
 
 ## Static library
 project(tnt)
@@ -59,7 +61,9 @@ target_link_libraries(${PROJECT_NAME} ${MSGPUCK_LIBRARIES})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION   ${LIBTNT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${LIBTNT_SOVERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "tarantool")
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -fPIC)
+if(NOT WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -fPIC)
+endif()
 
 install (TARGETS ${PROJECT_NAME}
          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

@@ -41,6 +41,11 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdarg.h>
+#ifndef WIN32
+#include <unistd.h>
+#else
+#include <tarantool/win32/vcunistd.h>
+#endif
 
 #include <tarantool/tnt_mem.h>
 #include <tarantool/tnt_proto.h>

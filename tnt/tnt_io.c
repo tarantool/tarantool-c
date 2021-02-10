@@ -39,8 +39,9 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include <sys/time.h>
 #include <sys/types.h>
+#ifndef WIN32
+#include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <netinet/in.h>
@@ -49,6 +50,10 @@
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <unistd.h>
+#else
+#include <tarantool/win32/vcunistd.h>
+#endif // !WIN32
+
 #include <fcntl.h>
 #include <errno.h>
 
@@ -88,6 +93,7 @@ tnt_io_resolve(struct addrinfo **addr_info_p,
 static enum tnt_error
 tnt_io_nonblock(struct tnt_stream_net *s, int set)
 {
+#ifndef WIN32
 	int flags = fcntl(s->fd, F_GETFL);
 	if (flags == -1) {
 		s->errno_ = errno;
@@ -101,6 +107,13 @@ tnt_io_nonblock(struct tnt_stream_net *s, int set)
 		s->errno_ = errno;
 		return TNT_ESYSTEM;
 	}
+#else
+	u_long flags = set ? 0 : 1;
+	if (NO_ERROR != ioctlsocket(s->fd, FIONBIO, &flags)) {
+		s->errno_ = errno;
+		return TNT_ESYSTEM;
+	}
+#endif
 	return TNT_EOK;
 }
 
@@ -214,6 +227,7 @@ out:
 	return result;
 }
 
+#ifndef WIN32
 static enum tnt_error
 tnt_io_connect_unix(struct tnt_stream_net *s, const char *path)
 {
@@ -239,6 +253,7 @@ tnt_io_connect_unix(struct tnt_stream_net *s, const char *path)
 	tnt_io_close(s);
 	return TNT_ESYSTEM;
 }
+#endif
 
 static enum tnt_error tnt_io_xbufmax(struct tnt_stream_net *s, int opt, int min) {
 	int max = 128 * 1024 * 1024;
@@ -294,6 +309,7 @@ tnt_io_connect(struct tnt_stream_net *s)
 		result = tnt_io_connect_tcp(s, host, port);
 		break;
 	}
+#ifndef WIN32
 	case URI_UNIX: {
 		char service[128];
 		memcpy(service, uri->service, uri->service_len);
@@ -301,6 +317,7 @@ tnt_io_connect(struct tnt_stream_net *s)
 		result = tnt_io_connect_unix(s, service);
 		break;
 	}
+#endif
 	default:
 		result = TNT_EFAIL;
 	}
@@ -375,7 +392,7 @@ tnt_io_sendv_raw(struct tnt_stream_net *s, struct iovec *iov, int count, int all
 			break;
 		while (count > 0) {
 			if (iov->iov_len > (size_t)r) {
-				iov->iov_base += r;
+				iov->iov_base = (char*)iov->iov_base + r;
 				iov->iov_len -= r;
 				break;
 			} else {

@@ -30,7 +30,12 @@
  * SUCH DAMAGE.
  */
 
+#ifndef WIN32
 #include <sys/time.h>
+#else
+#include "win32/vcunistd.h"
+#endif // !WIN32
+
 
 /**
  * \file tnt_opt.h
