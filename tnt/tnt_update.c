@@ -152,7 +152,10 @@ tnt_update_op(struct tnt_stream *ops, char op, uint32_t fieldno,
 	      const char *opdata, size_t opdata_len) {
 	struct iovec v[2]; size_t v_sz = 2;
 	char body[64], *data; data = body;
-	data = mp_encode_array(data, tnt_update_op_len(op));
+	ssize_t len = tnt_update_op_len(op);
+	assert(len >= 0);
+	assert(len <= UINT32_MAX);
+	data = mp_encode_array(data, (uint32_t)len);
 	data = mp_encode_str(data, &op, 1);
 	data = mp_encode_uint(data, fieldno);
 	v[0].iov_base = body;

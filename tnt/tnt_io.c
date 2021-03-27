@@ -90,6 +90,27 @@ tnt_io_resolve(struct addrinfo **addr_info_p,
 	return TNT_ERESOLVE;
 }
 
+#ifdef _WIN32
+
+#define EPOCH 116444736000000000ull
+
+int gettimeofday(struct timeval* tp, struct timezone* tzp)
+{
+	SYSTEMTIME	systemtime;
+	FILETIME	filetime;
+	uint64_t	time;
+
+	GetSystemTime(&systemtime);
+	SystemTimeToFileTime(&systemtime, &filetime);
+	time = filetime.dwLowDateTime + ((uint64_t)filetime.dwHighDateTime << 32);
+
+	tp->tv_sec = (long)((time - EPOCH) / 10000000LL);
+	tp->tv_usec = (long)systemtime.wMilliseconds * 1000;
+
+	return 0;
+}
+#endif
+
 static enum tnt_error
 tnt_io_nonblock(struct tnt_stream_net *s, int set)
 {

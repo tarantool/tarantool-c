@@ -42,7 +42,8 @@
 uint32_t
 tnt_stream_reqid(struct tnt_stream *s, uint32_t reqid)
 {
-	uint32_t old = s->reqid;
+	assert(s->reqid <= UINT32_MAX);
+	uint32_t old = (uint32_t)s->reqid;
 	s->reqid = reqid;
 	return old;
 }
