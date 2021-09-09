@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import subprocess
@@ -8,7 +8,7 @@ suite_name = 'cli'
 test_name = 'tarantool-poll'
 path = os.path.join(os.environ['BUILDDIR'], 'test', suite_name, test_name)
 
-obj = subprocess.Popen([path], stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
+obj = subprocess.Popen([path], stderr = subprocess.STDOUT, stdout = subprocess.PIPE, universal_newlines=True)
 rv = obj.communicate()
 
 print("TAP version 13")
