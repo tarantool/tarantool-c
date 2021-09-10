@@ -33,4 +33,5 @@ tarantool-poll
 tarantool-cli
 tarantool-call
 tarantool-unix
+tarantool-leak
 test/var/

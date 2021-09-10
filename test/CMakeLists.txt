@@ -32,6 +32,11 @@ add_executable(tarantool-test-disconnect tarantool_disconnect.c)
 set_target_properties(tarantool-test-disconnect PROPERTIES OUTPUT_NAME "tarantool-disconnect")
 target_link_libraries(tarantool-test-disconnect tnt test_common)
 
+project(tarantool-test-leak)
+add_executable(tarantool-test-leak cli/tarantool_leak.c)
+set_target_properties(tarantool-test-leak PROPERTIES OUTPUT_NAME "cli/tarantool-leak")
+target_link_libraries(tarantool-test-leak tnt test_common)
+
 add_custom_target(test
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/test-run.py -j -1
         --builddir=${CMAKE_BINARY_DIR}
