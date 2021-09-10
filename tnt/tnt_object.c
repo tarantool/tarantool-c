@@ -36,6 +36,7 @@ tnt_sbuf_object_grow_stack(struct tnt_sbuf_object *sbo)
 	struct tnt_sbo_stack *stack = tnt_mem_alloc(new_stack_alloc * sizeof(
 				struct tnt_sbo_stack));
 	if (!stack) return -1;
+	tnt_mem_free(sbo->stack);
 	sbo->stack_alloc = new_stack_alloc;
 	sbo->stack = stack;
 	return 0;
@@ -67,11 +68,11 @@ tnt_object(struct tnt_stream *s)
 
 	struct tnt_stream_buf *sb = TNT_SBUF_CAST(s);
 	sb->resize = tnt_sbuf_object_resize;
-	sb->free = tnt_sbuf_object_free;
 
 	struct tnt_sbuf_object *sbo = tnt_mem_alloc(sizeof(struct tnt_sbuf_object));
 	if (sbo == NULL)
 		goto error;
+	sb->free = tnt_sbuf_object_free;
 	sb->subdata = sbo;
 	sbo->stack_size = 0;
 	sbo->stack_alloc = 8;
