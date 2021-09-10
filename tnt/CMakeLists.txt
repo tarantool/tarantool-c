@@ -2,7 +2,7 @@
 # build flags
 #============================================================================#
 
-set(LIBTNT_NAME "tnt")
+set(LIBTNT_NAME "tarantool")
 set(LIBTNT_VERSIONMAJOR "2.0")
 set(LIBTNT_VERSIONMINOR "0")
 set(LIBTNT_VERSION "${LIBTNT_VERSIONMAJOR}.${LIBTNT_VERSIONMINOR}")
@@ -58,7 +58,7 @@ add_library(${PROJECT_NAME} STATIC ${TNT_SOURCES})
 target_link_libraries(${PROJECT_NAME} ${MSGPUCK_LIBRARIES})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION   ${LIBTNT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${LIBTNT_SOVERSION})
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "tarantool")
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${LIBTNT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -fPIC)
 
 install (TARGETS ${PROJECT_NAME}
