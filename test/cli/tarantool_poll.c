@@ -39,16 +39,19 @@ test_poll() {
 		if (tnt_set(tnt, TNT_OPT_URI, uri) != 0) {
 			fprintf(stderr, "failed to set uri\n");
 			ok = 0;
+			tnt_stream_free(tnt);
 			goto done;
 		}
 		if (tnt_set(tnt, TNT_OPT_SEND_BUF, 0) != 0) {
 			fprintf(stderr, "failed to set sendbuf size\n");
 			ok = 0;
+			tnt_stream_free(tnt);
 			goto done;
 		}
 		if (tnt_set(tnt, TNT_OPT_RECV_BUF, 0) != 0) {
 			fprintf(stderr, "failed to set rcvbuf size\n");
 			ok = 0;
+			tnt_stream_free(tnt);
 			goto done;
 		}
 
@@ -59,6 +62,7 @@ test_poll() {
 		if (tnt_set(tnt, TNT_OPT_TMOUT_CONNECT, &tv) != 0) {
 			fprintf(stderr, "failed to set timeout connect\n");
 			ok = 0;
+			tnt_stream_free(tnt);
 			goto done;
 		}
 
@@ -66,6 +70,7 @@ test_poll() {
 		if (ret != 0) {
 			diag("tnt_connect: %s", strerror(errno));
 			ok = 0;
+			tnt_stream_free(tnt);
 			goto done;
 		}
 
@@ -91,8 +96,10 @@ done:
 	is(1, ok, "expected non-assert test");
 
 	while (last > -1) {
-		if (streams[last] != NULL)
+		if (streams[last] != NULL) {
 			tnt_close(streams[last]);
+			tnt_stream_free(streams[last]);
+		}
 		--last;
 	}
 

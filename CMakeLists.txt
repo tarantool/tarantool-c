@@ -79,6 +79,37 @@ if (ENABLE_BUNDLED_DOCS)
     add_subdirectory(doc)
 endif(ENABLE_BUNDLED_DOCS)
 
+include(CheckCCompilerFlag)
+if (ENABLE_LSAN)
+    unset(COMPILER_SUPPORTS_LSAN CACHE)
+    check_c_compiler_flag("-fsanitize=leak" COMPILER_SUPPORTS_LSAN)
+    if (NOT COMPILER_SUPPORTS_LSAN)
+         message(FATAL_ERROR
+            "\n"
+            "Your compiler does not support leak sanitizer"
+            )
+    endif(NOT COMPILER_SUPPORTS_LSAN)
+    set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fsanitize=leak")
+endif(ENABLE_LSAN)
+
+if (ENABLE_ASAN)
+    unset(COMPILER_SUPPORTS_ASAN CACHE)
+    # Little hack, needed because CMake does not
+    # add "-fsanitize=address" to linker flags
+    # when called `check_c_compiler_flag`.
+    set (_saved_CRL ${CMAKE_REQUIRED_LIBRARIES})
+    set(CMAKE_REQUIRED_LIBRARIES "-fsanitize=address;asan")
+    check_c_compiler_flag("-fsanitize=address" COMPILER_SUPPORTS_ASAN)
+    set (CMAKE_REQUIRED_LIBRARIES ${_saved_CRL})
+    if (NOT COMPILER_SUPPORTS_ASAN)
+         message(FATAL_ERROR
+            "\n"
+            "Your compiler does not support address sanitizer"
+            )
+    endif(NOT COMPILER_SUPPORTS_ASAN)
+    set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -g -fsanitize=address")
+endif(ENABLE_ASAN)
+
 message(STATUS "------------------------------------------------")
 message(STATUS "        Tarantool library configuration:        ")
 message(STATUS "------------------------------------------------")
