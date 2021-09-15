@@ -54,4 +54,5 @@ int main() {
 	check_rbytes(reply, NULL, 0);
 
 	tnt_reply_free(reply); // Free reply
+	tnt_stream_free(tnt);
 }

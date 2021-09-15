@@ -817,7 +817,9 @@ static int test_pushes(const char *uri) {
 			ended = true;
 		}
 	}
+	tnt_request_free(subscribe);
 	tnt_close(tnt);
+	tnt_stream_free(tnt);
 
 	plan(2);
 	header();
