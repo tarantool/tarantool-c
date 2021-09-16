@@ -14,7 +14,7 @@ The current version is 1.0
 
 Tarantool-c depends on `msgpuck <https://github.com/tarantool/msgpuck>`_.
 
-For documentation, please, visit `github pages <http://tarantool.github.com/tarantool-c>`_.
+For documentation, please, visit `github pages <https://tarantool.github.io/tarantool-c>`_.
 
 It consinsts of:
 
