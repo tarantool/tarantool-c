@@ -1,0 +1,47 @@
+name: fast_testing
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - 'master'
+    tags:
+      - '*'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        tarantool:
+          - '1.10'
+          - '2.8'
+          - '2.9'
+
+    steps:
+      - name: Clone the connector
+        uses: actions/checkout@v2
+        with:
+          # Enable recursive submodules checkout as test-run git module is used
+          # for running tests.
+          submodules: recursive
+
+      - name: Setup tarantool ${{ matrix.tarantool }}
+        uses: tarantool/setup-tarantool@v1
+        with:
+          tarantool-version: ${{ matrix.tarantool }}
+
+      - name: Setup python3 for tests
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install test requirements
+        run: pip install -r test-run/requirements.txt
+
+      - run: cmake . && make
+      - run: ulimit -n 8192 # set file descriptors limit to enable poll test
+      - run: make test
