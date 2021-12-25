@@ -43,7 +43,7 @@ endif()
 # Static library
 #
 
-project(tntrpl)
+project(tntrpl C)
 add_library(tntrpl STATIC ${tntrpl_sources})
 set_target_properties(tntrpl PROPERTIES COMPILE_FLAGS "${tntrpl_cflags}")
 set_target_properties(tntrpl PROPERTIES VERSION ${LIBTNT_VERSION} SOVERSION ${LIBTNT_SOVERSION})
@@ -53,7 +53,7 @@ set_target_properties(tntrpl PROPERTIES OUTPUT_NAME "tarantoolrpl")
 # Shared library
 #
 
-project(tntrpl_shared)
+project(tntrpl_shared C)
 add_library(tntrpl_shared SHARED ${tntrpl_sources})
 target_link_libraries(tntrpl_shared tnt_shared tntnet_shared)
 set_target_properties(tntrpl_shared PROPERTIES OUTPUT_NAME tntrpl)
