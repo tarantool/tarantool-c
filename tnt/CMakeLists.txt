@@ -53,7 +53,7 @@ set_source_files_properties(${PROJECT_SOURCE_DIR}/third_party/uri.c PROPERTIES
     COMPILE_FLAGS "-Wno-implicit-fallthrough")
 
 ## Static library
-project(tnt)
+project(tnt C)
 add_library(${PROJECT_NAME} STATIC ${TNT_SOURCES})
 target_link_libraries(${PROJECT_NAME} ${MSGPUCK_LIBRARIES})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION   ${LIBTNT_VERSION})
@@ -67,7 +67,7 @@ install (TARGETS ${PROJECT_NAME}
          COMPONENT library)
 
 ## Shared library
-project(tnt_shared)
+project(tnt_shared C)
 add_library(${PROJECT_NAME} SHARED ${TNT_SOURCES})
 target_link_libraries(${PROJECT_NAME} ${MSGPUCK_LIBRARIES})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION   ${LIBTNT_VERSION})
