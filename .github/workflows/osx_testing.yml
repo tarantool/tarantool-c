@@ -1,0 +1,187 @@
+name: testing
+
+on: [push, pull_request]
+
+# TODO: Run testing using luarocks installed module.
+# TODO: Use caching of fixed tarantool versions or improve
+#       setup-tarantool to use it here.
+
+jobs:
+  testing_mac_os:
+    # We want to run on external PRs, but not on our own internal
+    # PRs as they'll be run by the push to the branch.
+    #
+    # The main trick is described here:
+    # https://github.com/Dart-Code/Dart-Code/pull/2375
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - macos-10.15
+          - macos-11.0
+        tarantool:
+          - brew
+          - 1.10.7
+          - 1.10.8
+          - 1.10.9
+          - 1.10.10
+          - 2.4.1
+          - 2.4.2
+          - 2.4.3
+          - 2.5.1
+          - 2.5.2
+          - 2.5.3
+          - 2.6.1
+          - 2.6.2
+          - 2.6.3
+          - 2.7.1
+          - 2.7.2
+          - 2.8.1
+          - master
+
+    env:
+      # Make sense only for non-brew jobs.
+      #
+      # Set as absolute paths to avoid any possible confusion
+      # after changing a current directory.
+      T_VERSION: ${{ matrix.tarantool }}
+      T_SRCDIR: ${{ format('{0}/tarantool-{1}', github.workspace, matrix.tarantool) }}
+      T_DESTDIR: ${{ format('{0}/tarantool-{1}-dest', github.workspace, matrix.tarantool) }}
+      SRCDIR: ${{ format('{0}/{1}', github.workspace, github.repository) }}
+
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - name: Install latest tarantool from brew
+        run: brew install tarantool
+        if: matrix.tarantool == 'brew'
+
+      - name: Cache built tarantool ${{ env.T_VERSION }}
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: ${{ env.T_DESTDIR }}
+          # v2 is due to https://github.com/actions/cache/issues/2
+          # and because the cache keys without -v2 may contain
+          # debug tarantool builds. It is desirable to have all
+          # build either debug or release (RelWithDebInfo), but
+          # we unable to build all releases in debug (see below).
+          #
+          # v3 is to re-verify all Mac OS builds after fix for the
+          # gh-6076 problem (see below).
+          # 
+          # v4 added due to inability to clear the cache after v3 prefix.
+          # See https://github.com/github/docs/issues/14145
+          key: ${{ matrix.runs-on }}-${{ matrix.tarantool }}-v4
+        if: matrix.tarantool != 'brew' && matrix.tarantool != 'master'
+
+      - name: Install tarantool build dependencies
+        run: brew install autoconf automake libtool openssl@1.1
+        if: matrix.tarantool != 'brew' && steps.cache.outputs.cache-hit != 'true'
+
+      - name: Clone tarantool ${{ env.T_VERSION }}
+        uses: actions/checkout@v2
+        with:
+          repository: tarantool/tarantool
+          ref: ${{ env.T_VERSION }}
+          path: ${{ env.T_SRCDIR }}
+          submodules: true
+          # fetch-depth is 1 by default and it is okay for
+          # building from a tag. However we have master in
+          # the version list.
+          fetch-depth: 0
+        if: matrix.tarantool != 'brew' && steps.cache.outputs.cache-hit != 'true'
+
+      - name: Patching tarantool for successful build
+        run: |
+          cd "${T_SRCDIR}"
+          # These steps fix the problem with tarantool build described in
+          # https://github.com/tarantool/tarantool/issues/6576
+          # -f is added to fix tarantool build on Mac OS
+          git show 11e87877df9001a4972019328592d79d55d1bb01 | patch -p1 -f
+        if: matrix.tarantool != 'brew' && matrix.tarantool != 'master' && steps.cache.outputs.cache-hit != 'true'
+
+      - name: Build tarantool ${{ env.T_VERSION }} from sources
+        run: |
+          mkdir "${T_DESTDIR}"
+          cd "${T_SRCDIR}"
+          # Set RelWithDebInfo just to disable -Werror.
+          #
+          # There are tarantool releases on which AppleClang
+          # complains about the problem that was fixed later in
+          # https://github.com/tarantool/tarantool/commit/7e8688ff8885cc7813d12225e03694eb8886de29
+          #
+          # Set OpenSSL root directory for linking tarantool with OpenSSL of version 1.1
+          # This is related to #49. There are too much deprecations which affect the build and tests.
+          # Must be revisited after fixing https://github.com/tarantool/tarantool/issues/6477
+          #
+          # Added -DENABLE_DIST=ON in case of tarantoolctl abcense in destdir. 
+          # Fixes not-brew tarantool build on Mac OS
+          cmake . -DENABLE_DIST=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1 -DOPENSSL_LIBRARIES=/usr/local/opt/openssl@1.1/lib
+          # {{{ Workaround Mac OS build failure (gh-6076)
+          #
+          # https://github.com/tarantool/tarantool/issues/6076
+          #
+          # In brief: when "src/lib/small" is in include paths,
+          # `#include <version>` from inside Mac OS SDK headers
+          # attempts to include "src/lib/small/VERSION" as a
+          # header file that leads to a syntax error.
+          #
+          # It was fixed in the following commits:
+          #
+          # * 1.10.10-24-g7bce4abd1
+          # * 2.7.2-44-gbb1d32903
+          # * 2.8.1-56-ga6c29c5af
+          # * 2.9.0-84-gc5ae543f3
+          #
+          # However applying the workaround for all versions looks
+          # harmless.
+          #
+          # Added -f just in case: I guess we'll drop this useless
+          # obsoleted VERSION file from the git repository sooner
+          # or later.
+          rm -f src/lib/small/VERSION
+          # The same as above, but for the VERSION file generated
+          # by tarantool's CMake script.
+          rm VERSION
+          # }}} Workaround Mac OS build failure (gh-6076)
+          # Continue the build.
+          make -j$(sysctl -n hw.logicalcpu)
+          make DESTDIR="${T_DESTDIR}" install
+        if: matrix.tarantool != 'brew' && steps.cache.outputs.cache-hit != 'true'
+
+      - name: Export TARANTOOL_DIR and PATH
+        run: |
+          printf '%s=%s\n' TARANTOOL_DIR "${T_DESTDIR}/usr/local" >> "${GITHUB_ENV}"
+          printf '%s\n' "${T_DESTDIR}/usr/local/bin" >> "${GITHUB_PATH}"
+        if: matrix.tarantool != 'brew'
+
+      - name: Verify tarantool version
+        run: |
+          # Workaround https://github.com/tarantool/tarantool/issues/4983
+          # Workaround https://github.com/tarantool/tarantool/issues/5040
+          tarantool -e "require('fiber').sleep(0) assert(_TARANTOOL:startswith('${T_VERSION}'), _TARANTOOL) os.exit()"
+        if: matrix.tarantool != 'brew' && matrix.tarantool != 'master'
+
+      - name: Clone the connector
+        uses: actions/checkout@v2
+        with:
+          path: ${{ env.SRCDIR }}
+          # Needed because of tarantool-c dependence on submodules
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Build the connector
+        run: |
+          cd "${SRCDIR}"
+          git submodule foreach git clean -ffxd
+          git clean -ffxd
+          cmake . && make
+
+      - name: Run tests
+        run: |
+          cd "${SRCDIR}"
+          # Needed to install and use gevent
+          pip3 install -r test-run/requirements.txt
+          make test

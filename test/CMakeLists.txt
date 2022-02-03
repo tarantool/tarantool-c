@@ -39,5 +39,6 @@ target_link_libraries(tarantool-test-leak tnt test_common)
 
 add_custom_target(test
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/test-run.py -j -1
+        --update-result
         --builddir=${CMAKE_BINARY_DIR}
         --vardir=${CMAKE_CURRENT_BINARY_DIR}/var)
