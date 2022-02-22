@@ -37,7 +37,7 @@ jobs:
       DIST: ${{ matrix.platform.dist }}
 
     steps:
-      - name: Clone the module
+      - name: Clone the connector
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
