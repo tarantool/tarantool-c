@@ -1,4 +1,4 @@
-name: fast_testing
+name: Linux testing
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: osx_testing
+name: OS X testing
 
 on: [push, pull_request]
 
