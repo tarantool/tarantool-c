@@ -2,15 +2,15 @@
                             Tarantool C client libraries
 -------------------------------------------------------------------------------
 
-.. image:: https://github.com/tarantool/tarantool-c/workflows/fast_testing/badge.svg
+.. image:: https://github.com/tarantool/tarantool-c/actions/workflows/fast_testing.yml/badge.svg
     :target: https://github.com/tarantool/tarantool-c/actions/workflows/fast_testing.yml?query=branch%3Amaster
     :alt: Linux testing
 
-.. image:: https://github.com/tarantool/tarantool-c/workflows/osx_testing/badge.svg
+.. image:: https://github.com/tarantool/tarantool-c/actions/workflows/osx_testing.yml/badge.svg
     :target: https://github.com/tarantool/tarantool-c/actions/workflows/osx_testing.yml?query=branch%3Amaster
     :alt: OS X testing
 
-.. image:: https://github.com/tarantool/tarantool-c/workflows/packaging/badge.svg
+.. image:: https://github.com/tarantool/tarantool-c/actions/workflows/packaging.yml/badge.svg
     :target: https://github.com/tarantool/tarantool-c/actions/workflows/packaging.yml?query=branch%3Amaster
     :alt: Packaging
 
