@@ -30,8 +30,6 @@ jobs:
           - { os: 'ubuntu', dist: 'xenial' }
           - { os: 'ubuntu', dist: 'bionic' }
           - { os: 'ubuntu', dist: 'focal' }
-          - { os: 'ubuntu', dist: 'hirsute' }
-          - { os: 'ubuntu', dist: 'impish' }
           - { os: 'ubuntu', dist: 'jammy' }
 
     env:
