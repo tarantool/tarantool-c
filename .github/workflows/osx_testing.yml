@@ -178,7 +178,7 @@ jobs:
       - name: Install testing dependencies
         run: |
           cd "${SRCDIR}"
-          pip3 install -r test-run/requirements.txt
+          pip3 install PyYAML gevent==22.10.2
 
       - name: Run tests
         run: |
