@@ -18,8 +18,8 @@ jobs:
       fail-fast: false
       matrix:
         runs-on:
-          - macos-10.15
-          - macos-11.0
+          - macos-11
+          - macos-12
         tarantool:
           # TODO: add 1.10 versions after resolving gh-159.
           - brew
