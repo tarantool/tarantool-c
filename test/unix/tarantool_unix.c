@@ -358,7 +358,7 @@ test_execute(const char *uri) {
 	args = tnt_object(NULL);
 	isnt(args, NULL, "Check object creation");
 	isnt(tnt_object_format(args, "[]"), -1, "check object filling");
-	query = "select * from test_table";
+	query = "select * from test_table where id = 0";
 	isnt(tnt_execute(tnt, query, strlen(query), args), -1,
 	     "Create execute sql request: select");
 	isnt(tnt_flush(tnt), -1, "Send to server");
