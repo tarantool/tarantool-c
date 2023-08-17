@@ -43,13 +43,13 @@ make %{?_smp_mflags}
 make DESTDIR=%{buildroot} install
 
 %files
-"%{_libdir}/libtarantool.a"
-"%{_libdir}/libtarantool.so"
 "%{_libdir}/libtarantool.so.*"
 
 %files devel
 %dir "%{_includedir}/tarantool"
 "%{_includedir}/tarantool/*.h"
+"%{_libdir}/libtarantool.a"
+"%{_libdir}/libtarantool.so"
 
 %changelog
 * Tue Jun 9 2015 Eugine Blikh <bigbes@gmail.com> 1.0.1-1
