@@ -1,1 +1,3 @@
 usr/include/tarantool/
+usr/lib/libtarantool.a
+usr/lib/libtarantool.so
