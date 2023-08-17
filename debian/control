@@ -21,7 +21,7 @@ Description: tarantool-c client library
 
 Package: libtarantool-c-dbg
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: libtarantool-c (= ${binary:Version}), ${misc:Depends}
 Pre-Depends: ${misc:Pre-Depends}
 Multi-Arch: same
 Description: tarantool-c client library
@@ -31,7 +31,7 @@ Description: tarantool-c client library
 
 Package: libtarantool-c-dev
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: libtarantool-c (= ${binary:Version}), ${misc:Depends}
 Pre-Depends: ${misc:Pre-Depends}
 Multi-Arch: same
 Description: tarantool-c client library
