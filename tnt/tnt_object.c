@@ -36,6 +36,7 @@ tnt_sbuf_object_grow_stack(struct tnt_sbuf_object *sbo)
 	struct tnt_sbo_stack *stack = tnt_mem_alloc(new_stack_alloc * sizeof(
 				struct tnt_sbo_stack));
 	if (!stack) return -1;
+	memcpy(stack, sbo->stack, sbo->stack_alloc * sizeof(*sbo->stack));
 	tnt_mem_free(sbo->stack);
 	sbo->stack_alloc = new_stack_alloc;
 	sbo->stack = stack;
