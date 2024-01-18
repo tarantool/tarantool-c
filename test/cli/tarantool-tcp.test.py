@@ -8,7 +8,11 @@ suite_name = 'cli'
 test_name = 'tarantool-tcp'
 path = os.path.join(os.environ['BUILDDIR'], 'test', suite_name, test_name)
 
-obj = subprocess.Popen([path], stderr = subprocess.STDOUT, stdout = subprocess.PIPE, universal_newlines=True)
+new_env = os.environ.copy()
+new_env["LISTEN"] = f"localhost:{server.get_iproto_port()}"
+
+obj = subprocess.Popen([path], stderr = subprocess.STDOUT,
+                       stdout = subprocess.PIPE, universal_newlines=True, env=new_env)
 rv = obj.communicate()
 
 print("TAP version 13")
