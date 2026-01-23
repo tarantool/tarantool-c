@@ -156,4 +156,4 @@ jobs:
         run: |
           cd "${SRCDIR}"
           ulimit -n 4096
-          make test
+          make testing

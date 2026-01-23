@@ -41,4 +41,4 @@ jobs:
 
       - run: cmake . && make
       - run: ulimit -n 8192 # set file descriptors limit to enable poll test
-      - run: make test
+      - run: make testing
