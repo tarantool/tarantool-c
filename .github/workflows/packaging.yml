@@ -18,7 +18,6 @@ jobs:
           - { os: 'debian', dist: 'stretch' }
           - { os: 'debian', dist: 'buster' }
           - { os: 'debian', dist: 'bullseye' }
-          - { os: 'el', dist: '7' }
           - { os: 'el', dist: '8' }
           - { os: 'fedora', dist: '30' }
           - { os: 'fedora', dist: '31' }
