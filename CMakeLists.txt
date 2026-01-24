@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5...3.22)
 
 project(LIBTNT C)
 
@@ -8,12 +8,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 set(CMAKE_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_INCLUDE_PATH})
 
 if(POLICY CMP0037)
-    cmake_policy(SET CMP0037 OLD) # don't blame custom target names
+    cmake_policy(SET CMP0037 NEW) # don't blame custom target names
 endif(POLICY CMP0037)
-
-if(POLICY CMP0002)
-    cmake_policy(SET CMP0002 OLD) # allow submodules with same target names
-endif(POLICY CMP0002)
 
 if (CMAKE_C_COMPILER_ID STREQUAL Clang)
     set(CMAKE_COMPILER_IS_CLANG  ON)
